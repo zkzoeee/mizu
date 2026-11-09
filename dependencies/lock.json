@@ -136,11 +136,11 @@
       "path": "vendor/sp1",
       "upstream": "https://github.com/succinctlabs/sp1.git",
       "base": "d83ed91f96701209613720708f36ffce0e98ed33",
-      "revision": "b2c2b02d5596ab5e07f2edb9a198050df01e67be",
-      "tree": "5b8027fc4695c5833c7c293c9445a10e9f58aea8",
+      "revision": "ac99509d080f6683d03e6a6fa96014eabaae0fc3",
+      "tree": "331c3f54a63f9d970e187f1babd6fc7ff4a233d0",
       "branch": "codex/mizu",
       "bundle": "dependencies/bundles/sp1.bundle",
-      "bundle_sha256": "10da8ec515fcdd550a6e98a06fceae105ef342cb1d610f44161f9369382275f8",
+      "bundle_sha256": "b54759f099a402537cd045d6050609b4a80a0cc8efcf0b81885b8f93ae9ffb0e",
       "patches": [
         {
           "commit": "0fde0939bc84bed83160e7f2c3685a863430ff7d",
@@ -210,6 +210,13 @@
           "paths": [
             "crates/curves/src/weierstrass/mod.rs",
             "crates/curves/src/weierstrass/pasta_arith.rs"
+          ]
+        },
+        {
+          "commit": "ac99509d080f6683d03e6a6fa96014eabaae0fc3",
+          "subject": "Pipeline streaming record generation and profile its phases",
+          "paths": [
+            "crates/core/machine/src/utils/prove.rs"
           ]
         }
       ]
