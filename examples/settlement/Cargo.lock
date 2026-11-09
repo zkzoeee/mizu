@@ -1088,7 +1088,7 @@ dependencies = [
 
 [[package]]
 name = "groupmap"
-version = "0.4.1"
+version = "0.7.0"
 dependencies = [
  "ark-ec",
  "ark-ff 0.5.0",
@@ -1107,7 +1107,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
 dependencies = [
  "allocator-api2",
+ "equivalent",
  "foldhash",
+ "serde",
 ]
 
 [[package]]
@@ -1230,7 +1232,7 @@ dependencies = [
 
 [[package]]
 name = "internal-tracing"
-version = "0.4.1"
+version = "0.7.0"
 
 [[package]]
 name = "itertools"
@@ -1320,7 +1322,7 @@ dependencies = [
 
 [[package]]
 name = "kimchi"
-version = "0.4.1"
+version = "0.7.0"
 dependencies = [
  "ark-ec",
  "ark-ff 0.5.0",
@@ -1337,7 +1339,6 @@ dependencies = [
  "num-bigint 0.4.6",
  "num-integer",
  "o1-utils",
- "once_cell",
  "poly-commitment",
  "rand 0.8.6",
  "rand_core 0.6.4",
@@ -1345,6 +1346,7 @@ dependencies = [
  "rmp-serde",
  "serde",
  "serde_with",
+ "sha2",
  "strum",
  "strum_macros",
  "thiserror 2.0.18",
@@ -1415,7 +1417,7 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
 name = "mina-curves"
-version = "0.4.1"
+version = "0.7.0"
 dependencies = [
  "ark-bn254",
  "ark-ec",
@@ -1427,7 +1429,7 @@ dependencies = [
 
 [[package]]
 name = "mina-poseidon"
-version = "0.4.1"
+version = "0.7.0"
 dependencies = [
  "ark-ec",
  "ark-ff 0.5.0",
@@ -1435,7 +1437,6 @@ dependencies = [
  "ark-serialize 0.5.0",
  "mina-curves",
  "o1-utils",
- "once_cell",
  "rand 0.8.6",
  "rayon",
  "serde",
@@ -1502,9 +1503,8 @@ dependencies = [
 
 [[package]]
 name = "o1-utils"
-version = "0.4.1"
+version = "0.7.0"
 dependencies = [
- "ark-ec",
  "ark-ff 0.5.0",
  "ark-poly",
  "ark-serialize 0.5.0",
@@ -1513,7 +1513,6 @@ dependencies = [
  "num-bigint 0.4.6",
  "num-integer",
  "rand 0.8.6",
- "rand_core 0.6.4",
  "rayon",
  "rmp-serde",
  "rustversion",
@@ -1521,6 +1520,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "sha2",
+ "spin",
  "thiserror 2.0.18",
 ]
 
@@ -1761,7 +1761,7 @@ dependencies = [
 
 [[package]]
 name = "poly-commitment"
-version = "0.4.1"
+version = "0.7.0"
 dependencies = [
  "ark-ec",
  "ark-ff 0.5.0",
@@ -1769,6 +1769,7 @@ dependencies = [
  "ark-serialize 0.5.0",
  "blake2",
  "groupmap",
+ "hashbrown 0.15.5",
  "hex",
  "itertools 0.12.1",
  "mina-curves",
@@ -2499,6 +2500,12 @@ dependencies = [
  "sp1-lib",
  "sp1-primitives",
 ]
+
+[[package]]
+name = "spin"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "023a211cb3138dbc438680b32560ad89f699977624c9f8dbb95a47d5b4c07dd3"
 
 [[package]]
 name = "spki"

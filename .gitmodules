@@ -11,7 +11,7 @@
 [submodule "vendor/proof-systems"]
 	path = vendor/proof-systems
 	url = https://github.com/o1-labs/proof-systems.git
-	branch = codex/mizu
+	branch = codex/proof-systems-0.7
 
 [submodule "vendor/sp1"]
 	path = vendor/sp1

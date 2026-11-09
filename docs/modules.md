@@ -12,7 +12,7 @@ there are no application snapshots followed by branding or deletion commits.
 | Cycle/operation runners | `crates/cycle-runner` | Measurement tools |
 | Receipt logic and types | `examples/settlement/{program,types}` | Optional standalone workspace |
 | Algebra arithmetic / GLV / MSM | `vendor/algebra` | Arkworks fork, three commits |
-| Pasta, Poseidon, IPA, Kimchi fast paths | `vendor/proof-systems` | Official 0.4.1-based fork, four commits |
+| Pasta, Poseidon, IPA, Kimchi fast paths | `vendor/proof-systems` | Official 0.7.0 / `b1d9829`-based fork, four commits |
 | Published SP1 crate copies | `vendor/sp1` in native upstream layout | SP1 6.10 fork, four commits |
 | Active Pasta harness and micro-guests | `tools/pasta-*` | Focused validation tools |
 | Benchmark recipes / selected measurements | `benchmarks` | Performance evidence |

@@ -2856,7 +2856,7 @@ dependencies = [
 
 [[package]]
 name = "groupmap"
-version = "0.4.1"
+version = "0.7.0"
 dependencies = [
  "ark-ec",
  "ark-ff 0.5.0",
@@ -2905,7 +2905,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
 dependencies = [
  "allocator-api2",
+ "equivalent",
  "foldhash 0.1.5",
+ "serde",
 ]
 
 [[package]]
@@ -3348,7 +3350,7 @@ dependencies = [
 
 [[package]]
 name = "internal-tracing"
-version = "0.4.1"
+version = "0.7.0"
 
 [[package]]
 name = "ipnet"
@@ -3472,7 +3474,7 @@ dependencies = [
 
 [[package]]
 name = "kimchi"
-version = "0.4.1"
+version = "0.7.0"
 dependencies = [
  "ark-ec",
  "ark-ff 0.5.0",
@@ -3489,7 +3491,6 @@ dependencies = [
  "num-bigint 0.4.6",
  "num-integer",
  "o1-utils",
- "once_cell",
  "poly-commitment",
  "rand 0.8.6",
  "rand_core 0.6.4",
@@ -3497,6 +3498,7 @@ dependencies = [
  "rmp-serde",
  "serde",
  "serde_with",
+ "sha2 0.10.9",
  "strum",
  "strum_macros 0.26.4",
  "thiserror 2.0.18",
@@ -3523,7 +3525,7 @@ version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 dependencies = [
- "spin",
+ "spin 0.9.8",
 ]
 
 [[package]]
@@ -3669,7 +3671,7 @@ checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
 name = "mina-curves"
-version = "0.4.1"
+version = "0.7.0"
 dependencies = [
  "ark-bn254",
  "ark-ec",
@@ -3682,7 +3684,7 @@ dependencies = [
 
 [[package]]
 name = "mina-poseidon"
-version = "0.4.1"
+version = "0.7.0"
 dependencies = [
  "ark-ec",
  "ark-ff 0.5.0",
@@ -3690,7 +3692,6 @@ dependencies = [
  "ark-serialize 0.5.0",
  "mina-curves",
  "o1-utils",
- "once_cell",
  "rand 0.8.6",
  "rayon",
  "serde",
@@ -3928,9 +3929,8 @@ dependencies = [
 
 [[package]]
 name = "o1-utils"
-version = "0.4.1"
+version = "0.7.0"
 dependencies = [
- "ark-ec",
  "ark-ff 0.5.0",
  "ark-poly",
  "ark-serialize 0.5.0",
@@ -3939,7 +3939,6 @@ dependencies = [
  "num-bigint 0.4.6",
  "num-integer",
  "rand 0.8.6",
- "rand_core 0.6.4",
  "rayon",
  "rmp-serde",
  "rustversion",
@@ -3947,6 +3946,7 @@ dependencies = [
  "serde_json",
  "serde_with",
  "sha2 0.10.9",
+ "spin 0.10.1",
  "thiserror 2.0.18",
 ]
 
@@ -4481,7 +4481,7 @@ checksum = "19f132c84eca552bf34cab8ec81f1c1dcc229b811638f9d283dceabe58c5569e"
 
 [[package]]
 name = "poly-commitment"
-version = "0.4.1"
+version = "0.7.0"
 dependencies = [
  "ark-ec",
  "ark-ff 0.5.0",
@@ -4489,6 +4489,7 @@ dependencies = [
  "ark-serialize 0.5.0",
  "blake2",
  "groupmap",
+ "hashbrown 0.15.5",
  "hex",
  "itertools 0.12.1",
  "mina-curves",
@@ -6709,6 +6710,12 @@ name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
+
+[[package]]
+name = "spin"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "023a211cb3138dbc438680b32560ad89f699977624c9f8dbb95a47d5b4c07dd3"
 
 [[package]]
 name = "spki"

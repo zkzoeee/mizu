@@ -10,8 +10,8 @@
 //! without a pre-seeded cache, kimchi runs the FFT-on-curve generator on the
 //! full SRS — historically ~91% of the guest's cycles. Encode-side we compute
 //! it once via [`poly_commitment::SRS::get_lagrange_basis_from_domain_size`];
-//! decode-side we seed the cache via the public `SRS::lagrange_bases`
-//! accessor (the *field* is private, the accessor is not).
+//! decode-side we seed the separate prefix cache via
+//! `SRS::set_lagrange_basis_prefix`; the cache fields remain private.
 //!
 //! Blob layout (all little-endian, sections 8-byte aligned at start):
 //!
@@ -184,13 +184,9 @@ fn read_bytes_section(bytes: &[u8]) -> (&[u8], &[u8]) {
 // Lagrange basis seeding.
 // ---------------------------------------------------------------------------
 
-/// Seed the wrap SRS's Lagrange-basis cache at `domain_size`. Interior
-/// mutability via the public `SRS::lagrange_bases` field, so this works
-/// through a shared `&WrapSrs` (i.e. through an `Arc<WrapSrs>` deref).
-///
-/// This proof-systems branch exposes `HashMapCache::get_or_generate`; use it to
-/// install the precomputed basis when absent.
-/// Seed the *prefix* cache, not the full-domain one.
+/// Seed the wrap SRS's prefix cache at `domain_size` through its public setter.
+/// The setter uses interior mutability and only installs an absent prefix, so
+/// this works through a shared `&WrapSrs` (including an `Arc<WrapSrs>` deref).
 ///
 /// Registering a short vector under the full-domain key would make
 /// `get_lagrange_basis` answer short, and `commit_evaluations_non_hiding`
@@ -204,9 +200,8 @@ fn seed_wrap_lagrange_prefix(
     len: usize,
     prefix: Vec<PolyComm<Pallas>>,
 ) {
-    let _ = srs
-        .lagrange_prefixes
-        .get_or_generate((domain_size, len), || prefix);
+    assert_eq!(prefix.len(), len);
+    srs.set_lagrange_basis_prefix(domain_size, prefix);
 }
 
 // ---------------------------------------------------------------------------
@@ -537,9 +532,7 @@ mod tests {
                 chunks: alloc::vec![*p],
             })
             .collect();
-        let _ = srs
-            .lagrange_prefixes
-            .get_or_generate((SIZE, PREFIX), || seeded.clone());
+        srs.set_lagrange_basis_prefix(SIZE, seeded.clone());
 
         // Consumer one: the prefix accessor gets the seeded prefix.
         let got = srs.get_lagrange_basis_prefix(domain, PREFIX);

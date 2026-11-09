@@ -13,6 +13,13 @@ std = [
   "dep:serde_json",
   "dep:hex",
   "ark-ff/std",
+  "ark-ec/std",
+  "ark-poly/std",
+  "ark-serialize/std",
+  "kimchi/parallel",
+  "poly-commitment/parallel",
+  "mina-poseidon/std",
+  "o1-utils/std",
 ]
 
 [dependencies]

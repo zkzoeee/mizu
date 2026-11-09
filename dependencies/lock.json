@@ -62,15 +62,15 @@
       "name": "proof-systems",
       "path": "vendor/proof-systems",
       "upstream": "https://github.com/o1-labs/proof-systems.git",
-      "base": "3abb66bbbe143e27845c88b6456ecab3a589e113",
-      "revision": "9a47c4973f5b5dac37bd146922e8d08045d049ec",
-      "tree": "20fc89335f22315531401b2afd287d1a8b2c39e2",
-      "branch": "codex/mizu",
+      "base": "b1d9829fa0b2bb8e15494df1e5e0c6741394075b",
+      "revision": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
+      "tree": "74ab3c6ea49a3c39d809ab93f840b0f33a847359",
+      "branch": "codex/proof-systems-0.7",
       "bundle": "dependencies/bundles/proof-systems.bundle",
-      "bundle_sha256": "eea487353e9665ef21054ad5ddef5756c33936fc189412a4b195fd0f965b3f13",
+      "bundle_sha256": "4d2e2b2500c83824f14a4a3daeee6e633eeeaa5b6d6826894243f6faa8495c8a",
       "patches": [
         {
-          "commit": "02078de82fac3f3d851b1c664a885bcb97905eda",
+          "commit": "9f37ee019fb855c08884fe2c5681093b8b979806",
           "subject": "Add canonical Pasta arithmetic, GLV and SP1 point operations",
           "paths": [
             "Cargo.toml",
@@ -78,8 +78,6 @@
             "curves/src/pasta/canonical_pallas.rs",
             "curves/src/pasta/canonical_words.rs",
             "curves/src/pasta/curves/pallas.rs",
-            "curves/src/pasta/fields/fp.rs",
-            "curves/src/pasta/fields/fq.rs",
             "curves/src/pasta/mod.rs",
             "curves/src/pasta/pallas_glv.rs",
             "curves/src/pasta/point_spikes.rs",
@@ -87,7 +85,7 @@
           ]
         },
         {
-          "commit": "428e4d75a56336f41a03ee17524e622696ed91fe",
+          "commit": "3d579636d89c4ebf4c9b9f7ba4e51ea8e995ac79",
           "subject": "Add canonical Poseidon and retained sponge fast paths",
           "paths": [
             "poseidon/src/canonical.rs",
@@ -101,7 +99,7 @@
           ]
         },
         {
-          "commit": "13607ce6b4d703522d6d02900b21add8e6374df6",
+          "commit": "af2c000a7664125c93c2f41c8e030dc252b27f83",
           "subject": "Add canonical IPA and reusable SRS representations",
           "paths": [
             "poly-commitment/src/canonical_ipa.rs",
@@ -114,15 +112,12 @@
           ]
         },
         {
-          "commit": "9a47c4973f5b5dac37bd146922e8d08045d049ec",
+          "commit": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
           "subject": "Optimize verifier challenges, expressions and borrowed commitments",
           "paths": [
             "kimchi/src/alphas.rs",
             "kimchi/src/circuits/constraints.rs",
-            "kimchi/src/circuits/lookup/lookups.rs",
-            "kimchi/src/circuits/lookup/tables/mod.rs",
             "kimchi/src/circuits/polynomials/permutation.rs",
-            "kimchi/src/prover.rs",
             "kimchi/src/verifier.rs"
           ]
         }

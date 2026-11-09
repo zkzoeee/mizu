@@ -7,8 +7,8 @@ edition = "2021"
 sp1-zkvm = "=6.10.0"
 pickles-verifier = { path = "../../../crates/pickles-verifier", default-features = false }
 mizu-settlement-types = { path = "../types" }
-ark-ff = { version = "0.5.0", features = ["std"] }
-mina-poseidon = { path = "../../../vendor/proof-systems/poseidon" }
+ark-ff = { version = "0.5.0", default-features = false }
+mina-poseidon = { path = "../../../vendor/proof-systems/poseidon", default-features = false }
 alloy-primitives = { version = "=0.8.20", features = ["sha3-keccak"] }
 
 [target.'cfg(target_os = "zkvm")'.dependencies]
