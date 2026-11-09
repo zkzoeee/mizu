@@ -1,0 +1,2588 @@
+{
+  "schema_version": 1,
+  "name": "mizu-openvm-inspired-sp1-6.10",
+  "date": "2026-11-09",
+  "status": "cpu-experiments-complete-no-proofs",
+  "proof_generated": false,
+  "source_revision": "00d03479423c1626d2e8a7a3262f72f1a1579c29",
+  "dependency_pins": {
+    "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+    "proof-systems": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
+    "sp1": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1"
+  },
+  "raw_evidence_directory_relative_to_repository": "../mizu-openvm-experiments-20261109",
+  "hardware": {
+    "system": [
+      "Darwin",
+      "25.2.0",
+      "Darwin Kernel Version 25.2.0: Tue Nov 18 21:07:05 PST 2025; root:xnu-12377.61.12~1/RELEASE_ARM64_T6020",
+      "arm64"
+    ],
+    "cpu_model": "not queried successfully",
+    "host_memory_context": "16 GB per repository instructions; not independently measured",
+    "parallelism": {
+      "cargo_build_jobs": 1,
+      "rayon_num_threads": 1,
+      "heavy_jobs": 1
+    }
+  },
+  "native_validation": {
+    "default_library_tests": 108,
+    "candidate_tests_passed": 213,
+    "failed": 0,
+    "candidate_env": {
+      "MIZU_CIP_MODE": "fused",
+      "MIZU_STACK_CROSS_FIELD": "1",
+      "MIZU_BATCH_ACCUMULATOR": "1"
+    },
+    "proof_generated": false
+  },
+  "variants": {
+    "control": {
+      "build_receipt_sha256": "43f990cae71d707d5afee7394b8106ea3c25f2b1e23d9d08dbc2203336945d4c",
+      "elf_sha256": "ac458051dd5656ad1f93ed70ca16c738c14a3a46a5aff37c4ee1f9769e10c110",
+      "tools": {
+        "builder_sha256": "a2ae8c8c226e59e85aeeaef1677b22b02aa1fcf80a146a105bc302118d03eb09",
+        "host_rust": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+        "guest_rust": "rustc 1.96.0-dev",
+        "sp1_builder": "cargo-prove sp1 (d83ed91 2026-10-23T15:22:23.918277000Z)"
+      },
+      "config": {
+        "schema_version": 1,
+        "name": "mizu-openvm-experiment-control",
+        "sp1_version": "6.10.0",
+        "fixture_dir": "fixtures/mainnet-blockchain-snark",
+        "guest": {
+          "directory": "crates/o1-verifier",
+          "package": "o1-verifier",
+          "binary": "o1-verifier",
+          "abi": "boolean",
+          "features": []
+        },
+        "optimization_env": {
+          "ZEKO_APPEND_B_POLY": "1",
+          "ZEKO_BORROW_PALLAS_SRS": "1",
+          "ZEKO_BORROW_POSITIONAL_SCALARS": "1",
+          "ZEKO_BORROW_VESTA_SRS": "1",
+          "ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS": "1",
+          "ZEKO_CANONICAL_MSM": "1",
+          "ZEKO_CANONICAL_PALLAS": "1",
+          "ZEKO_CANONICAL_POSEIDON": "1",
+          "ZEKO_DIRECT_MULMOD": "1",
+          "ZEKO_FIXED_PALLAS_SRS": "1",
+          "ZEKO_FIXED_VESTA_COUPLED": "1",
+          "ZEKO_FIXED_VESTA_SRS": "1",
+          "ZEKO_FUSE_PALLAS_BASE_CONVERSION": "1",
+          "ZEKO_FUSE_VESTA_BASE_CONVERSION": "1",
+          "ZEKO_HINTED_INVERSE": "1",
+          "ZEKO_INLINE_FINITE_COPY": "words",
+          "ZEKO_INTEGER_SCALAR_CHALLENGE": "1",
+          "ZEKO_IPA_BORROW_SRS_PREFIX": "1",
+          "ZEKO_IPA_CANONICAL_PREFIX": "1",
+          "ZEKO_IPA_DIRECT_COEFFICIENTS": "1",
+          "ZEKO_IPA_EXACT_CAPACITY": "1",
+          "ZEKO_MONT_DIRECT_MULMOD": "1",
+          "ZEKO_MSM_FILTER_ZERO": "1",
+          "ZEKO_OUTLINE_PALLAS_BUCKETS": "1",
+          "ZEKO_OUTLINE_VESTA_BUCKETS": "1",
+          "ZEKO_PACKED_PALLAS_HALVES": "1",
+          "ZEKO_PALLAS_AFFINE": "1",
+          "ZEKO_PALLAS_GLV": "1",
+          "ZEKO_PALLAS_POINT_PRECOMPILE": "1",
+          "ZEKO_PALLAS_WINDOW": "13",
+          "ZEKO_POSEIDON_PACKED_RHS": "1",
+          "ZEKO_PRECOMPUTED_SETUP": "1",
+          "ZEKO_PRECOMPUTED_VK_DIGEST": "1",
+          "ZEKO_TRIM_CONVERSIONS": "1",
+          "ZEKO_UNINIT_MSM_DIGITS": "1",
+          "ZEKO_VESTA_AFFINE": "1",
+          "ZEKO_VESTA_GLV": "1",
+          "ZEKO_VESTA_POINT_PRECOMPILE": "1",
+          "ZEKO_VESTA_WINDOW": "16",
+          "ZEKO_WRAP_SRS_PREFIX": "1"
+        },
+        "expected_public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+        "fixture_sha256": {
+          "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+          "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+          "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+          "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+        },
+        "builder_commit": "d83ed91"
+      },
+      "source_manifest_sha256": "bef37a2e4a36e72c44443deeccb48e59aec21dfb6e46ed338b440a5588483b0f",
+      "effective_guest_abi": "boolean",
+      "runs": {
+        "bad-accumulator": {
+          "guest_abi": "boolean",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 81831902,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "a164c82cde4ce79f09bbd6bee8742248d233b365ffb41333d36b666681ef3163"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 1310681,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 238096,
+          "stage_cycles": {
+            "pickles-accumulator": 75307072,
+            "setup": 4233620,
+            "verify": 77590707
+          },
+          "elapsed_seconds": 82.352062291,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": true,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "3a05f71a54aa76d090f1d929a80a956936a3090dd14ec9763f8c85a3b40f3161",
+          "run_receipt_sha256": "9731493cd55ec0c1208b893b5249e53c1a672b82e7d28d611b44255d53e518cd",
+          "log_sha256": "0bfc75404e0d98c5161374a310726fa82579f071e8376986595cfdfb6585f5ae",
+          "max_runner_rss_bytes": 354172928
+        },
+        "bad-opening": {
+          "guest_abi": "boolean",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142585612,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "5a6653fd257e4635985a886f370dfa2e19492f16714f0501de793ae8ee294671"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697989,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533879,
+          "stage_cycles": {
+            "pickles-accumulator": 75309756,
+            "pickles-wrap-kimchi": 54869904,
+            "pickles-wrap-prepare": 5788066,
+            "setup": 4233620,
+            "verify": 138344417
+          },
+          "elapsed_seconds": 126.29630675,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": true,
+          "precompile_profile": null,
+          "result_sha256": "8689bc600dc7ad5874ea0c8aaffd3f17b6bbf9b8f4b5bf43b09896395617becc",
+          "run_receipt_sha256": "630a0418ce253b978d081758edd432d124000c1008b310db63132e6acc1eb1f4",
+          "log_sha256": "7841be8db65dd12eac7a76b42084e392ecea2291f118d597737c526ee660360c",
+          "max_runner_rss_bytes": 324714496
+        },
+        "honest": {
+          "guest_abi": "boolean",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142638298,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697988,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533878,
+          "stage_cycles": {
+            "pickles-accumulator": 75309756,
+            "pickles-wrap-kimchi": 54870559,
+            "pickles-wrap-prepare": 5788066,
+            "setup": 4233620,
+            "verify": 138345072
+          },
+          "elapsed_seconds": 123.914160667,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "387991ee08d12f76ee567b2bf098de1210d34a9b4a6f90f579fa0d57fd4fb771",
+          "run_receipt_sha256": "fcbd8111ddcf7b5678826953d6663c43498201beea2a13a072f624f1e82a369b",
+          "log_sha256": "3a1cb9fade4c0ff25aa65008fa296d4df666a872a3d22bff7bacd07189b6e211",
+          "max_runner_rss_bytes": 344834048
+        },
+        "profile": {
+          "guest_abi": "boolean",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142638298,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697988,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533878,
+          "stage_cycles": {
+            "pickles-accumulator": 75309756,
+            "pickles-wrap-kimchi": 54870559,
+            "pickles-wrap-prepare": 5788066,
+            "setup": 4233620,
+            "verify": 138345072
+          },
+          "elapsed_seconds": 131.519147583,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": {
+            "gas_estimate_scope": "SP1 6.10 normalized gas model; chunk boundaries affect memory accounting. Not proof time, proof cost, or Ethereum gas",
+            "max_live_trace_chunks": 1,
+            "max_observed_chunk_entries": 1048607,
+            "memory_limit_scope": "2 GiB guest-address entry limit; trace buffer and host overhead are additional, not an RSS cap",
+            "method": "SP1 6.10 GasEstimatingVMEnum synchronous bounded trace replay",
+            "opcode_counts": {
+              "ADD": 12283832,
+              "ADDI": 22273264,
+              "ADDW": 1099043,
+              "AND": 4028469,
+              "AUIPC": 765313,
+              "BEQ": 7057511,
+              "BGE": 10732,
+              "BGEU": 1419599,
+              "BLT": 1713693,
+              "BLTU": 1597414,
+              "BNE": 9524306,
+              "DIVU": 90,
+              "DIVUW": 6,
+              "ECALL": 2543060,
+              "JAL": 2094350,
+              "JALR": 1314546,
+              "LB": 11835,
+              "LBU": 7535808,
+              "LD": 20301997,
+              "LH": 1707836,
+              "LHU": 17,
+              "LUI": 1028792,
+              "LW": 265910,
+              "LWU": 338,
+              "MUL": 85651,
+              "MULHU": 3312,
+              "OR": 2725384,
+              "SB": 2874589,
+              "SD": 12712254,
+              "SH": 1842345,
+              "SLL": 5639490,
+              "SLLW": 1768,
+              "SLTU": 4224219,
+              "SRA": 1706888,
+              "SRAW": 1766,
+              "SRL": 3742520,
+              "SRLW": 301320,
+              "SUB": 4838115,
+              "SUBW": 3584,
+              "SW": 202309,
+              "XOR": 3155023
+            },
+            "precompile_air_rows_unpadded": {
+              "PallasAddAssign": 697988,
+              "PallasDoubleAssign": 369,
+              "Uint256MulMod": 533878,
+              "VestaAddAssign": 1310683,
+              "VestaDoubleAssign": 112
+            },
+            "proof_nonce": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "replay_exit_code": 0,
+            "replay_seconds": 4.044924544000001,
+            "replayed_instructions": 142638298,
+            "sp1_core_options": {
+              "drop_ldes": false,
+              "full_size_shards": false,
+              "gas_trace_chunk_slots": 2,
+              "gas_trace_chunk_threshold": 134217728,
+              "global_dependencies_opt": false,
+              "memory_limit": 2147483648,
+              "minimal_trace_chunk_threshold": 1048576,
+              "recompute_gkr_trace": false,
+              "retained_events_presets": [
+                "Sha256",
+                "Poseidon2",
+                "U256Ops",
+                "Bls12381Field",
+                "Bn254Field"
+              ],
+              "shard_size": 16777216,
+              "sharding_threshold": {
+                "element_threshold": 402653184,
+                "height_threshold": 4194304
+              },
+              "trace_chunk_slots": 1
+            },
+            "sp1_gas_estimate": 533365470,
+            "syscall_count_scope": "Precompile invocations with mapped SP1 AIRs; excludes ordinary HALT, WRITE, HINT and COMMIT ecalls",
+            "syscall_counts": {
+              "PALLAS_ADD": 697988,
+              "PALLAS_DOUBLE": 369,
+              "UINT256_MUL": 533878,
+              "VESTA_ADD": 1310683,
+              "VESTA_DOUBLE": 112
+            },
+            "total_precompile_invocations": 2543030,
+            "trace_buffer_capacity_bytes": 18649847,
+            "trace_chunk_threshold_entries": 1048576,
+            "trace_chunks_replayed": 117
+          },
+          "result_sha256": "56eefba28949e1c0e392c11a5113bafbb7764644c32dc4b65fc7a53437cadd20",
+          "run_receipt_sha256": "8a1372fe60e6345c09043c85ace438d1435c663cbc1fee4173c05f92fdfd4f04",
+          "log_sha256": "c5fbc7367d17f5769f295c08829ca04f630647492b3721c669a8c31f2e47f697",
+          "max_runner_rss_bytes": 375209984
+        }
+      }
+    },
+    "allocation": {
+      "build_receipt_sha256": "93b99d7050f76dfc669817b51edfefef0ba06a2156c627a205ad818cbc123021",
+      "elf_sha256": "c515d34eef94297720fb61ba3154939b970501a0da101713397df59b9be1b45b",
+      "tools": {
+        "builder_sha256": "a2ae8c8c226e59e85aeeaef1677b22b02aa1fcf80a146a105bc302118d03eb09",
+        "host_rust": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+        "guest_rust": "rustc 1.96.0-dev",
+        "sp1_builder": "cargo-prove sp1 (d83ed91 2026-10-23T15:22:23.918277000Z)"
+      },
+      "config": {
+        "schema_version": 1,
+        "name": "mizu-openvm-experiment-allocation",
+        "sp1_version": "6.10.0",
+        "fixture_dir": "fixtures/mainnet-blockchain-snark",
+        "guest": {
+          "directory": "crates/o1-verifier",
+          "package": "o1-verifier",
+          "binary": "o1-verifier",
+          "abi": "boolean",
+          "features": []
+        },
+        "optimization_env": {
+          "ZEKO_APPEND_B_POLY": "1",
+          "ZEKO_BORROW_PALLAS_SRS": "1",
+          "ZEKO_BORROW_POSITIONAL_SCALARS": "1",
+          "ZEKO_BORROW_VESTA_SRS": "1",
+          "ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS": "1",
+          "ZEKO_CANONICAL_MSM": "1",
+          "ZEKO_CANONICAL_PALLAS": "1",
+          "ZEKO_CANONICAL_POSEIDON": "1",
+          "ZEKO_DIRECT_MULMOD": "1",
+          "ZEKO_FIXED_PALLAS_SRS": "1",
+          "ZEKO_FIXED_VESTA_COUPLED": "1",
+          "ZEKO_FIXED_VESTA_SRS": "1",
+          "ZEKO_FUSE_PALLAS_BASE_CONVERSION": "1",
+          "ZEKO_FUSE_VESTA_BASE_CONVERSION": "1",
+          "ZEKO_HINTED_INVERSE": "1",
+          "ZEKO_INLINE_FINITE_COPY": "words",
+          "ZEKO_INTEGER_SCALAR_CHALLENGE": "1",
+          "ZEKO_IPA_BORROW_SRS_PREFIX": "1",
+          "ZEKO_IPA_CANONICAL_PREFIX": "1",
+          "ZEKO_IPA_DIRECT_COEFFICIENTS": "1",
+          "ZEKO_IPA_EXACT_CAPACITY": "1",
+          "ZEKO_MONT_DIRECT_MULMOD": "1",
+          "ZEKO_MSM_FILTER_ZERO": "1",
+          "ZEKO_OUTLINE_PALLAS_BUCKETS": "1",
+          "ZEKO_OUTLINE_VESTA_BUCKETS": "1",
+          "ZEKO_PACKED_PALLAS_HALVES": "1",
+          "ZEKO_PALLAS_AFFINE": "1",
+          "ZEKO_PALLAS_GLV": "1",
+          "ZEKO_PALLAS_POINT_PRECOMPILE": "1",
+          "ZEKO_PALLAS_WINDOW": "13",
+          "ZEKO_POSEIDON_PACKED_RHS": "1",
+          "ZEKO_PRECOMPUTED_SETUP": "1",
+          "ZEKO_PRECOMPUTED_VK_DIGEST": "1",
+          "ZEKO_TRIM_CONVERSIONS": "1",
+          "ZEKO_UNINIT_MSM_DIGITS": "1",
+          "ZEKO_VESTA_AFFINE": "1",
+          "ZEKO_VESTA_GLV": "1",
+          "ZEKO_VESTA_POINT_PRECOMPILE": "1",
+          "ZEKO_VESTA_WINDOW": "16",
+          "ZEKO_WRAP_SRS_PREFIX": "1",
+          "MIZU_CIP_MODE": "borrowed",
+          "MIZU_STACK_CROSS_FIELD": "1"
+        },
+        "expected_public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+        "fixture_sha256": {
+          "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+          "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+          "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+          "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+        },
+        "builder_commit": "d83ed91"
+      },
+      "source_manifest_sha256": "bef37a2e4a36e72c44443deeccb48e59aec21dfb6e46ed338b440a5588483b0f",
+      "effective_guest_abi": "boolean",
+      "runs": {
+        "bad-accumulator": {
+          "guest_abi": "boolean",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 81831902,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "a164c82cde4ce79f09bbd6bee8742248d233b365ffb41333d36b666681ef3163"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 1310681,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 238096,
+          "stage_cycles": {
+            "pickles-accumulator": 75307072,
+            "setup": 4233620,
+            "verify": 77590707
+          },
+          "elapsed_seconds": 81.273386875,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": true,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "56254b8c5bb878cf6fe3fbf41fb790ea03e475913dd41867bfa9c78d4e290362",
+          "run_receipt_sha256": "412ebe53805913c1824835de1c72c5dc21529fd179c42fe26187f050f7a8649a",
+          "log_sha256": "1e2a008afb390195d0d556926669c138111562633bf37053680cc94dc8224743",
+          "max_runner_rss_bytes": 355942400
+        },
+        "bad-opening": {
+          "guest_abi": "boolean",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142500554,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "5a6653fd257e4635985a886f370dfa2e19492f16714f0501de793ae8ee294671"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697989,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533785,
+          "stage_cycles": {
+            "pickles-accumulator": 75309756,
+            "pickles-wrap-kimchi": 54869904,
+            "pickles-wrap-prepare": 5703008,
+            "setup": 4233620,
+            "verify": 138259359
+          },
+          "elapsed_seconds": 124.673085292,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": true,
+          "precompile_profile": null,
+          "result_sha256": "90589b60a13c31741c9c3f13cefcc077e197f38ee987b8ac17d92d0b5a9bbb07",
+          "run_receipt_sha256": "85930ae55d8be0bb5e95b4dd4387279935049242cb705a3f3e66fc42f22bd571",
+          "log_sha256": "f37c560a8004fffcd82bf7fb55aa9d08cab4455000adb3bea0961a0b462eb724",
+          "max_runner_rss_bytes": 353435648
+        },
+        "honest": {
+          "guest_abi": "boolean",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142553240,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697988,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533784,
+          "stage_cycles": {
+            "pickles-accumulator": 75309756,
+            "pickles-wrap-kimchi": 54870559,
+            "pickles-wrap-prepare": 5703008,
+            "setup": 4233620,
+            "verify": 138260014
+          },
+          "elapsed_seconds": 125.3915715,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "1fbe2d0532b34e0e1ed3919eb2224b20276b9b68b7f5d684885ad84d03cb0cad",
+          "run_receipt_sha256": "75bda6297306f4dccd21932579ed2b21901c2b03c483602292fc59e7e8d7b2da",
+          "log_sha256": "48d652ab5ff05e87d507eec0e7b11559ca8868164aceec7f5aa976be4098afaf",
+          "max_runner_rss_bytes": 353386496
+        },
+        "profile": {
+          "guest_abi": "boolean",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142553240,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697988,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533784,
+          "stage_cycles": {
+            "pickles-accumulator": 75309756,
+            "pickles-wrap-kimchi": 54870559,
+            "pickles-wrap-prepare": 5703008,
+            "setup": 4233620,
+            "verify": 138260014
+          },
+          "elapsed_seconds": 134.447929625,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": {
+            "gas_estimate_scope": "SP1 6.10 normalized gas model; chunk boundaries affect memory accounting. Not proof time, proof cost, or Ethereum gas",
+            "max_live_trace_chunks": 1,
+            "max_observed_chunk_entries": 1048607,
+            "memory_limit_scope": "2 GiB guest-address entry limit; trace buffer and host overhead are additional, not an RSS cap",
+            "method": "SP1 6.10 GasEstimatingVMEnum synchronous bounded trace replay",
+            "opcode_counts": {
+              "ADD": 12274496,
+              "ADDI": 22259519,
+              "ADDW": 1098902,
+              "AND": 4022954,
+              "AUIPC": 763418,
+              "BEQ": 7054742,
+              "BGE": 10731,
+              "BGEU": 1418948,
+              "BLT": 1713693,
+              "BLTU": 1596235,
+              "BNE": 9522609,
+              "DIVU": 90,
+              "DIVUW": 6,
+              "ECALL": 2542966,
+              "JAL": 2093534,
+              "JALR": 1313302,
+              "LB": 11835,
+              "LBU": 7535215,
+              "LD": 20295395,
+              "LH": 1707836,
+              "LHU": 17,
+              "LUI": 1025232,
+              "LW": 265910,
+              "LWU": 338,
+              "MUL": 84718,
+              "MULHU": 3312,
+              "OR": 2720408,
+              "SB": 2873661,
+              "SD": 12705701,
+              "SH": 1842345,
+              "SLL": 5631772,
+              "SLLW": 1768,
+              "SLTU": 4223841,
+              "SRA": 1706888,
+              "SRAW": 1766,
+              "SRL": 3733668,
+              "SRLW": 301320,
+              "SUB": 4834647,
+              "SUBW": 3584,
+              "SW": 202309,
+              "XOR": 3153609
+            },
+            "precompile_air_rows_unpadded": {
+              "PallasAddAssign": 697988,
+              "PallasDoubleAssign": 369,
+              "Uint256MulMod": 533784,
+              "VestaAddAssign": 1310683,
+              "VestaDoubleAssign": 112
+            },
+            "proof_nonce": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "replay_exit_code": 0,
+            "replay_seconds": 4.215209751999999,
+            "replayed_instructions": 142553240,
+            "sp1_core_options": {
+              "drop_ldes": false,
+              "full_size_shards": false,
+              "gas_trace_chunk_slots": 2,
+              "gas_trace_chunk_threshold": 134217728,
+              "global_dependencies_opt": false,
+              "memory_limit": 2147483648,
+              "minimal_trace_chunk_threshold": 1048576,
+              "recompute_gkr_trace": false,
+              "retained_events_presets": [
+                "Sha256",
+                "Bls12381Field",
+                "Poseidon2",
+                "U256Ops",
+                "Bn254Field"
+              ],
+              "shard_size": 16777216,
+              "sharding_threshold": {
+                "element_threshold": 402653184,
+                "height_threshold": 4194304
+              },
+              "trace_chunk_slots": 1
+            },
+            "sp1_gas_estimate": 533304347,
+            "syscall_count_scope": "Precompile invocations with mapped SP1 AIRs; excludes ordinary HALT, WRITE, HINT and COMMIT ecalls",
+            "syscall_counts": {
+              "PALLAS_ADD": 697988,
+              "PALLAS_DOUBLE": 369,
+              "UINT256_MUL": 533784,
+              "VESTA_ADD": 1310683,
+              "VESTA_DOUBLE": 112
+            },
+            "total_precompile_invocations": 2542936,
+            "trace_buffer_capacity_bytes": 18649847,
+            "trace_chunk_threshold_entries": 1048576,
+            "trace_chunks_replayed": 117
+          },
+          "result_sha256": "7e2542d56edd0fa33510b7e6a6324663373fbaeea98a82e421a9524d4a55a881",
+          "run_receipt_sha256": "a3127b3c8a519c991b72ac541ff0edadfde3349b023a1c41cba095271037da3f",
+          "log_sha256": "5d0c4c279a946f8daf69394192901597d63ae95724e4e5bf1ac432f048d10494",
+          "max_runner_rss_bytes": 342032384
+        }
+      }
+    },
+    "fused": {
+      "build_receipt_sha256": "adeb061197de7e274ccc07bc72d6b127f69fcad368ad8dc73fd0b9c52806cfd0",
+      "elf_sha256": "b62c13000014efb4703bad12d6aed406b35832636c4d4f9ddf2f65f935e6801a",
+      "tools": {
+        "builder_sha256": "a2ae8c8c226e59e85aeeaef1677b22b02aa1fcf80a146a105bc302118d03eb09",
+        "host_rust": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+        "guest_rust": "rustc 1.96.0-dev",
+        "sp1_builder": "cargo-prove sp1 (d83ed91 2026-10-23T15:22:23.918277000Z)"
+      },
+      "config": {
+        "schema_version": 1,
+        "name": "mizu-openvm-experiment-fused",
+        "sp1_version": "6.10.0",
+        "fixture_dir": "fixtures/mainnet-blockchain-snark",
+        "guest": {
+          "directory": "crates/o1-verifier",
+          "package": "o1-verifier",
+          "binary": "o1-verifier",
+          "abi": "boolean",
+          "features": []
+        },
+        "optimization_env": {
+          "ZEKO_APPEND_B_POLY": "1",
+          "ZEKO_BORROW_PALLAS_SRS": "1",
+          "ZEKO_BORROW_POSITIONAL_SCALARS": "1",
+          "ZEKO_BORROW_VESTA_SRS": "1",
+          "ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS": "1",
+          "ZEKO_CANONICAL_MSM": "1",
+          "ZEKO_CANONICAL_PALLAS": "1",
+          "ZEKO_CANONICAL_POSEIDON": "1",
+          "ZEKO_DIRECT_MULMOD": "1",
+          "ZEKO_FIXED_PALLAS_SRS": "1",
+          "ZEKO_FIXED_VESTA_COUPLED": "1",
+          "ZEKO_FIXED_VESTA_SRS": "1",
+          "ZEKO_FUSE_PALLAS_BASE_CONVERSION": "1",
+          "ZEKO_FUSE_VESTA_BASE_CONVERSION": "1",
+          "ZEKO_HINTED_INVERSE": "1",
+          "ZEKO_INLINE_FINITE_COPY": "words",
+          "ZEKO_INTEGER_SCALAR_CHALLENGE": "1",
+          "ZEKO_IPA_BORROW_SRS_PREFIX": "1",
+          "ZEKO_IPA_CANONICAL_PREFIX": "1",
+          "ZEKO_IPA_DIRECT_COEFFICIENTS": "1",
+          "ZEKO_IPA_EXACT_CAPACITY": "1",
+          "ZEKO_MONT_DIRECT_MULMOD": "1",
+          "ZEKO_MSM_FILTER_ZERO": "1",
+          "ZEKO_OUTLINE_PALLAS_BUCKETS": "1",
+          "ZEKO_OUTLINE_VESTA_BUCKETS": "1",
+          "ZEKO_PACKED_PALLAS_HALVES": "1",
+          "ZEKO_PALLAS_AFFINE": "1",
+          "ZEKO_PALLAS_GLV": "1",
+          "ZEKO_PALLAS_POINT_PRECOMPILE": "1",
+          "ZEKO_PALLAS_WINDOW": "13",
+          "ZEKO_POSEIDON_PACKED_RHS": "1",
+          "ZEKO_PRECOMPUTED_SETUP": "1",
+          "ZEKO_PRECOMPUTED_VK_DIGEST": "1",
+          "ZEKO_TRIM_CONVERSIONS": "1",
+          "ZEKO_UNINIT_MSM_DIGITS": "1",
+          "ZEKO_VESTA_AFFINE": "1",
+          "ZEKO_VESTA_GLV": "1",
+          "ZEKO_VESTA_POINT_PRECOMPILE": "1",
+          "ZEKO_VESTA_WINDOW": "16",
+          "ZEKO_WRAP_SRS_PREFIX": "1",
+          "MIZU_CIP_MODE": "fused",
+          "MIZU_STACK_CROSS_FIELD": "1"
+        },
+        "expected_public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+        "fixture_sha256": {
+          "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+          "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+          "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+          "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+        },
+        "builder_commit": "d83ed91"
+      },
+      "source_manifest_sha256": "bef37a2e4a36e72c44443deeccb48e59aec21dfb6e46ed338b440a5588483b0f",
+      "effective_guest_abi": "boolean",
+      "runs": {
+        "bad-accumulator": {
+          "guest_abi": "boolean",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 81831902,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "a164c82cde4ce79f09bbd6bee8742248d233b365ffb41333d36b666681ef3163"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 1310681,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 238096,
+          "stage_cycles": {
+            "pickles-accumulator": 75307072,
+            "setup": 4233620,
+            "verify": 77590707
+          },
+          "elapsed_seconds": 80.16446825,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": true,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "12ee1a7792170d42dab886e3dd5781f71700f3cf91f5b25295ce8c3a08062a89",
+          "run_receipt_sha256": "093be5e6e7349cecab1bb747dd40695c1155d503be7543bf5c7be67e179bdd22",
+          "log_sha256": "57354bce4b5a2cb43fb631d40b19bfc373f6ab3cab82f62acb812ac98fcdbeb6",
+          "max_runner_rss_bytes": 353566720
+        },
+        "bad-opening": {
+          "guest_abi": "boolean",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142503743,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "5a6653fd257e4635985a886f370dfa2e19492f16714f0501de793ae8ee294671"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697989,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533719,
+          "stage_cycles": {
+            "pickles-accumulator": 75309756,
+            "pickles-wrap-kimchi": 54869904,
+            "pickles-wrap-prepare": 5706197,
+            "setup": 4233620,
+            "verify": 138262548
+          },
+          "elapsed_seconds": 122.612951583,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": true,
+          "precompile_profile": null,
+          "result_sha256": "9713a71f1c397744e5e5705cdc2a75121fd0527fc05034a28c55643815632ec9",
+          "run_receipt_sha256": "8e11fc0dec100a9b2ceb41b16a07e1ee999dfd3f009df49105595637e5086f88",
+          "log_sha256": "0cbec2f544e8313446ce86cdb36f46fd827b388492e1a9c954713f9ab22728f4",
+          "max_runner_rss_bytes": 353566720
+        },
+        "honest": {
+          "guest_abi": "boolean",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142556429,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697988,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533718,
+          "stage_cycles": {
+            "pickles-accumulator": 75309756,
+            "pickles-wrap-kimchi": 54870559,
+            "pickles-wrap-prepare": 5706197,
+            "setup": 4233620,
+            "verify": 138263203
+          },
+          "elapsed_seconds": 123.580683042,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "500301f59bb3ec5e2eed68d20fe31a24ea75c5480eb8eb002f481fb04c00a1d8",
+          "run_receipt_sha256": "fa0496af41944c4c75a9209f748a7fbbb55ff939d410a583b2f46fdb327051b0",
+          "log_sha256": "2598c77b05b4c574b983e37d758ce2ddfbb472e7cacc0cfc73927af63b297eac",
+          "max_runner_rss_bytes": 353452032
+        },
+        "profile": {
+          "guest_abi": "boolean",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142556429,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697988,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533718,
+          "stage_cycles": {
+            "pickles-accumulator": 75309756,
+            "pickles-wrap-kimchi": 54870559,
+            "pickles-wrap-prepare": 5706197,
+            "setup": 4233620,
+            "verify": 138263203
+          },
+          "elapsed_seconds": 133.26385725,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": {
+            "gas_estimate_scope": "SP1 6.10 normalized gas model; chunk boundaries affect memory accounting. Not proof time, proof cost, or Ethereum gas",
+            "max_live_trace_chunks": 1,
+            "max_observed_chunk_entries": 1048607,
+            "memory_limit_scope": "2 GiB guest-address entry limit; trace buffer and host overhead are additional, not an RSS cap",
+            "method": "SP1 6.10 GasEstimatingVMEnum synchronous bounded trace replay",
+            "opcode_counts": {
+              "ADD": 12275085,
+              "ADDI": 22259580,
+              "ADDW": 1098902,
+              "AND": 4022953,
+              "AUIPC": 763292,
+              "BEQ": 7054879,
+              "BGE": 10732,
+              "BGEU": 1419003,
+              "BLT": 1713693,
+              "BLTU": 1596288,
+              "BNE": 9522640,
+              "DIVU": 90,
+              "DIVUW": 6,
+              "ECALL": 2542900,
+              "JAL": 2093550,
+              "JALR": 1313180,
+              "LB": 11835,
+              "LBU": 7535215,
+              "LD": 20296213,
+              "LH": 1707836,
+              "LHU": 17,
+              "LUI": 1025339,
+              "LW": 265910,
+              "LWU": 338,
+              "MUL": 84718,
+              "MULHU": 3315,
+              "OR": 2720411,
+              "SB": 2873661,
+              "SD": 12707142,
+              "SH": 1842345,
+              "SLL": 5631838,
+              "SLLW": 1768,
+              "SLTU": 4223955,
+              "SRA": 1706888,
+              "SRAW": 1766,
+              "SRL": 3733695,
+              "SRLW": 301320,
+              "SUB": 4834639,
+              "SUBW": 3584,
+              "SW": 202309,
+              "XOR": 3153599
+            },
+            "precompile_air_rows_unpadded": {
+              "PallasAddAssign": 697988,
+              "PallasDoubleAssign": 369,
+              "Uint256MulMod": 533718,
+              "VestaAddAssign": 1310683,
+              "VestaDoubleAssign": 112
+            },
+            "proof_nonce": [
+              0,
+              0,
+              0,
+              0
+            ],
+            "replay_exit_code": 0,
+            "replay_seconds": 4.053260951999999,
+            "replayed_instructions": 142556429,
+            "sp1_core_options": {
+              "drop_ldes": false,
+              "full_size_shards": false,
+              "gas_trace_chunk_slots": 2,
+              "gas_trace_chunk_threshold": 134217728,
+              "global_dependencies_opt": false,
+              "memory_limit": 2147483648,
+              "minimal_trace_chunk_threshold": 1048576,
+              "recompute_gkr_trace": false,
+              "retained_events_presets": [
+                "Bn254Field",
+                "Poseidon2",
+                "Bls12381Field",
+                "U256Ops",
+                "Sha256"
+              ],
+              "shard_size": 16777216,
+              "sharding_threshold": {
+                "element_threshold": 402653184,
+                "height_threshold": 4194304
+              },
+              "trace_chunk_slots": 1
+            },
+            "sp1_gas_estimate": 533305352,
+            "syscall_count_scope": "Precompile invocations with mapped SP1 AIRs; excludes ordinary HALT, WRITE, HINT and COMMIT ecalls",
+            "syscall_counts": {
+              "PALLAS_ADD": 697988,
+              "PALLAS_DOUBLE": 369,
+              "UINT256_MUL": 533718,
+              "VESTA_ADD": 1310683,
+              "VESTA_DOUBLE": 112
+            },
+            "total_precompile_invocations": 2542870,
+            "trace_buffer_capacity_bytes": 18649847,
+            "trace_chunk_threshold_entries": 1048576,
+            "trace_chunks_replayed": 117
+          },
+          "result_sha256": "24e9eb8cdd8dce77e4bcff67c93cc755df35f40a888f6977b3172db1a7b7dd07",
+          "run_receipt_sha256": "f68bc9494c147bd352681514ff46cdaa0b4656526bed03cb886d7f1215c80f56",
+          "log_sha256": "3b90fd3a3be852dfd71cb02a1ec0f65aee80ec8b0973c6e75ea68bebba90466a",
+          "max_runner_rss_bytes": 373981184
+        }
+      }
+    },
+    "digest": {
+      "build_receipt_sha256": "2a7108e252781162342d218bedd7503db829572ad029fc346c76a75c8c435f7b",
+      "elf_sha256": "21e01c01d82a22baa5877f64ac90b07ad2d4bafc5babafe94eb7c4a5c6e1d7a3",
+      "tools": {
+        "builder_sha256": "a2ae8c8c226e59e85aeeaef1677b22b02aa1fcf80a146a105bc302118d03eb09",
+        "host_rust": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+        "guest_rust": "rustc 1.96.0-dev",
+        "sp1_builder": "cargo-prove sp1 (d83ed91 2026-10-23T15:22:23.918277000Z)"
+      },
+      "config": {
+        "schema_version": 1,
+        "name": "mizu-openvm-experiment-digest",
+        "sp1_version": "6.10.0",
+        "fixture_dir": "fixtures/mainnet-blockchain-snark",
+        "guest": {
+          "directory": "crates/o1-verifier",
+          "package": "o1-verifier",
+          "binary": "o1-verifier",
+          "abi": "boolean",
+          "features": [
+            "statement-digest"
+          ]
+        },
+        "optimization_env": {
+          "ZEKO_APPEND_B_POLY": "1",
+          "ZEKO_BORROW_PALLAS_SRS": "1",
+          "ZEKO_BORROW_POSITIONAL_SCALARS": "1",
+          "ZEKO_BORROW_VESTA_SRS": "1",
+          "ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS": "1",
+          "ZEKO_CANONICAL_MSM": "1",
+          "ZEKO_CANONICAL_PALLAS": "1",
+          "ZEKO_CANONICAL_POSEIDON": "1",
+          "ZEKO_DIRECT_MULMOD": "1",
+          "ZEKO_FIXED_PALLAS_SRS": "1",
+          "ZEKO_FIXED_VESTA_COUPLED": "1",
+          "ZEKO_FIXED_VESTA_SRS": "1",
+          "ZEKO_FUSE_PALLAS_BASE_CONVERSION": "1",
+          "ZEKO_FUSE_VESTA_BASE_CONVERSION": "1",
+          "ZEKO_HINTED_INVERSE": "1",
+          "ZEKO_INLINE_FINITE_COPY": "words",
+          "ZEKO_INTEGER_SCALAR_CHALLENGE": "1",
+          "ZEKO_IPA_BORROW_SRS_PREFIX": "1",
+          "ZEKO_IPA_CANONICAL_PREFIX": "1",
+          "ZEKO_IPA_DIRECT_COEFFICIENTS": "1",
+          "ZEKO_IPA_EXACT_CAPACITY": "1",
+          "ZEKO_MONT_DIRECT_MULMOD": "1",
+          "ZEKO_MSM_FILTER_ZERO": "1",
+          "ZEKO_OUTLINE_PALLAS_BUCKETS": "1",
+          "ZEKO_OUTLINE_VESTA_BUCKETS": "1",
+          "ZEKO_PACKED_PALLAS_HALVES": "1",
+          "ZEKO_PALLAS_AFFINE": "1",
+          "ZEKO_PALLAS_GLV": "1",
+          "ZEKO_PALLAS_POINT_PRECOMPILE": "1",
+          "ZEKO_PALLAS_WINDOW": "13",
+          "ZEKO_POSEIDON_PACKED_RHS": "1",
+          "ZEKO_PRECOMPUTED_SETUP": "1",
+          "ZEKO_PRECOMPUTED_VK_DIGEST": "1",
+          "ZEKO_TRIM_CONVERSIONS": "1",
+          "ZEKO_UNINIT_MSM_DIGITS": "1",
+          "ZEKO_VESTA_AFFINE": "1",
+          "ZEKO_VESTA_GLV": "1",
+          "ZEKO_VESTA_POINT_PRECOMPILE": "1",
+          "ZEKO_VESTA_WINDOW": "16",
+          "ZEKO_WRAP_SRS_PREFIX": "1"
+        },
+        "expected_public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+        "fixture_sha256": {
+          "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+          "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+          "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+          "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+        },
+        "builder_commit": "d83ed91"
+      },
+      "source_manifest_sha256": "bef37a2e4a36e72c44443deeccb48e59aec21dfb6e46ed338b440a5588483b0f",
+      "effective_guest_abi": "statement-digest",
+      "runs": {
+        "bad-accumulator": {
+          "guest_abi": "statementdigest",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 81831916,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "a164c82cde4ce79f09bbd6bee8742248d233b365ffb41333d36b666681ef3163"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 1310681,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 238096,
+          "stage_cycles": {
+            "pickles-accumulator": 75307072,
+            "setup": 4233620,
+            "verify": 77590707
+          },
+          "elapsed_seconds": 80.756290959,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": true,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "49290b384a79347ff70abae9d457af8136db4d5205cd35ca7e4980cca76ce879",
+          "run_receipt_sha256": "e436d67421da17222ef5bff9889e6036bdb77031c6f4f3434f2fec80453c6200",
+          "log_sha256": "c6e4accb202001fb78c281cb9045ab74e1547443083216ff6f7110b24b9a01d4",
+          "max_runner_rss_bytes": 353566720
+        },
+        "bad-opening": {
+          "guest_abi": "statementdigest",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142585626,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "5a6653fd257e4635985a886f370dfa2e19492f16714f0501de793ae8ee294671"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697989,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533879,
+          "stage_cycles": {
+            "pickles-accumulator": 75309756,
+            "pickles-wrap-kimchi": 54869904,
+            "pickles-wrap-prepare": 5788066,
+            "setup": 4233620,
+            "verify": 138344417
+          },
+          "elapsed_seconds": 124.226472791,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": true,
+          "precompile_profile": null,
+          "result_sha256": "d2079f5113675d371a895c709012194d6a2aa1ec51b312769cffe2916fd9dc42",
+          "run_receipt_sha256": "b3bb1cd652d5a17e20786da1fce74c9013a07b662b36324e7e3e079e337c4727",
+          "log_sha256": "cc7a21a2991e25b8c2a50e753bd8f72e8b8fddaf44ca46967df0b5f5f43a167c",
+          "max_runner_rss_bytes": 354680832
+        },
+        "bad-statement": {
+          "guest_abi": "statementdigest",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 6523646,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "67b75fe1c4baea158e7439344b2860dc4f38143768a85accc5550c601a527b41"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 0,
+            "vesta_double": 0
+          },
+          "uint256_mul_count": 172462,
+          "stage_cycles": {
+            "setup": 4233620,
+            "verify": 2282437
+          },
+          "elapsed_seconds": 0.374779083,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": true,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "c55eba094273739e9bef9be59c6523127aa051cf9483023b23a4c4294497ed35",
+          "run_receipt_sha256": "a78135b84bf1934ee74c373ce8f37dce0252279bb6c8571ade6225224f703438",
+          "log_sha256": "510d95394aceef2771e9b922b6f11b47c7f4483228ffe7f991e2db5d880f1112",
+          "max_runner_rss_bytes": 277725184
+        },
+        "honest": {
+          "guest_abi": "statementdigest",
+          "proof_valid": false,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142645115,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 32,
+          "public_values_sha256": "b71ae7a9945e5e7557ab509c9683d38a6249cdaea3e613e87992253b0e8490a5",
+          "public_values_hex": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "stdin_items_sha256": [
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697988,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533879,
+          "stage_cycles": {
+            "pickles-accumulator": 75309756,
+            "pickles-wrap-kimchi": 54870559,
+            "pickles-wrap-prepare": 5788066,
+            "setup": 4233620,
+            "verify": 138345072
+          },
+          "elapsed_seconds": 121.715886542,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "aaf712175e2a5dd7cbe9349af35de79b3901014e2689599b30d1dae040716f26",
+          "run_receipt_sha256": "69087ff765aec9fb2ca4164711eb81e63c2f36e28fdf3ea0843b72341567c722",
+          "log_sha256": "2e89735e42c77c09de3c4765168490bcb7aa449317b1d98f5e3fd3f5dc55c4b6",
+          "max_runner_rss_bytes": 354615296
+        }
+      }
+    },
+    "batch-control": {
+      "build_receipt_sha256": "07a44dbdada8daee85b4a4a487bc576c9f47553afd2c43db7c9f479cbde619fe",
+      "elf_sha256": "55f0624f2d663b9705535637639299f1ef804865ba5b855fedd1729c26a35adb",
+      "tools": {
+        "builder_sha256": "a2ae8c8c226e59e85aeeaef1677b22b02aa1fcf80a146a105bc302118d03eb09",
+        "host_rust": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+        "guest_rust": "rustc 1.96.0-dev",
+        "sp1_builder": "cargo-prove sp1 (d83ed91 2026-10-23T15:22:23.918277000Z)"
+      },
+      "config": {
+        "schema_version": 1,
+        "name": "mizu-openvm-experiment-batch-control",
+        "sp1_version": "6.10.0",
+        "fixture_dir": "fixtures/mainnet-blockchain-snark",
+        "guest": {
+          "directory": "crates/o1-verifier",
+          "package": "o1-verifier",
+          "binary": "o1-verifier-batch",
+          "abi": "boolean",
+          "features": [
+            "batch"
+          ]
+        },
+        "optimization_env": {
+          "ZEKO_APPEND_B_POLY": "1",
+          "ZEKO_BORROW_PALLAS_SRS": "1",
+          "ZEKO_BORROW_POSITIONAL_SCALARS": "1",
+          "ZEKO_BORROW_VESTA_SRS": "1",
+          "ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS": "1",
+          "ZEKO_CANONICAL_MSM": "1",
+          "ZEKO_CANONICAL_PALLAS": "1",
+          "ZEKO_CANONICAL_POSEIDON": "1",
+          "ZEKO_DIRECT_MULMOD": "1",
+          "ZEKO_FIXED_PALLAS_SRS": "1",
+          "ZEKO_FIXED_VESTA_COUPLED": "1",
+          "ZEKO_FIXED_VESTA_SRS": "1",
+          "ZEKO_FUSE_PALLAS_BASE_CONVERSION": "1",
+          "ZEKO_FUSE_VESTA_BASE_CONVERSION": "1",
+          "ZEKO_HINTED_INVERSE": "1",
+          "ZEKO_INLINE_FINITE_COPY": "words",
+          "ZEKO_INTEGER_SCALAR_CHALLENGE": "1",
+          "ZEKO_IPA_BORROW_SRS_PREFIX": "1",
+          "ZEKO_IPA_CANONICAL_PREFIX": "1",
+          "ZEKO_IPA_DIRECT_COEFFICIENTS": "1",
+          "ZEKO_IPA_EXACT_CAPACITY": "1",
+          "ZEKO_MONT_DIRECT_MULMOD": "1",
+          "ZEKO_MSM_FILTER_ZERO": "1",
+          "ZEKO_OUTLINE_PALLAS_BUCKETS": "1",
+          "ZEKO_OUTLINE_VESTA_BUCKETS": "1",
+          "ZEKO_PACKED_PALLAS_HALVES": "1",
+          "ZEKO_PALLAS_AFFINE": "1",
+          "ZEKO_PALLAS_GLV": "1",
+          "ZEKO_PALLAS_POINT_PRECOMPILE": "1",
+          "ZEKO_PALLAS_WINDOW": "13",
+          "ZEKO_POSEIDON_PACKED_RHS": "1",
+          "ZEKO_PRECOMPUTED_SETUP": "1",
+          "ZEKO_PRECOMPUTED_VK_DIGEST": "1",
+          "ZEKO_TRIM_CONVERSIONS": "1",
+          "ZEKO_UNINIT_MSM_DIGITS": "1",
+          "ZEKO_VESTA_AFFINE": "1",
+          "ZEKO_VESTA_GLV": "1",
+          "ZEKO_VESTA_POINT_PRECOMPILE": "1",
+          "ZEKO_VESTA_WINDOW": "16",
+          "ZEKO_WRAP_SRS_PREFIX": "1"
+        },
+        "expected_public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+        "fixture_sha256": {
+          "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+          "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+          "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+          "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+        },
+        "builder_commit": "d83ed91"
+      },
+      "source_manifest_sha256": "bef37a2e4a36e72c44443deeccb48e59aec21dfb6e46ed338b440a5588483b0f",
+      "effective_guest_abi": "batch",
+      "runs": {
+        "bad-accumulator-0": {
+          "guest_abi": "batch",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 86199930,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "9d9f290527a6be626a8f5985b26e19b237b44872b03631811df4416fc1713178",
+            "a164c82cde4ce79f09bbd6bee8742248d233b365ffb41333d36b666681ef3163",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 1310681,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 376860,
+          "stage_cycles": {
+            "pickles-accumulator": 75307072,
+            "setup": 8601436
+          },
+          "elapsed_seconds": 83.284969666,
+          "batch_size": 3,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": true,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "0fd3f95cdc29ae548546871011087dee1b98ffbd3340126d5559f46dc29c7174",
+          "run_receipt_sha256": "b283ea5e9923a4f251259ac8aa790bf99994a91e85944d3a6cba5e154ccfad13",
+          "log_sha256": "e538990d5c80e37903a82578e5676cf8ae226a5cb48b63a3369e2d0abfedabdd",
+          "max_runner_rss_bytes": 353501184
+        },
+        "bad-accumulator-1": {
+          "guest_abi": "batch",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 163783828,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "9d9f290527a6be626a8f5985b26e19b237b44872b03631811df4416fc1713178",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "a164c82cde4ce79f09bbd6bee8742248d233b365ffb41333d36b666681ef3163",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 2621364,
+            "vesta_double": 224
+          },
+          "uint256_mul_count": 497061,
+          "stage_cycles": {
+            "pickles-accumulator": 150616828,
+            "setup": 8601436
+          },
+          "elapsed_seconds": 163.48678075,
+          "batch_size": 3,
+          "corrupt_index": 1,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": true,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "444775667edc5ab52ead53dada565b815f20c7db8f3760b00665f45c650945d2",
+          "run_receipt_sha256": "5fe29ae481c203d6dfe43fa6790df098ef64229eea2058ef9bd8d45432f70ebb",
+          "log_sha256": "9d59f1232b5709101b4706cd4b2f8727b465f8981d17a2fdd9842205f2babe0d",
+          "max_runner_rss_bytes": 353157120
+        },
+        "bad-accumulator-2": {
+          "guest_abi": "batch",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 241367726,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "9d9f290527a6be626a8f5985b26e19b237b44872b03631811df4416fc1713178",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "a164c82cde4ce79f09bbd6bee8742248d233b365ffb41333d36b666681ef3163"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 3932047,
+            "vesta_double": 336
+          },
+          "uint256_mul_count": 617262,
+          "stage_cycles": {
+            "pickles-accumulator": 225926584,
+            "setup": 8601436
+          },
+          "elapsed_seconds": 247.604794209,
+          "batch_size": 3,
+          "corrupt_index": 2,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": true,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "46e1a3af878cd12d81ce275c8d74662caa43f193005a400f9bbcb1158b01428b",
+          "run_receipt_sha256": "59a3376e65f2cb845515daf06552a28e3f712ccaeab54761cc2dccb354e4f546",
+          "log_sha256": "71fe62b21a33f19e3a6b67feb7eb89284e69b3ed3ba670d41c16bf9b0251ac1a",
+          "max_runner_rss_bytes": 353501184
+        },
+        "bad-opening-last": {
+          "guest_abi": "batch",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 241314020,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "26b25d457597a7b0463f9620f666dd10aa2c4373a505967c7c8d70922a2d6ece",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "5a6653fd257e4635985a886f370dfa2e19492f16714f0501de793ae8ee294671"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 701905,
+            "pallas_double": 621,
+            "vesta_add": 2621366,
+            "vesta_double": 224
+          },
+          "uint256_mul_count": 1158986,
+          "stage_cycles": {
+            "pickles-accumulator": 150619512,
+            "pickles-wrap-kimchi": 68420196,
+            "pickles-wrap-prepare": 11203875,
+            "setup": 6411552
+          },
+          "elapsed_seconds": 210.278883042,
+          "batch_size": 2,
+          "corrupt_index": 1,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": true,
+          "precompile_profile": null,
+          "result_sha256": "574555dae78548427814749554cb8ff9c6133f9da4c0e2fcf46401bceab9183c",
+          "run_receipt_sha256": "011bce8eeec6abbbc17dfa862d794b4dd4ac2bb542e123346000a46511f7c5c2",
+          "log_sha256": "2033faa780a02f1e724a5648e5ccb71b6834822934cad2a829cf9c842e41bd49",
+          "max_runner_rss_bytes": 355549184
+        },
+        "invalid-count-0": {
+          "guest_abi": "batch",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 7585,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 0,
+            "vesta_double": 0
+          },
+          "uint256_mul_count": 0,
+          "stage_cycles": {},
+          "elapsed_seconds": 0.227412583,
+          "batch_size": 0,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "1a64093c3b60a12aac4c18ce10dbed286c57767730e47dc666d9cdba7e13402f",
+          "run_receipt_sha256": "24592f7450e91d03d49aba22e9b693d353757f84f3e6c1ba7e38289ea5db17a4",
+          "log_sha256": "72c35d8c376950cb8da1d48e7514ff09a6ff32c40829fb92d1557db090087a57",
+          "max_runner_rss_bytes": 279330816
+        },
+        "invalid-count-9": {
+          "guest_abi": "batch",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 7585,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "9f076b7eb7fdc0311cd3208cdbbebbf8014dd3a05e35191c96947b358a362b40",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 0,
+            "vesta_double": 0
+          },
+          "uint256_mul_count": 0,
+          "stage_cycles": {},
+          "elapsed_seconds": 0.202136958,
+          "batch_size": 9,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "15b82d1a7b9c0cbbc217485ba1a96c464a40594d4536aed4c7e7271d51f8d571",
+          "run_receipt_sha256": "c25ef4cf53af8fcdc16d9a48b109e6f48f55f0d6764f1c77cb2da4109a1d29aa",
+          "log_sha256": "ca7f0f13eac9b8604882fba270e9d65352f1d8f9fb5cc724608b5b4ea2a52ddc",
+          "max_runner_rss_bytes": 278052864
+        },
+        "n1": {
+          "guest_abi": "batch",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142664462,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "67abdd721024f0ff4e0b3f4c2fc13bc5bad42d0b7851d456d88d203d15aaa450",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697988,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533878,
+          "stage_cycles": {
+            "pickles-accumulator": 75309756,
+            "pickles-wrap-kimchi": 54903543,
+            "pickles-wrap-prepare": 5793041,
+            "setup": 4221668
+          },
+          "elapsed_seconds": 124.548651667,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "6235a9f612787e6d5455b3aca4bbe677abea3130ff0ffe0a46ae51381932f0f3",
+          "run_receipt_sha256": "3a6a0329ff4c70f3021fe044be90d992580fa550914d0b34ff508464b92029b9",
+          "log_sha256": "98d999ddaa980997f3dec8cc07b28686e67d3cc0f14d6a7e3aed5ff282d4607b",
+          "max_runner_rss_bytes": 353058816
+        },
+        "n2": {
+          "guest_abi": "batch",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 241406025,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "26b25d457597a7b0463f9620f666dd10aa2c4373a505967c7c8d70922a2d6ece",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 701889,
+            "pallas_double": 621,
+            "vesta_add": 2621366,
+            "vesta_double": 224
+          },
+          "uint256_mul_count": 1158985,
+          "stage_cycles": {
+            "pickles-accumulator": 150619512,
+            "pickles-wrap-kimchi": 68421607,
+            "pickles-wrap-prepare": 11203875,
+            "setup": 6411552
+          },
+          "elapsed_seconds": 211.653130125,
+          "batch_size": 2,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "e2264832a0f811fc64660e1a483caff41a98a2c6b066e7a460c94cc8d063aa46",
+          "run_receipt_sha256": "1a8115598c1c691745fbcd6decf4b93acc5c3b06768b07b3eb6ee9100059a37a",
+          "log_sha256": "c13c4f84bf9d6e79a35b4be68dbf876db2f7562e41e55350ab9f971f70dafcb9",
+          "max_runner_rss_bytes": 355254272
+        },
+        "n4": {
+          "guest_abi": "batch",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 435999550,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "fb5e512425fc9449316ec95969ebe71e2d576dbab833d61e2a5b9330fd70ee02",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 709653,
+            "pallas_double": 1125,
+            "vesta_add": 5242732,
+            "vesta_double": 448
+          },
+          "uint256_mul_count": 2278159,
+          "stage_cycles": {
+            "pickles-accumulator": 301239024,
+            "pickles-wrap-kimchi": 92568179,
+            "pickles-wrap-prepare": 22025782,
+            "setup": 10791320
+          },
+          "elapsed_seconds": 367.903534667,
+          "batch_size": 4,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "229515bb64ecb578e8a2e5f6ee60bc57ad8b18fa923b25650d32b8d569aa6df6",
+          "run_receipt_sha256": "97f9df1f92b9f198d255018e1a14c1b7942b9b288b37d4b49cec6f81f9ee7fbd",
+          "log_sha256": "3a701db580782ca76f80bc32c1bb878908b6dc79e0126cf56c62977342f9d24e",
+          "max_runner_rss_bytes": 353402880
+        },
+        "n8": {
+          "guest_abi": "batch",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 825188525,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "dc765660b06ee03dd16fd7ca5b957e8c805161ac2c4af28c5a100ab2ab432ca1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 725144,
+            "pallas_double": 2133,
+            "vesta_add": 10485464,
+            "vesta_double": 896
+          },
+          "uint256_mul_count": 4516507,
+          "stage_cycles": {
+            "pickles-accumulator": 602478048,
+            "pickles-wrap-kimchi": 140862494,
+            "pickles-wrap-prepare": 43669783,
+            "setup": 19550856
+          },
+          "elapsed_seconds": 682.56967125,
+          "batch_size": 8,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "1a30e78c3365a9ca764fde93b5fa5e03763d0e66e9ec039addaf6ce960a438f5",
+          "run_receipt_sha256": "89fbc50f284668bfc717521d9157a5e32e5e2126a9eb90d07da7e57d98895b3b",
+          "log_sha256": "c228d8d8f5eea331abafce7a1c0c21cf5cfd0c804645a443cfca4eccead8c16a",
+          "max_runner_rss_bytes": 354598912
+        }
+      }
+    },
+    "batch-combined": {
+      "build_receipt_sha256": "99f695388c18b44b4dd52e0a105ee53a236fccfc5e4adaaed20dd8c0dcc3aafd",
+      "elf_sha256": "f328e4a218ea27923740e4c4bbc385a8b85e0274eba29461d471dbd919cbc58d",
+      "tools": {
+        "builder_sha256": "a2ae8c8c226e59e85aeeaef1677b22b02aa1fcf80a146a105bc302118d03eb09",
+        "host_rust": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+        "guest_rust": "rustc 1.96.0-dev",
+        "sp1_builder": "cargo-prove sp1 (d83ed91 2026-10-23T15:22:23.918277000Z)"
+      },
+      "config": {
+        "schema_version": 1,
+        "name": "mizu-openvm-experiment-batch-combined",
+        "sp1_version": "6.10.0",
+        "fixture_dir": "fixtures/mainnet-blockchain-snark",
+        "guest": {
+          "directory": "crates/o1-verifier",
+          "package": "o1-verifier",
+          "binary": "o1-verifier-batch",
+          "abi": "boolean",
+          "features": [
+            "batch"
+          ]
+        },
+        "optimization_env": {
+          "ZEKO_APPEND_B_POLY": "1",
+          "ZEKO_BORROW_PALLAS_SRS": "1",
+          "ZEKO_BORROW_POSITIONAL_SCALARS": "1",
+          "ZEKO_BORROW_VESTA_SRS": "1",
+          "ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS": "1",
+          "ZEKO_CANONICAL_MSM": "1",
+          "ZEKO_CANONICAL_PALLAS": "1",
+          "ZEKO_CANONICAL_POSEIDON": "1",
+          "ZEKO_DIRECT_MULMOD": "1",
+          "ZEKO_FIXED_PALLAS_SRS": "1",
+          "ZEKO_FIXED_VESTA_COUPLED": "1",
+          "ZEKO_FIXED_VESTA_SRS": "1",
+          "ZEKO_FUSE_PALLAS_BASE_CONVERSION": "1",
+          "ZEKO_FUSE_VESTA_BASE_CONVERSION": "1",
+          "ZEKO_HINTED_INVERSE": "1",
+          "ZEKO_INLINE_FINITE_COPY": "words",
+          "ZEKO_INTEGER_SCALAR_CHALLENGE": "1",
+          "ZEKO_IPA_BORROW_SRS_PREFIX": "1",
+          "ZEKO_IPA_CANONICAL_PREFIX": "1",
+          "ZEKO_IPA_DIRECT_COEFFICIENTS": "1",
+          "ZEKO_IPA_EXACT_CAPACITY": "1",
+          "ZEKO_MONT_DIRECT_MULMOD": "1",
+          "ZEKO_MSM_FILTER_ZERO": "1",
+          "ZEKO_OUTLINE_PALLAS_BUCKETS": "1",
+          "ZEKO_OUTLINE_VESTA_BUCKETS": "1",
+          "ZEKO_PACKED_PALLAS_HALVES": "1",
+          "ZEKO_PALLAS_AFFINE": "1",
+          "ZEKO_PALLAS_GLV": "1",
+          "ZEKO_PALLAS_POINT_PRECOMPILE": "1",
+          "ZEKO_PALLAS_WINDOW": "13",
+          "ZEKO_POSEIDON_PACKED_RHS": "1",
+          "ZEKO_PRECOMPUTED_SETUP": "1",
+          "ZEKO_PRECOMPUTED_VK_DIGEST": "1",
+          "ZEKO_TRIM_CONVERSIONS": "1",
+          "ZEKO_UNINIT_MSM_DIGITS": "1",
+          "ZEKO_VESTA_AFFINE": "1",
+          "ZEKO_VESTA_GLV": "1",
+          "ZEKO_VESTA_POINT_PRECOMPILE": "1",
+          "ZEKO_VESTA_WINDOW": "16",
+          "ZEKO_WRAP_SRS_PREFIX": "1",
+          "MIZU_BATCH_ACCUMULATOR": "1"
+        },
+        "expected_public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+        "fixture_sha256": {
+          "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+          "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+          "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+          "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+        },
+        "builder_commit": "d83ed91"
+      },
+      "source_manifest_sha256": "bef37a2e4a36e72c44443deeccb48e59aec21dfb6e46ed338b440a5588483b0f",
+      "effective_guest_abi": "batch",
+      "runs": {
+        "bad-accumulator-0": {
+          "guest_abi": "batch",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 104116305,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "9d9f290527a6be626a8f5985b26e19b237b44872b03631811df4416fc1713178",
+            "a164c82cde4ce79f09bbd6bee8742248d233b365ffb41333d36b666681ef3163",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 1310692,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 758774,
+          "stage_cycles": {
+            "pickles-accumulator": 88630486,
+            "setup": 8647422
+          },
+          "elapsed_seconds": 82.763455458,
+          "batch_size": 3,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": true,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "819396467c3e886f3319d49b7ac517f02d5d898fab8ad32c52c1259ec4c9c286",
+          "run_receipt_sha256": "f54a31d50d6f75b08c63d3e8f75076a300670eed2244b29caf3be398071fe2f9",
+          "log_sha256": "e8fa721d71f3d9e689301f51c2e0570a522764d95b991c61ca347c0926edb651",
+          "max_runner_rss_bytes": 353484800
+        },
+        "bad-accumulator-1": {
+          "guest_abi": "batch",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 104120084,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "9d9f290527a6be626a8f5985b26e19b237b44872b03631811df4416fc1713178",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "a164c82cde4ce79f09bbd6bee8742248d233b365ffb41333d36b666681ef3163",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 1310692,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 758563,
+          "stage_cycles": {
+            "pickles-accumulator": 88634265,
+            "setup": 8647422
+          },
+          "elapsed_seconds": 82.715902625,
+          "batch_size": 3,
+          "corrupt_index": 1,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": true,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "b370164da04c8c2b60df64f6ef4541576430563a29e102afdbf566682cd5fab2",
+          "run_receipt_sha256": "e53672ab5fba8c0ba272b1b24f4c86c912fb96c0b3991af2d003ee43bda20c71",
+          "log_sha256": "9eeb14739495db33178b7a04d9b8725b344cfbea886569a306509103991159fa",
+          "max_runner_rss_bytes": 353435648
+        },
+        "bad-accumulator-2": {
+          "guest_abi": "batch",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 104106886,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "9d9f290527a6be626a8f5985b26e19b237b44872b03631811df4416fc1713178",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "a164c82cde4ce79f09bbd6bee8742248d233b365ffb41333d36b666681ef3163"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 1310700,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 758307,
+          "stage_cycles": {
+            "pickles-accumulator": 88621067,
+            "setup": 8647422
+          },
+          "elapsed_seconds": 82.467666917,
+          "batch_size": 3,
+          "corrupt_index": 2,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": true,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "a8da0775e96af53748a197f2b8047c46a059157e669d6de3ee3e23a60c8d9541",
+          "run_receipt_sha256": "d1eef047571138319417cdc542047f69018333b7ea7fdfa8b95ffee3196f1833",
+          "log_sha256": "0a98c09433a060c5b28d2bbac4ec4cb5e539e34d85424470798bbdb5f8c48954",
+          "max_runner_rss_bytes": 353763328
+        },
+        "bad-opening-last": {
+          "guest_abi": "batch",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 173152390,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "26b25d457597a7b0463f9620f666dd10aa2c4373a505967c7c8d70922a2d6ece",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "5a6653fd257e4635985a886f370dfa2e19492f16714f0501de793ae8ee294671"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 701905,
+            "pallas_double": 621,
+            "vesta_add": 1310698,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 1233572,
+          "stage_cycles": {
+            "pickles-accumulator": 82411306,
+            "pickles-wrap-kimchi": 68420161,
+            "pickles-wrap-prepare": 11205273,
+            "setup": 6457538
+          },
+          "elapsed_seconds": 127.424481125,
+          "batch_size": 2,
+          "corrupt_index": 1,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": true,
+          "precompile_profile": null,
+          "result_sha256": "dc15182fad568740931e0c9455e6da03cf176b53e163ec5ddef9bb011b1c8ed7",
+          "run_receipt_sha256": "97d4ddceab53081acf9302d253090061031230dd5d3311fa7bd72c4d6d83c8b0",
+          "log_sha256": "2e10fa64e2aad511805cf3a4551e357fd83e807a65705f6e9d3b5a25324bc38f",
+          "max_runner_rss_bytes": 355680256
+        },
+        "invalid-count-0": {
+          "guest_abi": "batch",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 7595,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 0,
+            "vesta_double": 0
+          },
+          "uint256_mul_count": 0,
+          "stage_cycles": {},
+          "elapsed_seconds": 0.216983709,
+          "batch_size": 0,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "97e74617c6f905b492d962a35b9babcf812b49f32bb7689a91afdc193ed86ef5",
+          "run_receipt_sha256": "6c5656bb39c9adab21014c120f3df5d871e093372afdfd04977959e7fc045d55",
+          "log_sha256": "fdaadd1e0205a07db31d6d3a4c315ea258edee631b15516d3f556fbb7be7d58c",
+          "max_runner_rss_bytes": 278626304
+        },
+        "invalid-count-9": {
+          "guest_abi": "batch",
+          "proof_valid": null,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 7595,
+          "accepted": false,
+          "guest_exit_code": 1,
+          "public_values_len": 0,
+          "public_values_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "public_values_hex": "",
+          "stdin_items_sha256": [
+            "9f076b7eb7fdc0311cd3208cdbbebbf8014dd3a05e35191c96947b358a362b40",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 0,
+            "pallas_double": 0,
+            "vesta_add": 0,
+            "vesta_double": 0
+          },
+          "uint256_mul_count": 0,
+          "stage_cycles": {},
+          "elapsed_seconds": 0.199526167,
+          "batch_size": 9,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "34a6b7dd6834d4159881ee3caed0a032fb38deb3da0490ad706e1afb4f0c7c1d",
+          "run_receipt_sha256": "86d3189d13c0904f9c9b2c814443db347b641728a8a4cfdb9c89d5f7b5a68d1f",
+          "log_sha256": "bb6e3bc0848880d1b41d79f6279661a0e0112157d6ff443a0b5a0b63982a4760",
+          "max_runner_rss_bytes": 277872640
+        },
+        "n1": {
+          "guest_abi": "batch",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 142580188,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "67abdd721024f0ff4e0b3f4c2fc13bc5bad42d0b7851d456d88d203d15aaa450",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 697988,
+            "pallas_double": 369,
+            "vesta_add": 1310683,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 533878,
+          "stage_cycles": {
+            "pickles-accumulator": 75178724,
+            "pickles-wrap-kimchi": 54903527,
+            "pickles-wrap-prepare": 5793743,
+            "setup": 4267654
+          },
+          "elapsed_seconds": 127.18565,
+          "batch_size": 1,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "2548be8e4765cd27a1eba717a8dd785f6d068a6864b4029638c3afea4a45280e",
+          "run_receipt_sha256": "e8bcc6793bba1824fec64ee1f1f4882cc8a816dea227e562e04dc2419395b457",
+          "log_sha256": "59013aff9f29e481c0c706edab32c1b401fff331ac7a52a0975e7e9e1d909327",
+          "max_runner_rss_bytes": 352976896
+        },
+        "n2": {
+          "guest_abi": "batch",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 173244385,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "26b25d457597a7b0463f9620f666dd10aa2c4373a505967c7c8d70922a2d6ece",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 701889,
+            "pallas_double": 621,
+            "vesta_add": 1310698,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 1233571,
+          "stage_cycles": {
+            "pickles-accumulator": 82411306,
+            "pickles-wrap-kimchi": 68421572,
+            "pickles-wrap-prepare": 11205273,
+            "setup": 6457538
+          },
+          "elapsed_seconds": 128.094943084,
+          "batch_size": 2,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "2f9491dbdb1038a6737a11d35a9f7b5d678f9222c7be5f9865076732fe46bf31",
+          "run_receipt_sha256": "d9979ebda5ca45aec783d1486aa7f8afcce712472c9ca756463fb20ba634fc12",
+          "log_sha256": "6ef3a8c55b78862a06775b85cdb5094d4d0b90cbd5c41edadb23706e60d90666",
+          "max_runner_rss_bytes": 353419264
+        },
+        "n4": {
+          "guest_abi": "batch",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 229664187,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "fb5e512425fc9449316ec95969ebe71e2d576dbab833d61e2a5b9330fd70ee02",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 709653,
+            "pallas_double": 1125,
+            "vesta_add": 1310696,
+            "vesta_double": 112
+          },
+          "uint256_mul_count": 2486641,
+          "stage_cycles": {
+            "pickles-accumulator": 94856655,
+            "pickles-wrap-kimchi": 92568106,
+            "pickles-wrap-prepare": 22028564,
+            "setup": 10837306
+          },
+          "elapsed_seconds": 130.793355583,
+          "batch_size": 4,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "4d9c4121c3b1dc033d4d0e5da8aa12edab5b2206ab34776c2ac7e493b3542aa8",
+          "run_receipt_sha256": "d8ba0f01e07d0b5fe281055e2d181816de168a4b057e5eee849885f85e5dcbef",
+          "log_sha256": "4ef113a39c3a16e3111b7e4f8beb7dbd101a71d172905660a44921c6707dc248",
+          "max_runner_rss_bytes": 355696640
+        },
+        "n8": {
+          "guest_abi": "batch",
+          "proof_valid": true,
+          "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+          "cycles": 342539805,
+          "accepted": true,
+          "guest_exit_code": 0,
+          "public_values_len": 1,
+          "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "public_values_hex": "01",
+          "stdin_items_sha256": [
+            "dc765660b06ee03dd16fd7ca5b957e8c805161ac2c4af28c5a100ab2ab432ca1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+            "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+          ],
+          "fixture_sha256": {
+            "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+            "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+            "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+            "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+          },
+          "pasta_syscall_counts": {
+            "pallas_add": 725144,
+            "pallas_double": 2133,
+            "vesta_add": 1310697,
+            "vesta_double": 113
+          },
+          "uint256_mul_count": 4993681,
+          "stage_cycles": {
+            "pickles-accumulator": 119781442,
+            "pickles-wrap-kimchi": 140862345,
+            "pickles-wrap-prepare": 43675333,
+            "setup": 19596842
+          },
+          "elapsed_seconds": 136.21268325,
+          "batch_size": 8,
+          "corrupt_index": 0,
+          "corrupt_statement": false,
+          "corrupt_accumulator_challenge": false,
+          "corrupt_wrap_opening": false,
+          "precompile_profile": null,
+          "result_sha256": "91beab1246ffb96a31117bec7c04ce78f85248be2e392fc5e2c548d188fd64e4",
+          "run_receipt_sha256": "1062bc46a82105aee7474567f060b801c14d67ca5a154aeb67eea7b9553244d8",
+          "log_sha256": "cb8adc5182938aad2349e96d5aefc20f7a89d5f37383807d3772b428084df30d",
+          "max_runner_rss_bytes": 355811328
+        }
+      }
+    }
+  },
+  "comparisons": [
+    {
+      "control": "control/honest",
+      "candidate": "allocation/honest",
+      "kind": "same-input-output",
+      "control_cycles": 142638298,
+      "candidate_cycles": 142553240,
+      "delta_cycles": -85058,
+      "delta_percent": -0.059631951020615796,
+      "speedup": 1.0005966753193403
+    },
+    {
+      "control": "allocation/honest",
+      "candidate": "fused/honest",
+      "kind": "same-input-output",
+      "control_cycles": 142553240,
+      "candidate_cycles": 142556429,
+      "delta_cycles": 3189,
+      "delta_percent": 0.002237058940224719,
+      "speedup": 0.9999776299110298
+    },
+    {
+      "control": "control/honest",
+      "candidate": "fused/honest",
+      "kind": "same-input-output",
+      "control_cycles": 142638298,
+      "candidate_cycles": 142556429,
+      "delta_cycles": -81869,
+      "delta_percent": -0.05739622608228261,
+      "speedup": 1.00057429188269
+    },
+    {
+      "control": "control/honest",
+      "candidate": "digest/honest",
+      "kind": "changed-output-functionality",
+      "control_cycles": 142638298,
+      "candidate_cycles": 142645115,
+      "delta_cycles": 6817,
+      "delta_percent": 0.004779221356104516,
+      "speedup": 0.9999522100704255
+    },
+    {
+      "control": "batch-control/n1",
+      "candidate": "batch-combined/n1",
+      "kind": "same-input-output",
+      "control_cycles": 142664462,
+      "candidate_cycles": 142580188,
+      "delta_cycles": -84274,
+      "delta_percent": -0.05907147359515504,
+      "speedup": 1.0005910638860989
+    },
+    {
+      "control": "batch-control/n2",
+      "candidate": "batch-combined/n2",
+      "kind": "same-input-output",
+      "control_cycles": 241406025,
+      "candidate_cycles": 173244385,
+      "delta_cycles": -68161640,
+      "delta_percent": -28.23526877591394,
+      "speedup": 1.393442130895036
+    },
+    {
+      "control": "batch-control/n4",
+      "candidate": "batch-combined/n4",
+      "kind": "same-input-output",
+      "control_cycles": 435999550,
+      "candidate_cycles": 229664187,
+      "delta_cycles": -206335363,
+      "delta_percent": -47.324673385557396,
+      "speedup": 1.8984220208438507
+    },
+    {
+      "control": "batch-control/n8",
+      "candidate": "batch-combined/n8",
+      "kind": "same-input-output",
+      "control_cycles": 825188525,
+      "candidate_cycles": 342539805,
+      "delta_cycles": -482648720,
+      "delta_percent": -58.48950941240973,
+      "speedup": 2.4090295870869665
+    }
+  ],
+  "limits": [
+    "All guest runs are CPU execution only; no fresh cryptographic proof, verification, reload or CUDA measurements.",
+    "Batch executions repeat one valid mainnet proof and do not represent diverse proof batches.",
+    "Digest output changes the ABI; its difference is functionality overhead, not equivalent-output optimization.",
+    "Precompile rows are unpadded row estimates, not complete trace cells or proof time.",
+    "Runner/JIT RSS is not prover memory."
+  ],
+  "expected_runs": 36,
+  "completed_runs": 36,
+  "missing_runs": {},
+  "runner_sha256": "8d61e69cab288d3db5abbadc6db189df184fceca85a204b557ff190ba3a1c57b",
+  "launcher_sha256": "ac69e900194f55afabc27ce8ec88e9fff9048cc314750040f6fe1a18c02115b8",
+  "harness_repair": {
+    "previous_script_sha256": "a60b4fba76fc4ed8dd3257f611140f5b17407470bc19edebe1abe26f2f5c395d",
+    "reason": "Darwin time -l exited unsuccessfully after successful guest execution because sysctl kern.clockrate is disallowed; replace only child resource accounting with wait4. Guest source/ELFs/runner unchanged."
+  },
+  "known_reporting_issues": [
+    "Original frozen build configs inherited the boolean ABI/expected-output metadata for optional guests. Actual features, binary, runner ABI and exact accepted output identify the contracts; effective_guest_abi records them.",
+    "Original frozen runner proof_valid interprets the first output byte as a boolean, which is invalid for the digest guest. accepted and the exact expected digest comparison establish verification; retain the raw field unchanged. Metadata-only corrections are tracked separately."
+  ],
+  "identity_receipt_sha256": "c8110b2b1a38f260ed73a316d0e16da86c5a9bca34ec2dd0159cc24a05c23a51",
+  "post_validation": {
+    "distinct_producer_native": {
+      "log_sha256": "b749abc1600cf3e53d6507c06f1d09b38ba9edb70a0ed2bbf5cbae207f74b3ee",
+      "passed_tests": 1,
+      "failed_tests": 0,
+      "completed": true
+    },
+    "receipt_native": {
+      "log_sha256": "5b50a63998bf4542acec42ea3a975a6f99de4dd5565286a8ee8f8241644af926",
+      "passed_tests": 20,
+      "failed_tests": 0,
+      "completed": true
+    },
+    "no_std": {
+      "log_sha256": "e4c6406c3212bdb3f3ff8655e40b92282df575a2a977017c539d568986901921",
+      "passed_tests": 0,
+      "failed_tests": 0,
+      "completed": true
+    },
+    "digest_reporting_recheck": {
+      "completed": true,
+      "build_sha256": "b0f06c1df79838432b218e7651dcb0fda050285b95369ee77b96e451f1258cd8",
+      "result_sha256": "f45aa32dea6e1d92ffa29bac197f2bf5105b4738644c275ae59f4f97d8bc3da1",
+      "elf_sha256": "21e01c01d82a22baa5877f64ac90b07ad2d4bafc5babafe94eb7c4a5c6e1d7a3",
+      "runner_sha256": "215c448100d06ef002ab58d326bca45a6f45da18f4c058e3f6d64ad97ce1ac35",
+      "cycles": 142645115,
+      "guest_abi": "statement-digest",
+      "proof_valid": true,
+      "public_values_sha256": "b71ae7a9945e5e7557ab509c9683d38a6249cdaea3e613e87992253b0e8490a5",
+      "experiment_environment_injected": [
+        "MIZU_CIP_MODE=fused",
+        "MIZU_STACK_CROSS_FIELD=1",
+        "MIZU_BATCH_ACCUMULATOR=1"
+      ],
+      "config_selects_experiments": false,
+      "scope": "Generic benchmark run with corrected ABI/output fields and neutralized ambient experiment flags; same digest guest cycles and exact output as original."
+    }
+  },
+  "post_validation_complete": true,
+  "native_core_and_runner_tests_passed": 214
+}

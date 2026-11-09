@@ -45,7 +45,11 @@ External comparisons are kept separate from retained Mizu work. See the
 [o1-openvm review](o1-openvm-review.md) for its optimization inventory, linked
 dependency changes and the OpenVM/SP1 comparison.
 The [Mizu experiment register](openvm-experiments.md) tracks the opt-in adaptations
-and their separate validation/measurement outcomes.
+and their separate validation/measurement outcomes. All 36 CPU runs passed;
+combined accumulation saved 58.49% of whole-guest cycles at eight repeated
+mainnet proofs. The retained configuration remains unchanged. See also the
+[Miza validation review](miza-validation-review.md) for comparator, fixture and
+proof-handoff lessons, and a separate pending SP1 AIR review.
 
 For each new optimization or dependency port, update the responsible area and
 add an entry following [the template](TEMPLATE.md). Include retained, rejected,

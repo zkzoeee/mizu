@@ -20993,43 +20993,141 @@
       "evidence": "benchmarks/references/o1-openvm-review.json",
       "reviewed_main": "3724a3d12178c3a174513ad06e8896d700f56d64",
       "measured_by_mizu": false
+    },
+    {
+      "id": "local-miza-validation-2026-11-09",
+      "kind": "local-validation-tooling-review",
+      "document": "docs/optimizations/miza-validation-review.md",
+      "evidence": "benchmarks/references/miza-validation-review.json",
+      "selected_python_gate_tests_passed": 13,
+      "cryptographic_proof_matrix_status": "compile-only; simulated orchestration; proof gates remain open"
     }
   ],
   "mizu_experiments": [
     {
       "id": "mizu-openvm-allocation",
-      "status": "prototype-awaiting-matched-cycles",
+      "status": "measured-positive-opt-in-candidate",
       "document": "docs/optimizations/openvm-experiments.md",
       "owner": "o1js-to-zkvm",
-      "proof_generated": false
+      "proof_generated": false,
+      "evidence": "benchmarks/openvm-experiments-sp1-6.10.json",
+      "source_revision": "00d03479423c1626d2e8a7a3262f72f1a1579c29",
+      "dependency_pins": {
+        "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+        "proof-systems": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
+        "sp1": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1"
+      },
+      "retained_default": false,
+      "evidence_sha256": "32d3fde9c636a74ea76f735dcd65725a09818c8cde6adc1cf3df2e4def860784",
+      "validation": {
+        "native_core_and_runner": 214,
+        "receipt_native": 20,
+        "cpu_matrix_runs": 36,
+        "cpu_matrix_accepted": 15,
+        "cpu_matrix_guest_rejected": 21,
+        "no_std": true,
+        "fresh_sp1_proofs": false
+      }
     },
     {
       "id": "mizu-openvm-fused-cip",
-      "status": "prototype-awaiting-matched-cycles",
+      "status": "measured-regression-against-allocation",
       "document": "docs/optimizations/openvm-experiments.md",
       "owner": "o1js-to-zkvm",
-      "proof_generated": false
+      "proof_generated": false,
+      "evidence": "benchmarks/openvm-experiments-sp1-6.10.json",
+      "source_revision": "00d03479423c1626d2e8a7a3262f72f1a1579c29",
+      "dependency_pins": {
+        "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+        "proof-systems": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
+        "sp1": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1"
+      },
+      "retained_default": false,
+      "evidence_sha256": "32d3fde9c636a74ea76f735dcd65725a09818c8cde6adc1cf3df2e4def860784",
+      "validation": {
+        "native_core_and_runner": 214,
+        "receipt_native": 20,
+        "cpu_matrix_runs": 36,
+        "cpu_matrix_accepted": 15,
+        "cpu_matrix_guest_rejected": 21,
+        "no_std": true,
+        "fresh_sp1_proofs": false
+      }
     },
     {
       "id": "mizu-openvm-batch-accumulator",
-      "status": "prototype-awaiting-matched-cycles",
+      "status": "cpu-validated-opt-in-prototype",
       "document": "docs/optimizations/openvm-experiments.md",
       "owner": "o1js-to-zkvm",
-      "proof_generated": false
+      "proof_generated": false,
+      "evidence": "benchmarks/openvm-experiments-sp1-6.10.json",
+      "source_revision": "00d03479423c1626d2e8a7a3262f72f1a1579c29",
+      "dependency_pins": {
+        "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+        "proof-systems": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
+        "sp1": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1"
+      },
+      "retained_default": false,
+      "evidence_sha256": "32d3fde9c636a74ea76f735dcd65725a09818c8cde6adc1cf3df2e4def860784",
+      "validation": {
+        "native_core_and_runner": 214,
+        "receipt_native": 20,
+        "cpu_matrix_runs": 36,
+        "cpu_matrix_accepted": 15,
+        "cpu_matrix_guest_rejected": 21,
+        "no_std": true,
+        "fresh_sp1_proofs": false
+      }
     },
     {
       "id": "mizu-openvm-statement-digest",
-      "status": "prototype-awaiting-matched-cycles",
+      "status": "cpu-validated-optional-output",
       "document": "docs/optimizations/openvm-experiments.md",
       "owner": "o1js-to-zkvm",
-      "proof_generated": false
+      "proof_generated": false,
+      "evidence": "benchmarks/openvm-experiments-sp1-6.10.json",
+      "source_revision": "00d03479423c1626d2e8a7a3262f72f1a1579c29",
+      "dependency_pins": {
+        "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+        "proof-systems": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
+        "sp1": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1"
+      },
+      "retained_default": false,
+      "evidence_sha256": "32d3fde9c636a74ea76f735dcd65725a09818c8cde6adc1cf3df2e4def860784",
+      "validation": {
+        "native_core_and_runner": 214,
+        "receipt_native": 20,
+        "cpu_matrix_runs": 36,
+        "cpu_matrix_accepted": 15,
+        "cpu_matrix_guest_rejected": 21,
+        "no_std": true,
+        "fresh_sp1_proofs": false
+      }
     },
     {
       "id": "mizu-openvm-trace-accounting",
-      "status": "prototype-awaiting-matched-cycles",
+      "status": "cpu-replay-estimates-only",
       "document": "docs/optimizations/openvm-experiments.md",
       "owner": "o1js-to-zkvm",
-      "proof_generated": false
+      "proof_generated": false,
+      "evidence": "benchmarks/openvm-experiments-sp1-6.10.json",
+      "source_revision": "00d03479423c1626d2e8a7a3262f72f1a1579c29",
+      "dependency_pins": {
+        "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+        "proof-systems": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
+        "sp1": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1"
+      },
+      "retained_default": false,
+      "evidence_sha256": "32d3fde9c636a74ea76f735dcd65725a09818c8cde6adc1cf3df2e4def860784",
+      "validation": {
+        "native_core_and_runner": 214,
+        "receipt_native": 20,
+        "cpu_matrix_runs": 36,
+        "cpu_matrix_accepted": 15,
+        "cpu_matrix_guest_rejected": 21,
+        "no_std": true,
+        "fresh_sp1_proofs": false
+      }
     }
   ]
 }

@@ -64,3 +64,7 @@ Root-specific code stays in the o1js-to-zkvm module series. Current pins and
 ordered commits are in [the dependency lock](../../dependencies/lock.json).
 Historical evidence and current implementation are connected by this record,
 not by preserving the original experimental commit history.
+
+## OpenVM-inspired follow-up
+
+The [fused CIP prototype](openvm-experiments.md) removes 66 UInt256 calls versus the allocation candidate but adds 3,189 guest cycles and 1,005 units in the SP1 gas estimate. Keep the measured regression and raw data; do not select it from call counts alone.

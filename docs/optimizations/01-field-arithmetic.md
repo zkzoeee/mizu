@@ -72,3 +72,7 @@ Root-specific code stays in the o1js-to-zkvm module series. Current pins and
 ordered commits are in [the dependency lock](../../dependencies/lock.json).
 Historical evidence and current implementation are connected by this record,
 not by preserving the original experimental commit history.
+
+## OpenVM-inspired follow-up
+
+The opt-in [OpenVM-inspired experiments](openvm-experiments.md) evaluate stack cross-field encoding and fused CIP products using the existing algebra primitive. No algebra fork change was made; the simpler allocation variant beat fused CIP on cycles and the SP1 gas estimate.

@@ -52,11 +52,124 @@ accumulator and opening corruptions must halt unsuccessfully before any output.
 Compilation, native tests, CPU execution, replay/event estimates and runner RSS
 are separate evidence. None establishes fresh proof generation, complete proof
 verification, from-disk proof verification, CUDA cost or end-to-end proving time.
-Raw /usr/bin/time -l RSS includes the runner and JIT; it is not prover memory.
+Per-child wait4 resource accounting measures runner/JIT RSS; it is not prover memory.
+The initial time -l wrapper failed after successful control execution because an
+OS clockrate query was disallowed. Its raw result/log and original identity receipt
+are preserved outside the completed matrix; the replacement changes no guest or
+runner bytes.
 
 ## Results
 
-Pending matched execution. Prototype source commits: 7f9d257 (allocation/CIP),
-4fde221 (batch), 50eaf97 (digest), acbdce5 (measurement tools). The predecessor is
-142,650,295 cycles on the retained core checkpoint; fresh same-source controls
-will be used for attributing these experiments. No defaults have been changed.
+Measurements are in [the machine-readable matrix](../../benchmarks/openvm-experiments-sp1-6.10.json).
+All **36 frozen CPU runs** passed: **15 accepted** executions and **21 rejected**
+malformed-input executions. Each rejected guest halted unsuccessfully with no
+public output. All three trace replays matched their unprofiled cycles exactly.
+
+| Single-proof configuration | Cycles | Difference from fresh control |
+| --- | ---: | ---: |
+| Control | 142,638,298 | — |
+| Stack conversion / borrowed CIP | 142,553,240 | −85,058 (−0.0596%) |
+| Plus fused four-term CIP blocks | 142,556,429 | −81,869 (−0.0574%) |
+| Statement/VK digest output | 142,645,115 | +6,817 (+0.0048%), changed output ABI |
+
+The fused version uses 66 fewer UInt256 calls than the allocation variant,
+but costs 3,189 more guest cycles. It remains a prototype; fewer calls did not
+establish a faster guest. The allocation variant's saving is entirely in wrap
+preparation. All four compiled guests accepted the honest mainnet proof and
+rejected both accumulator/opening corruptions with unsuccessful halt and empty
+output. The digest guest also rejected a changed application statement.
+
+| Proofs | Per-proof accumulator control | Combined accumulator | Whole-guest cycle reduction |
+| --- | ---: | ---: | ---: |
+| 1 | 142,664,462 | 142,580,188 | Fallback; no mathematical batching saving |
+| 2 | 241,406,025 | 173,244,385 | 28.2353% |
+| 4 | 435,999,550 | 229,664,187 | 47.3247% |
+| 8 | 825,188,525 | 342,539,805 | 58.4895% (2.4090×) |
+
+At N=4, Vesta additions fall from 5,242,732 to 1,310,696, while UInt256 calls
+increase from 2,278,159 to 2,486,641. The accumulator stage falls from
+301,239,024 to 94,856,655 cycles. This is CPU execution and call-count evidence,
+not a measured proving-time improvement. The N=1 call counts are unchanged;
+its instruction difference reflects build/control-flow effects, not a removed MSM;
+no isolated arithmetic saving is claimed for this fallback.
+
+The fresh control differs by −11,997 cycles from the earlier 142,650,295 core
+checkpoint. That source/code-generation change is not credited to a new
+optimization. All candidate deltas above use fresh matching controls.
+
+Prototype source commits: 7f9d257 (allocation/CIP), 4fde221 (batch), 50eaf97
+(digest), acbdce5 (measurement tools), 92d711c (child resource accounting).
+Guest sources were frozen at 00d0347 with complete per-file hashes in each build
+receipt. The resource-accounting repair changes no guest or runner bytes.
+No retained defaults or dependency pins have changed.
+
+### Reporting corrections
+
+The original frozen build configs inherited the boolean ABI/expected-output
+metadata for the optional guests. Their selected features, binary and actual
+runner ABI/output identify the executed contracts; the summary records an
+`effective_guest_abi`. The original runner's legacy `proof_valid` field also
+interprets the first digest byte as a boolean. The authoritative `accepted`
+verdict already checks the exact expected 32-byte digest. Raw receipts remain
+unchanged; these metadata fields were corrected separately in 4dbab30 after the frozen
+matrix, without changing the verifier/guest algorithms. The generic benchmark
+now also passes the configured ABI, pins the fixture VK, clears inherited
+experiment flags, and captures untracked source plus example/tool/recipe inputs.
+The corrected digest run deliberately injected conflicting parent experiment
+flags and reproduced an identical guest ELF, the original exact digest and
+142,645,115 cycles, with correct ABI/validity reporting.
+Its build/result hashes and completion status are separate from the frozen matrix.
+
+## Trace and memory observations
+
+| Configuration | UInt256 rows | Total precompile rows | SP1 gas estimate |
+| --- | ---: | ---: | ---: |
+| Control | 533,878 | 2,543,030 | 533,365,470 |
+| Allocation | 533,784 | 2,542,936 | 533,304,347 |
+| Fused | 533,718 | 2,542,870 | 533,305,352 |
+
+All profiles replayed 117 chunks with one live trace buffer of 18,649,847 bytes.
+These are unpadded precompile rows and SP1's normalized gas model, not complete
+trace-cell counts, proof time or Ethereum gas. Fused saves 66 additional UInt256
+rows versus allocation, but its cycles and gas estimate are slightly worse.
+Allocation is the better measured single-proof candidate on both metrics.
+
+The eight-proof runner peaked at 338.17 MiB for the control and 339.33 MiB for
+the combined version. Its one-shot CPU execution wall times were 682.67 and
+136.32 seconds respectively. These describe the local runner and host arithmetic;
+there are no repetitions/spread or prover wall-time/RSS measurements. The cycle
+ratio is 2.4090×, distinct from the emulator's wall-time ratio.
+
+The combined batch's corrupted-accumulator checks at N=3 all cost about 104.1M
+cycles. The per-proof control rejects an invalid first member at 86.2M but an
+invalid last member at 241.4M. Batching trades early invalid-member rejection
+for shared honest-batch work; the guest remains bounded to eight members.
+
+## Validation and decision
+
+- **214 core/runner native tests:** the 213-test experimental suite plus a new
+  distinct-producer integration test. The latter uses real simplechain wrap0/1/2
+  proofs under one VK, all 40 retained settings and the three experimental flags.
+  It checks complete embedded-batch acceptance, corrupted challenges/openings in
+  every member, swapped commitments, a rehashed statement and another VK.
+- **20 receipt-example native tests** and an explicit no-std verifier check.
+- Six compiled experimental guest variants and the 36-run CPU matrix above.
+- The separate corrected digest/ambient-flag recheck passed; its immutable
+  build/result hashes are in the JSON post_validation section.
+- No fresh SP1 proof generation, proof verification/reload or CUDA run.
+
+Keep **allocation/borrowed CIP** as the small single-proof candidate; retain
+**fused CIP** as a measured cycle/gas regression against that candidate.
+The **combined accumulator** is the largest throughput candidate for multi-proof
+workloads, with the repeated-input timing limitation above. The **digest output**
+is a separate functional option with low measured overhead. All remain opt-in;
+`benchmarks/retained.json` and the three dependency pins are unchanged.
+
+Before promotion, run selected other producer fixtures through compiled candidate
+guests, use diverse real batch inputs for throughput measurements, and explicitly
+schedule the applicable fresh SP1 proof/complete-verifier gates. The native
+distinct-proof check adds correctness coverage; it does not turn the repeated
+mainnet timing workload into a diverse production benchmark.
+
+See also the [Miza validation review](miza-validation-review.md) for stronger
+comparison/proof-handoff gates and the separate pending runtime-AIR review.

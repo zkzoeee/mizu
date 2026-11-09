@@ -83,3 +83,7 @@ Root-specific code stays in the o1js-to-zkvm module series. Current pins and
 ordered commits are in [the dependency lock](../../dependencies/lock.json).
 Historical evidence and current implementation are connected by this record,
 not by preserving the original experimental commit history.
+
+## OpenVM-inspired follow-up
+
+The opt-in [combined-accumulator experiment](openvm-experiments.md) reuses the authenticated fixed Vesta tables across a transcript-weighted multi-proof equation. The eight-proof CPU workload measured 825,188,525 → 342,539,805 cycles. Inputs repeat one mainnet proof; native checks also cover three distinct same-key producer proofs. This is not a fresh SP1 proof benchmark.

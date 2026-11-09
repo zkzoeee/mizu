@@ -65,3 +65,7 @@ Root-specific code stays in the o1js-to-zkvm module series. Current pins and
 ordered commits are in [the dependency lock](../../dependencies/lock.json).
 Historical evidence and current implementation are connected by this record,
 not by preserving the original experimental commit history.
+
+## OpenVM-inspired follow-up
+
+The [OpenVM-inspired experiments](openvm-experiments.md) add optional borrowed/fused deferred CIP schedules, complete embedded batch verification, and a separate statement/VK digest output feature. Normal single-proof input/output and retained defaults are unchanged. These Pickles-specific changes stay in the root topic commits.
