@@ -70,7 +70,7 @@ fn main() -> Result<()> {
     let pasta = runner.pasta_syscall_counts();
     let actual = runner.into_public_values_stream();
     let accepted = failure.is_none() && exit == 0 && actual == expected && pasta == [0; 4];
-    let report = serde_json::json!({"mode":"cpu-operation-benchmark","operation":"mina-kimchi-poseidon-fp-fq","iterations_per_field":args.iterations,"elf_sha256":hex::encode(Sha256::digest(&elf)),"input_sha256":hex::encode(Sha256::digest(&input)),"cycles":cycles,"stage_cycles":stages,"uint256_mul_count":uint256,"pasta_syscall_counts":pasta,"guest_exit_code":exit,"accepted":accepted,"failure":failure,"public_values_len":actual.len(),"public_values_sha256":hex::encode(Sha256::digest(&actual)),"expected_public_values_sha256":hex::encode(Sha256::digest(&expected)),"elapsed_seconds":started.elapsed().as_secs_f64()});
+    let report = serde_json::json!({"mode":"cpu-operation-benchmark","proof_generated":false,"operation":"mina-kimchi-poseidon-fp-fq","iterations_per_field":args.iterations,"elf_sha256":hex::encode(Sha256::digest(&elf)),"input_sha256":hex::encode(Sha256::digest(&input)),"cycles":cycles,"stage_cycles":stages,"uint256_mul_count":uint256,"pasta_syscall_counts":pasta,"guest_exit_code":exit,"accepted":accepted,"failure":failure,"public_values_len":actual.len(),"public_values_sha256":hex::encode(Sha256::digest(&actual)),"expected_public_values_sha256":hex::encode(Sha256::digest(&expected)),"elapsed_seconds":started.elapsed().as_secs_f64()});
     if let Some(parent) = args.output.parent() {
         fs::create_dir_all(parent)?;
     }
