@@ -20,7 +20,7 @@ const GUEST_MEMORY_LIMIT_BYTES: u64 = 2 * 1024 * 1024 * 1024;
 const PROFILE_TRACE_CHUNK_ENTRIES: u64 = 1 << 20;
 
 #[derive(Clone, Copy, Debug, ValueEnum)]
-enum GuestAbi { Boolean, Settlement }
+enum GuestAbi { Boolean, Settlement, Batch, StatementDigest }
 
 #[derive(Parser, Debug)]
 #[command(about = "Execute an existing Pickles guest on CPU; never generate a proof")]
@@ -30,6 +30,14 @@ struct Args {
     /// Settlement is only for the optional example and its historical reference.
     #[arg(long, value_enum, default_value = "boolean")]
     guest_abi: GuestAbi,
+    /// Batch guest only. The optional guest rejects counts outside 1..=8.
+    #[arg(long, default_value_t = 1, value_parser = clap::value_parser!(u32).range(0..=9))]
+    batch_size: u32,
+    /// Which member receives a requested corruption (zero based).
+    #[arg(long, default_value_t = 0)]
+    corrupt_index: usize,
+    #[arg(long)]
+    corrupt_statement: bool,
     #[arg(long, default_value = "fixtures/mainnet-blockchain-snark")]
     fixture_dir: PathBuf,
     /// Mutate an accumulator challenge. The guest must reject this input.
@@ -54,6 +62,11 @@ fn main() -> Result<()> {
     let args = Args::parse();
     let elf = fs::read(&args.elf).with_context(|| format!("read {}", args.elf.display()))?;
     let (mut proof, vk_hash, fixture_hashes) = load_fixture(&args.fixture_dir)?;
+    let expected_statement_digest = pickles_verifier::attestation::statement_digest(&vk_hash, &proof.app_state);
+    let honest_proof_input = bincode::serialize(&proof)?;
+    if args.corrupt_statement {
+        *proof.app_state.first_mut().context("empty application statement")? += pickles_verifier::types::StepField::from(1u64);
+    }
     if args.corrupt_accumulator_challenge {
         let challenge = proof
             .raw_bulletproof_challenges
@@ -84,7 +97,18 @@ fn main() -> Result<()> {
         GUEST_MEMORY_LIMIT_BYTES,
         0,
     );
-    executor.with_input(&proof_input);
+    let mut stdin_items = Vec::new();
+    if matches!(args.guest_abi, GuestAbi::Batch) {
+        ensure!(args.corrupt_index < args.batch_size as usize || args.batch_size == 0, "corruption index outside batch");
+        stdin_items.push(bincode::serialize(&args.batch_size)?);
+        for i in 0..args.batch_size as usize {
+            stdin_items.push(if i == args.corrupt_index { proof_input.clone() } else { honest_proof_input.clone() });
+        }
+    } else {
+        ensure!(args.batch_size == 1 && args.corrupt_index == 0, "batch arguments require batch ABI");
+        stdin_items.push(proof_input.clone());
+    }
+    for item in &stdin_items { executor.with_input(item); }
     if matches!(args.guest_abi, GuestAbi::Settlement) { executor.with_input(&receipt_input); }
     let execution_error = loop {
         match executor.try_execute_chunk() {
@@ -121,6 +145,10 @@ fn main() -> Result<()> {
     } else {
         match args.guest_abi {
             GuestAbi::Boolean => validate_boolean_public_values(&public_values),
+            GuestAbi::Batch => validate_boolean_public_values(&public_values),
+            GuestAbi::StatementDigest => {
+                ensure_digest(&public_values, &expected_statement_digest)
+            },
             GuestAbi::Settlement => validate_public_values(&public_values, &vk_hash),
         }
     };
@@ -129,6 +157,11 @@ fn main() -> Result<()> {
     let mut report = json!({
         "schema_version": 2,
         "guest_abi": format!("{:?}", args.guest_abi).to_lowercase(),
+        "batch_size": args.batch_size,
+        "corrupt_index": args.corrupt_index,
+        "corrupt_statement": args.corrupt_statement,
+        "expected_statement_digest": hex::encode(expected_statement_digest),
+        "stdin_items_sha256": stdin_items.iter().map(|item| hex::encode(Sha256::digest(item))).collect::<Vec<_>>(),
         "mode": "cpu-execute-only",
         "sp1_executor_version": "6.10.0",
         "executor_implementation": "mizu-pasta-core-6.10.0",
@@ -188,7 +221,7 @@ fn main() -> Result<()> {
         );
     }
     ensure!(
-        !args.corrupt_accumulator_challenge && !args.corrupt_wrap_opening,
+        !args.corrupt_accumulator_challenge && !args.corrupt_wrap_opening && !args.corrupt_statement,
         "corrupted proof input was unexpectedly accepted"
     );
     Ok(())
@@ -352,6 +385,11 @@ fn load_fixture(directory: &Path) -> Result<(VerifiableProof, [u8; 32], serde_js
 
 fn validate_boolean_public_values(actual: &[u8]) -> Result<()> {
     ensure!(actual == [1], "guest must commit exactly boolean true");
+    Ok(())
+}
+
+fn ensure_digest(actual: &[u8], expected: &[u8; 32]) -> Result<()> {
+    ensure!(actual == expected, "guest must commit exactly the expected statement/VK digest");
     Ok(())
 }
 

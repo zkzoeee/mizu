@@ -48,7 +48,9 @@ def main():
     tools = tool_identity(builder, neutral)
     assert config['builder_commit'] in tools['sp1_builder'], 'builder commit differs from configuration'
     guest = config['guest'];elf=args.output/guest['binary']
-    timings.append(run([builder,'prove','build','--locked','--rustflags=-C,passes=lower-atomic','--warning-level','minimal','--packages',guest['package'],'--binaries',guest['binary'],'--output-directory',str(args.output)],env,args.output/'guest-build.log',ROOT/guest['directory']))
+    command = [builder,'prove','build','--locked','--rustflags=-C,passes=lower-atomic','--warning-level','minimal','--packages',guest['package'],'--binaries',guest['binary'],'--output-directory',str(args.output)]
+    if guest.get('features'): command += ['--features', ','.join(guest['features'])]
+    timings.append(run(command,env,args.output/'guest-build.log',ROOT/guest['directory']))
     assert snapshot() == source, 'source changed during build'
     receipt={'schema_version':1,'config':config,'tools':tools,'revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'source_sha256':source,'elf_sha256':sha(elf),'timings':timings,'proof_generated':False}
     if args.mode == 'run':
