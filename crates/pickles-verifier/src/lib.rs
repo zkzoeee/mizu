@@ -24,6 +24,7 @@ mod fixed_srs;
 mod fixed_pallas;
 mod canonical_coefficients;
 mod experimental_cip;
+mod accumulator_batch;
 mod vesta_glv;
 mod vesta_spikes;
 pub mod deferred;
@@ -105,9 +106,12 @@ pub(crate) fn verify_batch_with_index_digest_and_vesta(
     use types::WrapField;
 
     let generators = vesta_generators.unwrap_or_else(|| verifier.vesta_srs.g.as_slice());
-    if !proofs
-        .iter()
-        .all(|p| statement::check_app_state_binding(verifier, p)
+    if matches!(option_env!("MIZU_BATCH_ACCUMULATOR"), Some("1")) {
+        if !proofs.iter().all(|p| statement::check_app_state_binding(verifier, p))
+            || !accumulator_batch::check(verifier, proofs, generators, fixed_vesta, digest) {
+            return false;
+        }
+    } else if !proofs.iter().all(|p| statement::check_app_state_binding(verifier, p)
             && if let Some(table) = fixed_vesta {
                 accumulator_check_fixed(verifier, p, generators, table)
             } else {
@@ -218,6 +222,12 @@ fn batching_rng(
 /// std-gated `SRS::commit_non_hiding`.
 pub fn accumulator_check(verifier: &Verifier, proof: &VerifiableProof) -> bool {
     accumulator_check_with_generators(verifier, proof, &verifier.vesta_srs.g)
+}
+
+/// Experimental batch accumulator only; empty batches are rejected. Full
+/// verification still needs statement binding and the wrap proof checks.
+pub fn accumulator_check_batch(verifier: &Verifier, proofs: &[VerifiableProof]) -> bool {
+    accumulator_batch::check(verifier, proofs, &verifier.vesta_srs.g, None, None)
 }
 
 // Keep this MSM separate from the large batch verifier, as in the r75 ELF.
@@ -392,6 +402,37 @@ mod tests {
             .expect("conversion");
         let verifier = Verifier::new(wrap_vk, wrap_srs().clone(), vesta_srs().clone(), 1);
         (verifier, proof)
+    }
+
+    #[test]
+    fn experimental_batch_accepts_and_rejects_corruption_at_every_position() {
+        let (verifier, proof) = mainnet_proof();
+        assert!(!accumulator_check_batch(&verifier, &[]));
+        for n in [1, 2, 4, 8] {
+            assert!(accumulator_check_batch(&verifier, &vec![proof.clone(); n]));
+        }
+        for bad in 0..3 {
+            let mut batch = vec![proof.clone(); 3];
+            batch[bad].raw_bulletproof_challenges[0] += StepField::ONE;
+            assert!(!accumulator_check_batch(&verifier, &batch));
+            batch[bad] = proof.clone();
+            batch[bad].challenge_polynomial_commitment = Vesta::generator();
+            assert!(!accumulator_check_batch(&verifier, &batch));
+        }
+        let mut batch = vec![proof.clone(); 2];
+        let delta = Vesta::generator();
+        batch[0].challenge_polynomial_commitment = (proof.challenge_polynomial_commitment + delta).into_affine();
+        batch[1].challenge_polynomial_commitment = (proof.challenge_polynomial_commitment - delta).into_affine();
+        assert!(!accumulator_check_batch(&verifier, &batch), "opposite errors must not cancel");
+        let challenge = accumulator_batch::challenge(&verifier, &batch, None);
+        batch.swap(0, 1);
+        assert_ne!(challenge, accumulator_batch::challenge(&verifier, &batch, None));
+        assert!(!accumulator_check_batch(&verifier, &batch));
+        let mut short = Verifier::new(verifier.wrap_vk.clone(), wrap_srs().clone(),
+            Arc::new(VestaSrs::new(verifier.vesta_srs.g[..8].to_vec(), verifier.vesta_srs.h)), 1);
+        assert!(!accumulator_check_batch(&short, &[proof.clone(), proof.clone()]));
+        short.step_srs_length_log2 = usize::BITS as usize;
+        assert!(!accumulator_check_batch(&short, &[proof.clone(), proof]));
     }
 
     fn compat_proof() -> (Verifier, VerifiableProof) {

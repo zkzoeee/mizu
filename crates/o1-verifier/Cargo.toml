@@ -14,6 +14,7 @@ mina-curves = { workspace = true, default-features = false }
 
 [features]
 default = []
+batch = []
 # Routes Pasta Fp/Fq Montgomery multiplication through the SP1 zkVM
 # `sys_bigint` precompile. Activated by o1-verifier-host's build.rs during
 # the guest sub-build (`cargo build --features sp1` on o1-verifier).
@@ -30,5 +31,12 @@ sha2 = "0.10"
 [[bin]]
 name = "o1-verifier"
 path = "src/main.rs"
+test = false
+bench = false
+
+[[bin]]
+name = "o1-verifier-batch"
+path = "src/bin/batch.rs"
+required-features = ["batch"]
 test = false
 bench = false

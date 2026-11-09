@@ -435,15 +435,23 @@ impl EmbeddedVerifier {
     }
 
     pub fn verify(&self, proof: &crate::types::VerifiableProof) -> bool {
-        let rounds = proof.wrap_proof.proof.lr.len();
-        if rounds >= usize::BITS as usize
+        self.verify_batch(core::slice::from_ref(proof))
+    }
+
+    /// Optional multi-proof entry point over this immutable embedded key.
+    /// Select the experimental combined accumulator at build time; otherwise
+    /// the existing per-proof checks are the control.
+    pub fn verify_batch(&self, proofs: &[crate::types::VerifiableProof]) -> bool {
+        if proofs.is_empty() || proofs.iter().any(|proof| {
+            let rounds = proof.wrap_proof.proof.lr.len();
+            rounds >= usize::BITS as usize
             || (1usize << rounds) > self.verifier.wrap_vk.srs.g.len()
-        {
+        }) {
             return false;
         }
         crate::verify_batch_with_index_digest_and_vesta(
             &self.verifier,
-            core::slice::from_ref(proof),
+            proofs,
             Some(self.digest),
             self.vesta_generators,
             self.fixed_vesta.as_ref(),
