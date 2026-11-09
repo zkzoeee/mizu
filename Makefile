@@ -41,7 +41,7 @@ build-rust: ## Build the o1zkvm Rust binary (override VK_JSON for a different ba
 	cargo build --release -p o1-verifier-host $(if $(CARGO_FEATURES),--features $(CARGO_FEATURES))
 
 rust-unit-tests: ## Run pickles-verifier's std unit tests over the fixture matrix
-	cargo test --release -p pickles-verifier
+	CARGO_BUILD_JOBS=1 RAYON_NUM_THREADS=1 cargo test --profile native-test -p pickles-verifier -p cycle-runner -- --test-threads=1
 
 rust-e2e-tests: ## Run the full Rust+SP1 e2e against $(FIXTURE_DIR) (execute mode, no real proving)
 	./scripts/rust-e2e-test.sh
@@ -98,3 +98,9 @@ fetch-mainnet-fixture: ## Fetch a fresh mainnet blockchain-SNARK fixture (MINA_G
 	@[ -n "$$MINA_GRAPHQL_URI" ] || (echo "error: set MINA_GRAPHQL_URI (e.g. https://api.minascan.io/node/mainnet/v1/graphql)" >&2; exit 1)
 	mkdir -p "$(MAINNET_FIXTURE_DIR)"
 	nix develop $(MINA_DEVSHELL) -c bash -c 'cd mina && MINA_GRAPHQL_URI="$$MINA_GRAPHQL_URI" dune exec src/app/fetch_blockchain_fixture/fetch_blockchain_fixture.exe -- "$(MAINNET_FIXTURE_DIR)"'
+
+bootstrap: ## Restore pinned dependency forks
+	python3 dependencies/bootstrap.py
+
+benchmark: ## Build and measure the retained boolean verifier on CPU
+	python3 scripts/benchmark.py run --output benchmarks/runs/$$(date +%Y%m%dT%H%M%S)

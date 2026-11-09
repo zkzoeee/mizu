@@ -1,2 +1,10 @@
-target/
-trace.json
+**/target/
+**/node_modules/
+.env
+.env.*
+.DS_Store
+/build/
+/benchmarks/runs/
+*.profraw
+*.profdata
+__pycache__/

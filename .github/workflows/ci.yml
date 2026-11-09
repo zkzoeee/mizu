@@ -1,88 +1,22 @@
-name: CI
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
+name: Verifier checks
+on: [push, pull_request, workflow_dispatch]
+env:
+  CARGO_BUILD_JOBS: 1
+  RAYON_NUM_THREADS: 1
 jobs:
-  lint:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: "1.92.0"
-          components: clippy, rustfmt
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@1.92.0
       - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "cargo-workspace"
-      - name: Cache SP1 + protoc
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.sp1
-            ~/.rustup/toolchains/succinct
-            ~/.local/bin/protoc
-            ~/.local/include/google
-          key: sp1-v6.0.2-protoc-27.3-${{ runner.os }}
-      - name: Install SP1 toolchain and protoc
-        run: make install
-      - name: Add SP1 and protoc to PATH
+      - name: Restore pinned dependency forks
+        run: python3 dependencies/bootstrap.py
+      - name: Native tests and no-std check
         run: |
-          echo "$HOME/.sp1/bin" >> $GITHUB_PATH
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-      - run: make lint-check
-
-  rust-unit-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: "1.92.0"
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "cargo-workspace"
-      - run: make rust-unit-tests
-
-  rust-e2e-test:
-    runs-on: large-runner-pu
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: "1.92.0"
-
-      - uses: Swatinem/rust-cache@v2
-        with:
-          shared-key: "cargo-workspace"
-
-      - name: Cache SP1 + protoc
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.sp1
-            ~/.rustup/toolchains/succinct
-            ~/.local/bin/protoc
-            ~/.local/include/google
-          key: sp1-v6.0.2-protoc-27.3-${{ runner.os }}
-
-      - name: Install SP1 toolchain and protoc
-        run: make install
-
-      - name: Add SP1 and protoc to PATH
-        run: |
-          echo "$HOME/.sp1/bin" >> $GITHUB_PATH
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - run: make rust-e2e-tests
+          cargo test --profile native-test --locked -p pickles-verifier -p cycle-runner -- --test-threads=1
+          cargo check --profile native-test --locked -p pickles-verifier --no-default-features
+      - name: Receipt example tests
+        run: cargo test --profile native-test --locked --manifest-path examples/settlement/Cargo.toml --workspace --lib -- --test-threads=1

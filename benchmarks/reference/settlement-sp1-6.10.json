@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "historical-settlement-reference",
+  "date": "2026-11-09",
+  "guest_abi": "settlement (577 bytes)",
+  "cycles": {
+    "sp1_6_1": 142692781,
+    "sp1_6_10": 142692323,
+    "delta": -458,
+    "delta_percent": -0.00032096928575524786,
+    "metric": "MinimalExecutorRunner::global_clk",
+    "fresh_execution": true,
+    "same_fixture": true,
+    "same_optimization_settings": true,
+    "same_guest_compiler": true
+  },
+  "public_values_sha256": "e28098de97d14ccdf98aa05896114825a6cf004a8868d42976f4634c4904ef50",
+  "pasta_syscall_counts": {
+    "pallas_add": 697988,
+    "pallas_double": 369,
+    "vesta_add": 1310683,
+    "vesta_double": 112
+  },
+  "uint256_mul_count": 533878,
+  "elf_sha256": "7e6edf51f38319aa91e1c8ef2752a443653bc485327f0e5bb820afc40ed89707",
+  "runner_sha256": "0af1ce626c151b4fee0c7e9e003da4a5298c4f32c07f829d7cc0f661416a2a23",
+  "execution_only": true,
+  "real_proof_generated": false,
+  "scope": "Measured before layout consolidation. The main verifier now uses the upstream boolean ABI; this is not its cycle baseline. Full raw evidence is in the external consolidation archive."
+}
