@@ -80,3 +80,17 @@ workspace was read only. This records a snapshot; it does not monitor r127.
 The 125 records preserve selected evidence, not a full archive of every log or
 variant. A SHA-256 identifies the captured working-copy file, including
 uncommitted content; the original repository's HEAD alone is insufficient.
+
+## Zakura and Ragu follow-up (2026-11-10)
+
+Techniques adapted from Zakura Common's Pasta work, with no code or dependency
+imported, are recorded in their areas: batched witness inversion, a fixed-limb
+executor path and leaner field-op population in
+[SP1 runtime](06-sp1-runtime-and-proving.md#mizu-zakura-host-witness-batched-inversion-fixed-limb-executor-leaner-field-ops)
+(single-threaded record generation −49.3%, bit-identical witness), the opt-in
+deferred MDS reduction in [Poseidon](04-poseidon.md) (+2.50% cycles, −1.20% main
+cells), and a batch-transcript review in the
+[experiment register](openvm-experiments.md). Ragu's verification approach is
+adapted in the [Pasta AIR verification plan](../pasta-air-verification-plan.md),
+whose first fuzzing layer is recorded in [measurement](07-measurement-and-tooling.md).
+Evidence: [summary JSON](../../benchmarks/zakura-ragu-experiments-sp1-6.10.json).

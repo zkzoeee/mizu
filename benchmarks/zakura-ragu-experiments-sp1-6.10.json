@@ -1,0 +1,181 @@
+{
+ "schema_version": 1,
+ "name": "mizu-zakura-ragu-experiments",
+ "date": "2026-11-10",
+ "sp1_version": "6.10.0",
+ "proof_generated": false,
+ "gpu_used": false,
+ "host": "Apple M2 Pro, 16 GB, RAYON_NUM_THREADS=1, one observation per arm (no spread)",
+ "guest": {
+  "elf": "benchmarks/.dev-cache/builds/43fbdb05.../o1-verifier (retained recipe, mainnet VK)",
+  "elf_sha256": "ac458051dd5656ad1f93ed70ca16c738c14a3a46a5aff37c4ee1f9769e10c110",
+  "proof_input_sha256": "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+  "cycles": 142638298,
+  "records": 148
+ },
+ "host_witness_and_executor": {
+  "mode": "pasta-precompile-proof-6-10 --mode r5-cycles --time-witness, PASTA_WITNESS_DIGEST=1",
+  "opts": {
+   "SHARD_SIZE": 16777216,
+   "ELEMENT_THRESHOLD": 402653184,
+   "HEIGHT_THRESHOLD": 4194304,
+   "MINIMAL_TRACE_CHUNK_THRESHOLD": 16777216,
+   "TRACE_CHUNK_SLOTS": 1,
+   "MEMORY_LIMIT": 2147483648,
+   "global_dependencies_opt": true,
+   "routing": "default"
+  },
+  "identity_gates_all_arms": {
+   "guest_cycles": true,
+   "records": true,
+   "precompile_events": true,
+   "uint256_events": true,
+   "witness_digests_bit_identical": true
+  },
+  "control": {
+   "record_generation_seconds": 347.2,
+   "pasta_dependency_seconds": 113.7,
+   "pasta_trace_seconds": 97.98,
+   "streaming_total_seconds": 558.88
+  },
+  "candidate_batch_inversion_and_fixed_limb_executor": {
+   "record_generation_seconds": 184.14,
+   "pasta_dependency_seconds": 62.61,
+   "pasta_trace_seconds": 47.9,
+   "streaming_total_seconds": 294.65
+  },
+  "candidate_final_with_divrem_and_discarded_trace_lookups": {
+   "record_generation_seconds": 176.04,
+   "pasta_dependency_seconds": 55.74,
+   "pasta_trace_seconds": 34.65,
+   "streaming_total_seconds": 266.43
+  },
+  "attribution_note": "record_generation includes one in-record Pasta dependency pass; executor saving is derived as record-generation delta minus the separately timed dependency delta, not measured in isolation",
+  "witness_digests": {
+   "pallas-add": {
+    "dependencies_sha256": "6daaf5d234aaa375c67fd69ca0b25a499a8fbafd5cfacba75f98930836deafee",
+    "lookup_entries": 1849091,
+    "trace_sha256": "593423d36bac36210dd14a62c4de8f0357ef384f620fa6c918279dbd611e8c40",
+    "trace_values": 1116178752
+   },
+   "pallas-double": {
+    "dependencies_sha256": "215f206402280e870c490e61c4cd02815ed47b0d31234e8cb2691035854f0112",
+    "lookup_entries": 77578,
+    "trace_sha256": "11c764fe9d7a998d2a87fbb8a921a13a0395d9e9f147404342f01ea002b9258d",
+    "trace_values": 661856
+   },
+   "vesta-add": {
+    "dependencies_sha256": "248d354d758c4edd9356167a38af25b3efd29c6a77ae5cdca7e4d2107abe0af7",
+    "lookup_entries": 3122574,
+    "trace_sha256": "0e35bd754b337d7fdf1ce76320956fc19b78c9c1ff68c41acdad13adc7d7d1ff",
+    "trace_values": 2095892448
+   },
+   "vesta-double": {
+    "dependencies_sha256": "5b2f5a2fdcc010681dfa141c144718986ff8f71bb5354dba663d397e6f1d398b",
+    "lookup_entries": 31044,
+    "trace_sha256": "7eeea257fc5cf89d60d7a6644df13006a1e59ac84036a4bf6a44e4dc834b66fa",
+    "trace_values": 254560
+   }
+  },
+  "executor_only_cycle_runner_seconds": {
+   "previous_fork_runner_3c590a4d19": [
+    125.0,
+    126.0
+   ],
+   "new_fork_runner_9ebdb68c37": [
+    10.6
+   ],
+   "note": "cycle-runner wall time for the retained mainnet guest (142,638,298 cycles, accepted); runners differ in fork source; one host, no spread beyond the two old runs"
+  }
+ },
+ "deferred_mds": {
+  "flag": "MIZU_POSEIDON_DEFERRED_MDS=1",
+  "default": false,
+  "operation_guest": {
+   "control_cycles": 1565472,
+   "candidate_cycles": 2076518,
+   "uint256_mul": [
+    37506,
+    26946
+   ],
+   "oracle_checked": true
+  },
+  "full_guest": {
+   "control_cycles": 142638298,
+   "candidate_cycles": 146204861,
+   "delta_cycles": 3566563,
+   "uint256_mul": [
+    533878,
+    458308
+   ],
+   "accepted": true,
+   "corrupted_accumulator_rejected": true
+  },
+  "trace_default_routing": {
+   "main_cells": [
+    43922703280,
+    43395469248
+   ],
+   "main_shape_area": [
+    44067454976,
+    43545264128
+   ],
+   "global_interaction_events": [
+    136299445,
+    133568754
+   ],
+   "preprocessed_cells": [
+    706838528,
+    688324608
+   ],
+   "memory_initialize_events": [
+    3205102,
+    3205105
+   ],
+   "memory_finalize_events": [
+    6443307,
+    6443455
+   ]
+  },
+  "trace_note": "Stored cells and shape area are record metrics, not proving time. Under retain-UInt routing the mulmod calls already deduplicate in CPU shards, so this saving is expected to shrink; not measured."
+ },
+ "fuzz": {
+  "seeds": {
+   "0x5eed0001": 32,
+   "0x5eed0002": 64,
+   "0x5eed0003": 64
+  },
+  "operations_checked": 544,
+  "surviving_columns": 0,
+  "degenerate_parity": true
+ },
+ "artifacts_local": "benchmarks/runs/zakura-host-witness (gitignored)",
+ "artifact_sha256": {
+  "binaries.sha256": "9c1962f3e2de88c6f8a7190d58e9dc32992e18649786cf09ffd5cfa1d3a0ae9c",
+  "compare_r5.py": "2cb628b8bdf5d6e44b3ccecae9f9e8efae8a1b7362507a980ecb895f0c831e9d",
+  "fuzz-0x5eed0002.json": "2a621ec99e7cd17f0a31ee312154515af8ccf425b64d2775c0f4248c646f767f",
+  "fuzz-0x5eed0003.json": "dbc37423c10976a846d2435a4021417ae9299d115afe83aa3b067416178c4108",
+  "fuzz-c3-seed1.json": "1a8b34ac3715ebab9051f46f68cc13205f2773531888c2e02fb2e99e6ab970a3",
+  "fuzz-seed1.json": "f63ae230c6230ecbccb3e09389ae965d7e6f4163e039ebe31dd994b253a6687b",
+  "pasta_arith.rs": "d62fb89e1fbf4d07a28e46d60829978e30ef36d5dad98aadfc0ec517d998c1fa",
+  "r5-candidate-batch-fixedlimb.json": "d901f1fe69f65338d61b73be4403c4ef462f9ecc2a0e7611bdff3c0f50ba1930",
+  "r5-candidate-final.json": "66af22b15905e09cf7d083b9d99c66aa7c7bb625fd5483ae6701ccaae4da2b39",
+  "r5-candidate.log": "d3ddb854161c9ff43659489841643b3fb47b033e8b72fc87fb7269e36ba62f27",
+  "r5-candidate3.log": "6d117eba6ba60a94e99fba6bc2fdf9214659d6727610724775195173359764cc",
+  "r5-control.json": "19cd52671a9938b99cb8d4c2ab46172d04ad3605d709f9249d07eee0e1b26d80",
+  "r5-control.log": "a3c596e1de7b9792c98f5516479c90c20aac4f0f617496d060d8ca19441cca77",
+  "sp1-fork-candidate-before-divrem.patch": "2b4201658e0c100a3eb80b082785ecd7c84b1e307ed4a3ac6922b871bb9f7159",
+  "sp1-fork-final.patch": "93744a64600bc81717f35553d1c675bc462f7cad631e893b556359a574c1a5f6",
+  "trace-deferred-mds-candidate.json": "bc136606adf16dfa17a4cdd7b1a4ca46b0fed3fd30ad7785584bb1e8b541607f",
+  "trace-deferred-mds-control.json": "db1d8020a747a116e5edf5f0fa61870b2f75d8c5d1cad467756f154e99e0c417"
+ },
+ "fork_commits": {
+  "sp1": [
+   "e0b57de84 Batch Weierstrass add witness inversions and trim field-op population",
+   "b2c2b02d5 Run Pallas and Vesta executor operations on fixed-limb arithmetic"
+  ],
+  "proof-systems": [
+   "8d691e991 Add an opt-in deferred-reduction Poseidon MDS row"
+  ]
+ }
+}

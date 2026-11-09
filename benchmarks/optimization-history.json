@@ -21128,6 +21128,106 @@
         "no_std": true,
         "fresh_sp1_proofs": false
       }
+    },
+    {
+      "owner": "sp1",
+      "proof_generated": false,
+      "evidence": "benchmarks/zakura-ragu-experiments-sp1-6.10.json",
+      "source_revision": "4fc2699 (root) with the pinned forks",
+      "dependency_pins": {
+        "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+        "proof-systems": "8d691e9918a1d9c5126f802fd4fc410c9c5f85b3",
+        "sp1": "b2c2b02d5596ab5e07f2edb9a198050df01e67be"
+      },
+      "evidence_sha256": "df4bdcb21fdc641ef451951e44d27fe8285388e5c6c646df3c8de634f3e50e03",
+      "id": "mizu-zakura-host-witness",
+      "status": "retained-host-time-improvement",
+      "document": "docs/optimizations/06-sp1-runtime-and-proving.md",
+      "retained_default": true,
+      "validation": {
+        "witness_digests_bit_identical": true,
+        "harness_differential_tests": 3,
+        "fuzz_seeds": 3,
+        "guest_cycles_unchanged": true,
+        "fresh_sp1_proofs": false,
+        "single_thread_streaming_seconds": [
+          558.88,
+          266.43
+        ],
+        "executor_only_seconds": [
+          125.5,
+          10.6
+        ]
+      }
+    },
+    {
+      "owner": "proof-systems",
+      "proof_generated": false,
+      "evidence": "benchmarks/zakura-ragu-experiments-sp1-6.10.json",
+      "source_revision": "4fc2699 (root) with the pinned forks",
+      "dependency_pins": {
+        "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+        "proof-systems": "8d691e9918a1d9c5126f802fd4fc410c9c5f85b3",
+        "sp1": "b2c2b02d5596ab5e07f2edb9a198050df01e67be"
+      },
+      "evidence_sha256": "df4bdcb21fdc641ef451951e44d27fe8285388e5c6c646df3c8de634f3e50e03",
+      "id": "mizu-poseidon-deferred-mds",
+      "status": "measured-opt-in-trace-volume-candidate",
+      "document": "docs/optimizations/04-poseidon.md",
+      "retained_default": false,
+      "validation": {
+        "native_tests": 6,
+        "no_std": true,
+        "operation_oracle": true,
+        "full_guest_accepted": true,
+        "corrupted_accumulator_rejected": true,
+        "cycles_delta": 3566563,
+        "main_cells_delta": -527234032,
+        "fresh_sp1_proofs": false
+      }
+    },
+    {
+      "owner": "o1js-to-zkvm",
+      "proof_generated": false,
+      "evidence": "benchmarks/zakura-ragu-experiments-sp1-6.10.json",
+      "source_revision": "4fc2699 (root) with the pinned forks",
+      "dependency_pins": {
+        "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+        "proof-systems": "8d691e9918a1d9c5126f802fd4fc410c9c5f85b3",
+        "sp1": "b2c2b02d5596ab5e07f2edb9a198050df01e67be"
+      },
+      "evidence_sha256": "df4bdcb21fdc641ef451951e44d27fe8285388e5c6c646df3c8de634f3e50e03",
+      "id": "mizu-zakura-batch-review",
+      "status": "validation-only",
+      "document": "docs/optimizations/openvm-experiments.md",
+      "retained_default": false,
+      "validation": {
+        "native_tests": 2,
+        "no_std": true,
+        "open_recommendation": "bind a build-time step-SRS digest into the batch challenge (transcript v2)"
+      }
+    },
+    {
+      "owner": "o1js-to-zkvm",
+      "proof_generated": false,
+      "evidence": "benchmarks/zakura-ragu-experiments-sp1-6.10.json",
+      "source_revision": "4fc2699 (root) with the pinned forks",
+      "dependency_pins": {
+        "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+        "proof-systems": "8d691e9918a1d9c5126f802fd4fc410c9c5f85b3",
+        "sp1": "b2c2b02d5596ab5e07f2edb9a198050df01e67be"
+      },
+      "evidence_sha256": "df4bdcb21fdc641ef451951e44d27fe8285388e5c6c646df3c8de634f3e50e03",
+      "id": "mizu-pasta-fuzz",
+      "status": "validation-tooling-retained",
+      "document": "docs/optimizations/07-measurement-and-tooling.md",
+      "retained_default": false,
+      "validation": {
+        "seeds": 3,
+        "operations": 544,
+        "surviving_columns": 0,
+        "degenerate_parity": true
+      }
     }
   ],
   "mizu_workflows": [

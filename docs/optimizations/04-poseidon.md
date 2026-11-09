@@ -63,3 +63,40 @@ Root-specific code stays in the o1js-to-zkvm module series. Current pins and
 ordered commits are in [the dependency lock](../../dependencies/lock.json).
 Historical evidence and current implementation are connected by this record,
 not by preserving the original experimental commit history.
+
+## mizu-poseidon-deferred-mds: one reduction per MDS row
+
+- **Status:** opt-in measured candidate, proof-systems fork topic `8d691e991`;
+  not in the retained recipe.
+- **Area and owner:** proof-systems fork,
+  `curves/src/pasta/canonical_words.rs` (`sum3_prepared_products_deferred`) and
+  `poseidon/src/canonical.rs`; recipes `benchmarks/dev/deferred-mds.json` and
+  `poseidon-deferred-mds.json`.
+- **Predecessors:** r69/r70 prepared canonical Poseidon; r110 modeled the same
+  75,570-call reduction with a dedicated AIR. Idea adapted from Zakura's
+  deferred Montgomery reduction for inner products.
+- **Mechanism:** each MDS row's three products accumulate unreduced as a
+  512-bit value through `UINT256_MUL_CARRY`, which SP1 keeps in CPU shards by
+  default, and reduce once with a single `UINT256_MUL` by `2^256 mod p`.
+  Bounds are in the function's comment.
+- **Selection:** `MIZU_POSEIDON_DEFERRED_MDS=1` at guest build time. Default off.
+- **Result:**
+
+| Measurement | Control | Candidate | Change |
+| --- | ---: | ---: | ---: |
+| Poseidon operation guest cycles (32 permutations) | 1,565,472 | 2,076,518 | +32.6% |
+| Full guest cycles | 142,638,298 | 146,204,861 | +2.50% |
+| Full guest `UINT256_MUL` calls | 533,878 | 458,308 | −75,570 |
+| Main cells, default routing | 43,922,703,280 | 43,395,469,248 | −1.20% |
+| Global interaction events | 136,299,445 | 133,568,754 | −2.00% |
+
+- **Correctness evidence:** six native tests, including every Poseidon round on
+  both fields against Mina's permutation and an edge-value test at `p − 1`;
+  no-std; the operation guest's outputs against the independent integer
+  oracle; the full guest accepts the mainnet proof and rejects a corrupted
+  accumulator challenge (guest exit 1, no output).
+- **Decision and limits:** the first change in this record that trades cycles
+  for trace volume deliberately. Keep opt-in. Stored cells are not proving
+  time. Under retain-UInt routing the removed calls already deduplicate in CPU
+  shards, so the saving should shrink; that is unmeasured. Promotion needs a
+  real proof comparison on the production routing.

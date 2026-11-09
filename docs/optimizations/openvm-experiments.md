@@ -173,3 +173,27 @@ mainnet timing workload into a diverse production benchmark.
 
 See also the [Miza validation review](miza-validation-review.md) for stronger
 comparison/proof-handoff gates and the separate pending runtime-AIR review.
+
+## Soundness review against Zakura's prepared zero-check rules
+
+Reviewed 2026-11-10 (`mizu-zakura-batch-review`): the combined accumulator's
+challenge in `accumulator_batch.rs` checked against the rules Zakura Common
+documents for its batched fixed-base zero checks (`pasta_curves/src/glv/zero.rs`):
+
+| Rule | Combined accumulator | Evidence |
+| --- | --- | --- |
+| Challenge derived only after every equation is fixed | Yes: Blake2s over each member's raw challenges and commitment, in order, length-prefixed | Source; new binding test |
+| Challenge binds every input that defines an equation | Count, SRS size, VK digest, each challenge vector and commitment | `experimental_batch_challenge_binds_every_transcript_input` |
+| Challenge binds the prepared bases' identity | **No.** The Vesta bases and fixed table are not hashed | Source |
+| Zero challenge excluded | Yes, by counter rejection | Same test |
+| Prepared tables never deserialized from untrusted input | Yes: build-derived, embedded, bound to the SRS bytes | Existing embedded-setup tests |
+| Soundness error stated | Combination of `n` equations: at most `(n - 1)` times the largest challenge-value probability, about `n * 2^-254` | Arithmetic |
+
+The one gap is defense in depth, not an attack. The bases are program-fixed
+before any proof exists, and a caller who controlled the bases would control
+verification anyway. Zakura binds them so that one prepared check can never be
+reused with different bases; binding a build-time digest of the step SRS into
+the transcript would do the same here at no runtime hashing cost. That changes
+the experimental transcript (`v1` to `v2`), so it is recorded as a
+recommendation rather than made unasked. Early rejection of an invalid first
+member is lost under batching, as already noted above.

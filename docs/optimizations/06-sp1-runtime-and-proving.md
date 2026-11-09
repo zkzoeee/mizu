@@ -70,3 +70,68 @@ Root-specific code stays in the o1js-to-zkvm module series. Current pins and
 ordered commits are in [the dependency lock](../../dependencies/lock.json).
 Historical evidence and current implementation are connected by this record,
 not by preserving the original experimental commit history.
+
+## mizu-zakura-host-witness: batched inversion, fixed-limb executor, leaner field ops
+
+- **Status:** retained host-time improvement, pinned as SP1 fork topics
+  `e0b57de84` (witness) and `b2c2b02d5` (executor). No guest-cycle change by
+  construction.
+- **Area and owner:** SP1 fork. `crates/core/machine/src/operations/field/field_op.rs`
+  (`mod_inverse`, `batch_mod_inverse`, one `div_rem`),
+  `crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_add.rs`
+  (per-chunk batch inversion, discarded trace-pass lookups),
+  `crates/curves/src/weierstrass/pasta_arith.rs` (new) and `mod.rs`
+  (Pallas/Vesta `EllipticCurve` on the fixed-limb path).
+- **Predecessors:** r12 inverse reuse (retained) and optional GMP inversion
+  (off). Techniques adapted from Zakura Common's Pasta work: batch inversion
+  (Montgomery's trick), fixed four-limb Montgomery arithmetic, and a
+  variable-time extended-Euclid inverse. No code or dependency was imported.
+- **Mechanism:**
+  1. Witness generation populates every addition twice per shard (dependencies,
+     then trace), each needing `1 / (q.x - p.x)` by Fermat exponentiation. Rows
+     are now inverted per chunk with one exponentiation plus three
+     multiplications per row. The `inverse_check` and `slope` columns are filled
+     through the existing bit-identical `populate_div_with_inverse`.
+  2. The executor's Pasta add and double ran the generic big-integer formulas
+     with a square-and-multiply inversion. Canonical, distinct operands now run
+     on stack Montgomery arithmetic with a binary extended-Euclid inverse. Every
+     other input keeps the generic path, panics included.
+  3. Field-op population computes `(carry, result)` with one `div_rem` instead
+     of `%`, `-` and `/`, and the add chip's trace pass discards the byte
+     lookups that the dependency pass already records.
+- **Selection:** always on in the fork; no flag. Doubling witnesses keep the
+  per-row path: 481 per proof cannot move the total.
+- **Control/candidate:** `pasta-precompile-proof-6-10 --mode r5-cycles
+  --time-witness` with `PASTA_WITNESS_DIGEST=1`, retained mainnet ELF, default
+  routing, production shard thresholds, 2 GiB memory limit,
+  `RAYON_NUM_THREADS=1`, Apple M2 Pro. Harness code identical across arms;
+  control built from the stashed fork. One observation per arm.
+- **Result (seconds, single thread):**
+
+| Phase | Control | Candidate | Change |
+| --- | ---: | ---: | ---: |
+| Record generation (execute, trace, dependencies) | 347.20 | 176.04 | −49.3% |
+| Pasta dependency generation (separately timed) | 113.70 | 55.74 | −51.0% |
+| Pasta trace generation (separately timed) | 97.98 | 34.65 | −64.6% |
+| Total streaming run | 558.88 | 266.43 | −52.3% |
+
+  Of the record-generation saving, about 51 s is the batched inversion inside
+  the in-record dependency pass and about 112 s the executor path, derived from
+  the separately timed dependency delta. Executor-only runs agree: the
+  `cycle-runner` execution of the same mainnet guest took 125.0 and 126.0 s
+  with the previous fork and 10.6 s with this one (one run, same cycles and
+  output). Pasta curve arithmetic was most of the serial executor's time.
+- **Correctness evidence:** cycles (142,638,298), records (148), every precompile
+  and UInt256 count, and SHA-256 digests of every Pasta chip trace and its
+  sorted byte lookups across the whole workload are identical between control
+  and candidate. Harness tests compare 600 batched add rows and lookups with
+  row-by-row population, batch inverses with single inversions (zeros
+  included), and the executor path with the generic path and the integer
+  reference. `pasta-fuzz` passed three seeds (see the measurement record).
+- **Validation scope:** CPU execution, native and harness tests only. No fresh
+  proof, no CUDA run, and no wall-clock proof measurement. The GPU pipeline is
+  executor- and CPU-tracegen-paced (r120/r124/r125), so these phases are the
+  ones that pace it, but the proof-time effect is unmeasured.
+- **Decision and limits:** keep. Run the applicable fresh proof gate before
+  claiming any proving-time change. Evidence:
+  [summary](../../benchmarks/zakura-ragu-experiments-sp1-6.10.json).

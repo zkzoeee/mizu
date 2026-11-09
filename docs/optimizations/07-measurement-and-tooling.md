@@ -118,3 +118,31 @@ matrices and completed cryptographic verification. No dependency code was ported
   refresh the pinned builder and recipes deliberately. Do not import historical
   SP1 6.1 manifests, application code or Miza's unproved runtime into this loop.
   The [development guide](../development-loop.md) documents commands and scope.
+
+## mizu-pasta-fuzz: differential fuzzing of the Pasta precompiles
+
+- **Status:** validation tooling, retained. No performance claim.
+- **Area and owner:** `tools/pasta-proof/src/main.rs`, mode `pasta-fuzz`; tests
+  in `batch_inversion_tests`.
+- **Mechanism:** three layers against the harness's independent integer
+  reference (`ref_add`, `ref_double`): executor curve operations against the
+  generic formulas, including degenerate and noncanonical inputs that must
+  behave identically on both paths, panics included; random operands through a
+  real program, checking every executor result, every witness row's `x3` and
+  `y3`, and the AIR on honest rows; and a sweep that perturbs every column of
+  an honest row and evaluates the chip AIR with `debug_constraints`.
+- **Selection:** `--mode pasta-fuzz --output DIR`, seeded by `PASTA_FUZZ_SEED`
+  and sized by `PASTA_FUZZ_ITERS`. The seed is printed and recorded.
+- **Result:** seeds `0x5eed0001` (32 iterations), `0x5eed0002` and
+  `0x5eed0003` (64) all passed: 544 operations, zero surviving columns in all
+  four chips, degenerate-input parity on both curves.
+- **Limits:** algebraic constraints only; interactions are not evaluated, and a
+  single-column sweep cannot find coordinated multi-column forgeries. The plan
+  for lookup-aware mutation and Lean proofs is in
+  [the verification plan](../pasta-air-verification-plan.md).
+
+The same mode also extends `r5-cycles --time-witness`: it now times Pasta
+dependency and trace generation separately, and with `PASTA_WITNESS_DIGEST=1`
+it digests every Pasta chip trace and its sorted byte lookups over the whole
+workload. Equal digests across two builds mean the witness is bit-identical
+for every real addition, not just for the one-event `witness-digest` fixtures.
