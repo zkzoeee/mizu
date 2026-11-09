@@ -29,7 +29,8 @@ sp1-curves = "=6.10.0"
 sp1-derive = "=6.10.0"
 sp1-hypercube = "=6.10.0"
 sp1-primitives = "=6.10.0"
-tokio = { version = "1", features = ["rt", "rt-multi-thread", "sync", "time"] }
+futures = "0.3"
+tokio = { version = "1", features = ["macros", "rt", "rt-multi-thread", "sync", "time"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # CUDA proving. Optional, and off by default: these never build on the

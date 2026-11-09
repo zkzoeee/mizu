@@ -954,6 +954,7 @@ pub fn run_selftest(output: &Path) -> Result<()> {
         "complete_record_stream",
     )?);
     let unknown = StreamedExecutionSummary {
+            profile: Default::default(),
         cycles: summary.cycles,
         exit_code: None,
         public_values: None,
@@ -980,6 +981,7 @@ pub fn run_selftest(output: &Path) -> Result<()> {
         "successful_guest_exit",
     )?);
     let fake = |bytes: Vec<u8>, cycles: u64| StreamedExecutionSummary {
+            profile: Default::default(),
         cycles,
         public_values: Some(bytes),
         exit_code: Some(0),
@@ -1187,6 +1189,7 @@ mod tests {
     fn outcome_gates_reject_cap_exit_output_and_cycle_changes() {
         let expected = fixture_expectation(100);
         let good = || StreamedExecutionSummary {
+            profile: Default::default(),
             cycles: 100,
             exit_code: Some(0),
             public_values: Some(3u64.to_le_bytes().to_vec()),

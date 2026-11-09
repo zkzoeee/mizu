@@ -59,6 +59,7 @@ use strum::IntoEnumIterator;
 
 #[cfg(feature = "cuda")]
 mod gpu;
+mod pipeline;
 
 type Air = RiscvAir<SP1Field>;
 type Cpu = CpuShardProver<SP1GlobalContext, SP1InnerPcs, SP1InnerPcsProver, Air>;
@@ -2571,13 +2572,21 @@ async fn run_r5_cycles(
             .then(|| OPS.iter().map(|o| (o.id, WitnessDigest::default())).collect());
     let mut stopped_early = false;
 
+    // Opt-in digest of every streamed record, in order, for byte-level
+    // comparison of two record producers on the same workload.
+    let mut record_digest =
+        std::env::var_os("PASTA_RECORD_DIGEST").is_some().then(Sha256::new);
     let exec_start = Instant::now();
-    let cycles = sp1_core_machine::utils::generate_records_streaming::<SP1Field, _>(
+    let summary = sp1_core_machine::utils::generate_records_streaming_with_summary::<SP1Field, _>(
         program,
         stdin,
         opts,
         [0; 4],
         |record| {
+            let mut record = record;
+            if let Some(hasher) = record_digest.as_mut() {
+                hash_record_canonical(hasher, &mut record);
+            }
             records_seen += 1;
             let mut rec_uint = 0usize;
             for (name, code) in &uint_codes {
@@ -2614,6 +2623,9 @@ async fn run_r5_cycles(
     )
     .map_err(|e| anyhow::anyhow!("execution failed: {e}"))?;
     let streaming_seconds = exec_start.elapsed().as_secs_f64();
+    let cycles = summary.cycles;
+    let producer_profile = pipeline::producer_profile_json(&summary.profile);
+    let record_digest = record_digest.map(|h| hex::encode(h.finalize()));
 
     let total_adds = per_op["vesta-add"] + per_op["pallas-add"];
     let total_doubles = per_op["vesta-double"] + per_op["pallas-double"];
@@ -2691,6 +2703,8 @@ async fn run_r5_cycles(
         "pasta_witness_dependency_total_seconds": if time_witness { json!(dependency_total) } else { json!(null) },
         "pasta_witness_total_seconds": if time_witness { json!(witness_total) } else { json!(null) },
         "pasta_witness_digests": json!(witness_digests),
+        "record_stream_sha256": record_digest,
+        "producer_profile": producer_profile,
         "rayon_num_threads": std::env::var("RAYON_NUM_THREADS").ok(),
         "pasta_witness_us_per_addition": if time_witness && total_adds > 0 {
             json!(witness_total * 1e6 / total_adds as f64)
@@ -2739,6 +2753,304 @@ fn witness_digest() -> Result<Value> {
         "what_this_proves": "equal digests across two builds mean the committed witness trace and the byte/range events it emits are bit-identical, so any difference is confined to host-side computation",
         "operations": operations,
     }))
+}
+
+// ---------------------------------------------------------------------------
+// Mode: pipeline-cpu
+//
+// Local CPU check of the proving pipeline: one multi-shard Pasta program is
+// proved twice, first with the original single-threaded producer and one shard
+// proof at a time, then with the pipelined producer and several shard proofs
+// in flight. Both proofs must pass the complete-execution verifier, and the
+// two producers must emit byte-identical record streams. CPU proofs of a small
+// synthetic program only; no GPU, no mainnet guest proof.
+// ---------------------------------------------------------------------------
+
+async fn run_pipeline_cpu(output: &Path) -> Result<()> {
+    ensure!(!output.exists(), "use a fresh output directory");
+    let calls_wanted = fuzz_env_u64("PASTA_PIPELINE_CALLS", 256) as usize;
+    let depth = fuzz_env_u64("PASTA_PROVE_INFLIGHT", 3) as usize;
+    let add_op = OPS[0];
+    let pts = multiples(add_op.curve, 4);
+    let calls: Vec<Call> = (0..calls_wanted)
+        .map(|i| make_call(add_op, pts[i % 3].clone(), Some(pts[i % 3 + 1].clone())))
+        .collect::<Result<_>>()?;
+    let (program, _) = build_program_at(&calls, FIXTURE_BASE, true, false, 0, Some(0), 0, 0)?;
+
+    let verifier = ShardVerifier::from_basefold_parameters(
+        FriConfig::default_fri_config(),
+        LOG_STACKING_HEIGHT,
+        MAX_LOG_ROW_COUNT,
+        Air::machine(),
+    );
+    let prover = SimpleProver::new(verifier.clone(), Cpu::new(verifier));
+    let (pk, vk) = prover.setup(program.clone()).await;
+    let pk = unsafe { pk.into_inner() };
+    let policy = Policy { require_successful_exit: true, expected_committed_digest: None };
+
+    // Control: the sequential producer's canonical digest must be stable run
+    // to run, or a mismatch below would not be attributable to the pipeline.
+    std::env::set_var("PASTA_REPLAY_THREADS", "1");
+    let control_a = record_stream_digest(&program, multishard_opts())?;
+    let control_b = record_stream_digest(&program, multishard_opts())?;
+    std::env::remove_var("PASTA_REPLAY_THREADS");
+    ensure!(control_a == control_b, "the sequential producer's canonical digest is not stable");
+
+    let mut arms = Vec::new();
+    let mut digests = Vec::new();
+    for (name, replay, prove_depth) in [("sequential", "1", 1usize), ("pipelined", "0", depth)] {
+        // `0` is not a valid thread count, so the producer falls back to its
+        // default parallelism; `1` selects the original inline loop.
+        std::env::set_var("PASTA_REPLAY_THREADS", replay);
+        if replay == "0" {
+            std::env::remove_var("PASTA_REPLAY_THREADS");
+        }
+        let started = Instant::now();
+        let (tx, rx) = tokio::sync::mpsc::channel::<ExecutionRecord>(4);
+        let producer_program = program.clone();
+        let producer = tokio::task::spawn_blocking(move || {
+            sp1_core_machine::utils::generate_records_streaming_with_summary::<SP1Field, _>(
+                producer_program,
+                SP1Stdin::new(),
+                multishard_opts(),
+                [0; 4],
+                move |record| tx.blocking_send(record).is_ok(),
+            )
+        });
+        let (shards, consumer) = pipeline::prove_stream(&prover, pk.clone(), rx, prove_depth).await;
+        let summary = producer
+            .await
+            .map_err(|e| anyhow::anyhow!("producer panicked: {e}"))?
+            .map_err(|e| anyhow::anyhow!("execution failed: {e}"))?;
+        let generated = shards.len();
+        let proof = MachineProof { shard_proofs: canonical_shard_order(shards) };
+        ensure!(proof.shard_proofs.len() == generated, "ordering lost shards");
+        let verdict = verify_complete_execution(&prover, &vk, &proof, &policy);
+        let seconds = started.elapsed().as_secs_f64();
+        let proof_bytes = bincode::serialize(&proof)?;
+        let record_stream = record_stream_digest(&program, multishard_opts())?;
+        digests.push(record_stream.clone());
+        arms.push(json!({
+            "arm": name,
+            "replay_threads_env": replay,
+            "prove_depth": prove_depth,
+            "guest_cycles": summary.cycles,
+            "exit_code": summary.exit_code,
+            "shards": generated,
+            "complete_verifier_accepted": verdict.is_ok(),
+            "rejection_check": verdict.as_ref().err().map(|e| e.check),
+            "proof_sha256": sha(&proof_bytes),
+            "record_stream_sha256": record_stream,
+            "producer_profile": pipeline::producer_profile_json(&summary.profile),
+            "consumer": consumer.to_json(),
+            "seconds": seconds,
+        }));
+        ensure!(verdict.is_ok(), "{name}: complete verifier rejected the proof");
+    }
+    std::env::remove_var("PASTA_REPLAY_THREADS");
+    ensure!(digests[0] == digests[1], "the two producers emitted different record streams");
+    fs::create_dir_all(output)?;
+    let report = json!({
+        "mode": "pipeline-cpu",
+        "calls": calls_wanted,
+        "proof_generated": "CPU core proofs of a synthetic program",
+        "gpu_used": false,
+        "record_streams_identical": true,
+        "sequential_digest_stable": true,
+        "arms": arms,
+    });
+    write_json(output.join("result.json"), &report)?;
+    println!("{}", serde_json::to_string_pretty(&report)?);
+    Ok(())
+}
+
+/// Fold one record into `hasher` canonically. A record's bincode is not
+/// canonical: `byte_lookups` and the precompile-event map are hash maps whose
+/// iteration order differs between instances, and precompile shards' global
+/// interaction events inherit that order. Everything else is hashed as
+/// bincode with those two fields taken out, then the lookups as sorted
+/// serialized entries and the precompile events by syscall code, each event
+/// list in its own order. The record is left exactly as it was.
+fn hash_record_canonical(hasher: &mut Sha256, record: &mut ExecutionRecord) {
+    let lookups = std::mem::take(&mut record.byte_lookups);
+    let precompiles = std::mem::take(&mut record.precompile_events);
+    // Upstream builds precompile shards' global interaction events by iterating
+    // the precompile-event hash map, whose hasher is seeded per process, so
+    // their order differs between processes for the same execution. The global
+    // sum is order-independent; hash them sorted.
+    let globals = std::mem::take(&mut record.global_interaction_events);
+    bincode::serialize_into(&mut *hasher, &*record).expect("record serializes");
+    let mut sorted: Vec<Vec<u8>> = globals
+        .iter()
+        .map(|event| bincode::serialize(event).expect("global event serializes"))
+        .collect();
+    sorted.sort_unstable();
+    hasher.update((sorted.len() as u64).to_le_bytes());
+    for event in &sorted {
+        hasher.update(event);
+    }
+    record.global_interaction_events = globals;
+    let mut entries: Vec<Vec<u8>> = lookups
+        .iter()
+        .map(|entry| bincode::serialize(&entry).expect("lookup serializes"))
+        .collect();
+    entries.sort_unstable();
+    hasher.update((entries.len() as u64).to_le_bytes());
+    for entry in &entries {
+        hasher.update(entry);
+    }
+    let mut codes: Vec<_> = precompiles.events.iter().collect();
+    codes.sort_by_key(|(code, _)| **code as u32);
+    hasher.update((codes.len() as u64).to_le_bytes());
+    for (code, events) in codes {
+        hasher.update((*code as u32).to_le_bytes());
+        bincode::serialize_into(&mut *hasher, events).expect("events serialize");
+    }
+    record.byte_lookups = lookups;
+    record.precompile_events = precompiles;
+}
+
+/// Per-record digests of separate field groups, so a producer mismatch can be
+/// localized to the record and the part of it that differs.
+fn record_field_digests(record: &ExecutionRecord) -> Value {
+    let h = |bytes: Vec<u8>| hex::encode(Sha256::digest(bytes))[..16].to_string();
+    let mut lookups: Vec<Vec<u8>> = record
+        .byte_lookups
+        .iter()
+        .map(|entry| bincode::serialize(&entry).expect("lookup"))
+        .collect();
+    lookups.sort_unstable();
+    let mut codes: Vec<_> = record.precompile_events.events.iter().collect();
+    codes.sort_by_key(|(code, _)| **code as u32);
+    let precompiles: Vec<u8> = codes
+        .iter()
+        .flat_map(|(code, events)| {
+            let mut v = (**code as u32).to_le_bytes().to_vec();
+            v.extend(bincode::serialize(events).expect("events"));
+            v
+        })
+        .collect();
+    let mut global: Vec<Vec<u8>> = record
+        .global_interaction_events
+        .iter()
+        .map(|e| bincode::serialize(e).expect("global"))
+        .collect();
+    let global_ordered = h(global.concat());
+    global.sort_unstable();
+    json!({
+        "public_values": h(bincode::serialize(&record.public_values).expect("pv")),
+        "byte_lookups": h(lookups.concat()),
+        "precompiles": h(precompiles),
+        "global_interactions_ordered": global_ordered,
+        "global_interactions_sorted": h(global.concat()),
+        "global_memory_init": h(bincode::serialize(&record.global_memory_initialize_events).expect("init")),
+        "global_memory_final": h(bincode::serialize(&record.global_memory_finalize_events).expect("final")),
+        "cpu_local_memory": h(bincode::serialize(&record.cpu_local_memory_access).expect("local")),
+        "cumulative_sum": h(bincode::serialize(&*record.global_cumulative_sum.lock().unwrap()).expect("sum")),
+        "counts": [record.cpu_event_count, record.global_interaction_event_count],
+    })
+}
+
+fn run_producer_equivalence(output: &Path, elf: Option<&Path>, input: Option<&Path>) -> Result<()> {
+    ensure!(!output.exists(), "use a fresh output directory");
+    // Either a real guest (`--elf`, `--input`, options from the environment as
+    // in r5-cycles) or a synthetic Pasta program with small shards.
+    let (program, stdin, opts, calls) = if let Some(elf) = elf {
+        let elf = fs::read(elf)?;
+        let program = Arc::new(Program::from(&elf).map_err(|e| anyhow::anyhow!("{e}"))?);
+        let dir = input.context("--input is required with --elf")?;
+        let mut stdin = SP1Stdin::new();
+        stdin.write_slice(&fs::read(dir.join("proof-input.bin"))?);
+        stdin.write_slice(&fs::read(dir.join("receipt-input.bin"))?);
+        let mut opts = SP1CoreOpts::default();
+        opts.global_dependencies_opt =
+            std::env::var("PASTA_GLOBAL_DEPS_OPT").map(|v| v != "0").unwrap_or(false);
+        (program, stdin, opts, 0usize)
+    } else {
+        let mut calls = Vec::new();
+        for op in &OPS {
+            let pts = multiples(op.curve, 80);
+            for i in 0..60 {
+                calls.push(match op.kind {
+                    Kind::Add => make_call(*op, pts[i].clone(), Some(pts[i + 7].clone()))?,
+                    Kind::Double => make_call(*op, pts[i].clone(), None)?,
+                });
+            }
+        }
+        let (program, _) = build_program(&calls)?;
+        (program, SP1Stdin::new(), core_opts(), calls.len())
+    };
+    let collect = |threads: &str| -> Result<Vec<Value>> {
+        std::env::set_var("PASTA_REPLAY_THREADS", threads);
+        let mut out = Vec::new();
+        sp1_core_machine::utils::generate_records_streaming::<SP1Field, _>(
+            program.clone(),
+            stdin.clone(),
+            opts.clone(),
+            [0; 4],
+            |mut record| {
+                let mut fields = record_field_digests(&record);
+                let mut hasher = Sha256::new();
+                hash_record_canonical(&mut hasher, &mut record);
+                fields["canonical"] = json!(hex::encode(hasher.finalize())[..16].to_string());
+                out.push(fields);
+                true
+            },
+        )
+        .map_err(|e| anyhow::anyhow!("execution failed: {e}"))?;
+        std::env::remove_var("PASTA_REPLAY_THREADS");
+        Ok(out)
+    };
+    let sequential = collect("1")?;
+    let sequential_again = collect("1")?;
+    let pipelined = collect("8")?;
+    let diff = |a: &[Value], b: &[Value]| -> Vec<Value> {
+        let mut out = Vec::new();
+        if a.len() != b.len() {
+            out.push(json!({"record_count": [a.len(), b.len()]}));
+        }
+        for (i, (x, y)) in a.iter().zip(b).enumerate() {
+            let fields: Vec<&String> = x
+                .as_object()
+                .unwrap()
+                .keys()
+                .filter(|k| x[*k] != y[*k])
+                .collect();
+            if !fields.is_empty() {
+                out.push(json!({"record": i, "fields": fields}));
+            }
+        }
+        out
+    };
+    let report = json!({
+        "mode": "producer-equivalence",
+        "calls": calls,
+        "records": sequential.len(),
+        "sequential_vs_sequential": diff(&sequential, &sequential_again),
+        "sequential_vs_pipelined": diff(&sequential, &pipelined),
+    });
+    fs::create_dir_all(output)?;
+    write_json(output.join("result.json"), &report)?;
+    println!("{}", serde_json::to_string_pretty(&report)?);
+    Ok(())
+}
+
+/// SHA-256 over the bincode of every record the current producer settings
+/// emit for `program`, in order.
+fn record_stream_digest(program: &Arc<Program>, opts: SP1CoreOpts) -> Result<String> {
+    let mut hasher = Sha256::new();
+    sp1_core_machine::utils::generate_records_streaming::<SP1Field, _>(
+        program.clone(),
+        SP1Stdin::new(),
+        opts,
+        [0; 4],
+        |mut record| {
+            hash_record_canonical(&mut hasher, &mut record);
+            true
+        },
+    )
+    .map_err(|e| anyhow::anyhow!("execution failed: {e}"))?;
+    Ok(hex::encode(hasher.finalize()))
 }
 
 // ---------------------------------------------------------------------------
@@ -6510,6 +6822,14 @@ fn main() -> Result<()> {
                 max_records,
                 &reference.context("--reference trace expectation is required")?,
             ))
+        }
+        "producer-equivalence" => {
+            let output = output.context("--output is required")?;
+            run_producer_equivalence(&output, elf.as_deref(), input.as_deref())
+        }
+        "pipeline-cpu" => {
+            let output = output.context("--output is required")?;
+            runtime.block_on(run_pipeline_cpu(&output))
         }
         "pasta-fuzz" => {
             let output = output.context("--output is required")?;

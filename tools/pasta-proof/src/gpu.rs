@@ -545,15 +545,22 @@ async fn prove_core_gpu(
         !opts.full_size_shards,
         "full_size_shards requires separately validated GPU memory tuning"
     );
-    let inflight = env_usize("PASTA_R5_INFLIGHT", 2);
+    // Records buffered between producer and prover. Raised from 2 to 4: the
+    // pipelined producer runs ahead of the prover, and records live in host
+    // memory, not VRAM.
+    let inflight = env_usize("PASTA_R5_INFLIGHT", 4);
+    // Shard proofs in flight at once. Each acquires one of the CUDA prover's
+    // buffers before generating traces, so VRAM stays bounded by the worker
+    // count; extra depth only overlaps host-side trace generation.
+    let prove_depth = env_usize("PASTA_PROVE_INFLIGHT", 2);
 
     // Bounded, so a fast executor cannot accumulate records faster than the GPU
     // retires them. This is the whole point of streaming.
-    let (tx, mut rx) = tokio::sync::mpsc::channel::<sp1_core_executor::ExecutionRecord>(inflight);
+    let (tx, rx) = tokio::sync::mpsc::channel::<sp1_core_executor::ExecutionRecord>(inflight);
     let exec_program = program.clone();
     let exec_start = Instant::now();
     let exec_handle = tokio::task::spawn_blocking(move || {
-        sp1_core_machine::utils::generate_records_streaming::<SP1Field, _>(
+        sp1_core_machine::utils::generate_records_streaming_with_summary::<SP1Field, _>(
             exec_program,
             stdin,
             opts,
@@ -584,23 +591,22 @@ async fn prove_core_gpu(
         let setup_seconds = setup_start.elapsed().as_secs_f64();
 
         let prove_start = Instant::now();
-        let mut shards = Vec::new();
-        while let Some(record) = rx.recv().await {
-            shards.push(gpu_prover.prove_shard(pk.clone(), record).await);
-        }
+        let (shards, consumer) =
+            crate::pipeline::prove_stream(&gpu_prover, pk.clone(), rx, prove_depth).await;
         let prove_seconds = prove_start.elapsed().as_secs_f64();
-        (vk, shards, setup_seconds, prove_seconds)
+        (vk, shards, setup_seconds, prove_seconds, consumer)
     });
 
-    let (vk, shards, setup_seconds, prove_seconds) = handle
+    let (vk, shards, setup_seconds, prove_seconds, consumer) = handle
         .await
         .map_err(|e| anyhow::anyhow!("the CUDA proving task failed: {e:?}"))?;
     let gpu_seconds = gpu_start.elapsed().as_secs_f64();
-    let cycles = exec_handle
+    let summary = exec_handle
         .await
         .map_err(|e| anyhow::anyhow!("the executor task panicked: {e}"))?
         .map_err(|e| anyhow::anyhow!("execution failed: {e}"))?;
     let exec_seconds = exec_start.elapsed().as_secs_f64();
+    let cycles = summary.cycles;
 
     let vk_bytes = bincode::serialize(&vk)?;
     fs::write(output.join("verification-key.bin"), &vk_bytes)?;
@@ -688,6 +694,9 @@ async fn prove_core_gpu(
         "gpu_free_vram_bytes_at_start": free_vram,
         "gpu_workers": num_workers,
         "records_in_flight": inflight,
+        "prove_depth": prove_depth,
+        "producer_profile": crate::pipeline::producer_profile_json(&summary.profile),
+        "consumer": consumer.to_json(),
         "executor_seconds": exec_seconds,
         "gpu_setup_seconds": setup_seconds,
         "gpu_prove_seconds": prove_seconds,
