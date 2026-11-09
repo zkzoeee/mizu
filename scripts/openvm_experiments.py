@@ -93,7 +93,9 @@ def execute(output, variant, label, abi='boolean', count=1, extra=(), reject=Fal
     start = time.monotonic()
     print(f'Running {variant}/{label}', flush=True)
     with target.with_suffix('.log').open('w') as log:
-        process = subprocess.run(['/usr/bin/time', '-l', *command], env=environment(), cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+        process = subprocess.Popen(command, env=environment(), cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+        _, status, usage = os.wait4(process.pid, 0)
+        process.returncode = os.waitstatus_to_exitcode(status)
     result = json.loads(target.read_text())
     assert result['elf_sha256'] == receipt['elf_sha256']
     assert result['fixture_sha256'] == receipt['config']['fixture_sha256']
@@ -106,7 +108,9 @@ def execute(output, variant, label, abi='boolean', count=1, extra=(), reject=Fal
         assert result['guest_exit_code'] == 0
     write(target.with_suffix('.run.json'), dict(command=command, exit_code=process.returncode,
           wall_seconds=time.monotonic()-start, result_sha256=sha(target), runner_sha256=sha(output/'cycle-runner'),
-          max_rss_note='Darwin maximum resident set size in bytes is recorded by /usr/bin/time -l in the adjacent log'))
+          max_runner_rss_bytes=usage.ru_maxrss if sys.platform == 'darwin' else usage.ru_maxrss * 1024,
+          child_user_seconds=usage.ru_utime, child_system_seconds=usage.ru_stime,
+          max_rss_note='Per-child wait4 rusage; includes runner/JIT, not prover memory'))
     check_identity(output)
     print(f"  {result['cycles']:,} cycles; accepted={result['accepted']}", flush=True)
 
