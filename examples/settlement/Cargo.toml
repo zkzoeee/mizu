@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = ["types", "program"]
+default-members = ["types"]
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+opt-level = 3
+
+[profile.release.build-override]
+opt-level = 3
+
+[profile.native-test]
+inherits = "release"
+lto = false
+codegen-units = 4
+
+[patch.crates-io]
+ark-ff = { path = "../../vendor/algebra/ff" }
+ark-ec = { path = "../../vendor/algebra/ec" }
+ark-serialize = { path = "../../vendor/algebra/serialize" }
+ark-poly = { path = "../../vendor/algebra/poly" }
+crypto-bigint = { git = "https://github.com/sp1-patches/RustCrypto-bigint", tag = "patch-0.5.5-sp1-6.0.0" }
