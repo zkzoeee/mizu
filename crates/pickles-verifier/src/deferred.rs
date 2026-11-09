@@ -301,7 +301,11 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
             es.push(pe(evals));
         }
     }
-    let cip = combined_inner_product(&xi, &r, &es);
+    let cip = match option_env!("MIZU_CIP_MODE") {
+        Some("borrowed") => crate::experimental_cip::borrowed(xi, r, &es),
+        Some("fused") => crate::experimental_cip::fused(xi, r, &es),
+        _ => combined_inner_product(&xi, &r, &es),
+    };
 
     // ----- derive_plonk (Type1 scalars) -----
     let collapsed = step_evals.combine(&powers_of_eval_points_for_chunks);
@@ -368,7 +372,34 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
 /// 128-bit challenges, all `<` both
 /// Pasta moduli — and the post-shift representative in the Type1 conversion.
 fn fp_to_fq(x: StepField) -> WrapField {
-    WrapField::from_le_bytes_mod_order(&x.into_bigint().to_bytes_le())
+    if matches!(option_env!("MIZU_STACK_CROSS_FIELD"), Some("1")) {
+        fp_to_fq_stack(x)
+    } else {
+        WrapField::from_le_bytes_mod_order(&x.into_bigint().to_bytes_le())
+    }
+}
+
+fn fp_to_fq_stack(x: StepField) -> WrapField {
+    let limbs = x.into_bigint().0;
+    let mut bytes = [0u8; 32];
+    for (dst, limb) in bytes.chunks_exact_mut(8).zip(limbs) {
+        dst.copy_from_slice(&limb.to_le_bytes());
+    }
+    WrapField::from_le_bytes_mod_order(&bytes)
+}
+
+#[cfg(test)]
+mod conversion_experiment_tests {
+    use super::*;
+    #[test]
+    fn stack_conversion_preserves_mod_reduction_and_limb_order() {
+        let mut values = alloc::vec![StepField::zero(), StepField::one(), -StepField::one()];
+        for bit in 0..255 { values.push(StepField::from(2u64).pow([bit])); }
+        for value in values {
+            assert_eq!(fp_to_fq_stack(value),
+                WrapField::from_le_bytes_mod_order(&value.into_bigint().to_bytes_le()));
+        }
+    }
 }
 
 /// Cross-field Type1 of a RAW (unshifted) step-field scalar, as the wrap

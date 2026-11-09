@@ -23,6 +23,7 @@ mod canonical_msm;
 mod fixed_srs;
 mod fixed_pallas;
 mod canonical_coefficients;
+mod experimental_cip;
 mod vesta_glv;
 mod vesta_spikes;
 pub mod deferred;
