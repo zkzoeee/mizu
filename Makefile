@@ -1,3 +1,7 @@
+CARGO_BUILD_JOBS ?= 1
+RAYON_NUM_THREADS ?= 1
+export CARGO_BUILD_JOBS RAYON_NUM_THREADS
+
 .PHONY: help install build-rust rust-unit-tests rust-e2e-tests rust-e2e-tests-profile prove-cpu prove-cuda prove-network lint-check lint dump-simplechain-fixtures clear-simplechain-fixtures dump-treeproofreturn-fixtures clear-treeproofreturn-fixtures dump-nrr-fixtures clear-nrr-fixtures fetch-mainnet-fixture
 
 # Default fixture: the real mainnet blockchain SNARK we fetch via the

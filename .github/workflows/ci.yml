@@ -20,3 +20,23 @@ jobs:
           cargo check --profile native-test --locked -p pickles-verifier --no-default-features
       - name: Receipt example tests
         run: cargo test --profile native-test --locked --manifest-path examples/settlement/Cargo.toml --workspace --lib -- --test-threads=1
+      - name: Pasta harness tests
+        run: cargo test --release --locked --manifest-path tools/pasta-proof/Cargo.toml --lib --bin pasta-precompile-proof-6-10 -- --test-threads=1
+  guest-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.92.0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+      - uses: Swatinem/rust-cache@v2
+      - name: Restore pinned dependency forks
+        run: python3 dependencies/bootstrap.py
+      - name: Install SP1 6.10 and protoc
+        run: |
+          make install
+          echo "$HOME/.sp1/bin" >> $GITHUB_PATH
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Compile host and embedded guest
+        run: cargo check --profile native-test --locked -p o1-verifier-host
