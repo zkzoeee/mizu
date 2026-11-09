@@ -7,6 +7,12 @@ not deleted. `.gitmodules` names the official source repositories. Bootstrap
 restores our unpublished commits into local bare forks and overrides the clone
 URLs locally before checking out the immutable pins.
 
+See the [version and optimization inventory](../docs/dependencies-and-optimizations.md)
+for modified crates, other dependency sources and coordinated upgrade steps;
+the [file appendix](../docs/file-changes.md) lists every changed path and retained
+benchmark flag. Exact revisions and lockfile summaries are also available in
+[`inventory.json`](inventory.json).
+
 | Fork | Official base | Our modules |
 | --- | --- | --- |
 | algebra | v0.5.0, `7ad88c4` | Field arithmetic; GLV/MSM; polynomial evaluation |

@@ -1,0 +1,2035 @@
+{
+  "schema_version": 1,
+  "inventory_source_revision": "0a19aeb0b0d870f30a271828fdad0b873178f74c",
+  "scope": "Implementation at the recorded source revision; the inventory documentation added afterward is not part of its own file-diff baseline.",
+  "repositories": [
+    {
+      "name": "o1js-to-zkvm",
+      "path": ".",
+      "upstream": "https://github.com/o1-labs/o1js-to-zkvm.git",
+      "base": "095a5c0a46b903b7b126c857c9910567b16e2e6b",
+      "revision": "0a19aeb0b0d870f30a271828fdad0b873178f74c",
+      "changed_files": [
+        {
+          "status": "M",
+          "path": ".github/workflows/ci.yml"
+        },
+        {
+          "status": "M",
+          "path": ".gitignore"
+        },
+        {
+          "status": "M",
+          "path": ".gitmodules"
+        },
+        {
+          "status": "A",
+          "path": "AGENTS.md"
+        },
+        {
+          "status": "M",
+          "path": "Cargo.lock"
+        },
+        {
+          "status": "M",
+          "path": "Cargo.toml"
+        },
+        {
+          "status": "A",
+          "path": "LICENSE-APACHE"
+        },
+        {
+          "status": "A",
+          "path": "LICENSE-MIT"
+        },
+        {
+          "status": "M",
+          "path": "Makefile"
+        },
+        {
+          "status": "M",
+          "path": "README.md"
+        },
+        {
+          "status": "A",
+          "path": "benchmarks/core-sp1-6.10.json"
+        },
+        {
+          "status": "A",
+          "path": "benchmarks/reference/settlement-sp1-6.10.json"
+        },
+        {
+          "status": "A",
+          "path": "benchmarks/retained.json"
+        },
+        {
+          "status": "A",
+          "path": "crates/cycle-runner/Cargo.toml"
+        },
+        {
+          "status": "A",
+          "path": "crates/cycle-runner/src/bin/export-fixture.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/cycle-runner/src/bin/operation-bench-runner.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/cycle-runner/src/bin/prepare-vesta.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/cycle-runner/src/main.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/o1-verifier-host/Cargo.toml"
+        },
+        {
+          "status": "M",
+          "path": "crates/o1-verifier-host/build.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/o1-verifier-host/src/main.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/o1-verifier/Cargo.toml"
+        },
+        {
+          "status": "A",
+          "path": "crates/o1-verifier/blob_cache.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/o1-verifier/build.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/o1-verifier/src/atomic_shims.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/o1-verifier/src/main.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/pickles-verifier/Cargo.toml"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/build.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/src/canonical_coefficients.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/src/canonical_msm.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/pickles-verifier/src/convert.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/pickles-verifier/src/deferred.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/src/fixed_pallas.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/src/fixed_srs.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/pickles-verifier/src/lib.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/pickles-verifier/src/serialize.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/src/setup_data.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/src/statement.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/pickles-verifier/src/types.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/src/vesta_glv.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/src/vesta_spikes.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/pickles-verifier/src/wire.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/affine_spikes.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/b_poly.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/canonical_ipa.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/canonical_poseidon.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/fixed_pallas_prefix.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/ipa_borrowed_prefix.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/legacy_sponge_constants.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/mont_direct_spike.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/msm_spikes.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/pallas_field_spikes.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/pallas_msm_spikes.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/pallas_spikes.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/pasta_input_contract.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/point_spikes.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/positional_recoding.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/precompile_spikes.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/scalar_challenge.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/sponge_constants.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/srs_storage.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/pickles-verifier/tests/verifier_blob_cache.rs"
+        },
+        {
+          "status": "A",
+          "path": "dependencies/README.md"
+        },
+        {
+          "status": "A",
+          "path": "dependencies/bootstrap.py"
+        },
+        {
+          "status": "A",
+          "path": "dependencies/bundles/algebra.bundle"
+        },
+        {
+          "status": "A",
+          "path": "dependencies/bundles/proof-systems.bundle"
+        },
+        {
+          "status": "A",
+          "path": "dependencies/bundles/sp1.bundle"
+        },
+        {
+          "status": "A",
+          "path": "dependencies/lock.json"
+        },
+        {
+          "status": "A",
+          "path": "dependencies/verify.py"
+        },
+        {
+          "status": "A",
+          "path": "docs/modules.md"
+        },
+        {
+          "status": "A",
+          "path": "docs/validation.md"
+        },
+        {
+          "status": "A",
+          "path": "examples/settlement/Cargo.lock"
+        },
+        {
+          "status": "A",
+          "path": "examples/settlement/Cargo.toml"
+        },
+        {
+          "status": "A",
+          "path": "examples/settlement/README.md"
+        },
+        {
+          "status": "A",
+          "path": "examples/settlement/program/Cargo.toml"
+        },
+        {
+          "status": "A",
+          "path": "examples/settlement/program/build.rs"
+        },
+        {
+          "status": "A",
+          "path": "examples/settlement/program/src/lib.rs"
+        },
+        {
+          "status": "A",
+          "path": "examples/settlement/program/src/main.rs"
+        },
+        {
+          "status": "A",
+          "path": "examples/settlement/program/src/receipt.rs"
+        },
+        {
+          "status": "A",
+          "path": "examples/settlement/types/Cargo.toml"
+        },
+        {
+          "status": "A",
+          "path": "examples/settlement/types/src/lib.rs"
+        },
+        {
+          "status": "A",
+          "path": "fixtures/ocaml-compat/README.md"
+        },
+        {
+          "status": "A",
+          "path": "fixtures/ocaml-compat/app_statement.json"
+        },
+        {
+          "status": "A",
+          "path": "fixtures/ocaml-compat/proof.serde.json"
+        },
+        {
+          "status": "A",
+          "path": "fixtures/ocaml-compat/public_input_skeleton.json"
+        },
+        {
+          "status": "A",
+          "path": "fixtures/ocaml-compat/settlement.json"
+        },
+        {
+          "status": "A",
+          "path": "fixtures/ocaml-compat/statement.json"
+        },
+        {
+          "status": "A",
+          "path": "fixtures/ocaml-compat/vk.serde.json"
+        },
+        {
+          "status": "M",
+          "path": "rust-toolchain.toml"
+        },
+        {
+          "status": "A",
+          "path": "scripts/benchmark.py"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-guest/Cargo.lock"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-guest/Cargo.toml"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-guest/src/main.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/.gitignore"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/Cargo.lock"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/Cargo.toml"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/README.md"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/bin/trace-accounting.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/compressed_point.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/gpu.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/input_contract.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/instruction_profile.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/lib.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/main.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/operand_profile.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/pasta_retention_audit.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/poseidon_round.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/retention_audit.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/run_manifest.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/src/trace_accounting.rs"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/tests/fixtures/public-values.bin"
+        },
+        {
+          "status": "A",
+          "path": "tools/pasta-proof/tests/fixtures/run-manifest.json"
+        },
+        {
+          "status": "A",
+          "path": "vendor/algebra"
+        },
+        {
+          "status": "A",
+          "path": "vendor/proof-systems"
+        },
+        {
+          "status": "A",
+          "path": "vendor/sp1"
+        }
+      ],
+      "changed_file_count": 115,
+      "commits": [
+        {
+          "revision": "5991812bc00678af3d65463379c4594aa95b252c",
+          "subject": "Pin upstream-based algebra, proof-systems and SP1 6.10 patch stacks"
+        },
+        {
+          "revision": "f0e1a1f0a659931d29dfefdf5ddc6ee6d7061783",
+          "subject": "Add strict Pickles wire validation and retained verifier optimizations"
+        },
+        {
+          "revision": "f3045ecd1b4869725bea3aed8f94b36aa1e04c09",
+          "subject": "Integrate optimized setup with the upstream verifier guest and host"
+        },
+        {
+          "revision": "61b53ce977ac04a1a82e8c1614ecb485df2d7d8d",
+          "subject": "Add bounded CPU execution and reproducible cycle measurements"
+        },
+        {
+          "revision": "f47e6a52b5067d78af0680d08446c08861c471db",
+          "subject": "Add focused Pasta AIR and guest ABI validation tools"
+        },
+        {
+          "revision": "d6db979ae7c3c59b6b9a11d3fdb26b01ba89b16e",
+          "subject": "Keep versioned settlement receipts in an optional example"
+        },
+        {
+          "revision": "07abea2274add3b7067560ff699b0d8467929b84",
+          "subject": "Document module ownership, upstream sync and retained benchmark evidence"
+        },
+        {
+          "revision": "5358f8a7f9d61d340ad14ca3570299864e6583d3",
+          "subject": "Add modular CI checks and bounded local build defaults"
+        },
+        {
+          "revision": "0a19aeb0b0d870f30a271828fdad0b873178f74c",
+          "subject": "Record clean workspace validation and the core cycle baseline"
+        }
+      ]
+    },
+    {
+      "name": "algebra",
+      "path": "vendor/algebra",
+      "upstream": "https://github.com/arkworks-rs/algebra.git",
+      "base": "7ad88c46e859a94ab8e0b19fd8a217c3dc472f1c",
+      "revision": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+      "changed_files": [
+        {
+          "status": "M",
+          "path": "Cargo.toml"
+        },
+        {
+          "status": "M",
+          "path": "ec/Cargo.toml"
+        },
+        {
+          "status": "M",
+          "path": "ec/src/hashing/map_to_curve_hasher.rs"
+        },
+        {
+          "status": "M",
+          "path": "ec/src/lib.rs"
+        },
+        {
+          "status": "M",
+          "path": "ec/src/models/short_weierstrass/mod.rs"
+        },
+        {
+          "status": "M",
+          "path": "ec/src/models/twisted_edwards/mod.rs"
+        },
+        {
+          "status": "M",
+          "path": "ec/src/pairing.rs"
+        },
+        {
+          "status": "A",
+          "path": "ec/src/scalar_mul/fixed_base.rs"
+        },
+        {
+          "status": "M",
+          "path": "ec/src/scalar_mul/glv.rs"
+        },
+        {
+          "status": "M",
+          "path": "ec/src/scalar_mul/mod.rs"
+        },
+        {
+          "status": "A",
+          "path": "ec/src/scalar_mul/variable_base/affine_spike.rs"
+        },
+        {
+          "status": "M",
+          "path": "ec/src/scalar_mul/variable_base/mod.rs"
+        },
+        {
+          "status": "M",
+          "path": "ec/src/scalar_mul/variable_base/stream_pippenger.rs"
+        },
+        {
+          "status": "M",
+          "path": "ec/src/scalar_mul/wnaf.rs"
+        },
+        {
+          "status": "M",
+          "path": "ff/Cargo.toml"
+        },
+        {
+          "status": "M",
+          "path": "ff/src/fields/arithmetic.rs"
+        },
+        {
+          "status": "M",
+          "path": "ff/src/fields/mod.rs"
+        },
+        {
+          "status": "M",
+          "path": "ff/src/fields/models/cubic_extension.rs"
+        },
+        {
+          "status": "M",
+          "path": "ff/src/fields/models/fp/montgomery_backend.rs"
+        },
+        {
+          "status": "M",
+          "path": "ff/src/fields/models/fp4.rs"
+        },
+        {
+          "status": "M",
+          "path": "ff/src/lib.rs"
+        },
+        {
+          "status": "M",
+          "path": "poly/src/polynomial/univariate/dense.rs"
+        }
+      ],
+      "changed_file_count": 22,
+      "commits": [
+        {
+          "revision": "7b99b0e0f7243814c1414e3180bd51b643d2e5e2",
+          "subject": "Add SP1 field arithmetic and inversion fast paths"
+        },
+        {
+          "revision": "712a6ae796d08e7572fd05d08fac54866bc93e6f",
+          "subject": "Add GLV and fixed/variable-base MSM optimizations"
+        },
+        {
+          "revision": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+          "subject": "Optimize polynomial evaluation for the verifier"
+        }
+      ]
+    },
+    {
+      "name": "proof-systems",
+      "path": "vendor/proof-systems",
+      "upstream": "https://github.com/o1-labs/proof-systems.git",
+      "base": "3abb66bbbe143e27845c88b6456ecab3a589e113",
+      "revision": "9a47c4973f5b5dac37bd146922e8d08045d049ec",
+      "changed_files": [
+        {
+          "status": "M",
+          "path": "Cargo.toml"
+        },
+        {
+          "status": "M",
+          "path": "curves/Cargo.toml"
+        },
+        {
+          "status": "A",
+          "path": "curves/src/pasta/canonical_pallas.rs"
+        },
+        {
+          "status": "A",
+          "path": "curves/src/pasta/canonical_words.rs"
+        },
+        {
+          "status": "M",
+          "path": "curves/src/pasta/curves/pallas.rs"
+        },
+        {
+          "status": "M",
+          "path": "curves/src/pasta/fields/fp.rs"
+        },
+        {
+          "status": "M",
+          "path": "curves/src/pasta/fields/fq.rs"
+        },
+        {
+          "status": "M",
+          "path": "curves/src/pasta/mod.rs"
+        },
+        {
+          "status": "A",
+          "path": "curves/src/pasta/pallas_glv.rs"
+        },
+        {
+          "status": "A",
+          "path": "curves/src/pasta/point_spikes.rs"
+        },
+        {
+          "status": "A",
+          "path": "curves/src/pasta/precompile_spikes.rs"
+        },
+        {
+          "status": "M",
+          "path": "kimchi/src/alphas.rs"
+        },
+        {
+          "status": "M",
+          "path": "kimchi/src/circuits/constraints.rs"
+        },
+        {
+          "status": "M",
+          "path": "kimchi/src/circuits/lookup/lookups.rs"
+        },
+        {
+          "status": "M",
+          "path": "kimchi/src/circuits/lookup/tables/mod.rs"
+        },
+        {
+          "status": "M",
+          "path": "kimchi/src/circuits/polynomials/permutation.rs"
+        },
+        {
+          "status": "M",
+          "path": "kimchi/src/prover.rs"
+        },
+        {
+          "status": "M",
+          "path": "kimchi/src/verifier.rs"
+        },
+        {
+          "status": "A",
+          "path": "poly-commitment/src/canonical_ipa.rs"
+        },
+        {
+          "status": "M",
+          "path": "poly-commitment/src/commitment.rs"
+        },
+        {
+          "status": "A",
+          "path": "poly-commitment/src/generators.rs"
+        },
+        {
+          "status": "M",
+          "path": "poly-commitment/src/ipa.rs"
+        },
+        {
+          "status": "M",
+          "path": "poly-commitment/src/lib.rs"
+        },
+        {
+          "status": "M",
+          "path": "poly-commitment/src/precomputed_srs.rs"
+        },
+        {
+          "status": "M",
+          "path": "poly-commitment/src/utils.rs"
+        },
+        {
+          "status": "A",
+          "path": "poseidon/src/canonical.rs"
+        },
+        {
+          "status": "M",
+          "path": "poseidon/src/lib.rs"
+        },
+        {
+          "status": "M",
+          "path": "poseidon/src/pasta/fp_kimchi.rs"
+        },
+        {
+          "status": "M",
+          "path": "poseidon/src/pasta/fp_legacy.rs"
+        },
+        {
+          "status": "M",
+          "path": "poseidon/src/pasta/fq_kimchi.rs"
+        },
+        {
+          "status": "M",
+          "path": "poseidon/src/pasta/fq_legacy.rs"
+        },
+        {
+          "status": "M",
+          "path": "poseidon/src/permutation.rs"
+        },
+        {
+          "status": "M",
+          "path": "poseidon/src/sponge.rs"
+        }
+      ],
+      "changed_file_count": 33,
+      "commits": [
+        {
+          "revision": "02078de82fac3f3d851b1c664a885bcb97905eda",
+          "subject": "Add canonical Pasta arithmetic, GLV and SP1 point operations"
+        },
+        {
+          "revision": "428e4d75a56336f41a03ee17524e622696ed91fe",
+          "subject": "Add canonical Poseidon and retained sponge fast paths"
+        },
+        {
+          "revision": "13607ce6b4d703522d6d02900b21add8e6374df6",
+          "subject": "Add canonical IPA and reusable SRS representations"
+        },
+        {
+          "revision": "9a47c4973f5b5dac37bd146922e8d08045d049ec",
+          "subject": "Optimize verifier challenges, expressions and borrowed commitments"
+        }
+      ]
+    },
+    {
+      "name": "sp1",
+      "path": "vendor/sp1",
+      "upstream": "https://github.com/succinctlabs/sp1.git",
+      "base": "d83ed91f96701209613720708f36ffce0e98ed33",
+      "revision": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1",
+      "changed_files": [
+        {
+          "status": "M",
+          "path": "crates/core/executor/Cargo.toml"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/air.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/artifacts/rv64im_complexity.json"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/artifacts/rv64im_complexity_mprotect.json"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/artifacts/rv64im_costs.json"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/events/precompiles/mod.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/minimal.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/minimal/arch/portable/mod.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/minimal/ecall.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/record.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/retain.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/syscall_code.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/vm.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/vm/gas.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/vm/syscall.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/vm/syscall/precompiles/weierstrass/add.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/executor/src/vm/syscall/precompiles/weierstrass/double.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/machine/Cargo.toml"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/machine/src/operations/field/field_op.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/machine/src/riscv/mod.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_add.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_double.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/machine/src/utils/prove.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/runner/Cargo.toml"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/runner/build.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/core/runner/src/portable.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/curves/Cargo.toml"
+        },
+        {
+          "status": "M",
+          "path": "crates/curves/src/lib.rs"
+        },
+        {
+          "status": "M",
+          "path": "crates/curves/src/weierstrass/mod.rs"
+        },
+        {
+          "status": "A",
+          "path": "crates/curves/src/weierstrass/pasta.rs"
+        }
+      ],
+      "changed_file_count": 30,
+      "commits": [
+        {
+          "revision": "0fde0939bc84bed83160e7f2c3685a863430ff7d",
+          "subject": "Add Pasta curves and modular inversion support"
+        },
+        {
+          "revision": "7d7b32b1530dbddac728d31c2ecf6afd34718e65",
+          "subject": "Register Pasta execution, AIRs and lossless record streaming"
+        },
+        {
+          "revision": "59fa996a5001d31f3112dd05307003111847c3e7",
+          "subject": "Keep the Pasta crates compatible with registry SP1 consumers"
+        },
+        {
+          "revision": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1",
+          "subject": "Expose portable execution counters for cycle measurements"
+        }
+      ]
+    }
+  ],
+  "modified_external_source_packages": {
+    "algebra": [
+      "ark-ff",
+      "ark-ec",
+      "ark-poly"
+    ],
+    "proof-systems": [
+      "mina-curves",
+      "mina-poseidon",
+      "poly-commitment",
+      "kimchi"
+    ],
+    "sp1": [
+      "sp1-curves",
+      "sp1-core-executor",
+      "sp1-core-machine",
+      "sp1-core-executor-runner"
+    ]
+  },
+  "modified_external_source_package_count": 11,
+  "retained_benchmark": {
+    "config": "benchmarks/retained.json",
+    "cycles": 142660047,
+    "guest_abi": "boolean",
+    "configured_flags": [
+      {
+        "name": "ZEKO_APPEND_B_POLY",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/poly-commitment/src/commitment.rs",
+            "lines": [
+              546
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_BORROW_PALLAS_SRS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/o1-verifier/build.rs",
+            "lines": [
+              37
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/lib.rs",
+            "lines": [
+              727
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/serialize.rs",
+            "lines": [
+              496
+            ]
+          },
+          {
+            "path": "examples/settlement/program/build.rs",
+            "lines": [
+              38
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_BORROW_POSITIONAL_SCALARS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/o1-verifier/build.rs",
+            "lines": [
+              34
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/canonical_msm.rs",
+            "lines": [
+              316
+            ]
+          },
+          {
+            "path": "examples/settlement/program/build.rs",
+            "lines": [
+              35
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_BORROW_VESTA_SRS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/pickles-verifier/src/lib.rs",
+            "lines": [
+              749
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/serialize.rs",
+            "lines": [
+              492
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/pickles-verifier/src/lib.rs",
+            "lines": [
+              237
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_CANONICAL_MSM",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/pickles-verifier/src/lib.rs",
+            "lines": [
+              238,
+              259
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_CANONICAL_PALLAS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/curves/pallas.rs",
+            "lines": [
+              47
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_CANONICAL_POSEIDON",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/poseidon/src/permutation.rs",
+            "lines": [
+              151
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_DIRECT_MULMOD",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/pickles-verifier/src/canonical_msm.rs",
+            "lines": [
+              103
+            ]
+          },
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/canonical_pallas.rs",
+            "lines": [
+              106
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_FIXED_PALLAS_SRS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/o1-verifier/build.rs",
+            "lines": [
+              36,
+              70
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/lib.rs",
+            "lines": [
+              832
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/serialize.rs",
+            "lines": [
+              282,
+              495
+            ]
+          },
+          {
+            "path": "examples/settlement/program/build.rs",
+            "lines": [
+              37,
+              71
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_FIXED_VESTA_COUPLED",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/o1-verifier/build.rs",
+            "lines": [
+              33
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/canonical_msm.rs",
+            "lines": [
+              311
+            ]
+          },
+          {
+            "path": "examples/settlement/program/build.rs",
+            "lines": [
+              34
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_FIXED_VESTA_SRS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/o1-verifier/build.rs",
+            "lines": [
+              32,
+              69
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/lib.rs",
+            "lines": [
+              692
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/serialize.rs",
+            "lines": [
+              278,
+              494
+            ]
+          },
+          {
+            "path": "examples/settlement/program/build.rs",
+            "lines": [
+              33,
+              70
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_FUSE_PALLAS_BASE_CONVERSION",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/canonical_pallas.rs",
+            "lines": [
+              436
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_FUSE_VESTA_BASE_CONVERSION",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/pickles-verifier/src/canonical_msm.rs",
+            "lines": [
+              202
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/lib.rs",
+            "lines": [
+              239
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_HINTED_INVERSE",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/precompile_spikes.rs",
+            "lines": [
+              19
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_INLINE_FINITE_COPY",
+        "value": "words",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/point_spikes.rs",
+            "lines": [
+              238
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_INTEGER_SCALAR_CHALLENGE",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/poseidon/src/sponge.rs",
+            "lines": [
+              194
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_IPA_BORROW_SRS_PREFIX",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/poly-commitment/src/ipa.rs",
+            "lines": [
+              321
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_IPA_CANONICAL_PREFIX",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/poly-commitment/src/ipa.rs",
+            "lines": [
+              329
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_IPA_DIRECT_COEFFICIENTS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/poly-commitment/src/ipa.rs",
+            "lines": [
+              397
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_IPA_EXACT_CAPACITY",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/poly-commitment/src/ipa.rs",
+            "lines": [
+              304
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_MONT_DIRECT_MULMOD",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/algebra/ff/src/fields/models/fp/montgomery_backend.rs",
+            "lines": [
+              64
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_MSM_FILTER_ZERO",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/algebra/ec/src/scalar_mul/variable_base/mod.rs",
+            "lines": [
+              188
+            ]
+          },
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/canonical_pallas.rs",
+            "lines": [
+              220
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_OUTLINE_PALLAS_BUCKETS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/point_spikes.rs",
+            "lines": [
+              690
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_OUTLINE_VESTA_BUCKETS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/point_spikes.rs",
+            "lines": [
+              689
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_PACKED_PALLAS_HALVES",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/o1-verifier/build.rs",
+            "lines": [
+              35
+            ]
+          },
+          {
+            "path": "examples/settlement/program/build.rs",
+            "lines": [
+              36
+            ]
+          },
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/canonical_pallas.rs",
+            "lines": [
+              439
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_PALLAS_AFFINE",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/canonical_pallas.rs",
+            "lines": [
+              205
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_PALLAS_GLV",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/canonical_pallas.rs",
+            "lines": [
+              206
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_PALLAS_POINT_PRECOMPILE",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/canonical_pallas.rs",
+            "lines": [
+              208
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_PALLAS_WINDOW",
+        "value": "13",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/pickles-verifier/src/fixed_pallas.rs",
+            "lines": [
+              240
+            ]
+          },
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/canonical_pallas.rs",
+            "lines": [
+              209
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_POSEIDON_PACKED_RHS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/poseidon/src/canonical.rs",
+            "lines": [
+              134,
+              149
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_PRECOMPUTED_SETUP",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/o1-verifier/build.rs",
+            "lines": [
+              31,
+              68
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/serialize.rs",
+            "lines": [
+              493
+            ]
+          },
+          {
+            "path": "examples/settlement/program/build.rs",
+            "lines": [
+              32,
+              69
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_PRECOMPUTED_VK_DIGEST",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/o1-verifier/src/main.rs",
+            "lines": [
+              30,
+              36
+            ]
+          },
+          {
+            "path": "examples/settlement/program/src/main.rs",
+            "lines": [
+              56,
+              62
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_TRIM_CONVERSIONS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/pickles-verifier/src/canonical_msm.rs",
+            "lines": [
+              218
+            ]
+          },
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/canonical_pallas.rs",
+            "lines": [
+              207
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_UNINIT_MSM_DIGITS",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "vendor/proof-systems/curves/src/pasta/point_spikes.rs",
+            "lines": [
+              426
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_VESTA_AFFINE",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/pickles-verifier/src/canonical_msm.rs",
+            "lines": [
+              268
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/vesta_spikes.rs",
+            "lines": [
+              58
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_VESTA_GLV",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/pickles-verifier/src/canonical_msm.rs",
+            "lines": [
+              203,
+              219,
+              228,
+              239
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/lib.rs",
+            "lines": [
+              240
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_VESTA_POINT_PRECOMPILE",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/pickles-verifier/src/canonical_msm.rs",
+            "lines": [
+              204,
+              241,
+              270
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/lib.rs",
+            "lines": [
+              241
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/vesta_spikes.rs",
+            "lines": [
+              49
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_VESTA_WINDOW",
+        "value": "16",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/pickles-verifier/src/canonical_msm.rs",
+            "lines": [
+              312
+            ]
+          },
+          {
+            "path": "crates/pickles-verifier/src/vesta_spikes.rs",
+            "lines": [
+              11
+            ]
+          }
+        ]
+      },
+      {
+        "name": "ZEKO_WRAP_SRS_PREFIX",
+        "value": "1",
+        "configured_in_retained_benchmark": true,
+        "references": [
+          {
+            "path": "crates/o1-verifier/src/main.rs",
+            "lines": [
+              29
+            ]
+          },
+          {
+            "path": "examples/settlement/program/src/main.rs",
+            "lines": [
+              55
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "workspace_lockfiles": [
+    {
+      "path": "Cargo.lock",
+      "sp1_versions": [
+        "6.10.0"
+      ],
+      "slop_versions": [
+        "6.10.0"
+      ],
+      "ark_packages": [
+        {
+          "name": "ark-bn254",
+          "version": "0.5.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ec",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-ff",
+          "version": "0.3.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ff",
+          "version": "0.4.2",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ff",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-ff-asm",
+          "version": "0.3.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ff-asm",
+          "version": "0.4.2",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ff-asm",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-ff-macros",
+          "version": "0.3.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ff-macros",
+          "version": "0.4.2",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ff-macros",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-poly",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-serialize",
+          "version": "0.3.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-serialize",
+          "version": "0.4.2",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-serialize",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-serialize-derive",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-std",
+          "version": "0.3.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-std",
+          "version": "0.4.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-std",
+          "version": "0.5.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        }
+      ],
+      "external_git_dependencies": [
+        {
+          "name": "crypto-bigint",
+          "version": "0.5.5",
+          "source": "git+https://github.com/sp1-patches/RustCrypto-bigint?tag=patch-0.5.5-sp1-6.0.0#ef85da866879b5929b1da071ebe92c082b0554b9"
+        }
+      ],
+      "selected_other_locked_versions": {
+        "num-bigint": [
+          "0.3.3",
+          "0.4.6"
+        ],
+        "serde": [
+          "1.0.228"
+        ],
+        "rayon": [
+          "1.10.0"
+        ],
+        "crypto-bigint": [
+          "0.5.5"
+        ],
+        "bincode": [
+          "1.3.3"
+        ],
+        "bytemuck": [
+          "1.25.0"
+        ],
+        "postcard": [
+          "1.1.3"
+        ]
+      }
+    },
+    {
+      "path": "examples/settlement/Cargo.lock",
+      "sp1_versions": [
+        "6.10.0"
+      ],
+      "slop_versions": [
+        "6.10.0"
+      ],
+      "ark_packages": [
+        {
+          "name": "ark-bn254",
+          "version": "0.5.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ec",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-ff",
+          "version": "0.3.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ff",
+          "version": "0.4.2",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ff",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-ff-asm",
+          "version": "0.3.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ff-asm",
+          "version": "0.4.2",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ff-asm",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-ff-macros",
+          "version": "0.3.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ff-macros",
+          "version": "0.4.2",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-ff-macros",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-poly",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-serialize",
+          "version": "0.3.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-serialize",
+          "version": "0.4.2",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-serialize",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-serialize-derive",
+          "version": "0.5.0",
+          "source": "local path"
+        },
+        {
+          "name": "ark-std",
+          "version": "0.3.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-std",
+          "version": "0.4.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        },
+        {
+          "name": "ark-std",
+          "version": "0.5.0",
+          "source": "registry+https://github.com/rust-lang/crates.io-index"
+        }
+      ],
+      "external_git_dependencies": [
+        {
+          "name": "crypto-bigint",
+          "version": "0.5.5",
+          "source": "git+https://github.com/sp1-patches/RustCrypto-bigint?tag=patch-0.5.5-sp1-6.0.0#ef85da866879b5929b1da071ebe92c082b0554b9"
+        }
+      ],
+      "selected_other_locked_versions": {
+        "num-bigint": [
+          "0.3.3",
+          "0.4.6"
+        ],
+        "serde": [
+          "1.0.228"
+        ],
+        "rayon": [
+          "1.10.0"
+        ],
+        "crypto-bigint": [
+          "0.5.5"
+        ],
+        "bincode": [
+          "1.3.3"
+        ],
+        "bytemuck": [
+          "1.25.0"
+        ],
+        "postcard": [
+          "1.1.3"
+        ]
+      }
+    },
+    {
+      "path": "tools/pasta-proof/Cargo.lock",
+      "sp1_versions": [
+        "6.10.0"
+      ],
+      "slop_versions": [
+        "6.10.0"
+      ],
+      "ark_packages": [],
+      "external_git_dependencies": [],
+      "selected_other_locked_versions": {
+        "num-bigint": [
+          "0.3.3",
+          "0.4.8"
+        ],
+        "serde": [
+          "1.0.229"
+        ],
+        "rayon": [
+          "1.12.0"
+        ],
+        "crypto-bigint": [
+          "0.5.5"
+        ],
+        "rug": [
+          "1.30.0"
+        ],
+        "gmp-mpfr-sys": [
+          "1.7.1"
+        ],
+        "bincode": [
+          "1.3.3"
+        ]
+      }
+    },
+    {
+      "path": "tools/pasta-guest/Cargo.lock",
+      "sp1_versions": [
+        "6.10.0"
+      ],
+      "slop_versions": [
+        "6.10.0"
+      ],
+      "ark_packages": [],
+      "external_git_dependencies": [],
+      "selected_other_locked_versions": {
+        "num-bigint": [
+          "0.3.3",
+          "0.4.8"
+        ],
+        "serde": [
+          "1.0.229"
+        ],
+        "crypto-bigint": [
+          "0.5.5"
+        ],
+        "bincode": [
+          "1.3.3"
+        ]
+      }
+    }
+  ],
+  "external_patch_not_authored_by_mizu": {
+    "package": "crypto-bigint",
+    "version": "0.5.5",
+    "repository": "https://github.com/sp1-patches/RustCrypto-bigint",
+    "tag": "patch-0.5.5-sp1-6.0.0",
+    "revision": "ef85da866879b5929b1da071ebe92c082b0554b9",
+    "workspaces": [
+      "root",
+      "examples/settlement"
+    ],
+    "standalone_pasta_tools": "crates.io crypto-bigint 0.5.5"
+  },
+  "optional_upstream_fixture_export_submodule": {
+    "path": "mina",
+    "repository": "https://github.com/MinaProtocol/mina.git",
+    "revision": "e8c2137de13f7f77d398fe52c6f0fc1c214a4ab7",
+    "modified_by_mizu": false,
+    "used_for_default_rust_dependencies": false
+  }
+}

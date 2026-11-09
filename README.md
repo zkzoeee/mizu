@@ -49,5 +49,6 @@ example's historical 142,692,323-cycle result is recorded separately in
 `benchmarks/reference`; its 577-byte ABI differs from the core boolean guest.
 
 Read [the module map](docs/modules.md), [upstream sync guide](dependencies/README.md),
-and [receipt example](examples/settlement/README.md). Full historical runs and
+the [dependency and optimization inventory](docs/dependencies-and-optimizations.md),
+[changed-file list](docs/file-changes.md), and [receipt example](examples/settlement/README.md). Full historical runs and
 retired applications are recoverable from the external consolidation archive.
