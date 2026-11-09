@@ -22,6 +22,51 @@ const PROFILE_TRACE_CHUNK_ENTRIES: u64 = 1 << 20;
 #[derive(Clone, Copy, Debug, ValueEnum)]
 enum GuestAbi { Boolean, Settlement, Batch, StatementDigest }
 
+#[derive(Clone, Copy, Debug, ValueEnum)]
+enum Mutation { AppState, RehashedAppState, PreviousStepCommitment, Accumulator, PublicInput, WrapOpening }
+
+impl Mutation {
+    fn label(self) -> &'static str {
+        match self {
+            Self::AppState => "app-state", Self::RehashedAppState => "rehashed-app-state",
+            Self::PreviousStepCommitment => "previous-step-commitment", Self::Accumulator => "accumulator",
+            Self::PublicInput => "public-input", Self::WrapOpening => "wrap-opening",
+        }
+    }
+
+    fn apply(self, proof: &mut VerifiableProof, fixture: &Path) -> Result<()> {
+        use pickles_verifier::types::{StepField, WrapField, Verifier};
+        match self {
+            Self::AppState | Self::RehashedAppState => {
+                *proof.app_state.first_mut().context("mutation requires a statement field")? += StepField::from(1u64);
+                if matches!(self, Self::RehashedAppState) {
+                    use mina_curves::pasta::{Pallas, Vesta};
+                    use poly_commitment::precomputed_srs::get_srs;
+                    let key = parse_wrap_vk(&fs::read_to_string(fixture.join("vk.serde.json"))?)
+                        .map_err(|e| anyhow!("parse mutation VK: {e}"))?;
+                    let verifier = Verifier::new(key, Arc::new(get_srs::<Pallas>()), Arc::new(get_srs::<Vesta>()), 1);
+                    proof.messages_for_next_step_proof_digest = pickles_verifier::statement::app_state_digest(&verifier, proof)
+                        .context("mutated statement must retain its shape")?;
+                }
+            }
+            Self::PreviousStepCommitment => {
+                let point = proof.prev_step_sgs.first_mut().context("fixture has no previous step commitment")?;
+                let old = *point;
+                *point = -*point;
+                ensure!(*point != old, "previous commitment mutation is a no-op");
+            }
+            Self::Accumulator => {
+                let old = proof.challenge_polynomial_commitment;
+                proof.challenge_polynomial_commitment = -old;
+                ensure!(proof.challenge_polynomial_commitment != old, "accumulator mutation is a no-op");
+            }
+            Self::PublicInput => proof.messages_for_next_wrap_proof_digest += WrapField::from(1u64),
+            Self::WrapOpening => proof.wrap_proof.proof.z1 += WrapField::from(1u64),
+        }
+        Ok(())
+    }
+}
+
 #[derive(Parser, Debug)]
 #[command(about = "Execute an existing Pickles guest on CPU; never generate a proof")]
 struct Args {
@@ -38,6 +83,9 @@ struct Args {
     corrupt_index: usize,
     #[arg(long)]
     corrupt_statement: bool,
+    /// Deterministic Miza-style mutation, applied after fixture conversion.
+    #[arg(long, value_enum, conflicts_with_all = ["corrupt_statement", "corrupt_accumulator_challenge", "corrupt_wrap_opening"])]
+    mutation: Option<Mutation>,
     #[arg(long, default_value = "fixtures/mainnet-blockchain-snark")]
     fixture_dir: PathBuf,
     /// Mutate an accumulator challenge. The guest must reject this input.
@@ -64,6 +112,7 @@ fn main() -> Result<()> {
     let (mut proof, vk_hash, fixture_hashes) = load_fixture(&args.fixture_dir)?;
     let expected_statement_digest = pickles_verifier::attestation::statement_digest(&vk_hash, &proof.app_state);
     let honest_proof_input = bincode::serialize(&proof)?;
+    if let Some(mutation) = args.mutation { mutation.apply(&mut proof, &args.fixture_dir)?; }
     if args.corrupt_statement {
         *proof.app_state.first_mut().context("empty application statement")? += pickles_verifier::types::StepField::from(1u64);
     }
@@ -161,6 +210,7 @@ fn main() -> Result<()> {
             GuestAbi::Batch => "batch", GuestAbi::StatementDigest => "statement-digest",
         },
         "batch_size": args.batch_size,
+        "mutation": args.mutation.map_or("none", Mutation::label),
         "corrupt_index": args.corrupt_index,
         "corrupt_statement": args.corrupt_statement,
         "expected_statement_digest": hex::encode(expected_statement_digest),
@@ -228,7 +278,7 @@ fn main() -> Result<()> {
         );
     }
     ensure!(
-        !args.corrupt_accumulator_challenge && !args.corrupt_wrap_opening && !args.corrupt_statement,
+        !args.corrupt_accumulator_challenge && !args.corrupt_wrap_opening && !args.corrupt_statement && args.mutation.is_none(),
         "corrupted proof input was unexpectedly accepted"
     );
     Ok(())
@@ -417,15 +467,28 @@ fn validate_public_values(actual: &[u8], vk_hash: &[u8; 32]) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{validate_public_values, validate_boolean_public_values, PrecompileProfile, GUEST_MEMORY_LIMIT_BYTES};
+    use super::{validate_public_values, validate_boolean_public_values, PrecompileProfile, GUEST_MEMORY_LIMIT_BYTES, Mutation, load_fixture};
     use sp1_core_executor::{Instruction, Opcode, Program, SyscallCode};
     use sp1_core_executor_runner::MinimalExecutorRunner;
-    use std::sync::Arc;
+    use std::{sync::Arc, path::PathBuf};
 
     #[test]
     fn boolean_output_rejects_false_and_extra_bytes() {
         assert!(validate_boolean_public_values(&[1]).is_ok());
         for bad in [vec![], vec![0], vec![1, 0], vec![2]] { assert!(validate_boolean_public_values(&bad).is_err()); }
+    }
+
+    #[test]
+    fn every_named_mutation_changes_a_real_fixture() {
+        let directory = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/mainnet-blockchain-snark");
+        let (proof, _, _) = load_fixture(&directory).unwrap();
+        let before = bincode::serialize(&proof).unwrap();
+        for mutation in [Mutation::AppState, Mutation::RehashedAppState, Mutation::PreviousStepCommitment,
+                         Mutation::Accumulator, Mutation::PublicInput, Mutation::WrapOpening] {
+            let mut changed = proof.clone();
+            mutation.apply(&mut changed, &directory).unwrap();
+            assert_ne!(before, bincode::serialize(&changed).unwrap(), "{}", mutation.label());
+        }
     }
 
     #[test]
