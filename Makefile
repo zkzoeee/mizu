@@ -108,3 +108,30 @@ bootstrap: ## Restore pinned dependency forks
 
 benchmark: ## Build and measure the retained boolean verifier on CPU
 	python3 scripts/benchmark.py run --output benchmarks/runs/$$(date +%Y%m%dT%H%M%S)
+
+# Cached CPU-only development loop. Logs and immutable artifacts stay local.
+DEV_RECIPE ?= benchmarks/dev/retained.json
+DEV_CANDIDATE ?= benchmarks/dev/allocation.json
+DEV_CONTROL ?= benchmarks/dev/retained.json
+
+.PHONY: dev-tools dev-check dev-check-all dev-baseline dev-bench dev-operation dev-gate
+dev-tools: ## Test comparison/cache/oracle gates (no Rust or guest build)
+	python3 -B scripts/dev.py tools-test
+
+dev-check: ## Targeted native checks under the exact recipe flags
+	python3 -B scripts/dev.py check --recipe "$(DEV_RECIPE)" $(if $(DEV_TEST),--test "$(DEV_TEST)")
+
+dev-check-all: ## Full native suite and no-std under the exact recipe flags
+	python3 -B scripts/dev.py check --all --recipe "$(DEV_RECIPE)"
+
+dev-baseline: ## Freeze a reusable baseline before changing source
+	python3 -B scripts/dev.py baseline --recipe "$(DEV_RECIPE)"
+
+dev-bench: ## Cached control + candidate + relevant rejection
+	python3 -B scripts/dev.py bench --recipe "$(DEV_CANDIDATE)" $(if $(DEV_BASELINE),--control-record "$(DEV_BASELINE)",--control "$(DEV_CONTROL)")
+
+dev-operation: ## Small Poseidon guest + independent integer oracle
+	python3 -B scripts/dev.py bench --control benchmarks/dev/poseidon-reference.json --recipe benchmarks/dev/poseidon-canonical.json
+
+dev-gate: ## Full CPU promotion gate; native, producer fixtures, mutations, trace
+	python3 -B scripts/dev.py gate --recipe "$(DEV_RECIPE)"

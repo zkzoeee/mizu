@@ -14,10 +14,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - name: Restore pinned dependency forks
         run: python3 dependencies/bootstrap.py
-      - name: Native tests and no-std check
-        run: |
-          cargo test --profile native-test --locked -p pickles-verifier -p cycle-runner -- --test-threads=1
-          cargo check --profile native-test --locked -p pickles-verifier --no-default-features
+      - name: Fetch locked native dependencies
+        run: cargo fetch --locked
+      - name: Comparison, cache and oracle gates
+        run: python3 -B scripts/dev.py tools-test
+      - name: Recipe-matched native tests and no-std check
+        run: python3 -B scripts/dev.py check --all --recipe benchmarks/dev/retained.json
       - name: Receipt example tests
         run: cargo test --profile native-test --locked --manifest-path examples/settlement/Cargo.toml --workspace --lib -- --test-threads=1
       - name: Pasta harness tests

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "template": true,
+  "run_id": "REPLACE-with-unique-actual-run-id",
+  "evidence_origin": "observed_mizu",
+  "source": {
+    "repository": "REPLACE-with-source-repository-url",
+    "revision": "REPLACE-with-full-40-character-commit"
+  },
+  "program_sha256": "REPLACE-with-actual-program-hash",
+  "measurement_artifact_sha256": "REPLACE-with-raw-run-artifact-hash",
+  "compatibility": {
+    "protocol": "REPLACE-with-explicit-protocol-version",
+    "fixture_sha256": "REPLACE-with-fixture-hash",
+    "vk_sha256": "REPLACE-with-verification-key-hash",
+    "srs_sha256": "REPLACE-with-SRS-hash",
+    "input_sha256": "REPLACE-with-exact-serialized-input-hash",
+    "toolchain": "REPLACE-with-exact-toolchain-identity",
+    "runtime_revision": "REPLACE-with-full-runtime-commit",
+    "backend": "REPLACE-with-explicit-backend-identity",
+    "workload": "REPLACE-with-exact-command-options-and-sampling-policy"
+  },
+  "correctness": {
+    "passed": false,
+    "report_sha256": "REPLACE-with-correctness-report-hash",
+    "output_sha256": "REPLACE-with-verified-public-output-hash"
+  },
+  "measurement": {
+    "kind": "execution",
+    "cycles": null
+  }
+}
