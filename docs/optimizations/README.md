@@ -41,6 +41,10 @@ from the historical receipt guest to the current core.
 
 ## How to keep the records
 
+External comparisons are kept separate from retained Mizu work. See the
+[o1-openvm review](o1-openvm-review.md) for its optimization inventory, linked
+dependency changes and the OpenVM/SP1 comparison.
+
 For each new optimization or dependency port, update the responsible area and
 add an entry following [the template](TEMPLATE.md). Include retained, rejected,
 superseded, prototype, profiling-only and pending outcomes. Link the current

@@ -20984,5 +20984,15 @@
       ],
       "reports": []
     }
+  ],
+  "external_reviews": [
+    {
+      "id": "external-o1-openvm-2026-11-09",
+      "kind": "external-reference-not-a-mizu-optimization",
+      "document": "docs/optimizations/o1-openvm-review.md",
+      "evidence": "benchmarks/references/o1-openvm-review.json",
+      "reviewed_main": "3724a3d12178c3a174513ad06e8896d700f56d64",
+      "measured_by_mizu": false
+    }
   ]
 }

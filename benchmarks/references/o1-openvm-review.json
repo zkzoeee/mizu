@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "id": "external-o1-openvm-2026-11-09",
+  "reviewed_at": "2026-11-09",
+  "kind": "external-reference-not-a-mizu-optimization",
+  "repository": "https://github.com/youtpout/o1-openvm",
+  "reviewed_main": "3724a3d12178c3a174513ad06e8896d700f56d64",
+  "main_commit_count": 7,
+  "declared_openvm_version": "2.0.1",
+  "method": "Read GitHub commit history, pinned guest/config files, linked fork commits and official VM documentation; no builds or performance runs.",
+  "commits": [
+    {
+      "revision": "3724a3d12178c3a174513ad06e8896d700f56d64",
+      "date": "2026-07-30T12:20:54Z",
+      "subject": "Record the security/perf round; refresh measurements",
+      "url": "https://github.com/youtpout/o1-openvm/commit/3724a3d12178c3a174513ad06e8896d700f56d64"
+    },
+    {
+      "revision": "1be92393f09807d202031b569e73698a56f8048d",
+      "date": "2026-07-30T11:56:32Z",
+      "subject": "CLAUDE.md: correct a false claim about wire.rs validation",
+      "url": "https://github.com/youtpout/o1-openvm/commit/1be92393f09807d202031b569e73698a56f8048d"
+    },
+    {
+      "revision": "1e67b12f23ff3aa73a98c4168214f37ab6ad4db5",
+      "date": "2026-07-30T11:47:26Z",
+      "subject": "Route both Pasta curves through OpenVM chips; add in-guest rejection tests",
+      "url": "https://github.com/youtpout/o1-openvm/commit/1e67b12f23ff3aa73a98c4168214f37ab6ad4db5"
+    },
+    {
+      "revision": "f25e65db1214c3289c459c0e3b84d2cda36dbc04",
+      "date": "2026-07-30T10:22:47Z",
+      "subject": "Untrack generated artifacts",
+      "url": "https://github.com/youtpout/o1-openvm/commit/f25e65db1214c3289c459c0e3b84d2cda36dbc04"
+    },
+    {
+      "revision": "9aa7b5c1c435290777041b8d5a128a3e3bcc4b7a",
+      "date": "2026-07-30T10:22:23Z",
+      "subject": "Port the universal pickles verifier to OpenVM",
+      "url": "https://github.com/youtpout/o1-openvm/commit/9aa7b5c1c435290777041b8d5a128a3e3bcc4b7a"
+    },
+    {
+      "revision": "9bac7fcb94e7bb16114112cb67a72db2e1be5feb",
+      "date": "2026-07-30T09:29:35Z",
+      "subject": "gnerate proof",
+      "url": "https://github.com/youtpout/o1-openvm/commit/9bac7fcb94e7bb16114112cb67a72db2e1be5feb"
+    },
+    {
+      "revision": "d2785684c0bc9c28d833541546c80430eff2d81b",
+      "date": "2026-07-30T09:13:52Z",
+      "subject": "init project",
+      "url": "https://github.com/youtpout/o1-openvm/commit/d2785684c0bc9c28d833541546c80430eff2d81b"
+    }
+  ],
+  "source_files": [
+    {
+      "repository": "youtpout/o1-openvm",
+      "ref": "3724a3d12178c3a174513ad06e8896d700f56d64",
+      "path": "CLAUDE.md",
+      "git_blob_sha": "227a3f3725672e90742138c934df8f9289fd1144",
+      "url": "https://github.com/youtpout/o1-openvm/blob/3724a3d12178c3a174513ad06e8896d700f56d64/CLAUDE.md"
+    },
+    {
+      "repository": "youtpout/o1-openvm",
+      "ref": "3724a3d12178c3a174513ad06e8896d700f56d64",
+      "path": "Cargo.toml",
+      "git_blob_sha": "0201a20e738a771f1215cb651429243b10cef974",
+      "url": "https://github.com/youtpout/o1-openvm/blob/3724a3d12178c3a174513ad06e8896d700f56d64/Cargo.toml"
+    },
+    {
+      "repository": "youtpout/o1-openvm",
+      "ref": "3724a3d12178c3a174513ad06e8896d700f56d64",
+      "path": "Cargo.lock",
+      "git_blob_sha": "2d4402996dc871f1a3db03745ac2f1e0d2b801d7",
+      "url": "https://github.com/youtpout/o1-openvm/blob/3724a3d12178c3a174513ad06e8896d700f56d64/Cargo.lock"
+    },
+    {
+      "repository": "youtpout/o1-openvm",
+      "ref": "3724a3d12178c3a174513ad06e8896d700f56d64",
+      "path": "build.rs",
+      "git_blob_sha": "bc51baa17f3e8d65d541a704d568edb18db8598f",
+      "url": "https://github.com/youtpout/o1-openvm/blob/3724a3d12178c3a174513ad06e8896d700f56d64/build.rs"
+    },
+    {
+      "repository": "youtpout/o1-openvm",
+      "ref": "3724a3d12178c3a174513ad06e8896d700f56d64",
+      "path": "openvm.toml",
+      "git_blob_sha": "69c75c8e1c9fb35d99c494d5f83f42b9d4821618",
+      "url": "https://github.com/youtpout/o1-openvm/blob/3724a3d12178c3a174513ad06e8896d700f56d64/openvm.toml"
+    },
+    {
+      "repository": "youtpout/o1-openvm",
+      "ref": "3724a3d12178c3a174513ad06e8896d700f56d64",
+      "path": "src/main.rs",
+      "git_blob_sha": "dc7a9f5bd19f7ae535c2d44112f257137e9be34d",
+      "url": "https://github.com/youtpout/o1-openvm/blob/3724a3d12178c3a174513ad06e8896d700f56d64/src/main.rs"
+    },
+    {
+      "repository": "youtpout/o1-openvm",
+      "ref": "3724a3d12178c3a174513ad06e8896d700f56d64",
+      "path": "openvm_init.rs",
+      "git_blob_sha": "1690c44642ed649b110087dbc251f18222376fcb",
+      "url": "https://github.com/youtpout/o1-openvm/blob/3724a3d12178c3a174513ad06e8896d700f56d64/openvm_init.rs"
+    },
+    {
+      "repository": "youtpout/o1-openvm",
+      "ref": "3724a3d12178c3a174513ad06e8896d700f56d64",
+      "path": "tools/mkinput/src/main.rs",
+      "git_blob_sha": "5fc2e2c9f0f591dbeb6073a3adfb1eef3dd50f9c",
+      "url": "https://github.com/youtpout/o1-openvm/blob/3724a3d12178c3a174513ad06e8896d700f56d64/tools/mkinput/src/main.rs"
+    },
+    {
+      "repository": "youtpout/o1js-to-zkvm",
+      "ref": "276f324afc48ec74d3db4c7f276cfbd35530b005",
+      "path": "crates/pickles-verifier/src/openvm_ec.rs",
+      "git_blob_sha": "32c4977af04ce7bb54feebedef1005e2574a2e48",
+      "url": "https://github.com/youtpout/o1js-to-zkvm/blob/276f324afc48ec74d3db4c7f276cfbd35530b005/crates/pickles-verifier/src/openvm_ec.rs"
+    },
+    {
+      "repository": "youtpout/proof-systems",
+      "ref": "5ba1f140eefd7c3bf8c8ac38c878d248c9925183",
+      "path": "poly-commitment/src/openvm_msm.rs",
+      "git_blob_sha": "9e0a910dc3c928ee0db678655fb3e34cc9102ce7",
+      "url": "https://github.com/youtpout/proof-systems/blob/5ba1f140eefd7c3bf8c8ac38c878d248c9925183/poly-commitment/src/openvm_msm.rs"
+    }
+  ],
+  "linked_fork_heads_observed": {
+    "proof-systems": "5ba1f140eefd7c3bf8c8ac38c878d248c9925183",
+    "o1js-to-zkvm": "276f324afc48ec74d3db4c7f276cfbd35530b005"
+  },
+  "reported_measurements": {
+    "scope": "Author-reported single-mainnet-proof OpenVM meter measurements; not independently reproduced; not a matched comparison with Mizu.",
+    "stages": [
+      {
+        "name": "no Pasta acceleration",
+        "instructions": 31819681513,
+        "trace_cells": 1170322141177
+      },
+      {
+        "name": "Pasta modular arithmetic",
+        "instructions": 24221887063,
+        "trace_cells": 896055841422
+      },
+      {
+        "name": "plus Vesta ECC",
+        "instructions": 5815088237,
+        "trace_cells": 220926602404
+      },
+      {
+        "name": "plus Pallas ECC before extra point checks",
+        "instructions": 2249380517,
+        "trace_cells": 86644291990
+      },
+      {
+        "name": "plus checked point construction",
+        "instructions": 2286997815,
+        "trace_cells": 88224421019
+      },
+      {
+        "name": "plus VK checks and allocation removal",
+        "instructions": 2230979102,
+        "trace_cells": 85934163225
+      }
+    ],
+    "historical_sp1_reference_cycles": 4378867074,
+    "source": "https://github.com/youtpout/o1-openvm/blob/3724a3d12178c3a174513ad06e8896d700f56d64/CLAUDE.md"
+  },
+  "batching": {
+    "source_commit": "146db80719b4cb76c2b50c030d72bee3b029664c",
+    "repository": "youtpout/o1js-to-zkvm",
+    "scope": "Shared verifier batching API, not the single-proof universal guest's benchmark.",
+    "reported_host_phase_speedups": {
+      "two_proofs": 1.81,
+      "three_proofs": 2.83
+    },
+    "reported_timing_variation": "approximately +/-17%; not guest/proof-time speedups"
+  },
+  "reproducibility_notes": [
+    "Guest comments claiming Pallas is not wired/no accelerators are stale; TOML/generated init and code enable both curves.",
+    "Latest guest Cargo.lock has source-less path-style pickles-verifier and duplicate package records despite Git dependencies in Cargo.toml; no clean locked build was attempted.",
+    "Guest lock still records proof-systems e0a1352, preceding the observed 5ba1f1 allocation/hardening commit; do not claim the final reported measurements are fully pinned by that lock.",
+    "The early generate-proof commit predates the Mina port; it does not establish a full Mina proof for the optimized guest.",
+    "No fresh execution, proof generation, proof reload verification, GPU benchmark or security audit was performed during this review.",
+    "The 32-byte user output is this guest/default aggregation configuration; the OpenVM SDK supports custom public-value configuration."
+  ],
+  "current_mizu_reference": {
+    "measurement": "benchmarks/core-proof-systems-0.7-sp1-6.10.json",
+    "cycles": 142650295,
+    "sp1": "6.10.0",
+    "abi": "one boolean",
+    "comparison": "different runtime/fixed VK policy, public output and ISA metrics; no speed ratio inferred."
+  },
+  "official_sources": [
+    "https://docs.openvm.dev/book/advanced-usage/creating-a-new-extension/",
+    "https://docs.openvm.dev/book/acceleration-using-extensions/elliptic-curve-cryptography/",
+    "https://docs.succinct.xyz/docs/sp1/getting-started/migration",
+    "https://docs.succinct.xyz/docs/sp1/hypercube/",
+    "https://docs.succinct.xyz/docs/sp1/optimizing-programs/precompiles",
+    "https://blog.openvm.dev/2.0-production",
+    "https://docs.openvm.dev/book/writing-apps/generating-proofs/"
+  ]
+}
