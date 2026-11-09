@@ -10,11 +10,11 @@
       "path": "vendor/algebra",
       "upstream": "https://github.com/arkworks-rs/algebra.git",
       "base": "7ad88c46e859a94ab8e0b19fd8a217c3dc472f1c",
-      "revision": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
-      "tree": "65ccbce6d022711bbbc30cbc36f6dd162b260a95",
+      "revision": "6f81d7e13f3e2ea3cb985df5f5c16a8560dbc969",
+      "tree": "322ede8d57878ae1c7b3f84094bfd8f9236c292b",
       "branch": "codex/mizu",
       "bundle": "dependencies/bundles/algebra.bundle",
-      "bundle_sha256": "3a5509cfa7eda4eb47dc807f9fbe2e97991bdcaa0d68cb03ae8a543d857ff870",
+      "bundle_sha256": "783f3f009bdb1454b17c0734314966dba83ad0528e3afb8d40b1668e039b2ac8",
       "patches": [
         {
           "commit": "7b99b0e0f7243814c1414e3180bd51b643d2e5e2",
@@ -55,6 +55,13 @@
           "paths": [
             "poly/src/polynomial/univariate/dense.rs"
           ]
+        },
+        {
+          "commit": "6f81d7e13f3e2ea3cb985df5f5c16a8560dbc969",
+          "subject": "Route direct Pasta mulmods to the fixed-modulus syscalls",
+          "paths": [
+            "ff/src/fields/models/fp/montgomery_backend.rs"
+          ]
         }
       ]
     },
@@ -63,11 +70,11 @@
       "path": "vendor/proof-systems",
       "upstream": "https://github.com/o1-labs/proof-systems.git",
       "base": "b1d9829fa0b2bb8e15494df1e5e0c6741394075b",
-      "revision": "8d691e9918a1d9c5126f802fd4fc410c9c5f85b3",
-      "tree": "fc1940b2e39d7bdfa651d7df6c04d3fea16338e2",
+      "revision": "dbe478fc4cda3a51ee5a365158fe89954f0d7863",
+      "tree": "32d3ce31d03c67880deb4c34f8bb43f5e099ae81",
       "branch": "codex/proof-systems-0.7",
       "bundle": "dependencies/bundles/proof-systems.bundle",
-      "bundle_sha256": "7c027942558b3f87a3f73239e51309c8062c2ffcd1f5fb0ae16e8e75803440cf",
+      "bundle_sha256": "15cefb9e1a0b0b64f772039da76e8a8865e17754f6db1facfd0d17b0e27e09f1",
       "patches": [
         {
           "commit": "9f37ee019fb855c08884fe2c5681093b8b979806",
@@ -128,6 +135,14 @@
             "curves/src/pasta/canonical_words.rs",
             "poseidon/src/canonical.rs"
           ]
+        },
+        {
+          "commit": "dbe478fc4cda3a51ee5a365158fe89954f0d7863",
+          "subject": "Route canonical Pasta multiplies to the fixed-modulus syscalls",
+          "paths": [
+            "curves/src/pasta/canonical_pallas.rs",
+            "curves/src/pasta/canonical_words.rs"
+          ]
         }
       ]
     },
@@ -136,11 +151,11 @@
       "path": "vendor/sp1",
       "upstream": "https://github.com/succinctlabs/sp1.git",
       "base": "d83ed91f96701209613720708f36ffce0e98ed33",
-      "revision": "ac99509d080f6683d03e6a6fa96014eabaae0fc3",
-      "tree": "331c3f54a63f9d970e187f1babd6fc7ff4a233d0",
+      "revision": "70a005d67f95fb7175073ddf2384502c04424017",
+      "tree": "8ff3b40687bbfa27999244a6a2bfbe53a6fa7b22",
       "branch": "codex/mizu",
       "bundle": "dependencies/bundles/sp1.bundle",
-      "bundle_sha256": "b54759f099a402537cd045d6050609b4a80a0cc8efcf0b81885b8f93ae9ffb0e",
+      "bundle_sha256": "1996a2094dd2a8f5e5c7b91fd04773c8b958efdcdf7ebf400999efb23b7ee4ad",
       "patches": [
         {
           "commit": "0fde0939bc84bed83160e7f2c3685a863430ff7d",
@@ -217,6 +232,29 @@
           "subject": "Pipeline streaming record generation and profile its phases",
           "paths": [
             "crates/core/machine/src/utils/prove.rs"
+          ]
+        },
+        {
+          "commit": "70a005d67f95fb7175073ddf2384502c04424017",
+          "subject": "Add fixed-modulus Pallas and Vesta field-op precompiles",
+          "paths": [
+            "crates/core/executor/src/air.rs",
+            "crates/core/executor/src/artifacts/rv64im_complexity.json",
+            "crates/core/executor/src/artifacts/rv64im_complexity_mprotect.json",
+            "crates/core/executor/src/artifacts/rv64im_costs.json",
+            "crates/core/executor/src/events/precompiles/mod.rs",
+            "crates/core/executor/src/minimal/ecall.rs",
+            "crates/core/executor/src/syscall_code.rs",
+            "crates/core/executor/src/vm/syscall.rs",
+            "crates/core/executor/src/vm/syscall/precompiles/fptower/fp.rs",
+            "crates/core/executor/src/vm/syscall/precompiles/fptower/fp2_addsub.rs",
+            "crates/core/executor/src/vm/syscall/precompiles/fptower/fp2_mul.rs",
+            "crates/core/machine/src/riscv/mod.rs",
+            "crates/core/machine/src/syscall/precompiles/fptower/fp.rs",
+            "crates/core/machine/src/syscall/precompiles/fptower/fp2_addsub.rs",
+            "crates/core/machine/src/syscall/precompiles/fptower/fp2_mul.rs",
+            "crates/curves/src/weierstrass/mod.rs",
+            "crates/curves/src/weierstrass/pasta.rs"
           ]
         }
       ]
