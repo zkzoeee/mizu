@@ -63,11 +63,11 @@
       "path": "vendor/proof-systems",
       "upstream": "https://github.com/o1-labs/proof-systems.git",
       "base": "b1d9829fa0b2bb8e15494df1e5e0c6741394075b",
-      "revision": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
-      "tree": "74ab3c6ea49a3c39d809ab93f840b0f33a847359",
+      "revision": "8d691e9918a1d9c5126f802fd4fc410c9c5f85b3",
+      "tree": "fc1940b2e39d7bdfa651d7df6c04d3fea16338e2",
       "branch": "codex/proof-systems-0.7",
       "bundle": "dependencies/bundles/proof-systems.bundle",
-      "bundle_sha256": "4d2e2b2500c83824f14a4a3daeee6e633eeeaa5b6d6826894243f6faa8495c8a",
+      "bundle_sha256": "7c027942558b3f87a3f73239e51309c8062c2ffcd1f5fb0ae16e8e75803440cf",
       "patches": [
         {
           "commit": "9f37ee019fb855c08884fe2c5681093b8b979806",
@@ -120,6 +120,14 @@
             "kimchi/src/circuits/polynomials/permutation.rs",
             "kimchi/src/verifier.rs"
           ]
+        },
+        {
+          "commit": "8d691e9918a1d9c5126f802fd4fc410c9c5f85b3",
+          "subject": "Add an opt-in deferred-reduction Poseidon MDS row",
+          "paths": [
+            "curves/src/pasta/canonical_words.rs",
+            "poseidon/src/canonical.rs"
+          ]
         }
       ]
     },
@@ -128,11 +136,11 @@
       "path": "vendor/sp1",
       "upstream": "https://github.com/succinctlabs/sp1.git",
       "base": "d83ed91f96701209613720708f36ffce0e98ed33",
-      "revision": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1",
-      "tree": "af202e2d9b70ec2f1b3c5252ffad4953f7ce57b7",
+      "revision": "b2c2b02d5596ab5e07f2edb9a198050df01e67be",
+      "tree": "5b8027fc4695c5833c7c293c9445a10e9f58aea8",
       "branch": "codex/mizu",
       "bundle": "dependencies/bundles/sp1.bundle",
-      "bundle_sha256": "95b2ab9e97c1bcc2073636bf4b47cb2c8cfc3ca8514dbaa3adcb3aff650919ee",
+      "bundle_sha256": "10da8ec515fcdd550a6e98a06fceae105ef342cb1d610f44161f9369382275f8",
       "patches": [
         {
           "commit": "0fde0939bc84bed83160e7f2c3685a863430ff7d",
@@ -186,6 +194,22 @@
             "crates/core/executor/src/minimal.rs",
             "crates/core/executor/src/minimal/arch/portable/mod.rs",
             "crates/core/runner/src/portable.rs"
+          ]
+        },
+        {
+          "commit": "e0b57de848ef91fcefc3f19a6d081265864fa14f",
+          "subject": "Batch Weierstrass add witness inversions and trim field-op population",
+          "paths": [
+            "crates/core/machine/src/operations/field/field_op.rs",
+            "crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_add.rs"
+          ]
+        },
+        {
+          "commit": "b2c2b02d5596ab5e07f2edb9a198050df01e67be",
+          "subject": "Run Pallas and Vesta executor operations on fixed-limb arithmetic",
+          "paths": [
+            "crates/curves/src/weierstrass/mod.rs",
+            "crates/curves/src/weierstrass/pasta_arith.rs"
           ]
         }
       ]
