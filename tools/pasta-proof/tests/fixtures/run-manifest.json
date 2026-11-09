@@ -1,0 +1,147 @@
+{
+  "cycles": 142692781,
+  "elf_sha256": "992a8e5f149c0748db389699811905984bee182c82b98f2fcc787d6ef6517be1",
+  "proof_input_sha256": "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+  "receipt_input_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+  "public_values_len": 577,
+  "public_values_sha256": "e28098de97d14ccdf98aa05896114825a6cf004a8868d42976f4634c4904ef50",
+  "precompile_calls": {
+    "PALLAS_ADD": 697988,
+    "PALLAS_DOUBLE": 369,
+    "UINT256_MUL": 533878,
+    "VESTA_ADD": 1310683,
+    "VESTA_DOUBLE": 112
+  },
+  "production_pcs": {
+    "fri": "sp1_primitives::fri_params::core_fri_config()",
+    "log_stacking_height": 21,
+    "max_log_row_count": 22
+  },
+  "arms": [
+    {
+      "expected_calls_on_cpu": {},
+      "expected_precompile_calls": {
+        "PALLAS_ADD": 697988,
+        "PALLAS_DOUBLE": 369,
+        "UINT256_MUL": 533878,
+        "VESTA_ADD": 1310683,
+        "VESTA_DOUBLE": 112
+      },
+      "expected_records": 149,
+      "measured_main_cells": 43953205328,
+      "name": "default",
+      "opts": {
+        "global_dependencies_opt": true,
+        "memory_limit": 2147483648,
+        "minimal_trace_chunk_threshold": 16777216,
+        "retained_events_presets": [
+          "Bls12381Field",
+          "Bn254Field",
+          "Poseidon2",
+          "Sha256",
+          "U256Ops"
+        ],
+        "shard_size": 16777216,
+        "sharding_threshold": {
+          "element_threshold": 402653184,
+          "height_threshold": 4194304
+        },
+        "trace_chunk_slots": 1,
+        "gas_trace_chunk_threshold": 134217728,
+        "gas_trace_chunk_slots": 2,
+        "recompute_gkr_trace": false,
+        "drop_ldes": false,
+        "full_size_shards": false
+      }
+    },
+    {
+      "expected_calls_on_cpu": {
+        "UINT256_MUL": 533878
+      },
+      "expected_precompile_calls": {
+        "PALLAS_ADD": 697988,
+        "PALLAS_DOUBLE": 369,
+        "UINT256_MUL": 533878,
+        "VESTA_ADD": 1310683,
+        "VESTA_DOUBLE": 112
+      },
+      "expected_records": 134,
+      "measured_main_cells": 39073155952,
+      "name": "retain-uint",
+      "opts": {
+        "global_dependencies_opt": true,
+        "memory_limit": 2147483648,
+        "minimal_trace_chunk_threshold": 16777216,
+        "retained_events_presets": [
+          "Bls12381Field",
+          "Bn254Field",
+          "Poseidon2",
+          "Sha256",
+          "U256Ops",
+          "Uint256MulMod"
+        ],
+        "shard_size": 16777216,
+        "sharding_threshold": {
+          "element_threshold": 402653184,
+          "height_threshold": 4194304
+        },
+        "trace_chunk_slots": 1,
+        "gas_trace_chunk_threshold": 134217728,
+        "gas_trace_chunk_slots": 2,
+        "recompute_gkr_trace": false,
+        "drop_ldes": false,
+        "full_size_shards": false
+      }
+    },
+    {
+      "expected_calls_on_cpu": {
+        "PALLAS_ADD": 697988,
+        "UINT256_MUL": 533878,
+        "VESTA_ADD": 1310683
+      },
+      "expected_precompile_calls": {
+        "PALLAS_ADD": 697988,
+        "PALLAS_DOUBLE": 369,
+        "UINT256_MUL": 533878,
+        "VESTA_ADD": 1310683,
+        "VESTA_DOUBLE": 112
+      },
+      "expected_records": 82,
+      "measured_main_cells": 27859439760,
+      "name": "retain-pasta-and-uint",
+      "opts": {
+        "global_dependencies_opt": true,
+        "memory_limit": 2147483648,
+        "minimal_trace_chunk_threshold": 16777216,
+        "retained_events_presets": [
+          "Bls12381Field",
+          "Bn254Field",
+          "PallasAdd",
+          "Poseidon2",
+          "Sha256",
+          "U256Ops",
+          "Uint256MulMod",
+          "VestaAdd"
+        ],
+        "shard_size": 16777216,
+        "sharding_threshold": {
+          "element_threshold": 402653184,
+          "height_threshold": 4194304
+        },
+        "trace_chunk_slots": 1,
+        "gas_trace_chunk_threshold": 134217728,
+        "gas_trace_chunk_slots": 2,
+        "recompute_gkr_trace": false,
+        "drop_ldes": false,
+        "full_size_shards": false
+      }
+    }
+  ],
+  "schema": "mizu-core-proof-run-manifest/1",
+  "run": "unit-test-fixture-not-a-proof-plan",
+  "elf": "unit-test-only.elf",
+  "authorization": {
+    "total_usd_cap": 2.0,
+    "note": "Synthetic parser-test value. This file grants no spending or proving permission."
+  }
+}

@@ -1,0 +1,21 @@
+[package]
+name = "pasta-guest-program"
+version = "0.1.0"
+edition = "2021"
+
+# Deliberately standalone: no root-workspace membership, no arkworks and no
+# mina-curves, so the proved validation logic in this guest is self-contained
+# and auditable against the raw precompile ABI alone.
+[workspace]
+
+[dependencies]
+sp1-zkvm = "=6.10.0"
+sp1-primitives = "=6.10.0"
+
+# Pin the zkvm syscall library exactly: a caret range resolves sp1-lib to a
+# newer minor release whose syscall symbols do not match sp1-zkvm 6.10.0.
+[target.'cfg(target_os = "zkvm")'.dependencies]
+sp1-lib = "=6.10.0"
+
+[profile.release]
+opt-level = 3
