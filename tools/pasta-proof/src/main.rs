@@ -934,6 +934,102 @@ fn mutate_double_event(event: &mut EllipticCurveDoubleEvent, case: Case) -> Resu
 }
 
 /// Serialize the chip's generated trace and return its byte/range dependencies.
+/// Running SHA-256 digests of one Pasta chip's witness over a whole run: the
+/// trace values in row-major order, and each record's byte lookups sorted so
+/// the digest does not depend on HashMap iteration order.
+#[derive(Default)]
+struct WitnessDigest {
+    trace: Sha256,
+    dependencies: Sha256,
+    trace_values: u64,
+    lookup_entries: u64,
+}
+
+impl WitnessDigest {
+    fn absorb(&mut self, values: &[SP1Field], dependencies: &ExecutionRecord) {
+        // Hash in bounded pieces: a single chip trace can be gigabytes.
+        let mut buf = Vec::with_capacity(1 << 20);
+        for chunk in values.chunks(1 << 18) {
+            buf.clear();
+            for v in chunk {
+                buf.extend_from_slice(&v.as_canonical_u32().to_le_bytes());
+            }
+            self.trace.update(&buf);
+        }
+        self.trace_values += values.len() as u64;
+
+        let mut lookups: Vec<Vec<u8>> = dependencies
+            .byte_lookups
+            .iter()
+            .map(|entry| bincode::serialize(&entry).expect("byte lookup serializes"))
+            .collect();
+        lookups.sort_unstable();
+        for lookup in &lookups {
+            self.dependencies.update(lookup);
+        }
+        self.lookup_entries += lookups.len() as u64;
+    }
+
+    fn finish(self) -> Value {
+        json!({
+            "trace_sha256": hex::encode(self.trace.finalize()),
+            "trace_values": self.trace_values,
+            "dependencies_sha256": hex::encode(self.dependencies.finalize()),
+            "lookup_entries": self.lookup_entries,
+        })
+    }
+}
+
+/// Time one Pasta chip's dependency and trace generation on a real record,
+/// optionally folding both outputs into `digest`. Returns `(deps, trace)` seconds.
+fn time_chip_witness(
+    record: &ExecutionRecord,
+    op: &Op,
+    digest: Option<&mut WitnessDigest>,
+) -> (f64, f64) {
+    use sp1_core_machine::SupervisorMode;
+    match (op.curve, op.kind) {
+        (Curve::Vesta, Kind::Add) => time_witness_for(
+            &WeierstrassAddAssignChip::<Vesta, SupervisorMode>::new(),
+            record,
+            digest,
+        ),
+        (Curve::Pallas, Kind::Add) => time_witness_for(
+            &WeierstrassAddAssignChip::<Pallas, SupervisorMode>::new(),
+            record,
+            digest,
+        ),
+        (Curve::Vesta, Kind::Double) => time_witness_for(
+            &WeierstrassDoubleAssignChip::<Vesta, SupervisorMode>::new(),
+            record,
+            digest,
+        ),
+        (Curve::Pallas, Kind::Double) => time_witness_for(
+            &WeierstrassDoubleAssignChip::<Pallas, SupervisorMode>::new(),
+            record,
+            digest,
+        ),
+    }
+}
+
+fn time_witness_for<C: MachineAir<SP1Field, Record = ExecutionRecord>>(
+    chip: &C,
+    record: &ExecutionRecord,
+    digest: Option<&mut WitnessDigest>,
+) -> (f64, f64) {
+    let mut dependencies = ExecutionRecord::default();
+    let t = Instant::now();
+    chip.generate_dependencies(record, &mut dependencies);
+    let deps_seconds = t.elapsed().as_secs_f64();
+    let t = Instant::now();
+    let trace = chip.generate_trace(record, &mut ExecutionRecord::default());
+    let trace_seconds = t.elapsed().as_secs_f64();
+    if let Some(digest) = digest {
+        digest.absorb(&trace.values, &dependencies);
+    }
+    (deps_seconds, trace_seconds)
+}
+
 fn chip_trace_and_deps(record: &ExecutionRecord, op: &Op) -> Result<(Vec<u8>, ExecutionRecord)> {
     let mut deps = ExecutionRecord::default();
     let mut input = record.clone();
@@ -2462,6 +2558,17 @@ async fn run_r5_cycles(
     let mut per_uint: BTreeMap<&str, usize> = uint_codes.iter().map(|(n, _)| (*n, 0)).collect();
     let mut timeline: Vec<(usize, usize, usize)> = Vec::new();
     let mut witness_seconds: BTreeMap<&str, f64> = OPS.iter().map(|o| (o.id, 0.0)).collect();
+    // Dependency generation populates every row a second time, so it is timed
+    // separately from trace generation rather than folded into it.
+    let mut dependency_seconds: BTreeMap<&str, f64> =
+        OPS.iter().map(|o| (o.id, 0.0)).collect();
+    // Opt-in whole-workload witness digest. Equal digests across two builds
+    // mean every Pasta row and every byte lookup it emits is bit-identical for
+    // the real workload, not just for the one-event fixtures of
+    // `witness-digest`.
+    let mut digests: Option<BTreeMap<&str, WitnessDigest>> =
+        (time_witness && std::env::var_os("PASTA_WITNESS_DIGEST").is_some())
+            .then(|| OPS.iter().map(|o| (o.id, WitnessDigest::default())).collect());
     let mut stopped_early = false;
 
     let exec_start = Instant::now();
@@ -2470,7 +2577,7 @@ async fn run_r5_cycles(
         stdin,
         opts,
         [0; 4],
-        |mut record| {
+        |record| {
             records_seen += 1;
             let mut rec_uint = 0usize;
             for (name, code) in &uint_codes {
@@ -2489,9 +2596,10 @@ async fn run_r5_cycles(
                 }
                 *per_op.get_mut(op.id).unwrap() += n;
                 if time_witness {
-                    let t = Instant::now();
-                    let _ = generate_chip_trace(&mut record, op);
-                    *witness_seconds.get_mut(op.id).unwrap() += t.elapsed().as_secs_f64();
+                    let digest = digests.as_mut().map(|d| d.get_mut(op.id).unwrap());
+                    let (deps_s, trace_s) = time_chip_witness(&record, op, digest);
+                    *witness_seconds.get_mut(op.id).unwrap() += trace_s;
+                    *dependency_seconds.get_mut(op.id).unwrap() += deps_s;
                 }
             }
             timeline.push((records_seen, rec_add, rec_uint));
@@ -2509,7 +2617,14 @@ async fn run_r5_cycles(
 
     let total_adds = per_op["vesta-add"] + per_op["pallas-add"];
     let total_doubles = per_op["vesta-double"] + per_op["pallas-double"];
-    let witness_total: f64 = witness_seconds.values().sum();
+    let trace_total: f64 = witness_seconds.values().sum();
+    let dependency_total: f64 = dependency_seconds.values().sum();
+    let witness_total = trace_total + dependency_total;
+    let witness_digests = digests.map(|d| {
+        d.into_iter()
+            .map(|(id, digest)| (id, digest.finish()))
+            .collect::<BTreeMap<_, _>>()
+    });
     // The witness timing happens inside the streaming callback, so subtract it
     // to get the cost of record generation alone: execution, splicing, tracing
     // and dependency generation. These two are disjoint and sum to the total,
@@ -2571,7 +2686,12 @@ async fn run_r5_cycles(
             "memory_limit": memory_limit,
         },
         "pasta_witness_generation_seconds": if time_witness { json!(witness_seconds) } else { json!(null) },
+        "pasta_witness_dependency_seconds": if time_witness { json!(dependency_seconds) } else { json!(null) },
+        "pasta_witness_trace_total_seconds": if time_witness { json!(trace_total) } else { json!(null) },
+        "pasta_witness_dependency_total_seconds": if time_witness { json!(dependency_total) } else { json!(null) },
         "pasta_witness_total_seconds": if time_witness { json!(witness_total) } else { json!(null) },
+        "pasta_witness_digests": json!(witness_digests),
+        "rayon_num_threads": std::env::var("RAYON_NUM_THREADS").ok(),
         "pasta_witness_us_per_addition": if time_witness && total_adds > 0 {
             json!(witness_total * 1e6 / total_adds as f64)
         } else { json!(null) },
@@ -2618,6 +2738,394 @@ fn witness_digest() -> Result<Value> {
         "mode": "witness-digest",
         "what_this_proves": "equal digests across two builds mean the committed witness trace and the byte/range events it emits are bit-identical, so any difference is confined to host-side computation",
         "operations": operations,
+    }))
+}
+
+// ---------------------------------------------------------------------------
+// Mode: pasta-fuzz
+//
+// Differential fuzzing of the Pasta precompiles against the independent
+// integer reference (`ref_add` / `ref_double`), in three parts:
+//
+// 1. executor: the curve operation the host executor runs (`ec_add`,
+//    `ec_double`) against the generic short-Weierstrass formulas and the
+//    reference, including degenerate inputs, which must behave identically;
+// 2. witness: random operands executed by a real program; every result the
+//    executor writes and every trace row's x3/y3 limbs must equal the
+//    reference, and every honest row must satisfy the chip AIR;
+// 3. columns: every column of an honest row is perturbed in turn and the
+//    chip AIR's algebraic constraints are evaluated. A column that survives
+//    is constrained, if at all, only by the interaction arguments (memory,
+//    syscall, byte lookups), which this sweep does not evaluate.
+//
+// Inputs come from a dependency-free splitmix64 stream; the seed is printed
+// and recorded so any case replays exactly. No proof is generated.
+// ---------------------------------------------------------------------------
+
+struct FuzzRng(u64);
+
+impl FuzzRng {
+    fn next_u64(&mut self) -> u64 {
+        self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
+        let mut z = self.0;
+        z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+        z ^ (z >> 31)
+    }
+
+    /// `kG` for a random 256-bit `k`, computed with the reference group law.
+    fn point(&mut self, curve: Curve) -> Point {
+        let m = modulus(curve);
+        let g = generator(curve);
+        loop {
+            let mut acc = GroupPoint::Infinity;
+            let mut base = GroupPoint::Finite(g.0.clone(), g.1.clone());
+            for _ in 0..4 {
+                let word = self.next_u64();
+                for bit in 0..64 {
+                    if (word >> bit) & 1 == 1 {
+                        acc = group_add(&acc, &base, &m);
+                    }
+                    base = group_add(&base, &base, &m);
+                }
+            }
+            if let GroupPoint::Finite(x, y) = acc {
+                return (x, y);
+            }
+        }
+    }
+
+    /// A random operand pair with distinct x coordinates, as the raw add requires.
+    fn add_operands(&mut self, curve: Curve) -> (Point, Point) {
+        loop {
+            let (p, q) = (self.point(curve), self.point(curve));
+            if p.0 != q.0 {
+                return (p, q);
+            }
+        }
+    }
+}
+
+fn fuzz_env_u64(name: &str, default: u64) -> u64 {
+    std::env::var(name)
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(default)
+}
+
+fn run_pasta_fuzz(output: &Path) -> Result<()> {
+    ensure!(!output.exists(), "use a fresh output directory");
+    let seed = fuzz_env_u64("PASTA_FUZZ_SEED", 0x5eed_0001);
+    let iterations = fuzz_env_u64("PASTA_FUZZ_ITERS", 32) as usize;
+    eprintln!("pasta-fuzz seed={seed:#x} iterations={iterations}");
+    let started = Instant::now();
+    let mut rng = FuzzRng(seed);
+    let executor = fuzz_executor(&mut rng, iterations)?;
+    let witness = fuzz_witness(&mut rng, iterations)?;
+    let columns = fuzz_columns(&mut rng)?;
+    fs::create_dir_all(output)?;
+    let report = json!({
+        "mode": "pasta-fuzz",
+        "seed": format!("{seed:#x}"),
+        "iterations_per_operation": iterations,
+        "proved": false,
+        "executor": executor,
+        "witness": witness,
+        "columns": columns,
+        "seconds": started.elapsed().as_secs_f64(),
+    });
+    write_json(output.join("result.json"), &report)?;
+    println!("{}", serde_json::to_string_pretty(&report)?);
+    Ok(())
+}
+
+fn affine<E: sp1_curves::EllipticCurve>(p: &Point) -> sp1_curves::AffinePoint<E> {
+    sp1_curves::AffinePoint::new(p.0.clone(), p.1.clone())
+}
+
+fn point_of<E: sp1_curves::EllipticCurve>(p: &sp1_curves::AffinePoint<E>) -> Point {
+    (p.x.clone(), p.y.clone())
+}
+
+/// Whether two computations agree, treating "both panicked" as agreement.
+fn same_outcome(a: std::thread::Result<Point>, b: std::thread::Result<Point>) -> bool {
+    match (a, b) {
+        (Ok(a), Ok(b)) => a == b,
+        (Err(_), Err(_)) => true,
+        _ => false,
+    }
+}
+
+/// Executor curve operations against the generic formulas and the reference.
+fn fuzz_executor(rng: &mut FuzzRng, iterations: usize) -> Result<Value> {
+    use sp1_curves::EllipticCurve;
+    fn run<E: sp1_curves::weierstrass::WeierstrassParameters>(
+        rng: &mut FuzzRng,
+        curve: Curve,
+        iterations: usize,
+    ) -> Result<Value>
+    where
+        sp1_curves::weierstrass::SwCurve<E>: EllipticCurve,
+    {
+        type Sw<E> = sp1_curves::weierstrass::SwCurve<E>;
+        let m = modulus(curve);
+        for i in 0..iterations {
+            let (p, q) = rng.add_operands(curve);
+            let expected = ref_add(&p, &q, &m);
+            let fast = point_of(&Sw::<E>::ec_add(&affine(&p), &affine(&q)));
+            let generic = point_of(&affine::<Sw<E>>(&p).sw_add(&affine(&q)));
+            ensure!(fast == expected, "{curve:?} add {i}: executor differs from reference");
+            ensure!(generic == expected, "{curve:?} add {i}: generic differs from reference");
+            let expected = ref_double(&p, &m);
+            let fast = point_of(&Sw::<E>::ec_double(&affine(&p)));
+            let generic = point_of(&affine::<Sw<E>>(&p).sw_double());
+            ensure!(fast == expected, "{curve:?} double {i}: executor differs from reference");
+            ensure!(generic == expected, "{curve:?} double {i}: generic differs from reference");
+        }
+        // Degenerate inputs the AIR rejects but the executor still evaluates:
+        // the executor must behave exactly as the generic path does, panics
+        // included, so moving to the fast path cannot change what a malformed
+        // guest observes.
+        let p = rng.point(curve);
+        let minus_p = (p.0.clone(), &m - &p.1);
+        let off_curve = (p.0.clone(), BigUint::zero());
+        let noncanonical = (&p.0 + &m, p.1.clone());
+        let cases: Vec<(&str, Point, Option<Point>)> = vec![
+            ("add-p-minus-p", p.clone(), Some(minus_p)),
+            ("add-equal-points", p.clone(), Some(p.clone())),
+            ("add-noncanonical-q", p.clone(), Some(noncanonical.clone())),
+            ("add-noncanonical-p", noncanonical.clone(), Some(p.clone())),
+            ("double-zero-y", off_curve, None),
+            ("double-noncanonical", noncanonical, None),
+        ];
+        let mut degenerate = Vec::new();
+        for (name, a, b) in cases {
+            let (fast, generic) = match &b {
+                Some(b) => (
+                    catch_unwind(AssertUnwindSafe(|| point_of(&Sw::<E>::ec_add(&affine(&a), &affine(b))))),
+                    catch_unwind(AssertUnwindSafe(|| point_of(&affine::<Sw<E>>(&a).sw_add(&affine(b))))),
+                ),
+                None => (
+                    catch_unwind(AssertUnwindSafe(|| point_of(&Sw::<E>::ec_double(&affine(&a))))),
+                    catch_unwind(AssertUnwindSafe(|| point_of(&affine::<Sw<E>>(&a).sw_double()))),
+                ),
+            };
+            let panicked = (fast.is_err(), generic.is_err());
+            ensure!(same_outcome(fast, generic), "{curve:?} {name}: executor and generic paths diverge");
+            degenerate.push(json!({"case": name, "executor_panicked": panicked.0, "generic_panicked": panicked.1}));
+        }
+        Ok(json!({"random_cases": iterations, "degenerate": degenerate}))
+    }
+    // Panics are expected in the degenerate cases; keep their messages out of the log.
+    let hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(|_| {}));
+    let result = (|| {
+        Ok(json!({
+            "vesta": run::<sp1_curves::weierstrass::pasta::VestaParameters>(rng, Curve::Vesta, iterations)?,
+            "pallas": run::<sp1_curves::weierstrass::pasta::PallasParameters>(rng, Curve::Pallas, iterations)?,
+        }))
+    })();
+    std::panic::set_hook(hook);
+    result
+}
+
+/// The x3 and y3 results a trace row carries, read from its byte limbs.
+fn row_result(op: &Op, row: &[SP1Field]) -> Point {
+    fn value<F: PrimeField32>(limbs: &[F]) -> BigUint {
+        let bytes: Vec<u8> = limbs.iter().map(|l| l.as_canonical_u32() as u8).collect();
+        BigUint::from_bytes_le(&bytes)
+    }
+    macro_rules! read {
+        ($ty:ty) => {{
+            let cols: &$ty = row.borrow();
+            (value(&cols.x3_ins.result.0), value(&cols.y3_ins.result.0))
+        }};
+    }
+    use sp1_core_machine::SupervisorMode as S;
+    match (op.curve, op.kind) {
+        (Curve::Vesta, Kind::Add) => read!(WeierstrassAddAssignCols<SP1Field, VestaBaseField, S>),
+        (Curve::Pallas, Kind::Add) => read!(WeierstrassAddAssignCols<SP1Field, PallasBaseField, S>),
+        (Curve::Vesta, Kind::Double) => read!(WeierstrassDoubleAssignCols<SP1Field, VestaBaseField, S>),
+        (Curve::Pallas, Kind::Double) => read!(WeierstrassDoubleAssignCols<SP1Field, PallasBaseField, S>),
+    }
+}
+
+fn chip_for<'a>(
+    machine: &'a sp1_hypercube::Machine<SP1Field, Air>,
+    op: &Op,
+) -> Result<&'a Chip<SP1Field, Air>> {
+    machine
+        .chips()
+        .iter()
+        .find(|c| c.name() == op.chip)
+        .with_context(|| format!("{} chip not in machine", op.chip))
+}
+
+/// Random operands through a real program: executor results, witness rows and
+/// honest-row constraints, all against the reference.
+fn fuzz_witness(rng: &mut FuzzRng, iterations: usize) -> Result<Value> {
+    let mut results = Vec::new();
+    for op in &OPS {
+        let calls: Vec<Call> = (0..iterations)
+            .map(|_| match op.kind {
+                Kind::Add => {
+                    let (p, q) = rng.add_operands(op.curve);
+                    make_call(*op, p, Some(q))
+                }
+                Kind::Double => make_call(*op, rng.point(op.curve), None),
+            })
+            .collect::<Result<_>>()?;
+        let (program, _) = build_program(&calls)?;
+        let (records, _) =
+            generate_records::<SP1Field>(program, SP1Stdin::new(), core_opts(), [0; 4])?;
+        let machine = Air::machine();
+        let chip = chip_for(&machine, op)?;
+        let width = op_width(op);
+        let mut checked = 0usize;
+        for record in &records {
+            let events = record.get_precompile_events(op.syscall);
+            if events.is_empty() {
+                continue;
+            }
+            let trace = generate_chip_trace(&mut record.clone(), op);
+            let failures = eval_rows(chip, trace.clone());
+            ensure!(failures.is_empty(), "{}: honest rows fail the AIR: {} rows", op.id, failures.len());
+            for (row, (_, event)) in events.iter().enumerate() {
+                let written = match event {
+                    PrecompileEvent::VestaAdd(e) | PrecompileEvent::PallasAdd(e) => {
+                        e.p_memory_records.iter().map(|r| r.value).collect::<Vec<_>>()
+                    }
+                    PrecompileEvent::VestaDouble(e) | PrecompileEvent::PallasDouble(e) => {
+                        e.p_memory_records.iter().map(|r| r.value).collect::<Vec<_>>()
+                    }
+                    _ => bail!("{}: unexpected event kind", op.id),
+                };
+                let expected = &calls[checked].expected;
+                ensure!(
+                    point_from_words(&written) == *expected,
+                    "{} call {checked}: executor result differs from reference",
+                    op.id
+                );
+                ensure!(
+                    row_result(op, &trace.values[row * width..(row + 1) * width]) == *expected,
+                    "{} call {checked}: witness x3/y3 differ from reference",
+                    op.id
+                );
+                checked += 1;
+            }
+        }
+        ensure!(checked == iterations, "{}: checked {checked} of {iterations} calls", op.id);
+        results.push(json!({"operation": op.id, "calls": checked, "executor_matches": true,
+            "witness_matches": true, "honest_rows_satisfy_air": true}));
+    }
+    Ok(json!(results))
+}
+
+/// Column offsets of a chip's row struct, from `offset_of!` on its `u8`
+/// instantiation (the columns are `repr(C)` arrays of `T`).
+fn column_fields(op: &Op) -> Vec<(&'static str, usize)> {
+    use sp1_core_machine::SupervisorMode as S;
+    macro_rules! fields {
+        ($ty:ty; $($f:ident),*) => {{
+            let mut v = vec![$((stringify!($f), core::mem::offset_of!($ty, $f))),*];
+            v.sort_by_key(|(_, o)| *o);
+            v
+        }};
+    }
+    macro_rules! add_fields {
+        ($b:ty) => { fields!(WeierstrassAddAssignCols<u8, $b, S>; is_real, clk_high, clk_low, p_ptr, q_ptr,
+            p_addrs, q_addrs, p_access, q_access, slope_denominator, inverse_check, slope_numerator, slope,
+            slope_squared, p_x_plus_q_x, x3_ins, p_x_minus_x, y3_ins, slope_times_p_x_minus_x, x3_range,
+            y3_range, read_slice_page_prot_access, write_slice_page_prot_access) };
+    }
+    macro_rules! double_fields {
+        ($b:ty) => { fields!(WeierstrassDoubleAssignCols<u8, $b, S>; is_real, clk_high, clk_low, p_ptr,
+            p_addrs, p_access, slope_denominator, slope_numerator, slope, p_x_squared, p_x_squared_times_3,
+            slope_squared, p_x_plus_p_x, x3_ins, p_x_minus_x, y3_ins, slope_times_p_x_minus_x, x3_range,
+            y3_range, write_slice_page_prot_access) };
+    }
+    match (op.curve, op.kind) {
+        (Curve::Vesta, Kind::Add) => add_fields!(VestaBaseField),
+        (Curve::Pallas, Kind::Add) => add_fields!(PallasBaseField),
+        (Curve::Vesta, Kind::Double) => double_fields!(VestaBaseField),
+        (Curve::Pallas, Kind::Double) => double_fields!(PallasBaseField),
+    }
+}
+
+fn column_field(fields: &[(&'static str, usize)], column: usize) -> &'static str {
+    fields.iter().rev().find(|(_, o)| *o <= column).map(|(n, _)| *n).unwrap_or("?")
+}
+
+/// Fields whose values are bound by the memory, syscall or page-protection
+/// interactions rather than by the chip's own algebra.
+const INTERACTION_BOUND_FIELDS: [&str; 10] = [
+    "clk_high", "clk_low", "p_ptr", "q_ptr", "p_addrs", "q_addrs", "p_access", "q_access",
+    "read_slice_page_prot_access", "write_slice_page_prot_access",
+];
+
+/// Perturb every column of one honest row, twice, and evaluate the AIR.
+fn fuzz_columns(rng: &mut FuzzRng) -> Result<Value> {
+    let mut results = Vec::new();
+    for op in &OPS {
+        let call = match op.kind {
+            Kind::Add => {
+                let (p, q) = rng.add_operands(op.curve);
+                make_call(*op, p, Some(q))?
+            }
+            Kind::Double => make_call(*op, rng.point(op.curve), None)?,
+        };
+        let (program, _) = build_program(std::slice::from_ref(&call))?;
+        let (records, _) =
+            generate_records::<SP1Field>(program, SP1Stdin::new(), core_opts(), [0; 4])?;
+        let record = records
+            .iter()
+            .find(|r| !r.get_precompile_events(op.syscall).is_empty())
+            .context("no shard carried the precompile event")?;
+        let machine = Air::machine();
+        let chip = chip_for(&machine, op)?;
+        let width = op_width(op);
+        let honest = generate_chip_trace(&mut record.clone(), op);
+        ensure!(eval_rows(chip, honest.clone()).is_empty(), "{}: honest row fails", op.id);
+        let fields = column_fields(op);
+        let mut surviving: BTreeMap<&str, Vec<usize>> = BTreeMap::new();
+        for column in 0..width {
+            // A unit step and an arbitrary nonzero step: a column counts as
+            // algebraically unconstrained only if both leave the AIR satisfied.
+            let random = 1 + (rng.next_u64() % (SP1Field::ORDER_U32 as u64 - 1)) as u32;
+            let survives = [1u32, random].iter().all(|delta| {
+                let mut trace = honest.clone();
+                trace.values[column] += SP1Field::from_canonical_u32(*delta);
+                eval_rows(chip, trace).is_empty()
+            });
+            if survives {
+                surviving.entry(column_field(&fields, column)).or_default().push(column);
+            }
+        }
+        let arithmetic: Vec<&str> = surviving
+            .keys()
+            .copied()
+            .filter(|f| !INTERACTION_BOUND_FIELDS.contains(f))
+            .collect();
+        // The recorded expectation is that no arithmetic column survives
+        // (docs/pasta-air-verification-plan.md); a new survivor is a finding.
+        ensure!(
+            arithmetic.is_empty(),
+            "{}: algebraically unconstrained arithmetic fields {:?}",
+            op.id,
+            arithmetic
+        );
+        results.push(json!({
+            "operation": op.id,
+            "columns": width,
+            "surviving_columns": surviving.values().map(Vec::len).sum::<usize>(),
+            "surviving_by_field": surviving,
+            "algebraically_unconstrained_arithmetic_fields": arithmetic,
+        }));
+    }
+    Ok(json!({
+        "scope": "algebraic row constraints only; interaction-bound fields are expected to survive",
+        "interaction_bound_fields": INTERACTION_BOUND_FIELDS,
+        "results": results,
     }))
 }
 
@@ -6003,6 +6511,10 @@ fn main() -> Result<()> {
                 &reference.context("--reference trace expectation is required")?,
             ))
         }
+        "pasta-fuzz" => {
+            let output = output.context("--output is required")?;
+            run_pasta_fuzz(&output)
+        }
         "witness-digest" => {
             let report = witness_digest()?;
             if let Some(path) = output {
@@ -6155,5 +6667,120 @@ mod migration_tests {
         let mut x = pv;
         x.enable_trap_handler = SP1Field::one();
         rejects(&vk, x, "trap_handler_matches_vk");
+    }
+}
+
+/// Differential checks for the batched slope-denominator inversion in the
+/// Weierstrass add chip: the batched trace and byte lookups must equal what
+/// unbatched row-by-row population produces, inside one binary.
+#[cfg(test)]
+mod batch_inversion_tests {
+    use super::*;
+    use sp1_core_executor::events::ByteRecord;
+    use sp1_core_machine::operations::field::field_op::{batch_mod_inverse, mod_inverse};
+    use sp1_core_machine::SupervisorMode;
+    use sp1_curves::EllipticCurve;
+
+    #[test]
+    fn executor_curve_operations_match_generic_and_reference() {
+        let report = fuzz_executor(&mut FuzzRng(0x7e57), 16).unwrap();
+        for curve in ["vesta", "pallas"] {
+            assert_eq!(report[curve]["random_cases"], 16);
+        }
+    }
+
+    #[test]
+    fn batch_inverse_matches_single_inversions_with_zeros() {
+        for curve in [Curve::Vesta, Curve::Pallas] {
+            let m = modulus(curve);
+            let mut values: Vec<BigUint> = (1u32..200)
+                .map(|i| (BigUint::from(i).pow(37) + BigUint::from(i)) % &m)
+                .collect();
+            // Zeros and multiples of the modulus have no inverse; they must
+            // come back as zero without disturbing their neighbours.
+            values.insert(0, BigUint::zero());
+            values.insert(50, m.clone());
+            values.push(&m * 3u32);
+            values.push(&m - 1u32);
+            let batched = batch_mod_inverse(&values, &m);
+            assert_eq!(batched.len(), values.len());
+            for (value, inverse) in values.iter().zip(&batched) {
+                let reduced = value % &m;
+                if reduced.is_zero() {
+                    assert!(inverse.is_zero());
+                } else {
+                    assert_eq!(*inverse, mod_inverse(&reduced, &m));
+                    assert_eq!((&reduced * inverse) % &m, BigUint::one());
+                }
+            }
+            assert!(batch_mod_inverse(&[], &m).is_empty());
+            assert!(batch_mod_inverse(&[BigUint::zero()], &m)[0].is_zero());
+            assert_eq!(batch_mod_inverse(&[BigUint::one()], &m), vec![BigUint::one()]);
+        }
+    }
+
+    /// Population of every event row the unbatched way, then compare against
+    /// the chip's own (batched) trace rows and dependency byte lookups.
+    fn assert_add_chip_matches_unbatched<E: EllipticCurve + sp1_curves::weierstrass::WeierstrassParameters>(
+        record: &ExecutionRecord,
+        syscall: SyscallCode,
+    ) -> usize {
+        let chip = WeierstrassAddAssignChip::<E, SupervisorMode>::new();
+        let width = num_weierstrass_add_cols_supervisor::<E::BaseField>();
+        let events = record.get_precompile_events(syscall);
+        if events.is_empty() {
+            return 0;
+        }
+        let trace = MachineAir::<SP1Field>::generate_trace(&chip, record, &mut ExecutionRecord::default());
+        let mut deps = ExecutionRecord::default();
+        MachineAir::<SP1Field>::generate_dependencies(&chip, record, &mut deps);
+
+        let mut reference_lookups = ExecutionRecord::default();
+        for (idx, (_, op)) in events.iter().enumerate() {
+            let event = match op {
+                PrecompileEvent::VestaAdd(event) | PrecompileEvent::PallasAdd(event) => event,
+                _ => unreachable!(),
+            };
+            let mut row = vec![SP1Field::zero(); width];
+            let mut blu = Vec::new();
+            let cols: &mut WeierstrassAddAssignCols<SP1Field, E::BaseField, SupervisorMode> =
+                row.as_mut_slice().borrow_mut();
+            WeierstrassAddAssignChip::<E, SupervisorMode>::populate_row(event, cols, &mut blu);
+            assert_eq!(
+                &trace.values[idx * width..(idx + 1) * width],
+                row.as_slice(),
+                "row {idx} differs between batched and unbatched population"
+            );
+            reference_lookups.add_byte_lookup_events(blu);
+        }
+        assert_eq!(
+            deps.byte_lookups, reference_lookups.byte_lookups,
+            "dependency byte lookups differ between batched and unbatched population"
+        );
+        events.len()
+    }
+
+    #[test]
+    fn batched_add_witness_equals_unbatched_rows_and_lookups() {
+        // 300 additions per curve spans several 64-row trace chunks and the
+        // dependency chunks, with distinct operands in every call.
+        for op in OPS.iter().filter(|op| op.kind == Kind::Add) {
+            let points = multiples(op.curve, 601);
+            let calls: Vec<Call> = (0..300)
+                .map(|i| make_call(*op, points[i].clone(), Some(points[300 + i].clone())))
+                .collect::<Result<_>>()
+                .unwrap();
+            let (program, _) = build_program(&calls).unwrap();
+            let (records, _) =
+                generate_records::<SP1Field>(program, SP1Stdin::new(), core_opts(), [0; 4]).unwrap();
+            let checked: usize = records
+                .iter()
+                .map(|record| match op.curve {
+                    Curve::Vesta => assert_add_chip_matches_unbatched::<Vesta>(record, op.syscall),
+                    Curve::Pallas => assert_add_chip_matches_unbatched::<Pallas>(record, op.syscall),
+                })
+                .sum();
+            assert_eq!(checked, 300, "{}: every addition must be checked", op.id);
+        }
     }
 }

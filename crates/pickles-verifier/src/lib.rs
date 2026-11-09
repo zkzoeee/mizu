@@ -436,6 +436,43 @@ mod tests {
         assert!(!accumulator_check_batch(&short, &[proof.clone(), proof]));
     }
 
+    /// Zakura's prepared zero-check rule: the combination challenge must be
+    /// derived after every equation is fixed and must change with every input
+    /// that defines one. Each case below alters exactly one such input.
+    #[test]
+    fn experimental_batch_challenge_binds_every_transcript_input() {
+        let (verifier, proof) = mainnet_proof();
+        let batch = vec![proof.clone(); 2];
+        let base = accumulator_batch::challenge(&verifier, &batch, None);
+        assert!(!base.is_zero(), "the zero challenge is excluded");
+
+        let digest = StepField::from(7u64);
+        assert_ne!(base, accumulator_batch::challenge(&verifier, &batch, Some(digest)));
+        assert_ne!(
+            accumulator_batch::challenge(&verifier, &batch, Some(digest)),
+            accumulator_batch::challenge(&verifier, &batch, Some(digest + StepField::ONE)),
+            "the verifier-key digest is bound"
+        );
+
+        let three = vec![proof.clone(); 3];
+        assert_ne!(base, accumulator_batch::challenge(&verifier, &three, None), "count is bound");
+
+        let mut changed = batch.clone();
+        changed[1].raw_bulletproof_challenges[5] += StepField::ONE;
+        assert_ne!(base, accumulator_batch::challenge(&verifier, &changed, None), "challenges are bound");
+
+        let mut changed = batch.clone();
+        changed[1].challenge_polynomial_commitment = Vesta::generator();
+        assert_ne!(base, accumulator_batch::challenge(&verifier, &changed, None), "commitments are bound");
+
+        let mut wider = Verifier::new(verifier.wrap_vk.clone(), wrap_srs().clone(), vesta_srs().clone(), 1);
+        wider.step_srs_length_log2 += 1;
+        assert_ne!(base, accumulator_batch::challenge(&wider, &batch, None), "SRS size is bound");
+
+        // Deterministic: the same transcript yields the same challenge.
+        assert_eq!(base, accumulator_batch::challenge(&verifier, &batch, None));
+    }
+
     fn compat_proof() -> (Verifier, VerifiableProof) {
         let dir = "ocaml-compat";
         let ocaml =
