@@ -2397,7 +2397,27 @@ fn core_opts() -> SP1CoreOpts {
     opts.trace_chunk_slots = 0;
     opts.memory_limit = 128 * 1024 * 1024;
     opts.shard_size = 1 << 10;
+    apply_retention_env(&mut opts);
     opts
+}
+
+/// `PASTA_RETAIN` selects the precompile memory-retention routing for the CPU
+/// suites: `uint` keeps `UINT256_MUL` events in CPU shards, `pasta-uint` also
+/// both Pasta additions (the r107 "both-all" routing). Unset keeps the default.
+fn apply_retention_env(opts: &mut SP1CoreOpts) {
+    use sp1_core_executor::RetainedEventsPreset;
+    match std::env::var("PASTA_RETAIN").as_deref() {
+        Ok("uint") => {
+            opts.retained_events_presets.insert(RetainedEventsPreset::Uint256MulMod);
+        }
+        Ok("pasta-uint") => {
+            opts.retained_events_presets.insert(RetainedEventsPreset::Uint256MulMod);
+            opts.retained_events_presets.insert(RetainedEventsPreset::VestaAdd);
+            opts.retained_events_presets.insert(RetainedEventsPreset::PallasAdd);
+        }
+        Ok(other) => panic!("unknown PASTA_RETAIN routing {other:?}"),
+        Err(_) => {}
+    }
 }
 
 /// Options for proving a real program, as opposed to the tiny fixtures
@@ -6903,6 +6923,8 @@ fn main() -> Result<()> {
             | "guest-gpu"
             | "r5-gpu"
             | "manifest-core-gpu"
+            | "pipeline-cpu"
+            | "pasta-fp-check"
     ) || (mode == "volume" && !prove_counts.is_empty());
     ensure!(!generates_proof || std::env::var("PASTA_ALLOW_REAL_PROOF").as_deref() == Ok("1"),
         "real proof generation is gated: authorize it on a suitably sized host, then set PASTA_ALLOW_REAL_PROOF=1");

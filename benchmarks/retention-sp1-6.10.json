@@ -1,0 +1,53 @@
+{
+ "schema_version": 1,
+ "name": "mizu-retention-promotion",
+ "date": "2026-11-10",
+ "sp1_version": "6.10.0",
+ "routing": "retain UINT256_MUL, VESTA_ADD and PALLAS_ADD events in CPU shards (r107 both-all)",
+ "trace_current_boolean_guest": {
+  "main_cells": [
+   43922703280,
+   27839873136
+  ],
+  "main_shape_area": [
+   44067454976,
+   27940356096
+  ],
+  "global_interaction_events": [
+   136299445,
+   72424931
+  ],
+  "preprocessed_cells": [
+   706838528,
+   391626752
+  ],
+  "records": [
+   148,
+   82
+  ],
+  "calls_on_cpu": {
+   "PALLAS_ADD": 697988,
+   "UINT256_MUL": 533878,
+   "VESTA_ADD": 1310683
+  },
+  "complete_execution_accepted": true
+ },
+ "adversarial_cpu_proof_matrix": {
+  "cases": 42,
+  "honest_accepted": 4,
+  "malicious_rejected": 38,
+  "unexpected": 0,
+  "routing": "pasta-uint",
+  "shards_per_honest_case": 1,
+  "seconds": 104.2,
+  "peak_rss_bytes": 284868608
+ },
+ "prior_gpu_evidence": "r114 and r120: honest GPU core proofs of the retain-pasta-and-uint arm (82 shards) accepted by the complete-execution verifier, on the earlier receipt guest",
+ "promoted": "core-proof path: benchmarks/gpu/next-core-proof-manifest.json lists retain-pasta-and-uint as the primary arm",
+ "not_promoted": "SP1CoreOpts::default presets stay upstream's: the SDK's recursive path needs a recursion VK map covering the retained CPU clusters, which is not built",
+ "artifact_sha256": {
+  "proof-matrix-retain-pasta-uint.json": "9a1b438bc595f5e2ad1b2e313b2f0200a5dc2dc6d6e6f52091efed08202a9154",
+  "trace-default.json": "c10b9293dda8a4d94e2618083f454f54bf6d1be05920b4da82b24fe0207c5ab9",
+  "trace-retain-pasta-uint.json": "cdf099238d5795da98e4d51cc905813bed0e44420cf7ccc6aaecf094e1898d75"
+ }
+}

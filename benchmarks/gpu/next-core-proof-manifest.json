@@ -1,0 +1,108 @@
+{
+ "schema": "mizu-core-proof-run-manifest/1",
+ "run": "next-core-proof-retained-boolean-guest",
+ "elf": "/Users/user/000/_Z/o1js-to-zkvm/benchmarks/.dev-cache/builds/a9688db4bd019b3b716f8e21e112e99f32af5a7cd0e58403c366ccbb3ab2ff5f/o1-verifier",
+ "elf_sha256": "0cfb3eafeea0d450e3ae8efd9a472a363495d49a5ff055b31b7cb50541c5a871",
+ "cycles": 142638298,
+ "proof_input_sha256": "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+ "receipt_input_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+ "public_values_len": 1,
+ "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+ "precompile_calls": {
+  "PALLAS_ADD": 697988,
+  "PALLAS_DOUBLE": 369,
+  "UINT256_MUL": 533878,
+  "VESTA_ADD": 1310683,
+  "VESTA_DOUBLE": 112
+ },
+ "production_pcs": {
+  "fri": "sp1_primitives::fri_params::core_fri_config()",
+  "log_stacking_height": 21,
+  "max_log_row_count": 22
+ },
+ "authorization": {
+  "total_usd_cap": 0.0,
+  "note": "Template. This file grants no spending or proving permission; the user sets a cap before any rental."
+ },
+ "arms": [
+  {
+   "expected_calls_on_cpu": {
+    "PALLAS_ADD": 697988,
+    "UINT256_MUL": 533878,
+    "VESTA_ADD": 1310683
+   },
+   "expected_precompile_calls": {
+    "PALLAS_ADD": 697988,
+    "PALLAS_DOUBLE": 369,
+    "UINT256_MUL": 533878,
+    "VESTA_ADD": 1310683,
+    "VESTA_DOUBLE": 112
+   },
+   "expected_records": 82,
+   "measured_main_cells": 27839873136,
+   "name": "retain-pasta-and-uint",
+   "opts": {
+    "global_dependencies_opt": true,
+    "memory_limit": 2147483648,
+    "minimal_trace_chunk_threshold": 16777216,
+    "retained_events_presets": [
+     "Bls12381Field",
+     "Bn254Field",
+     "PallasAdd",
+     "Poseidon2",
+     "Sha256",
+     "U256Ops",
+     "Uint256MulMod",
+     "VestaAdd"
+    ],
+    "shard_size": 16777216,
+    "sharding_threshold": {
+     "element_threshold": 402653184,
+     "height_threshold": 4194304
+    },
+    "trace_chunk_slots": 1,
+    "gas_trace_chunk_threshold": 134217728,
+    "gas_trace_chunk_slots": 2,
+    "recompute_gkr_trace": false,
+    "drop_ldes": false,
+    "full_size_shards": false
+   }
+  },
+  {
+   "expected_calls_on_cpu": {},
+   "expected_precompile_calls": {
+    "PALLAS_ADD": 697988,
+    "PALLAS_DOUBLE": 369,
+    "UINT256_MUL": 533878,
+    "VESTA_ADD": 1310683,
+    "VESTA_DOUBLE": 112
+   },
+   "expected_records": 148,
+   "measured_main_cells": 43922703280,
+   "name": "default",
+   "opts": {
+    "global_dependencies_opt": true,
+    "memory_limit": 2147483648,
+    "minimal_trace_chunk_threshold": 16777216,
+    "retained_events_presets": [
+     "Bls12381Field",
+     "Bn254Field",
+     "Poseidon2",
+     "Sha256",
+     "U256Ops"
+    ],
+    "shard_size": 16777216,
+    "sharding_threshold": {
+     "element_threshold": 402653184,
+     "height_threshold": 4194304
+    },
+    "trace_chunk_slots": 1,
+    "gas_trace_chunk_threshold": 134217728,
+    "gas_trace_chunk_slots": 2,
+    "recompute_gkr_trace": false,
+    "drop_ldes": false,
+    "full_size_shards": false
+   }
+  }
+ ]
+}

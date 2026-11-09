@@ -201,3 +201,26 @@ not by preserving the original experimental commit history.
   new precompile clusters, so it stays opt-in. Not yet measured together with
   the deferred MDS flag, whose saving overlaps (both remove `UINT256_MUL`
   traffic). Evidence: [summary](../../benchmarks/pasta-fp-sp1-6.10.json).
+
+## mizu-retention-promotion: Pasta and UInt256 retention on the core-proof path
+
+- **Status:** promoted for core proofs; not promoted as SP1's global default.
+- **What changed:** the harness's CPU suites take `PASTA_RETAIN=uint` or
+  `pasta-uint`; the next GPU run's manifest,
+  `benchmarks/gpu/next-core-proof-manifest.json`, makes `retain-pasta-and-uint`
+  its primary arm with default routing as the control. Its spending cap is 0:
+  it grants nothing until the user sets one. It also needs the expected
+  `public-values.bin` (one byte `01`) in its input directory.
+- **Result (current boolean guest):** records 148 → 82, main cells
+  43,922,703,280 → 27,839,873,136 (−36.6%), Global interaction events −46.9%,
+  identical cycles; all 2,542,549 retained calls placed on CPU shards;
+  trace accounting accepts the complete execution.
+- **Proof evidence:** the 42-case CPU proof matrix under `pasta-uint` routing:
+  4 honest proofs accepted (one shard each, against three under default
+  routing) and 38 malicious cases rejected, none unexpected. Honest GPU proofs
+  of the same routing exist from r114/r120 on the earlier receipt guest.
+- **Why not the global default:** flipping `SP1CoreOpts::default` would also
+  change the SDK's recursive proving path (`make prove-cpu`), which needs a
+  recursion VK map covering the retained CPU clusters. That map is not built;
+  building it needs SP1's recursion toolchain and GPU-class compute.
+  Evidence: [summary](../../benchmarks/retention-sp1-6.10.json).
