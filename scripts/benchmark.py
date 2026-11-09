@@ -8,10 +8,10 @@ def snapshot():
     lock = json.loads((ROOT/'dependencies/lock.json').read_text())
     result = {}
     for repo, prefix in [(ROOT, '')]+[(ROOT/d['path'], d['path']+'/') for d in lock['dependencies']]:
-        for name in subprocess.check_output(['git', '-C', str(repo), 'ls-files', '-z']).split(b'\0'):
+        for name in subprocess.check_output(['git', '-C', str(repo), 'ls-files', '--cached', '--others', '--exclude-standard', '-z']).split(b'\0'):
             if not name: continue
             key = prefix+os.fsdecode(name); p = ROOT/key
-            if p.is_file() and (key.startswith(('crates/', 'vendor/', 'fixtures/')) or key in ('Cargo.toml','Cargo.lock','rust-toolchain.toml')):
+            if p.is_file() and (key.startswith(('crates/', 'vendor/', 'fixtures/', 'examples/', 'tools/')) or key in ('Cargo.toml','Cargo.lock','rust-toolchain.toml','dependencies/lock.json','scripts/benchmark.py','scripts/openvm_experiments.py')):
                 result[key] = sha(p)
     return result
 
@@ -36,7 +36,8 @@ def main():
     config = json.loads(args.config.read_text())
     fixture = ROOT/config['fixture_dir']
     assert {name:sha(fixture/name) for name in config['fixture_sha256']} == config['fixture_sha256'], 'fixture differs from retained configuration'
-    env = dict(os.environ, CARGO_BUILD_JOBS='1', RAYON_NUM_THREADS='1', CARGO_TARGET_DIR=str(ROOT/'target'), RUSTUP_TOOLCHAIN='1.92.0')
+    env = {k:v for k,v in os.environ.items() if not k.startswith(('ZEKO_', 'MIZU_'))}
+    env.update(CARGO_BUILD_JOBS='1', RAYON_NUM_THREADS='1', CARGO_TARGET_DIR=str(ROOT/'target'), RUSTUP_TOOLCHAIN='1.92.0', VK_JSON=str(fixture/'vk.serde.json'))
     env.update(config['optimization_env'])
     source = snapshot(); timings = []
     neutral = {k:v for k,v in env.items() if not k.startswith(('ZEKO_','MIZU_'))}
@@ -56,7 +57,7 @@ def main():
     if args.mode == 'run':
         receipt['runner_sha256']=sha(runner)
         result_path=args.output/'result.json'
-        timings.append(run([str(runner),'--elf',str(elf),'--fixture-dir',str(ROOT/config['fixture_dir']),'--output',str(result_path)],neutral,args.output/'execute.log'))
+        timings.append(run([str(runner),'--elf',str(elf),'--fixture-dir',str(ROOT/config['fixture_dir']),'--guest-abi',guest.get('abi','boolean'),'--batch-size',str(guest.get('batch_size',1)),'--output',str(result_path)],neutral,args.output/'execute.log'))
         result=json.loads(result_path.read_text())
         assert result['accepted'] and result['guest_exit_code']==0
         assert result['public_values_sha256']==config['expected_public_values_sha256']

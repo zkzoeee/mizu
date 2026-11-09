@@ -49,7 +49,13 @@ def build(output):
         config = json.loads((ROOT/'benchmarks/retained.json').read_text())
         config['name'] = f'mizu-openvm-experiment-{name}'
         config['optimization_env'].update(settings)
-        config['guest'].update(features=features, binary=binary)
+        abi = 'batch' if binary == 'o1-verifier-batch' else ('statement-digest' if 'statement-digest' in features else 'boolean')
+        config['guest'].update(features=features, binary=binary, abi=abi)
+        if abi == 'statement-digest':
+            # Golden output for the pinned mainnet fixture/VK. Native wire
+            # tests and the runner independently check its versioned encoding.
+            expected = bytes.fromhex('837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de')
+            config['expected_public_values_sha256'] = hashlib.sha256(expected).hexdigest()
         path = output/name/'config.json'
         write(path, config)
         print(f'Building {name}', flush=True)

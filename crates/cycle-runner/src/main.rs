@@ -156,7 +156,10 @@ fn main() -> Result<()> {
     let failure = validation.err().map(|error| error.to_string());
     let mut report = json!({
         "schema_version": 2,
-        "guest_abi": format!("{:?}", args.guest_abi).to_lowercase(),
+        "guest_abi": match args.guest_abi {
+            GuestAbi::Boolean => "boolean", GuestAbi::Settlement => "settlement",
+            GuestAbi::Batch => "batch", GuestAbi::StatementDigest => "statement-digest",
+        },
         "batch_size": args.batch_size,
         "corrupt_index": args.corrupt_index,
         "corrupt_statement": args.corrupt_statement,
@@ -191,8 +194,12 @@ fn main() -> Result<()> {
         "public_values_len": public_values.len(),
         "public_values_sha256": hex::encode(Sha256::digest(&public_values)),
         "public_values_hex": hex::encode(&public_values),
-        "proof_valid": public_values.first().map(|value| *value == 1),
-        "vk_hash": public_values.get(1..33).map(hex::encode),
+        "proof_valid": if matches!(args.guest_abi, GuestAbi::StatementDigest) {
+            accepted.then_some(true)
+        } else { public_values.first().map(|value| *value == 1) },
+        "vk_hash": if matches!(args.guest_abi, GuestAbi::Settlement) {
+            public_values.get(1..33).map(hex::encode)
+        } else { None },
         "expected_vk_hash": hex::encode(vk_hash),
         "accepted": accepted,
         "failure": failure,
