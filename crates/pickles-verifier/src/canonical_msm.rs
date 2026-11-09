@@ -110,7 +110,12 @@ impl FpConfig<4> for CanonicalFqConfig {
                 // full 64-byte RHS/modulus buffer is alive and disjoint from
                 // `a`; the syscall writes the reduced result into `a` in place.
                 unsafe {
-                    sp1_lib::syscall_uint256_mulmod(&mut (a.0).0, rhs_modulus.as_ptr());
+                    if matches!(option_env!("MIZU_PASTA_FP_PRECOMPILE"), Some("1")) {
+                        // CanonicalFq: the Vesta base field.
+                        pasta_fp_mul::<true>(&mut (a.0).0, &(b.0).0);
+                    } else {
+                        sp1_lib::syscall_uint256_mulmod(&mut (a.0).0, rhs_modulus.as_ptr());
+                    }
                 }
                 return;
             }
@@ -653,4 +658,20 @@ mod tests {
         assert_eq!(out.chunks.len(), 1);
         assert!(out.chunks[0].is_zero());
     }
+}
+
+/// `x <- x * y mod p` through the fixed-modulus Pasta syscall for the field
+/// selected at compile time: `PALLAS_FP_MUL` (0x00_01_01_76) for Fp, or
+/// `VESTA_FP_MUL` (0x00_01_01_79) for Fq. Only `x` and `y` are memory operands;
+/// the modulus is a constant of the syscall's AIR.
+///
+/// # Safety
+/// `x` must be a valid, aligned, writable `[u64; 4]` and `y` a valid, aligned
+/// `[u64; 4]` that does not alias `x`: both are memory operands of one syscall.
+#[cfg(target_os = "zkvm")]
+#[inline(always)]
+#[allow(unsafe_code)]
+pub(crate) unsafe fn pasta_fp_mul<const FQ: bool>(x: *mut [u64; 4], y: *const [u64; 4]) {
+    let code: u32 = if FQ { 0x00_01_01_79 } else { 0x00_01_01_76 };
+    core::arch::asm!("ecall", in("t0") code, in("a0") x, in("a1") y);
 }

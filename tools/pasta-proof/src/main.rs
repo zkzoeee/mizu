@@ -2756,6 +2756,259 @@ fn witness_digest() -> Result<Value> {
 }
 
 // ---------------------------------------------------------------------------
+// Mode: pasta-fp-check
+//
+// The fixed-modulus Pasta field syscalls (PALLAS_FP_* / VESTA_FP_*, served by
+// SP1's FpOpChip instantiated at the Pasta base fields). A raw program runs
+// add, sub and mul on random and edge operands in both fields; each result is
+// compared on the guest against an integer reference baked into the memory
+// image. Then: executor results against the reference, honest rows against
+// the AIR, a tampered result limb against the AIR, a sweep of every column,
+// and a CPU core proof of the program checked by the complete verifier.
+// ---------------------------------------------------------------------------
+
+#[derive(Clone)]
+struct FpCall {
+    code: SyscallCode,
+    x: BigUint,
+    y: BigUint,
+    expected: BigUint,
+}
+
+fn fp_words(value: &BigUint) -> [u64; 4] {
+    let mut out = [0u64; 4];
+    let digits = value.to_u64_digits();
+    out[..digits.len()].copy_from_slice(&digits);
+    out
+}
+
+fn build_fp_program(calls: &[FpCall], tag: u32) -> Result<Arc<Program>> {
+    // One 4 KiB-aligned slot per call keeps every operand address's low 12
+    // bits below 0x800, as `load_address` requires.
+    const BASE: u64 = 0x10_0000;
+    const STRIDE: u64 = 0x1000;
+    let mut instructions = Vec::new();
+    let mut branches = Vec::new();
+    let mut image: Vec<(u64, [u64; 4])> = Vec::new();
+    for (i, call) in calls.iter().enumerate() {
+        let base = BASE + i as u64 * STRIDE;
+        let (x, y, expected) = (base, base + 0x100, base + 0x200);
+        image.push((x, fp_words(&call.x)));
+        image.push((y, fp_words(&call.y)));
+        image.push((expected, fp_words(&call.expected)));
+        load_address(&mut instructions, 10, x);
+        load_address(&mut instructions, 11, y);
+        let code = call.code as u32 as u64;
+        instructions.push(Instruction::new(Opcode::LUI, 5, code & !0xfff, code & !0xfff, true, true));
+        instructions.push(Instruction::new(Opcode::ADDI, 5, 5, code & 0xfff, false, true));
+        instructions.push(Instruction::new(Opcode::ECALL, 5, 10, 11, false, false));
+        load_address(&mut instructions, 12, expected);
+        for limb in 0..4u64 {
+            instructions.push(Instruction::new(Opcode::LD, 20, 10, 8 * limb, false, true));
+            instructions.push(Instruction::new(Opcode::LD, 21, 12, 8 * limb, false, true));
+            branches.push(instructions.len());
+            instructions.push(Instruction::new(Opcode::BNE, 20, 21, 0, false, true));
+        }
+    }
+    add_commitments(&mut instructions, tag);
+    add_halt(&mut instructions);
+    let failure = instructions.len();
+    instructions.push(Instruction::new(Opcode::UNIMP, 0, 0, 0, false, false));
+    for i in branches {
+        instructions[i].op_c = ((failure - i) * 4) as u64;
+    }
+    ensure!(0x2000 + 4 * instructions.len() as u64 <= BASE, "program overlaps its data");
+    let mut program = Program::new(instructions, 0x2000, 0x2000);
+    let memory = Arc::make_mut(&mut program.memory_image);
+    for (address, words) in image {
+        for (i, word) in words.into_iter().enumerate() {
+            memory.insert(address + 8 * i as u64, word);
+        }
+    }
+    Ok(Arc::new(program))
+}
+
+fn fp_calls(rng: &mut FuzzRng, per_op: usize) -> Vec<FpCall> {
+    let fields = [
+        (PallasBaseField::modulus(), [SyscallCode::PALLAS_FP_ADD, SyscallCode::PALLAS_FP_SUB, SyscallCode::PALLAS_FP_MUL]),
+        (VestaBaseField::modulus(), [SyscallCode::VESTA_FP_ADD, SyscallCode::VESTA_FP_SUB, SyscallCode::VESTA_FP_MUL]),
+    ];
+    let mut calls = Vec::new();
+    for (m, codes) in fields {
+        let random = |rng: &mut FuzzRng| {
+            let mut v = BigUint::zero();
+            for _ in 0..4 {
+                v = (v << 64) + BigUint::from(rng.next_u64());
+            }
+            v % &m
+        };
+        let mut operands = vec![
+            (BigUint::zero(), BigUint::zero()),
+            (BigUint::one(), &m - 1u32),
+            (&m - 1u32, &m - 1u32),
+            (&m - 1u32, BigUint::one()),
+        ];
+        while operands.len() < per_op {
+            operands.push((random(rng), random(rng)));
+        }
+        for (i, code) in codes.into_iter().enumerate() {
+            for (x, y) in &operands {
+                let expected = match i {
+                    0 => (x + y) % &m,
+                    1 => (x + &m - y) % &m,
+                    _ => (x * y) % &m,
+                };
+                calls.push(FpCall { code, x: x.clone(), y: y.clone(), expected });
+            }
+        }
+    }
+    calls
+}
+
+async fn run_pasta_fp_check(output: &Path) -> Result<()> {
+    use sp1_core_machine::{
+        operations::field::{field_op::FieldOpCols, range::FieldLtCols},
+        syscall::precompiles::fptower::{num_fp_cols_supervisor, FpOpChip},
+        SupervisorMode,
+    };
+    ensure!(!output.exists(), "use a fresh output directory");
+    let mut rng = FuzzRng(fuzz_env_u64("PASTA_FUZZ_SEED", 0xf0_0001));
+    let per_op = fuzz_env_u64("PASTA_FUZZ_ITERS", 24) as usize;
+    let calls = fp_calls(&mut rng, per_op);
+    let tag = 0xF0F0;
+    let program = build_fp_program(&calls, tag)?;
+    let (records, cycles) =
+        generate_records::<SP1Field>(program.clone(), SP1Stdin::new(), core_opts(), [0; 4])?;
+
+    let machine = Air::machine();
+    let mut fields = Vec::new();
+    for (name, key, modulus, width, arithmetic) in [
+        (
+            "PallasFpOpAssign",
+            SyscallCode::PALLAS_FP_ADD,
+            PallasBaseField::modulus(),
+            num_fp_cols_supervisor::<PallasBaseField>(),
+            core::mem::size_of::<FieldOpCols<u8, PallasBaseField>>()
+                + core::mem::size_of::<FieldLtCols<u8, PallasBaseField>>(),
+        ),
+        (
+            "VestaFpOpAssign",
+            SyscallCode::VESTA_FP_ADD,
+            VestaBaseField::modulus(),
+            num_fp_cols_supervisor::<VestaBaseField>(),
+            core::mem::size_of::<FieldOpCols<u8, VestaBaseField>>()
+                + core::mem::size_of::<FieldLtCols<u8, VestaBaseField>>(),
+        ),
+    ] {
+        let chip = machine.chips().iter().find(|c| c.name() == name).context("chip")?;
+        let mut checked = 0usize;
+        let mut honest_ok = true;
+        let mut tamper_rejected = true;
+        let mut survivors_arith = 0usize;
+        let mut survivors_total = 0usize;
+        let mut swept = false;
+        for record in &records {
+            let events = record.get_precompile_events(key);
+            if events.is_empty() {
+                continue;
+            }
+            // Executor results against the reference, in call order.
+            for (_, event) in events.iter() {
+                let e = match event {
+                    PrecompileEvent::PallasFp(e) | PrecompileEvent::VestaFp(e) => e,
+                    _ => bail!("{name}: unexpected event"),
+                };
+                let result = point_from_words(
+                    &e.x_memory_records.iter().map(|r| r.value).chain([0; 4]).collect::<Vec<_>>(),
+                )
+                .0;
+                let x = point_from_words(&e.x.iter().copied().chain([0; 4]).collect::<Vec<_>>()).0;
+                let y = point_from_words(&e.y.iter().copied().chain([0; 4]).collect::<Vec<_>>()).0;
+                let expected = match e.op {
+                    sp1_core_executor::events::FieldOperation::Add => (&x + &y) % &modulus,
+                    sp1_core_executor::events::FieldOperation::Sub => (&x + &modulus - &y) % &modulus,
+                    sp1_core_executor::events::FieldOperation::Mul => (&x * &y) % &modulus,
+                    _ => bail!("{name}: unexpected operation"),
+                };
+                ensure!(result == expected, "{name}: executor result differs from the reference");
+                checked += 1;
+            }
+            let trace = match key {
+                SyscallCode::PALLAS_FP_ADD => MachineAir::<SP1Field>::generate_trace(
+                    &FpOpChip::<PallasBaseField, SupervisorMode>::new(),
+                    record,
+                    &mut ExecutionRecord::default(),
+                ),
+                _ => MachineAir::<SP1Field>::generate_trace(
+                    &FpOpChip::<VestaBaseField, SupervisorMode>::new(),
+                    record,
+                    &mut ExecutionRecord::default(),
+                ),
+            };
+            honest_ok &= eval_rows(chip, trace.clone()).is_empty();
+            // Tamper the first row's result: the last arithmetic block starts
+            // with the output's result limbs.
+            let result_column = width - arithmetic;
+            let mut tampered = trace.clone();
+            tampered.values[result_column] += SP1Field::one();
+            tamper_rejected &= !eval_rows(chip, tampered).is_empty();
+            if !swept {
+                for column in 0..width {
+                    let mut t = trace.clone();
+                    t.values[column] += SP1Field::from_canonical_u32(1 + (rng.next_u64() % 1000) as u32);
+                    if eval_rows(chip, t).is_empty() {
+                        survivors_total += 1;
+                        if column >= width - arithmetic {
+                            survivors_arith += 1;
+                        }
+                    }
+                }
+                swept = true;
+            }
+        }
+        ensure!(honest_ok, "{name}: an honest row fails the AIR");
+        ensure!(tamper_rejected, "{name}: a tampered result limb satisfies the AIR");
+        ensure!(survivors_arith == 0, "{name}: {survivors_arith} arithmetic columns survive perturbation");
+        fields.push(json!({
+            "chip": name, "width": width, "events_checked": checked,
+            "honest_rows_satisfy_air": honest_ok, "tampered_result_rejected": tamper_rejected,
+            "surviving_columns": survivors_total, "surviving_arithmetic_columns": survivors_arith,
+        }));
+    }
+    ensure!(
+        fields.iter().map(|f| f["events_checked"].as_u64().unwrap()).sum::<u64>() as usize == calls.len(),
+        "not every call produced a checked event"
+    );
+
+    // CPU core proof of the same program, checked by the complete verifier
+    // against the digest the program commits.
+    let started = Instant::now();
+    let (proof, vk, prover, shard_records, proof_cycles) = prove_program(program, core_opts()).await?;
+    let policy = Policy {
+        require_successful_exit: true,
+        expected_committed_digest: Some(fixture_digest_bytes(tag)),
+    };
+    let verdict = verify_complete_execution(&prover, &vk, &proof, &policy);
+    ensure!(verdict.is_ok(), "complete verifier rejected the honest Pasta Fp proof");
+    let report = json!({
+        "mode": "pasta-fp-check",
+        "calls": calls.len(),
+        "guest_cycles": cycles,
+        "chips": fields,
+        "proof": {
+            "shards": shard_records, "cycles": proof_cycles,
+            "complete_verifier_accepted": true,
+            "proof_seconds": started.elapsed().as_secs_f64(),
+            "kind": "CPU core proof of a synthetic program",
+        },
+    });
+    fs::create_dir_all(output)?;
+    write_json(output.join("result.json"), &report)?;
+    println!("{}", serde_json::to_string_pretty(&report)?);
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
 // Mode: pipeline-cpu
 //
 // Local CPU check of the proving pipeline: one multi-shard Pasta program is
@@ -3497,7 +3750,29 @@ fn registration_report() -> Result<Value> {
             bail!("syscall id collision: {previous:?} and {code:?}");
         }
     }
+    // Every chip's registered trace cost against its actual AIR width. Chips
+    // added by this fork (Pasta curve ops and the fixed-modulus Pasta field
+    // ops) must match exactly; upstream entries are reported, not enforced.
+    let mut cost_mismatches = Vec::new();
+    for chip in machine.chips() {
+        let name = chip.name().to_string();
+        let Some(id) = RiscvAirId::iter().find(|id| id.to_string() == name) else {
+            continue;
+        };
+        let (cost, width) = (costs.get(&id).copied(), slop_air::BaseAir::<SP1Field>::width(chip));
+        if cost != Some(width) {
+            cost_mismatches.push(json!({"chip": name, "registered": cost, "width": width}));
+        }
+    }
+    for fork_chip in ["PallasFpOpAssign", "PallasFpOpAssignUser", "VestaFpOpAssign", "VestaFpOpAssignUser"] {
+        ensure!(
+            !cost_mismatches.iter().any(|m| m["chip"] == fork_chip),
+            "{fork_chip}: registered cost differs from its AIR width"
+        );
+        ensure!(names.iter().any(|n| n == fork_chip), "{fork_chip} is not registered");
+    }
     Ok(json!({
+        "chip_cost_mismatches": cost_mismatches,
         "air_ids_total": RiscvAirId::iter().count(),
         "air_ids_with_cost_entries": RiscvAirId::iter().count(),
         "registered_chips": names.len(),
@@ -6826,6 +7101,10 @@ fn main() -> Result<()> {
         "producer-equivalence" => {
             let output = output.context("--output is required")?;
             run_producer_equivalence(&output, elf.as_deref(), input.as_deref())
+        }
+        "pasta-fp-check" => {
+            let output = output.context("--output is required")?;
+            runtime.block_on(run_pasta_fp_check(&output))
         }
         "pipeline-cpu" => {
             let output = output.context("--output is required")?;
