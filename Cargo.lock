@@ -1985,6 +1985,26 @@ dependencies = [
  "syn 2.0.117",
 ]
 
+[[package]]
+name = "cycle-runner"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ark-ec",
+ "ark-ff 0.5.0",
+ "bincode",
+ "clap",
+ "hex",
+ "mina-curves",
+ "mina-poseidon",
+ "pickles-verifier",
+ "poly-commitment",
+ "serde_json",
+ "sha2 0.10.9",
+ "sp1-core-executor",
+ "sp1-core-executor-runner",
+ "sp1-jit",
+]
 
 [[package]]
 name = "darling"

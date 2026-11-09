@@ -1,0 +1,22 @@
+[package]
+name = "cycle-runner"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+ark-ec = { workspace = true }
+ark-ff = { workspace = true }
+bincode = { workspace = true }
+clap = { version = "4.0", features = ["derive"] }
+hex = { workspace = true }
+mina-curves = { workspace = true }
+mina-poseidon = { workspace = true }
+pickles-verifier = { path = "../pickles-verifier" }
+poly-commitment = { workspace = true }
+serde_json = { workspace = true }
+sha2 = "0.10"
+# Intentionally no SDK, prover, CUDA, network client, or build-time guest compilation.
+sp1-core-executor = { version = "=6.10.0", features = ["profiling"] }
+sp1-core-executor-runner = { version = "=6.10.0", features = ["profiling"] }
+sp1-jit = { version = "=6.10.0", features = ["profiling"] }
