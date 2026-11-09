@@ -13,6 +13,8 @@ there are no application snapshots followed by branding or deletion commits.
 | Settlement verifier entry point and setup cache | Core `crates/o1-verifier`; receipts isolated below | o1js-to-zkvm patch stack |
 | Upstream host CLI | `crates/o1-verifier-host` | o1js-to-zkvm patch stack |
 | Cycle/operation runners | `crates/cycle-runner` | Measurement tools |
+| Standalone Poseidon screening guest | `crates/poseidon-bench` | Measurement tools; independent of verifier setup |
+| Cached native / screening / paired / promotion workflow | `scripts/dev.py`, `scripts/devloop`, `scripts/tests` | Measurement tools; [development guide](development-loop.md) |
 | Receipt logic and types | `examples/settlement/{program,types}` | Optional standalone workspace |
 | Algebra arithmetic / GLV / MSM | `vendor/algebra` | Arkworks fork, three commits |
 | Pasta, Poseidon, IPA, Kimchi fast paths | `vendor/proof-systems` | Official 0.7.0 / `b1d9829`-based fork, four commits |

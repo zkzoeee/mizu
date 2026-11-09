@@ -50,6 +50,10 @@ combined accumulation saved 58.49% of whole-guest cycles at eight repeated
 mainnet proofs. The retained configuration remains unchanged. See also the
 [Miza validation review](miza-validation-review.md) for comparator, fixture and
 proof-handoff lessons, and a separate pending SP1 AIR review.
+The restored [cached development loop](../development-loop.md) combines targeted
+native checks, independent Poseidon screening, frozen paired measurements and a
+separate full CPU promotion gate. Its [validation record](../../benchmarks/dev-loop-validation.json)
+distinguishes fresh executions, checked reuse and cryptographic proof gates.
 
 For each new optimization or dependency port, update the responsible area and
 add an entry following [the template](TEMPLATE.md). Include retained, rejected,

@@ -56,3 +56,10 @@ the [dependency and optimization inventory](docs/dependencies-and-optimizations.
 [optimization work records by area](docs/optimizations/README.md),
 [changed-file list](docs/file-changes.md), and [receipt example](examples/settlement/README.md). Full historical runs and
 retired applications are recoverable from the external consolidation archive.
+
+## Mizu development workflow
+
+See [the cached CPU development loop](docs/development-loop.md) for targeted
+native checks, standalone operation benchmarks, frozen baseline comparisons
+and source-matched promotion gates. Start with `make dev-tools` and
+`make dev-check`; the full matrix is a separate `make dev-gate` stage.

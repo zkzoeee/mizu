@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "kind": "cached-development-workflow-validation",
+  "status": "cpu-workflow-validated-no-proofs",
+  "proof_generated": false,
+  "implementation_revision": "e249a3b941cd1e3896a5ac8302876fb828ab86bd",
+  "dependency_pins": {
+    "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+    "proof-systems": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
+    "sp1": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1"
+  },
+  "raw_directory_relative_to_repository": "benchmarks/runs/dev-loop-validation",
+  "checks": {
+    "operation_cold": {
+      "artifact": "benchmarks/runs/dev-loop-validation/operation-cold/comparison.json",
+      "sha256": "f982d51b89fbf1d22fa3b3c5834cc658f23a5dbdf22c29ccef5c3e26e1c8fdd3",
+      "control": 2053847,
+      "candidate": 1565472,
+      "delta": -488375,
+      "reduction_percent": 23.77854825602881,
+      "control_cache_hit": false,
+      "candidate_cache_hit": false,
+      "negative": {
+        "scope": "operation screening; native oracle checks; full guest rejection belongs in gate"
+      }
+    },
+    "operation_warm": {
+      "artifact": "benchmarks/runs/dev-loop-validation/operation-warm/comparison.json",
+      "sha256": "6ac32f09cde58692df710fe453f9ac7f89bf4a3fc6b9d0d79f542760918ae519",
+      "control": 2053847,
+      "candidate": 1565472,
+      "delta": -488375,
+      "reduction_percent": 23.77854825602881,
+      "control_cache_hit": true,
+      "candidate_cache_hit": true,
+      "negative": {
+        "scope": "operation screening; native oracle checks; full guest rejection belongs in gate"
+      }
+    },
+    "targeted_native": {
+      "artifact": "benchmarks/runs/dev-loop-validation/targeted-native/native.json",
+      "sha256": "57bc3955c9161f7ee98330d8911812de6d9327ecc2565c5b22bff82accb1aecc",
+      "passed": 2,
+      "full_suite": false,
+      "no_std": true
+    },
+    "full_pair": {
+      "artifact": "benchmarks/runs/dev-loop-validation/full-pair/comparison.json",
+      "sha256": "7c65d2de5efe6ce3bf27cf30e1bf10d91fe236f3f2f385f2dd9c1b8799a3a3c8",
+      "control": 142638298,
+      "candidate": 142553240,
+      "delta": -85058,
+      "reduction_percent": 0.05963195102061114,
+      "control_cache_hit": false,
+      "candidate_cache_hit": false,
+      "negative": {
+        "cache_hit": false,
+        "case": "accumulator",
+        "receipt": "/Users/user/000/_Z/o1js-to-zkvm/benchmarks/.dev-cache/executions/29f0cfa745c10f34153f5ba5e2b944e3fb4dc81486222f6543dea97ec3d87a30/entry.json"
+      }
+    },
+    "full_pair_warm": {
+      "artifact": "benchmarks/runs/dev-loop-validation/full-pair-warm/comparison.json",
+      "sha256": "2b9eed10e65c84c55da11d9ab38a4e9b5bb86dcd45be00286c2fe073eb2f7e74",
+      "control": 142638298,
+      "candidate": 142553240,
+      "delta": -85058,
+      "reduction_percent": 0.05963195102061114,
+      "control_cache_hit": false,
+      "candidate_cache_hit": true,
+      "negative": {
+        "cache_hit": true,
+        "case": "accumulator",
+        "receipt": "/Users/user/000/_Z/o1js-to-zkvm/benchmarks/.dev-cache/executions/29f0cfa745c10f34153f5ba5e2b944e3fb4dc81486222f6543dea97ec3d87a30/entry.json"
+      }
+    },
+    "native_all": {
+      "artifact": "benchmarks/runs/dev-loop-validation/native-all/native.json",
+      "sha256": "8044d69cc5772856f3a35c8ed5e1b5105a152192c694281b6273328465e70ed1",
+      "passed": 215,
+      "full_suite": true,
+      "no_std": true
+    },
+    "promotion": {
+      "artifact": "benchmarks/runs/dev-loop-validation/promotion/gate.json",
+      "sha256": "33fc940c6799366e26fa86303c91d6773d27e7f51fd3cf264a154f1c4a497d79",
+      "full_cpu_matrix": true,
+      "case_count": 8,
+      "positive_fixture_count": 9,
+      "profile": "/Users/user/000/_Z/o1js-to-zkvm/benchmarks/.dev-cache/executions/7b24b1452a16733d2614e3cebedeb46e18f39268d7bea9031dfaf1b4022aba77/entry.json",
+      "native": {
+        "record": "benchmarks/runs/dev-loop-validation/native-all/native.json",
+        "sha256": "8044d69cc5772856f3a35c8ed5e1b5105a152192c694281b6273328465e70ed1"
+      }
+    },
+    "promotion_warm": {
+      "artifact": "benchmarks/runs/dev-loop-validation/promotion-warm/gate.json",
+      "sha256": "33fc940c6799366e26fa86303c91d6773d27e7f51fd3cf264a154f1c4a497d79",
+      "full_cpu_matrix": true,
+      "case_count": 8,
+      "positive_fixture_count": 9,
+      "profile": "/Users/user/000/_Z/o1js-to-zkvm/benchmarks/.dev-cache/executions/7b24b1452a16733d2614e3cebedeb46e18f39268d7bea9031dfaf1b4022aba77/entry.json",
+      "native": {
+        "record": "benchmarks/runs/dev-loop-validation/native-all/native.json",
+        "sha256": "8044d69cc5772856f3a35c8ed5e1b5105a152192c694281b6273328465e70ed1"
+      }
+    }
+  },
+  "source_references": {
+    "../wazabi/spikes/experiment.py": "cd57b948ff24caa3a69b322d94de3aece051acc931eeaca9d851186da74dfb1d",
+    "../wazabi/spikes/EXPERIMENTS.md": "7ffc657feaf4df4c57c019e7f4a0ebbbbf0a9599e2d5713010b000eaf2ca9f42",
+    "../wazabi/spikes/poseidon_reference.py": "eb21f20caecfd6192ba05673e7e768111929eaa872ad17d30baee1d2e2d2efda",
+    "../wazabi/program/pasta-selftest/src/bin/poseidon-operation-program.rs": "005f639fbfd52d87aa5f3dbc65e9f86e7ed4a6779c537268fcc13ac8569e78ca",
+    "../miza-o1js-to-zkvm/miza/compare_runs.py": "4f5be9f8f48a1c071de863b81e449f6feb64294d3cebd03c672d27dcfe758ac1",
+    "../miza-o1js-to-zkvm/miza/test_compare_runs.py": "20bc57eaf3263e6725fe539d8405318058e1ea2921ac22444c4d8f043572d5e6",
+    "../miza-o1js-to-zkvm/miza/native.py": "2055a9141cd49d7376f4acbe518d01f2f791d1ba7d37692419be7b29fb565198",
+    "../miza-o1js-to-zkvm/miza/run_native_gate.py": "6202c7264f2840a3241c7a1100fa9cd86716a7c423879449e6f2a4831039c554",
+    "../miza-o1js-to-zkvm/miza/guest_regressions.py": "92dd2f82cab97aab60ee94a39bb7b3e219e9f93d9836d4ac3a9cfc35cd1e3eb3"
+  },
+  "limits": [
+    "Checked cache reuse is not an independent measurement.",
+    "Poseidon kernel comparison validates a restored benchmark for an existing optimization; no new whole-verifier gain is claimed.",
+    "The CPU gate does not generate or verify an SP1 proof; runtime AIR/proof gates remain separate."
+  ],
+  "checked_operation_reuse": {
+    "seconds": 2.2927945840056054,
+    "scope": "checked reuse, not independent measurement"
+  },
+  "source_references_scope": "Working-file fingerprints; original repositories read only. No old experiment manifests, application integrations or experimental SP1 runtime were imported.",
+  "evidence_storage_hardening": {
+    "implementation_revision": "d3dc44583a55d3198b3ce739be9a5947bf29f9d5",
+    "tooling_tests_passed": 31,
+    "frozen_operation_storage_and_reuse_passed": true,
+    "operation_comparison": {
+      "control": 2053847,
+      "candidate": 1565472,
+      "delta": -488375,
+      "reduction_percent": 23.77854825602881,
+      "bundles_sha256": {
+        "candidate": "4a59269db62a3745ecb401529652c1add43ba218ddea8c548016cd07eaf6f8a8",
+        "control": "8cb6f1ee6d4ab98418da1b76b4ee93f7fc49699ce99752db8952bb0d946e6bae"
+      }
+    },
+    "artifacts_sha256": {
+      "frozen-operation/comparison.json": "b5c4a59593b5c57647e1518d87616d26913fd5b8298f267c0d73525d3e0fc715",
+      "frozen-operation/check.log": "ec06b4c2c5f81c9eda2ce09504f3d7b0e96c8e18c3217e4253b694bbcf01879c",
+      "argument-rejection.json": "231fb68e5dd31324043f4486a897361e2fab81e5ad1f560dc3c3e034e2ec48f8",
+      "tools-final.log": "e93ca5f654bca3e59357f9610c72e4d673831c6068ccbcc01c392a7fae7da5f1",
+      "validation-scope.json": "30c58d87945b98c0dc1146eed4328573848cf33333eb3ef2941767cd9ffcd37b"
+    },
+    "validation_scope": {
+      "completed": [
+        "31 Python tooling tests",
+        "Input freeze and checked reuse against prior frozen operation guests/runners",
+        "Invalid full-suite filter argument rejection"
+      ],
+      "full_cpu_matrix_scope": "Completed on the archived clean pinned source before concurrent runtime changes; no SP1 proof generation.",
+      "pending": "Rebaseline and validate the concurrent SP1 runtime work after its changes are finalized and pinned. It was not built or measured by this tooling task.",
+      "unrelated_working_files_at_capture": {
+        "tools/pasta-proof/src/main.rs": "8656fec32530fd639855e939ef9e6366f471249d69acf1ef8ac2638861a72cd2",
+        "vendor/sp1/crates/core/machine/src/operations/field/field_op.rs": "c7dd7075c51c6787f2bc2053f99e3d8db841c4f59ae0ab723cbc22713ffab0dd",
+        "vendor/sp1/crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_add.rs": "19ca51c5074bf50e6939c1c2801523a042005962aa44058481e07fb906c9d879"
+      },
+      "retained_failed_attempts": {
+        "native-all/all.command.json": "Redundant full native repeat stopped; prior completed 215-test suite retained.",
+        "operation-source-change.log": "Build comparison stopped when a standalone harness file changed.",
+        "operation-source-change-retry.log": "Retry stopped when source changed again."
+      },
+      "proof_generated": false
+    },
+    "scope": "Full CPU matrix above ran before evidence-only hardening. Current tooling and frozen-executable input storage/reuse passed. Concurrent standalone harness/runtime edits are separate and are not validated by these results.",
+    "proof_generated": false
+  }
+}

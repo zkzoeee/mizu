@@ -21129,5 +21129,40 @@
         "fresh_sp1_proofs": false
       }
     }
+  ],
+  "mizu_workflows": [
+    {
+      "id": "mizu-cached-dev-loop",
+      "status": "retained-cpu-development-tooling",
+      "owner": "o1js-to-zkvm",
+      "areas": [
+        "measurement-tooling"
+      ],
+      "document": "docs/optimizations/07-measurement-and-tooling.md",
+      "guide": "docs/development-loop.md",
+      "evidence": "benchmarks/dev-loop-validation.json",
+      "evidence_sha256": "1abb28a5220610063b6f8d50af41d617cebf8c5bbcac6defc292458e6f141d5a",
+      "implementation_topics": [
+        "29818e2",
+        "a2a0bd2",
+        "e249a3b",
+        "cb34107",
+        "d3dc445"
+      ],
+      "validation": {
+        "native_core_and_runner": 215,
+        "no_std": true,
+        "positive_fixture_count": 9,
+        "guest_rejection_cases": 7,
+        "bounded_trace_replay": true,
+        "full_cpu_gate_checked_repeat": true,
+        "tooling_tests": 31,
+        "frozen_operation_storage_and_reuse": true,
+        "fresh_sp1_proofs": false
+      },
+      "validation_scope": "Full CPU gate at the archived pinned baseline; storage hardening tested separately. Concurrent harness/SP1 runtime edits were preserved and require their own matched baseline/validation.",
+      "proof_generated": false,
+      "new_whole_verifier_optimization_claim": false
+    }
   ]
 }

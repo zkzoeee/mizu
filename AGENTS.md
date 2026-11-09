@@ -21,3 +21,9 @@ Read docs/modules.md and dependencies/README.md before changing module boundarie
   docs/optimizations and its evidence in benchmarks/optimization-history.json.
   Follow docs/optimizations/TEMPLATE.md; preserve rejected/superseded outcomes
   and distinguish guest cycles, host/record work and actual proof measurements.
+
+- Daily optimization work uses scripts/dev.py: targeted recipe-matched native
+  checks, small-operation screening and cached control/candidate/rejection runs.
+  Keep frozen baseline receipts across source edits; cache reuse is not a new
+  measurement. Use the full CPU gate before promoting a change, and the focused
+  Pasta harness for runtime changes. See docs/development-loop.md.

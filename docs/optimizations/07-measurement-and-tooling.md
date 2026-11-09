@@ -70,3 +70,51 @@ The [Miza validation review](miza-validation-review.md) records stronger compara
 guest-matrix and proof-handoff patterns, existing coverage overlaps, 13 selected
 Python gates actually run, and the distinction between compiled/simulated proof
 matrices and completed cryptographic verification. No dependency code was ported.
+
+## mizu-cached-dev-loop: reusable development and promotion gates
+
+- **Status:** retained tooling; the full CPU promotion gate and its checked
+  repeat passed. [Workflow evidence](../../benchmarks/dev-loop-validation.json)
+  separates the original complete matrix from later evidence-storage rechecks.
+- **Owner:** root `scripts/dev.py`, `scripts/devloop`, `scripts/tests`,
+  `crates/cycle-runner`, `crates/poseidon-bench`, Make and CI integration.
+- **Mechanism:** source/flag/tool-addressed guest builds; frozen runners,
+  source archives and checked execution reuse; recipe-matched native checks;
+  separate targeted, microbenchmark, paired-verifier and promotion stages.
+- **Predecessors:** r66 native-test/build profile, r67 authenticated blob cache,
+  r68 standalone Poseidon measurement and the original experiment-cache driver.
+  Miza's comparator/tests and source-matched native/guest regression patterns
+  were adapted to the current boolean/statement-digest guest contracts.
+- **Implementation topics:** 29818e2 restores the microguest/oracle; a2a0bd2
+  adds six deterministic runner mutations; e249a3b adds cache/comparison/native
+  and promotion commands; cb34107 freezes per-run input files, tightens native
+  receipt completeness and fixes reused-control labeling; d3dc445 scopes guest
+  cache guards to the root consumer instead of the standalone tools workspace.
+  These topic commits do not modify dependency forks.
+- **Control/candidate:** Poseidon recipes compare existing ordinary/canonical
+  paths, 2,053,847 → 1,565,472 cycles, independently checked on both fields.
+  This validates the screening tool, not a newly added whole-verifier gain.
+  A checked repeat took 2.293 seconds on this host and reused both original
+  observations; it is not an independent measurement. The full verifier pair
+  reproduced 142,638,298 → 142,553,240 cycles and an accumulator rejection.
+- **Correctness:** strict comparator tests cover compatibility fields, numeric
+  types, duplicate JSON keys and reused evidence. Cache tests corrupt actual
+  artifacts and archives. Native checks reject zero selected tests and match
+  recipe settings. Promotion checks require six changed witnesses, a distinct
+  wrong-key ELF, positive producer fixtures, output/exit gates and matching
+  bounded trace replay. All nine fixtures, seven rejection cases, 215 native
+  tests, no-std and replay passed, including a checked repeat of the gate.
+  Hardening adds tests for frozen-input corruption, incomplete native receipts,
+  interrupted attempts, explicit no-proof flags and immutable control reuse.
+  All 31 tooling tests and a frozen-operation input-storage/reuse check passed
+  after hardening. Concurrent harness/runtime edits interrupted fresh build
+  comparisons and remain outside this record's completed validation. A redundant
+  native repeat was stopped; its partial logs do not count as another passed suite.
+  Raw logs and failed attempts stay outside Git.
+- **Validation scope:** CPU builds, native tests, guest execution and trace
+  estimates; no SP1 proof generation, proof verification/reload or CUDA work.
+  Runtime changes still require the focused Pasta AIR/record/proof gates.
+- **Upstream sync:** replay the root tooling/microguest/runner topic commits;
+  refresh the pinned builder and recipes deliberately. Do not import historical
+  SP1 6.1 manifests, application code or Miza's unproved runtime into this loop.
+  The [development guide](../development-loop.md) documents commands and scope.
