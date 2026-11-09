@@ -28,6 +28,7 @@ mod accumulator_batch;
 mod vesta_glv;
 mod vesta_spikes;
 pub mod deferred;
+pub mod attestation;
 pub mod serialize;
 mod setup_data;
 pub mod statement;

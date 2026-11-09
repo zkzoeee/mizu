@@ -40,6 +40,7 @@ rand_core = { version = "0.6", default-features = false }
 rand_chacha = { version = "0.3", default-features = false }
 postcard = { version = "1", default-features = false, features = ["alloc"] }
 blake2 = { version = "0.10", default-features = false }
+sha3 = { version = "0.10.9", default-features = false }
 # Pod casts for the SP1-guest verifier blob (`serialize` module).
 bytemuck = { version = "1", default-features = false, features = ["derive"] }
 # serde_with + o1_utils::serialization::SerdeAs to drive `#[serde_as]` on the

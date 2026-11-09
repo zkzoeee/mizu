@@ -59,5 +59,12 @@ pub fn main() {
     tracker(b"cycle-tracker-report-end:verify\n");
 
     assert!(proof_valid, "Pickles proof verification failed");
+    #[cfg(not(feature = "statement-digest"))]
     sp1_zkvm::io::commit(&proof_valid);
+    #[cfg(feature = "statement-digest")]
+    {
+        let vk_id = include_bytes!(concat!(env!("OUT_DIR"), "/vk_hash.bin"));
+        let digest = pickles_verifier::attestation::statement_digest(vk_id, &proof.app_state);
+        sp1_zkvm::io::commit_slice(&digest);
+    }
 }

@@ -15,6 +15,7 @@ mina-curves = { workspace = true, default-features = false }
 [features]
 default = []
 batch = []
+statement-digest = []
 # Routes Pasta Fp/Fq Montgomery multiplication through the SP1 zkVM
 # `sys_bigint` precompile. Activated by o1-verifier-host's build.rs during
 # the guest sub-build (`cargo build --features sp1` on o1-verifier).
