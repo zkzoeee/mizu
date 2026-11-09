@@ -17,3 +17,7 @@ Read docs/modules.md and dependencies/README.md before changing module boundarie
   from guest execution validation.
 - Dependency changes belong in their upstream-based forks. Update pins, bundles
   and dependency metadata together, then validate the consumer and example.
+- For optimization work and dependency ports, update the responsible record in
+  docs/optimizations and its evidence in benchmarks/optimization-history.json.
+  Follow docs/optimizations/TEMPLATE.md; preserve rejected/superseded outcomes
+  and distinguish guest cycles, host/record work and actual proof measurements.

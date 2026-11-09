@@ -1,5 +1,8 @@
 # Module ownership and consolidation map
 
+The [optimization work records](optimizations/README.md) group the retained
+mechanisms, historical rounds, evidence and rejected alternatives by work area.
+
 The root patch stack starts at official o1js-to-zkvm `095a5c0`. Upstream commits
 and authors are preserved. Consolidated commits describe the resulting modules;
 there are no application snapshots followed by branding or deletion commits.

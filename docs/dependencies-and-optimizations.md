@@ -6,6 +6,9 @@ Cargo package resolutions live in each workspace's `Cargo.lock`. This is a
 local-state audit, not a claim that the pinned upstream revisions are the latest
 available releases.
 
+For the development history, controls, rejected alternatives and original round
+evidence, see the [optimization work records by area](optimizations/README.md).
+
 ## Versions and ownership
 
 | Component | Upstream version/base | Our current pin | What is modified |
