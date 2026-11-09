@@ -135,3 +135,36 @@ not by preserving the original experimental commit history.
 - **Decision and limits:** keep. Run the applicable fresh proof gate before
   claiming any proving-time change. Evidence:
   [summary](../../benchmarks/zakura-ragu-experiments-sp1-6.10.json).
+
+## mizu-proving-pipeline: pipelined producer and concurrent shard proofs
+
+- **Status:** producer retained (SP1 fork `ac99509d0`); concurrent consumer
+  retained in the harness, validated on CPU proofs only. The CUDA path uses it
+  but has not been compiled or run since the change.
+- **Mechanism:** the minimal executor runs on its own thread; each trace chunk
+  is spliced, its pieces traced concurrently, the order-dependent tail run in
+  execution order, and the chunk's records given dependencies concurrently.
+  The consumer keeps up to `PASTA_PROVE_INFLIGHT` shard proofs in flight. Stall
+  counters: executor blocked, waiting for a chunk, time in the consumer
+  callback (producer blocked), and the consumer's starved and proving time.
+- **Selection:** `PASTA_REPLAY_THREADS` (1 = original loop; default available
+  parallelism capped at 8), `PASTA_PROVE_INFLIGHT` (default 2 on CUDA),
+  `PASTA_R5_INFLIGHT` (record channel, now 4).
+- **Result (mainnet producer, M2 Pro, interleaved, two runs each):**
+
+| Replay threads | Producer seconds | Dependencies | Trace | CPU seconds |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 84.1, 84.1 | 50.6 | 14.8 | 166 |
+| 4 | 56.6, 55.1 | 35.1 | 8.4 | 181 |
+| 8 | 46.6, 46.4 | 28.0 | 6.3 | 184 |
+
+  On the small CPU proof (13 shards), three proofs in flight finish in 10.9 s
+  against 16.9 s one at a time.
+- **Correctness evidence:** per-record canonical digests identical for all 148
+  mainnet records between sequential and pipelined producers (and between two
+  sequential runs); both CPU proofs accepted by the complete-execution
+  verifier with identical record streams.
+- **Limits:** no GPU run, so the wall-clock effect on a pod is unmeasured.
+  Earlier runs of the same binary at 242 s were contaminated by other machine
+  load; only interleaved runs are reported. Evidence:
+  [summary](../../benchmarks/pipeline-sp1-6.10.json).

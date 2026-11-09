@@ -1,0 +1,126 @@
+{
+ "schema_version": 1,
+ "name": "mizu-proving-pipeline",
+ "date": "2026-11-10",
+ "sp1_version": "6.10.0",
+ "proof_generated": "CPU core proofs of a 13-shard synthetic Pasta program only",
+ "gpu_used": false,
+ "host": "Apple M2 Pro 10-core, 16 GB; arms interleaved; default rayon",
+ "fork_commit": "sp1 ac99509d0 Pipeline streaming record generation and profile its phases",
+ "producer_mainnet": {
+  "i1a": {
+   "total_seconds": 84.1,
+   "execute_seconds": 10.3,
+   "splice_seconds": 3.3,
+   "trace_chunk_seconds": 14.8,
+   "dependencies_seconds": 50.6,
+   "defer_split_seconds": 3.6,
+   "waiting_for_chunk_seconds": 0.0,
+   "replay_threads": 1,
+   "records": 148,
+   "cycles": 142638298
+  },
+  "i1b": {
+   "total_seconds": 84.1,
+   "execute_seconds": 10.5,
+   "splice_seconds": 3.2,
+   "trace_chunk_seconds": 14.7,
+   "dependencies_seconds": 50.6,
+   "defer_split_seconds": 3.5,
+   "waiting_for_chunk_seconds": 0.0,
+   "replay_threads": 1,
+   "records": 148,
+   "cycles": 142638298
+  },
+  "i4a": {
+   "total_seconds": 56.6,
+   "execute_seconds": 13.3,
+   "splice_seconds": 3.7,
+   "trace_chunk_seconds": 8.4,
+   "dependencies_seconds": 35.1,
+   "defer_split_seconds": 5.2,
+   "waiting_for_chunk_seconds": 0.5,
+   "replay_threads": 4,
+   "records": 148,
+   "cycles": 142638298
+  },
+  "i4b": {
+   "total_seconds": 55.1,
+   "execute_seconds": 13.4,
+   "splice_seconds": 3.7,
+   "trace_chunk_seconds": 8.1,
+   "dependencies_seconds": 34.4,
+   "defer_split_seconds": 5.0,
+   "waiting_for_chunk_seconds": 0.5,
+   "replay_threads": 4,
+   "records": 148,
+   "cycles": 142638298
+  },
+  "i8a": {
+   "total_seconds": 46.6,
+   "execute_seconds": 14.9,
+   "splice_seconds": 3.6,
+   "trace_chunk_seconds": 6.3,
+   "dependencies_seconds": 28.0,
+   "defer_split_seconds": 4.9,
+   "waiting_for_chunk_seconds": 0.5,
+   "replay_threads": 8,
+   "records": 148,
+   "cycles": 142638298
+  },
+  "i8b": {
+   "total_seconds": 46.4,
+   "execute_seconds": 15.2,
+   "splice_seconds": 3.8,
+   "trace_chunk_seconds": 6.3,
+   "dependencies_seconds": 27.6,
+   "defer_split_seconds": 4.9,
+   "waiting_for_chunk_seconds": 0.5,
+   "replay_threads": 8,
+   "records": 148,
+   "cycles": 142638298
+  }
+ },
+ "producer_equivalence_mainnet": {
+  "records": 148,
+  "sequential_vs_sequential_mismatches": 0,
+  "sequential_vs_pipelined_mismatches": 0,
+  "compared": "per-record canonical digest plus field groups"
+ },
+ "pipeline_cpu": {
+  "record_streams_identical": true,
+  "arms": [
+   {
+    "arm": "sequential",
+    "prove_depth": 1,
+    "shards": 13,
+    "complete_verifier_accepted": true,
+    "seconds": 16.874275208,
+    "max_in_flight": 1
+   },
+   {
+    "arm": "pipelined",
+    "prove_depth": 3,
+    "shards": 13,
+    "complete_verifier_accepted": true,
+    "seconds": 10.891644416,
+    "max_in_flight": 3
+   }
+  ]
+ },
+ "cuda_path": "edited to use the shared consumer; not compiled or run (no CUDA toolchain on this host)",
+ "notes": [
+  "Earlier same-binary runs at 242 s were contaminated by other machine load; interleaved runs agree within 1.5 s.",
+  "Upstream orders precompile shards' global interaction events by a per-process hash seed; cross-process digests therefore sort them."
+ ],
+ "artifact_sha256": {
+  "pipeline-cpu.json": "c42add87bb4666de3dfca065a63ffbd5cbb1e9eb2c22e1bc1192a5a5ce4979e2",
+  "producer-equivalence-mainnet.json": "8b6908865c677c728ca2a95ebc17260f2217154e8f2224661f3cec5c9ccc1f59",
+  "producer-i1a.json": "32ec898e4e3d23b451e7de5e145faad46d5dfd79b632fe86f83f8c2c0d47aa9b",
+  "producer-i1b.json": "e5b72117b22d82d9bd463e73abb36f1338e2b3b3a1e9f0e3222885336c590368",
+  "producer-i4a.json": "7fde1b8b347baab6ce2e34c86f1511ec701243f7906e5ee3fda082840c219949",
+  "producer-i4b.json": "c0b7a3a49b057172de95e0d1dba8ced6e1657abc57f958c07fa70b5c64d622d0",
+  "producer-i8a.json": "bf601a415c719a395639ecc255152da39db2bcf026f3b4b7f52928f14301997f",
+  "producer-i8b.json": "94e3a855fa147e76086af207414dc7d98cd601f691fb4546ea093dcb60ee1a71"
+ }
+}
