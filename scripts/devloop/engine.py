@@ -15,6 +15,12 @@ MUTATIONS = ('app-state', 'rehashed-app-state', 'previous-step-commitment', 'acc
 FIXTURES = ('mainnet-blockchain-snark', 'ocaml-compat', 'nrr', 'simplechain/wrap0', 'simplechain/wrap1', 'simplechain/wrap2', 'treeproofreturn/wrap0', 'treeproofreturn/wrap1', 'treeproofreturn/wrap2')
 
 
+def consumer_snapshot():
+    # tools/ contains excluded, standalone workspaces. None is linked by the
+    # root guests/runners. Keep every root crate and dependency fork in scope.
+    return {name: digest for name, digest in s.source_snapshot().items() if not name.startswith('tools/')}
+
+
 def recipe(path):
     result = s.read_record(path)
     if not isinstance(result.get('optimization_env'), dict):
@@ -56,7 +62,7 @@ def build(config, fixture=None):
     if fixture == (s.ROOT / config['fixture_dir']).resolve() and pins != config['fixture_sha256']:
         raise ValueError('fixture differs from the recipe pins')
     env['VK_JSON'] = str(fixture / 'vk.serde.json')
-    source = s.source_snapshot()
+    source = consumer_snapshot()
     # Host runner edits do not invalidate guest builds; different proofs with
     # byte-identical VKs share one guest. All library/fork sources stay pinned.
     inputs = {p: h for p, h in source.items() if not p.startswith(('crates/cycle-runner/', 'crates/o1-verifier-host/', 'fixtures/', 'scripts/tests/'))}
@@ -84,7 +90,7 @@ def build(config, fixture=None):
     archive = s.archive_source(source)
     s.command([tool['builder_path'], 'prove', 'build', *flags, '--output-directory', str(folder)],
               env, folder / 'build.log', cwd=s.ROOT / guest['directory'])
-    if s.source_snapshot() != source or s.ambient_identity(env, s.ROOT / guest['directory']) != identity['ambient'] or tools(env) != tool:
+    if consumer_snapshot() != source or s.ambient_identity(env, s.ROOT / guest['directory']) != identity['ambient'] or tools(env) != tool:
         raise ValueError('source changed during guest build')
     prior = s.seal(folder, identity, [guest['binary'], 'build.log', 'build.command.json'],
                    source_archive=archive, revision=subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=s.ROOT, text=True).strip(),
@@ -94,7 +100,7 @@ def build(config, fixture=None):
 
 def runners():
     env = s.environment()
-    source = s.source_snapshot()
+    source = consumer_snapshot()
     inputs = {p: h for p, h in source.items() if not p.startswith(('crates/o1-verifier/', 'crates/poseidon-bench/', 'crates/o1-verifier-host/', 'fixtures/', 'scripts/tests/'))}
     identity = {'sources': inputs, 'ambient': s.ambient_identity(env), 'profile': 'native-test',
                 'host': subprocess.check_output(['rustc', '--version'], cwd=s.ROOT, env=env, text=True).strip()}
@@ -107,7 +113,7 @@ def runners():
     s.command(['cargo', 'build', '--offline', '--profile', 'native-test', '--locked', '-p', 'cycle-runner', '--bins'], env, folder / 'build.log')
     for name in ('cycle-runner', 'operation-bench-runner'):
         shutil.copy2(s.ROOT / 'target/native-test' / name, folder / name)
-    if s.source_snapshot() != source or s.ambient_identity(env) != identity['ambient']: raise ValueError('source/configuration changed during runner build')
+    if consumer_snapshot() != source or s.ambient_identity(env) != identity['ambient']: raise ValueError('source/configuration changed during runner build')
     s.seal(folder, identity, ['cycle-runner', 'operation-bench-runner', 'build.log', 'build.command.json'])
     return folder
 
@@ -187,7 +193,7 @@ def execute(config, built, runner_folder, fixture=None, mutation='none', wrong_v
         print('Reusing checked execution (not a new sample)', flush=True)
         return run_folder, raw, prior, True
     run_folder.mkdir(parents=True, exist_ok=True)
-    source = s.source_snapshot()
+    source = consumer_snapshot()
     input_names = freeze_inputs(run_folder, fixture, identity)
     command = [str(runner), '--elf', str(elf), '--output', str(run_folder / 'result.json')]
     if operation: command += ['--iterations', str(identity['iterations'])]
@@ -204,7 +210,7 @@ def execute(config, built, runner_folder, fixture=None, mutation='none', wrong_v
     validate_execution(raw, identity, timing['exit_code'], expected)
     if profile and raw.get('precompile_profile',{}).get('replayed_instructions') != raw['cycles']:
         raise ValueError('trace replay did not account for every instruction')
-    if s.source_snapshot() != source or s.sha(elf) != identity['elf_sha256'] or s.sha(runner) != identity['runner_sha256'] or fixture_hashes(fixture) != identity['fixtures']:
+    if consumer_snapshot() != source or s.sha(elf) != identity['elf_sha256'] or s.sha(runner) != identity['runner_sha256'] or fixture_hashes(fixture) != identity['fixtures']:
         raise ValueError('execution source or inputs changed')
     prior = s.seal(run_folder, identity, ['result.json', 'execute.log', 'execute.command.json', *input_names],
                    command_status=timing['exit_code'], validated_output_sha256=expected, proof_generated=False)

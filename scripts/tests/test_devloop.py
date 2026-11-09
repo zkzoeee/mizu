@@ -113,6 +113,12 @@ class OracleTests(unittest.TestCase):
 
 
 class EvidenceHardeningTests(unittest.TestCase):
+    def test_consumer_scope_excludes_only_the_separate_tools_workspace(self):
+        snapshot = {'tools/pasta-proof/src/main.rs': 'a', 'crates/pickles-verifier/src/lib.rs': 'b',
+                    'vendor/sp1/crates/core/executor/src/lib.rs': 'c', 'scripts/dev.py': 'd'}
+        with patch.object(store, 'source_snapshot', return_value=snapshot):
+            self.assertEqual(engine.consumer_snapshot(), {name: digest for name, digest in snapshot.items() if not name.startswith('tools/')})
+
     def test_each_observation_preserves_input_bytes_and_checks_corruption(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory); fixture = root/'fixture'; fixture.mkdir()
