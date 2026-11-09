@@ -5783,7 +5783,7 @@
           "historical_claims": {
             "answer": "Yes. The r5-both-v16-p13 candidate was proved end to end as an SP1 core proof on an RTX 5090 and accepted by the CPU complete-execution verifier, and its committed public-value digest equals the SHA-256 of the retained 577-byte expected output of the mainnet-blockchain-snark fixture.",
             "question": "Can the Mina verification candidate itself be proved on a GPU with our four Pasta chips?",
-            "proof_type": "core only — no recursion, no wrap, no Groth16, as requested"
+            "proof_type": "core only \u2014 no recursion, no wrap, no Groth16, as requested"
           },
           "metric_selection": "first 60 matching scalar facts; consult source for full context",
           "selected_metrics": [
@@ -6223,7 +6223,7 @@
         {
           "source": "spikes/artifacts/r18-msm-decomposition/findings.json",
           "historical_claims": {
-            "headline": "Items 2 and 3 are the same target, and a 14-line data-layout change cut 27,591,419 cycles — 4.436% — with bit-identical public values.",
+            "headline": "Items 2 and 3 are the same target, and a 14-line data-layout change cut 27,591,419 cycles \u2014 4.436% \u2014 with bit-identical public values.",
             "task": "Plan items 2 and 3: the Vesta MSM bookkeeping (~45% of cycles) and the wrap-kimchi scaffolding (~31%)."
           },
           "metric_selection": "first 60 matching scalar facts; consult source for full context",
@@ -8688,7 +8688,7 @@
     {
       "id": "historical-r59",
       "round": 59,
-      "title": "r59: the Pallas window sweep, fairly — and the scaffolding is not free",
+      "title": "r59: the Pallas window sweep, fairly \u2014 and the scaffolding is not free",
       "areas": [
         "pasta-msm",
         "measurement-tooling",
@@ -8700,7 +8700,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r59: the Pallas window sweep, fairly — and the scaffolding is not free",
+          "heading": "r59: the Pallas window sweep, fairly \u2014 and the scaffolding is not free",
           "line": 1838,
           "end_line": 1882,
           "section_sha256": "40baee29cf103c6fe277057e71daced8877730b8b3ace76d8ed315cce3a1aca1"
@@ -10809,7 +10809,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r76–r78 Borrow embedded Vesta SRS with a stable accumulator boundary",
+          "heading": "r76\u2013r78 Borrow embedded Vesta SRS with a stable accumulator boundary",
           "line": 2058,
           "end_line": 2066,
           "section_sha256": "9a1fbf62bb0226b8b622060a79ded4363f960948cf0406c0cd778a62e5c11ebf"
@@ -10930,7 +10930,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r76–r78 Borrow embedded Vesta SRS with a stable accumulator boundary",
+          "heading": "r76\u2013r78 Borrow embedded Vesta SRS with a stable accumulator boundary",
           "line": 2058,
           "end_line": 2066,
           "section_sha256": "9a1fbf62bb0226b8b622060a79ded4363f960948cf0406c0cd778a62e5c11ebf"
@@ -11044,7 +11044,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r76–r78 Borrow embedded Vesta SRS with a stable accumulator boundary",
+          "heading": "r76\u2013r78 Borrow embedded Vesta SRS with a stable accumulator boundary",
           "line": 2058,
           "end_line": 2066,
           "section_sha256": "9a1fbf62bb0226b8b622060a79ded4363f960948cf0406c0cd778a62e5c11ebf"
@@ -14515,7 +14515,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r93 Fixed positional Pallas SRS and r94 frozen instruction profiling (Tasks31–32)",
+          "heading": "r93 Fixed positional Pallas SRS and r94 frozen instruction profiling (Tasks31\u201332)",
           "line": 2167,
           "end_line": 2178,
           "section_sha256": "97bd1370d71ec1759d28e3f513b8781f668a3d7e4ef9c60a30fb19159984ced8"
@@ -14918,7 +14918,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r93 Fixed positional Pallas SRS and r94 frozen instruction profiling (Tasks31–32)",
+          "heading": "r93 Fixed positional Pallas SRS and r94 frozen instruction profiling (Tasks31\u201332)",
           "line": 2167,
           "end_line": 2178,
           "section_sha256": "97bd1370d71ec1759d28e3f513b8781f668a3d7e4ef9c60a30fb19159984ced8"
@@ -15332,7 +15332,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r96–r97 Copy attribution and unretained identity hypothesis",
+          "heading": "r96\u2013r97 Copy attribution and unretained identity hypothesis",
           "line": 2190,
           "end_line": 2193,
           "section_sha256": "1070c7c2c0df8434a9ed687291abef4dd4e53f6ef1e576a1bf461ec97d7513ec"
@@ -15397,7 +15397,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r96–r97 Copy attribution and unretained identity hypothesis",
+          "heading": "r96\u2013r97 Copy attribution and unretained identity hypothesis",
           "line": 2190,
           "end_line": 2193,
           "section_sha256": "1070c7c2c0df8434a9ed687291abef4dd4e53f6ef1e576a1bf461ec97d7513ec"
@@ -17416,7 +17416,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r104–r106: nine-task chip batch, tasks1–3",
+          "heading": "r104\u2013r106: nine-task chip batch, tasks1\u20133",
           "line": 2240,
           "end_line": 2258,
           "section_sha256": "aa14a5b5a3120eff307bf1e50aaa0fb2de4262c283ca0b839bf435f325164a3e"
@@ -17473,7 +17473,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r104–r106: nine-task chip batch, tasks1–3",
+          "heading": "r104\u2013r106: nine-task chip batch, tasks1\u20133",
           "line": 2240,
           "end_line": 2258,
           "section_sha256": "aa14a5b5a3120eff307bf1e50aaa0fb2de4262c283ca0b839bf435f325164a3e"
@@ -17551,7 +17551,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r104–r106: nine-task chip batch, tasks1–3",
+          "heading": "r104\u2013r106: nine-task chip batch, tasks1\u20133",
           "line": 2240,
           "end_line": 2258,
           "section_sha256": "aa14a5b5a3120eff307bf1e50aaa0fb2de4262c283ca0b839bf435f325164a3e"
@@ -17747,7 +17747,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r109–r110 CPU accelerator prototypes (nine-task items6–7)",
+          "heading": "r109\u2013r110 CPU accelerator prototypes (nine-task items6\u20137)",
           "line": 2263,
           "end_line": 2268,
           "section_sha256": "66fda7be056b1b01987b358fed1462e0781547f0ba0eadc37d3efcdf3d561e37"
@@ -17812,7 +17812,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r109–r110 CPU accelerator prototypes (nine-task items6–7)",
+          "heading": "r109\u2013r110 CPU accelerator prototypes (nine-task items6\u20137)",
           "line": 2263,
           "end_line": 2268,
           "section_sha256": "66fda7be056b1b01987b358fed1462e0781547f0ba0eadc37d3efcdf3d561e37"
@@ -18371,7 +18371,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r114–r117 IPA scalar-buffer experiments (2026-11-07)",
+          "heading": "r114\u2013r117 IPA scalar-buffer experiments (2026-11-07)",
           "line": 2285,
           "end_line": 2297,
           "section_sha256": "a39a166f93768067e3908b0ec7a039caf453501864096c5a404920d8fb378068"
@@ -18430,7 +18430,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r114–r117 IPA scalar-buffer experiments (2026-11-07)",
+          "heading": "r114\u2013r117 IPA scalar-buffer experiments (2026-11-07)",
           "line": 2285,
           "end_line": 2297,
           "section_sha256": "a39a166f93768067e3908b0ec7a039caf453501864096c5a404920d8fb378068"
@@ -18628,7 +18628,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r114–r117 IPA scalar-buffer experiments (2026-11-07)",
+          "heading": "r114\u2013r117 IPA scalar-buffer experiments (2026-11-07)",
           "line": 2285,
           "end_line": 2297,
           "section_sha256": "a39a166f93768067e3908b0ec7a039caf453501864096c5a404920d8fb378068"
@@ -18819,7 +18819,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r114–r117 IPA scalar-buffer experiments (2026-11-07)",
+          "heading": "r114\u2013r117 IPA scalar-buffer experiments (2026-11-07)",
           "line": 2285,
           "end_line": 2297,
           "section_sha256": "a39a166f93768067e3908b0ec7a039caf453501864096c5a404920d8fb378068"
@@ -19156,7 +19156,7 @@
           "historical_claims": {
             "answer": "Yes, for all three arms. Each proof was accepted twice on the pod: once in-process after proving, and once more by a fresh process that reloaded the proof from disk and derived the verification key from the pinned ELF. Every arm produced exactly the shard count the CPU phase predicted, the committed digest equals the 577-byte expected output exported from the Mina fixture before any proving, and all three share one verification key.",
             "question": "Does the frozen 142,692,781-cycle Mina verification guest prove on a real RTX 5090, for all three precompile-routing arms, verified on the machine that made the proofs and not downloaded?",
-            "proof_type": "core only — no recursion, no wrap, no Groth16"
+            "proof_type": "core only \u2014 no recursion, no wrap, no Groth16"
           },
           "metric_selection": "first 60 matching scalar facts; consult source for full context",
           "selected_metrics": [
@@ -19408,7 +19408,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r121 — SP1 6.10.0 upgrade preflight (2026-11-09)",
+          "heading": "r121 \u2014 SP1 6.10.0 upgrade preflight (2026-11-09)",
           "line": 2298,
           "end_line": 2311,
           "section_sha256": "a232c550c0c62559ced17eaba3cebc614fdfcae5f0aef16f2eebfa8fa415ff3c"
@@ -19530,7 +19530,7 @@
           "path": "spikes/CYCLES_LEDGER.md",
           "sha256": "e8f95505c778bdaf0b09b7d9db20a4523ba809603832017e2149ffa9c85fe977",
           "kind": "ledger",
-          "heading": "r122 — isolated SP1 6.10 core migration (2026-11-09)",
+          "heading": "r122 \u2014 isolated SP1 6.10 core migration (2026-11-09)",
           "line": 2312,
           "end_line": 2318,
           "section_sha256": "8b9067cd1d4010b784c35f9b2fe3cc518a502b340d230eb129bc0287c3c12c36"
@@ -20993,6 +20993,43 @@
       "evidence": "benchmarks/references/o1-openvm-review.json",
       "reviewed_main": "3724a3d12178c3a174513ad06e8896d700f56d64",
       "measured_by_mizu": false
+    }
+  ],
+  "mizu_experiments": [
+    {
+      "id": "mizu-openvm-allocation",
+      "status": "prototype-awaiting-matched-cycles",
+      "document": "docs/optimizations/openvm-experiments.md",
+      "owner": "o1js-to-zkvm",
+      "proof_generated": false
+    },
+    {
+      "id": "mizu-openvm-fused-cip",
+      "status": "prototype-awaiting-matched-cycles",
+      "document": "docs/optimizations/openvm-experiments.md",
+      "owner": "o1js-to-zkvm",
+      "proof_generated": false
+    },
+    {
+      "id": "mizu-openvm-batch-accumulator",
+      "status": "prototype-awaiting-matched-cycles",
+      "document": "docs/optimizations/openvm-experiments.md",
+      "owner": "o1js-to-zkvm",
+      "proof_generated": false
+    },
+    {
+      "id": "mizu-openvm-statement-digest",
+      "status": "prototype-awaiting-matched-cycles",
+      "document": "docs/optimizations/openvm-experiments.md",
+      "owner": "o1js-to-zkvm",
+      "proof_generated": false
+    },
+    {
+      "id": "mizu-openvm-trace-accounting",
+      "status": "prototype-awaiting-matched-cycles",
+      "document": "docs/optimizations/openvm-experiments.md",
+      "owner": "o1js-to-zkvm",
+      "proof_generated": false
     }
   ]
 }
