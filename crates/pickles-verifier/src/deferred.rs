@@ -27,6 +27,7 @@ use ark_poly::{EvaluationDomain, Radix2EvaluationDomain};
 use kimchi::circuits::argument::ArgumentType;
 use kimchi::circuits::constraints::ConstraintSystem;
 use kimchi::circuits::polynomials::permutation;
+use kimchi::linearization::expr_linearization;
 use kimchi::proof::{PointEvaluations, ProofEvaluations, RecursionChallenge};
 use kimchi::verifier::{oracles_from_digest, DigestOracles};
 use mina_curves::pasta::{Pallas, Vesta};
@@ -87,11 +88,13 @@ pub struct ExpandedDeferredValues {
     pub r: StepField,
     /// the step `ft_eval0` (from the linearization interpreter).
     pub ft_eval0: StepField,
+    pub feature_flags: kimchi::circuits::constraints::FeatureFlags,
+    pub joint_combiner: Option<StepField>,
 }
 
 /// Convert the carried `ChunkedAllEvals` (the inner step proof's evaluations)
-/// into a kimchi `ProofEvaluations`. The step circuits have all feature flags
-/// off, so every optional gate / lookup evaluation is `None`.
+/// into a kimchi `ProofEvaluations`, retaining optional gate and lookup
+/// columns for application circuits with lookup features.
 fn to_proof_evaluations(e: &ChunkedAllEvals) -> ProofEvaluations<PointEvaluations<Vec<StepField>>> {
     ProofEvaluations {
         public: Some(e.public_evals.clone()),
@@ -105,21 +108,21 @@ fn to_proof_evaluations(e: &ChunkedAllEvals) -> ProofEvaluations<PointEvaluation
         mul_selector: e.index[3].clone(),
         emul_selector: e.index[4].clone(),
         endomul_scalar_selector: e.index[5].clone(),
-        range_check0_selector: None,
-        range_check1_selector: None,
-        foreign_field_add_selector: None,
-        foreign_field_mul_selector: None,
-        xor_selector: None,
-        rot_selector: None,
-        lookup_aggregation: None,
-        lookup_table: None,
-        lookup_sorted: [None, None, None, None, None],
-        runtime_lookup_table: None,
-        runtime_lookup_table_selector: None,
-        xor_lookup_selector: None,
-        lookup_gate_lookup_selector: None,
-        range_check_lookup_selector: None,
-        foreign_field_mul_lookup_selector: None,
+        range_check0_selector: e.range_check0_selector.clone(),
+        range_check1_selector: e.range_check1_selector.clone(),
+        foreign_field_add_selector: e.foreign_field_add_selector.clone(),
+        foreign_field_mul_selector: e.foreign_field_mul_selector.clone(),
+        xor_selector: e.xor_selector.clone(),
+        rot_selector: e.rot_selector.clone(),
+        lookup_aggregation: e.lookup_aggregation.clone(),
+        lookup_table: e.lookup_table.clone(),
+        lookup_sorted: e.lookup_sorted.clone(),
+        runtime_lookup_table: e.runtime_lookup_table.clone(),
+        runtime_lookup_table_selector: e.runtime_lookup_table_selector.clone(),
+        xor_lookup_selector: e.xor_lookup_selector.clone(),
+        lookup_gate_lookup_selector: e.lookup_gate_lookup_selector.clone(),
+        range_check_lookup_selector: e.range_check_lookup_selector.clone(),
+        foreign_field_mul_lookup_selector: e.foreign_field_mul_lookup_selector.clone(),
     }
 }
 
@@ -150,7 +153,11 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
     let generator = domain.group_gen;
     let max_poly_size = 1usize << verifier.step_srs_length_log2;
     let zk_rows = verifier.step_zk_rows as u64;
-    let shifts: [StepField; 7] = *permutation::Shifts::new(&domain).shifts();
+    // `Shifts::new` would also build its cell map -- seven vectors of
+    // `domain.size()` field elements -- which nothing on this path reads. At
+    // this domain size that map was 63,738,692 cycles, 16.9% of the whole
+    // run. See spikes/artifacts/r43-dead-shift-map/.
+    let shifts: [StepField; 7] = permutation::Shifts::shifts_only(&domain);
 
     // The step proof's evaluations + previous-recursion challenges. The
     // bp-polynomial values come from `chals`; the `comm` field is unused on
@@ -178,6 +185,27 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
     let beta = proof.raw_plonk.beta;
     let gamma = proof.raw_plonk.gamma;
     let zeta = zeta_chal.to_field(&endo);
+    let joint_combiner = proof.raw_plonk.joint_combiner.map(|raw| {
+        let challenge = ScalarChallenge::new(raw);
+        let field = challenge.to_field(&endo);
+        (challenge, field)
+    });
+    // `Verifier::new` already built this for the default feature flags, and
+    // until now nothing read it -- stage 1 rebuilt its own copy here instead,
+    // at about 6.85M cycles per proof. When the proof's flags match the
+    // default, the cached one is the same value by construction, since
+    // `expr_linearization`'s output is a function of the flags and the field
+    // alone. When they differ it still has to be rebuilt.
+    let rebuilt;
+    let (linearization, powers_of_alpha) =
+        if proof.raw_plonk.feature_flags
+            == kimchi::circuits::constraints::FeatureFlags::default()
+        {
+            (&verifier.linearization, &verifier.powers_of_alpha)
+        } else {
+            rebuilt = expr_linearization::<StepField>(Some(&proof.raw_plonk.feature_flags), true);
+            (&rebuilt.0, &rebuilt.1)
+        };
 
     let DigestOracles {
         oracles,
@@ -194,8 +222,8 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
         zk_rows,
         &shifts,
         gate_endo,
-        &verifier.linearization,
-        &verifier.powers_of_alpha,
+        linearization,
+        powers_of_alpha,
         proof.sponge_digest_before_evaluations,
         alpha,
         beta,
@@ -203,7 +231,7 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
         zeta,
         alpha_chal,
         zeta_chal,
-        None,
+        joint_combiner,
         &prev_challenges,
         &step_evals,
         proof.prev_evals.ft_eval1,
@@ -215,9 +243,9 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
     let r = oracles.u; // evalscale
     let zetaw = zeta * generator;
 
-    // ----- combined inner product (base columns, features off) -----
+    // ----- combined inner product -----
     // Build the per-polynomial evaluation table exactly as kimchi's `oracles`
-    // CIP block does (minus the optional-gate / lookup chains, all absent here):
+    // CIP block does, including optional-gate and lookup columns:
     // bp_polys, public_input, ft, z, the 6 index selectors, 15 witness, 15
     // coefficient, 6 sigma. Each entry is `[zeta_chunks, zeta_omega_chunks]`.
     let pe =
@@ -243,6 +271,35 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
     }
     for s in &step_evals.s {
         es.push(pe(s));
+    }
+    for optional in [
+        &step_evals.range_check0_selector,
+        &step_evals.range_check1_selector,
+        &step_evals.foreign_field_add_selector,
+        &step_evals.foreign_field_mul_selector,
+        &step_evals.xor_selector,
+        &step_evals.rot_selector,
+    ] {
+        if let Some(evals) = optional {
+            es.push(pe(evals));
+        }
+    }
+    for sorted in step_evals.lookup_sorted.iter().flatten() {
+        es.push(pe(sorted));
+    }
+    for optional in [
+        &step_evals.lookup_aggregation,
+        &step_evals.lookup_table,
+        &step_evals.runtime_lookup_table,
+        &step_evals.runtime_lookup_table_selector,
+        &step_evals.xor_lookup_selector,
+        &step_evals.lookup_gate_lookup_selector,
+        &step_evals.range_check_lookup_selector,
+        &step_evals.foreign_field_mul_lookup_selector,
+    ] {
+        if let Some(evals) = optional {
+            es.push(pe(evals));
+        }
     }
     let cip = combined_inner_product(&xi, &r, &es);
 
@@ -296,6 +353,8 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
         sponge_digest_before_evaluations: proof.sponge_digest_before_evaluations,
         r,
         ft_eval0,
+        feature_flags: proof.raw_plonk.feature_flags,
+        joint_combiner: proof.raw_plonk.joint_combiner,
     }
 }
 
@@ -345,8 +404,8 @@ fn pack_branch_data(bd: &BranchData) -> WrapField {
 /// proof's kimchi public input (40 `WrapField` elements). Mirrors PS
 /// `assembleWrapMainInput` + the `Wrap.StatementPacked` `valueToFields` order:
 /// 5 Type1 fp fields, 2 challenges, 3 scalar challenges, 3 digests, 16
-/// bulletproof challenges, 1 packed branch_data, 8 feature-flag + 2 lookup slots
-/// (all zero, features off).
+/// bulletproof challenges, 1 packed branch_data, 8 feature flags, and the
+/// lookup-option presence flag plus scalar challenge.
 pub fn wrap_public_input(
     dv: &ExpandedDeferredValues,
     messages_for_next_step_proof_digest: StepField,
@@ -385,8 +444,32 @@ pub fn wrap_public_input(
     // 1 packed branch_data.
     pi.push(pack_branch_data(&dv.branch_data));
 
-    // 8 feature-flag slots + lookup flag + lookup scalar challenge (all zero).
-    pi.resize(pi.len() + 10, WrapField::zero());
+    let flag = |enabled| {
+        if enabled {
+            WrapField::one()
+        } else {
+            WrapField::zero()
+        }
+    };
+    let features = dv.feature_flags;
+    pi.push(flag(features.range_check0));
+    pi.push(flag(features.range_check1));
+    pi.push(flag(features.foreign_field_add));
+    pi.push(flag(features.foreign_field_mul));
+    pi.push(flag(features.xor));
+    pi.push(flag(features.rot));
+    pi.push(flag(features.lookup_features.patterns.lookup));
+    pi.push(flag(features.lookup_features.uses_runtime_tables));
+    match dv.joint_combiner {
+        Some(challenge) => {
+            pi.push(WrapField::one());
+            pi.push(fp_to_fq(challenge));
+        }
+        None => {
+            pi.push(WrapField::zero());
+            pi.push(WrapField::zero());
+        }
+    }
 
     pi
 }

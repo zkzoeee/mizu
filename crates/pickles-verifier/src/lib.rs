@@ -19,8 +19,16 @@
 
 extern crate alloc;
 
+mod canonical_msm;
+mod fixed_srs;
+mod fixed_pallas;
+mod canonical_coefficients;
+mod vesta_glv;
+mod vesta_spikes;
 pub mod deferred;
 pub mod serialize;
+mod setup_data;
+pub mod statement;
 pub mod types;
 
 #[cfg(feature = "std")]
@@ -37,6 +45,14 @@ use mina_poseidon::sponge::ScalarChallenge;
 use poly_commitment::commitment::b_poly_coefficients;
 
 use types::{StepField, VerifiableProof, Verifier};
+
+#[cfg(target_os = "zkvm")]
+fn track_cycles(command: &[u8]) {
+    sp1_lib::io::write(1, command);
+}
+
+#[cfg(not(target_os = "zkvm"))]
+fn track_cycles(_command: &[u8]) {}
 
 /// Verify a single Pickles proof against its tag's [`Verifier`]. Deterministic
 /// + `no_std`.
@@ -55,8 +71,29 @@ pub fn verify(verifier: &Verifier, proof: &VerifiableProof) -> bool {
 ///      [`batching_rng`] (Fiat–Shamir-derived; see its doc for the soundness
 ///      argument).
 pub fn verify_batch(verifier: &Verifier, proofs: &[VerifiableProof]) -> bool {
+    verify_batch_with_index_digest(verifier, proofs, None)
+}
+
+pub(crate) fn verify_batch_with_index_digest(
+    verifier: &Verifier,
+    proofs: &[VerifiableProof],
+    digest: Option<StepField>,
+) -> bool {
+    verify_batch_with_index_digest_and_vesta(verifier, proofs, digest, None, None, None)
+}
+
+// Only the immutable embedded verifier supplies a borrowed generator slice.
+// Ordinary/runtime verifiers continue to use their owned SRS without overrides.
+pub(crate) fn verify_batch_with_index_digest_and_vesta(
+    verifier: &Verifier,
+    proofs: &[VerifiableProof],
+    digest: Option<StepField>,
+    vesta_generators: Option<&[Vesta]>,
+    fixed_vesta: Option<&fixed_srs::FixedVestaSrs<'_>>,
+    fixed_pallas: Option<&fixed_pallas::FixedPallasSrs<'_>>,
+) -> bool {
     use groupmap::GroupMap;
-    use kimchi::verifier::{batch_verify_with_rng, Context};
+    use kimchi::verifier::{batch_verify_with_rng, batch_verify_with_rng_and_index_digests, Context};
     use mina_curves::pasta::{Pallas, PallasParameters};
     use mina_poseidon::constants::PlonkSpongeConstantsKimchi;
     use mina_poseidon::pasta::FULL_ROUNDS;
@@ -66,10 +103,20 @@ pub fn verify_batch(verifier: &Verifier, proofs: &[VerifiableProof]) -> bool {
     use rand_chacha::ChaCha20Rng;
     use types::WrapField;
 
-    if !proofs.iter().all(|p| accumulator_check(verifier, p)) {
+    let generators = vesta_generators.unwrap_or_else(|| verifier.vesta_srs.g.as_slice());
+    if !proofs
+        .iter()
+        .all(|p| statement::check_app_state_binding(verifier, p)
+            && if let Some(table) = fixed_vesta {
+                accumulator_check_fixed(verifier, p, generators, table)
+            } else {
+                accumulator_check_with_generators(verifier, p, generators)
+            })
+    {
         return false;
     }
 
+    track_cycles(b"cycle-tracker-report-start:pickles-wrap-prepare\n");
     let pis: Vec<Vec<WrapField>> = proofs
         .iter()
         .map(|p| {
@@ -83,7 +130,6 @@ pub fn verify_batch(verifier: &Verifier, proofs: &[VerifiableProof]) -> bool {
         .collect();
 
     let mut rng = batching_rng(proofs, &pis);
-
     let contexts: Vec<Context<FULL_ROUNDS, Pallas, OpeningProof<Pallas, FULL_ROUNDS>, _>> = proofs
         .iter()
         .zip(pis.iter())
@@ -93,19 +139,41 @@ pub fn verify_batch(verifier: &Verifier, proofs: &[VerifiableProof]) -> bool {
             public_input: pi.as_slice(),
         })
         .collect();
+    track_cycles(b"cycle-tracker-report-end:pickles-wrap-prepare\n");
 
     let group_map = <Pallas as CommitmentCurve>::Map::setup();
     type WrapFqSponge = DefaultFqSponge<PallasParameters, PlonkSpongeConstantsKimchi, FULL_ROUNDS>;
     type WrapFrSponge = DefaultFrSponge<WrapField, PlonkSpongeConstantsKimchi, FULL_ROUNDS>;
-    batch_verify_with_rng::<
-        FULL_ROUNDS,
-        Pallas,
-        WrapFqSponge,
-        WrapFrSponge,
-        OpeningProof<Pallas, FULL_ROUNDS>,
-        ChaCha20Rng,
-    >(&group_map, &contexts, &mut rng)
-    .is_ok()
+    track_cycles(b"cycle-tracker-report-start:pickles-wrap-kimchi\n");
+    let verified = if let Some(digest) = digest {
+        let digests = alloc::vec![digest; contexts.len()];
+        if let Some(table) = fixed_pallas {
+            type Big = ark_ff::BigInt<4>;
+            type Batch<'a> = poly_commitment::commitment::BatchEvaluationProof<'a,Pallas,WrapFqSponge,OpeningProof<Pallas,FULL_ROUNDS>,FULL_ROUNDS>;
+            let msm = |prefix: &[Pallas], ks: &[Big], h: &Pallas, hk: &Big, tail: &[Pallas], tk: &[Big]| {
+                fixed_pallas::msm(&verifier.wrap_vk.srs.g, table, prefix, ks, h, hk, tail, tk)
+            };
+            let opening = |srs: &poly_commitment::ipa::SRS<Pallas>, map: &<Pallas as CommitmentCurve>::Map,
+                           batch: &mut [Batch<'_>], rng: &mut ChaCha20Rng| {
+                srs.verify_with_msm(map,batch,rng,Some(&msm))
+            };
+            kimchi::verifier::batch_verify_with_rng_and_index_digests_and_opening_verifier::<
+                FULL_ROUNDS,Pallas,WrapFqSponge,WrapFrSponge,OpeningProof<Pallas,FULL_ROUNDS>,ChaCha20Rng,
+            >(&group_map,&contexts,&mut rng,&digests,&opening).is_ok()
+        } else {
+        batch_verify_with_rng_and_index_digests::<
+            FULL_ROUNDS, Pallas, WrapFqSponge, WrapFrSponge,
+            OpeningProof<Pallas, FULL_ROUNDS>, ChaCha20Rng,
+        >(&group_map, &contexts, &mut rng, &digests).is_ok()
+        }
+    } else {
+        batch_verify_with_rng::<
+            FULL_ROUNDS, Pallas, WrapFqSponge, WrapFrSponge,
+            OpeningProof<Pallas, FULL_ROUNDS>, ChaCha20Rng,
+        >(&group_map, &contexts, &mut rng).is_ok()
+    };
+    track_cycles(b"cycle-tracker-report-end:pickles-wrap-kimchi\n");
+    verified
 }
 
 /// Fiat–Shamir-derived `ChaCha20Rng` for kimchi's batched dlog check, seeded
@@ -148,18 +216,76 @@ fn batching_rng(
 /// against the Vesta SRS generators. Plain arkworks MSM rather than the
 /// std-gated `SRS::commit_non_hiding`.
 pub fn accumulator_check(verifier: &Verifier, proof: &VerifiableProof) -> bool {
+    accumulator_check_with_generators(verifier, proof, &verifier.vesta_srs.g)
+}
+
+// Keep this MSM separate from the large batch verifier, as in the r75 ELF.
+// Merging it into the batch verifier regressed r76/r77's accumulator code.
+#[inline(never)]
+fn accumulator_check_with_generators(
+    verifier: &Verifier,
+    proof: &VerifiableProof,
+    g: &[Vesta],
+) -> bool {
+    track_cycles(b"cycle-tracker-report-start:pickles-accumulator\n");
     let chals: Vec<StepField> = proof
         .raw_bulletproof_challenges
         .iter()
         .map(|c| ScalarChallenge::new(*c).to_field(&verifier.step_endo))
         .collect();
+    let expected_len = 1usize << verifier.step_srs_length_log2;
+    let canonical_coefficients = matches!(option_env!("ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS"), Some("1"))
+        && matches!(option_env!("ZEKO_CANONICAL_MSM"), Some("1"))
+        && matches!(option_env!("ZEKO_FUSE_VESTA_BASE_CONVERSION"), Some("1"))
+        && matches!(option_env!("ZEKO_VESTA_GLV"), Some("1"))
+        && matches!(option_env!("ZEKO_VESTA_POINT_PRECOMPILE"), Some("1"))
+        && option_env!("ZEKO_VESTA_PREPARED_LANES").is_none();
+    if canonical_coefficients {
+        let coeffs = canonical_coefficients::coefficients(&chals);
+        if coeffs.len() != expected_len || g.len() < expected_len {
+            track_cycles(b"cycle-tracker-report-end:pickles-accumulator\n");
+            return false;
+        }
+        let computed_sg = canonical_msm::vesta_msm_canonical_scalars(&g[..expected_len], &coeffs).into_affine();
+        let valid = computed_sg == proof.challenge_polynomial_commitment;
+        track_cycles(b"cycle-tracker-report-end:pickles-accumulator\n");
+        return valid;
+    }
     let coeffs = b_poly_coefficients(&chals);
-    let g = &verifier.vesta_srs.g;
-    let n = coeffs.len().min(g.len());
-    let computed_sg = <<Vesta as AffineRepr>::Group as VariableBaseMSM>::msm(&g[..n], &coeffs[..n])
-        .expect("compute_sg MSM")
-        .into_affine();
-    computed_sg == proof.challenge_polynomial_commitment
+    if coeffs.len() != expected_len || g.len() < expected_len {
+        track_cycles(b"cycle-tracker-report-end:pickles-accumulator\n");
+        return false;
+    }
+    let computed_sg = if matches!(option_env!("ZEKO_CANONICAL_MSM"), Some("1")) {
+        canonical_msm::vesta_msm(&g[..expected_len], &coeffs).into_affine()
+    } else {
+        <<Vesta as AffineRepr>::Group as VariableBaseMSM>::msm(&g[..expected_len], &coeffs)
+            .expect("compute_sg MSM")
+            .into_affine()
+    };
+    let valid = computed_sg == proof.challenge_polynomial_commitment;
+    track_cycles(b"cycle-tracker-report-end:pickles-accumulator\n");
+    valid
+}
+
+#[inline(never)]
+fn accumulator_check_fixed(
+    verifier: &Verifier, proof: &VerifiableProof, g: &[Vesta],
+    table: &fixed_srs::FixedVestaSrs<'_>,
+) -> bool {
+    track_cycles(b"cycle-tracker-report-start:pickles-accumulator\n");
+    let chals: Vec<StepField> = proof.raw_bulletproof_challenges.iter()
+        .map(|c| ScalarChallenge::new(*c).to_field(&verifier.step_endo)).collect();
+    let expected_len = 1usize << verifier.step_srs_length_log2;
+    let coeffs = canonical_coefficients::coefficients(&chals);
+    if coeffs.len() != expected_len || g.len() < expected_len || table.len() != expected_len {
+        track_cycles(b"cycle-tracker-report-end:pickles-accumulator\n");
+        return false;
+    }
+    let computed = canonical_msm::vesta_msm_fixed(table, &coeffs).into_affine();
+    let valid = computed == proof.challenge_polynomial_commitment;
+    track_cycles(b"cycle-tracker-report-end:pickles-accumulator\n");
+    valid
 }
 
 // The tests use `std::fs` to read fixture JSONs + `std::sync::OnceLock` for
@@ -169,9 +295,13 @@ pub fn accumulator_check(verifier: &Verifier, proof: &VerifiableProof) -> bool {
 #[cfg(all(test, feature = "std"))]
 mod tests {
     use super::*;
-    use crate::types::{VestaSrs, WrapSrs};
-    use crate::wire::{parse_app_statement, parse_wrap_proof, parse_wrap_vk, OcamlProof};
-    use mina_curves::pasta::Pallas;
+    use crate::types::{VestaSrs, WrapSrs, STEP_IPA_ROUNDS};
+    use crate::wire::{
+        parse_app_statement, parse_app_statement_fields, parse_wrap_proof, parse_wrap_vk,
+        OcamlProof,
+    };
+    use ark_ff::{AdditiveGroup, Field, PrimeField, Zero};
+    use mina_curves::pasta::{Pallas, Vesta};
     use poly_commitment::precomputed_srs::get_srs;
     use std::sync::{Arc, OnceLock};
 
@@ -201,6 +331,7 @@ mod tests {
     fn verify_accepts_fixtures() {
         for dir in [
             "mainnet-blockchain-snark",
+            "ocaml-compat",
             "nrr",
             "simplechain/wrap0",
             "simplechain/wrap1",
@@ -213,15 +344,265 @@ mod tests {
                 OcamlProof::parse(&fixture(dir, "public_input_skeleton.json")).expect("skeleton");
             let wrap_vk = parse_wrap_vk(&fixture(dir, "vk.serde.json")).expect("vk");
             let wrap_proof = parse_wrap_proof(&fixture(dir, "proof.serde.json")).expect("proof");
-            let stmt = parse_app_statement(&fixture(dir, "app_statement.json")).expect("stmt");
+            let stmt =
+                parse_app_statement_fields(&fixture(dir, "app_statement.json")).expect("stmt");
 
             let vp = ocaml
-                .into_verifiable(wrap_proof, &wrap_vk, &[stmt])
+                .into_verifiable(wrap_proof, &wrap_vk, &stmt)
                 .expect("conversion");
             let verifier = Verifier::new(wrap_vk, wrap_srs().clone(), vesta_srs().clone(), 1);
 
             assert!(verify(&verifier, &vp), "verify should accept {dir}");
         }
+    }
+
+    #[test]
+    fn verify_rejects_mutated_application_statement() {
+        use ark_ff::One;
+
+        let dir = "mainnet-blockchain-snark";
+        let ocaml =
+            OcamlProof::parse(&fixture(dir, "public_input_skeleton.json")).expect("skeleton");
+        let wrap_vk = parse_wrap_vk(&fixture(dir, "vk.serde.json")).expect("vk");
+        let wrap_proof = parse_wrap_proof(&fixture(dir, "proof.serde.json")).expect("proof");
+        let stmt = parse_app_statement(&fixture(dir, "app_statement.json")).expect("stmt");
+        let mut proof = ocaml
+            .into_verifiable(wrap_proof, &wrap_vk, &[stmt])
+            .expect("conversion");
+        let verifier = Verifier::new(wrap_vk, wrap_srs().clone(), vesta_srs().clone(), 1);
+
+        proof.app_state[0] += StepField::one();
+
+        assert!(
+            !verify(&verifier, &proof),
+            "application statement must be bound inside the verifier"
+        );
+    }
+
+    fn mainnet_proof() -> (Verifier, VerifiableProof) {
+        let dir = "mainnet-blockchain-snark";
+        let ocaml =
+            OcamlProof::parse(&fixture(dir, "public_input_skeleton.json")).expect("skeleton");
+        let wrap_vk = parse_wrap_vk(&fixture(dir, "vk.serde.json")).expect("vk");
+        let wrap_proof = parse_wrap_proof(&fixture(dir, "proof.serde.json")).expect("proof");
+        let stmt = parse_app_statement(&fixture(dir, "app_statement.json")).expect("stmt");
+        let proof = ocaml
+            .into_verifiable(wrap_proof, &wrap_vk, &[stmt])
+            .expect("conversion");
+        let verifier = Verifier::new(wrap_vk, wrap_srs().clone(), vesta_srs().clone(), 1);
+        (verifier, proof)
+    }
+
+    fn compat_proof() -> (Verifier, VerifiableProof) {
+        let dir = "ocaml-compat";
+        let ocaml =
+            OcamlProof::parse(&fixture(dir, "public_input_skeleton.json")).expect("skeleton");
+        let wrap_vk = parse_wrap_vk(&fixture(dir, "vk.serde.json")).expect("vk");
+        let wrap_proof = parse_wrap_proof(&fixture(dir, "proof.serde.json")).expect("proof");
+        let stmt = parse_app_statement_fields(&fixture(dir, "app_statement.json"))
+            .expect("application statement");
+        let proof = ocaml
+            .into_verifiable(wrap_proof, &wrap_vk, &stmt)
+            .expect("conversion");
+        let verifier = Verifier::new(wrap_vk, wrap_srs().clone(), vesta_srs().clone(), 1);
+        (verifier, proof)
+    }
+
+    fn assert_serial_msm_matches_naive<C>(len: usize)
+    where
+        C: AffineRepr,
+        C::Group: VariableBaseMSM<MulBase = C>,
+        C::ScalarField: PrimeField,
+    {
+        let bases: Vec<C> = (0..len)
+            .map(|i| (C::generator() * C::ScalarField::from((i as u64) + 2)).into_affine())
+            .collect();
+        let scalars: Vec<C::ScalarField> = (0..len)
+            .map(|i| {
+                let mut scalar = C::ScalarField::from((i as u64) + 11);
+                for round in 0..4 {
+                    scalar.square_in_place();
+                    scalar += C::ScalarField::from((i + round + 3) as u64);
+                }
+                match i % 19 {
+                    0 => C::ScalarField::ZERO,
+                    1 => C::ScalarField::ONE,
+                    _ => scalar,
+                }
+            })
+            .collect();
+        let bigints: Vec<_> = scalars.iter().map(|scalar| scalar.into_bigint()).collect();
+
+        let serial =
+            ark_ec::scalar_mul::variable_base::msm_bigint_serial::<C::Group>(&bases, &bigints);
+        let naive = bases
+            .iter()
+            .zip(&scalars)
+            .fold(C::Group::zero(), |mut sum, (base, scalar)| {
+                sum += *base * scalar;
+                sum
+            });
+
+        assert_eq!(serial, naive, "serial MSM mismatch at length {len}");
+    }
+
+    #[test]
+    fn zkvm_serial_msm_matches_naive_on_both_pasta_curves() {
+        for len in [0, 1, 2, 31, 32, 257] {
+            assert_serial_msm_matches_naive::<Pallas>(len);
+            assert_serial_msm_matches_naive::<Vesta>(len);
+        }
+    }
+
+    #[test]
+    fn zkvm_serial_msm_accepts_the_real_accumulator_commitment() {
+        let (verifier, proof) = mainnet_proof();
+        let challenges: Vec<StepField> = proof
+            .raw_bulletproof_challenges
+            .iter()
+            .map(|challenge| ScalarChallenge::new(*challenge).to_field(&verifier.step_endo))
+            .collect();
+        let coefficients = b_poly_coefficients(&challenges);
+        assert_eq!(coefficients.len(), 1usize << STEP_IPA_ROUNDS);
+        assert!(verifier.vesta_srs.g.len() >= coefficients.len());
+        let bigints: Vec<_> = coefficients
+            .iter()
+            .map(|coefficient| coefficient.into_bigint())
+            .collect();
+
+        let commitment = ark_ec::scalar_mul::variable_base::msm_bigint_serial::<
+            <Vesta as AffineRepr>::Group,
+        >(&verifier.vesta_srs.g[..coefficients.len()], &bigints)
+        .into_affine();
+
+        assert_eq!(commitment, proof.challenge_polynomial_commitment);
+    }
+
+    #[test]
+    fn canonical_accumulator_coefficients_match_real_commitment_and_bind_values() {
+        let (verifier, proof) = mainnet_proof();
+        let challenges: Vec<StepField> = proof.raw_bulletproof_challenges.iter()
+            .map(|c| ScalarChallenge::new(*c).to_field(&verifier.step_endo)).collect();
+        let mut coeffs = crate::canonical_coefficients::coefficients(&challenges);
+        let g = &verifier.vesta_srs.g[..coeffs.len()];
+        let honest = crate::canonical_msm::vesta_msm_canonical_scalars(g, &coeffs).into_affine();
+        assert_eq!(honest, proof.challenge_polynomial_commitment);
+        coeffs[0].add_assign(&mina_curves::pasta::canonical_words::CanonicalPasta::from_limbs([1, 0, 0, 0]).unwrap());
+        let changed = crate::canonical_msm::vesta_msm_canonical_scalars(g, &coeffs).into_affine();
+        assert_ne!(changed, proof.challenge_polynomial_commitment);
+        assert_eq!(changed, (honest + g[0]).into_affine(), "coefficient zero binds the first generator");
+    }
+
+    #[test]
+    fn two_proof_batch_accepts_and_rejects_a_corrupted_member() {
+        let (verifier, proof) = mainnet_proof();
+        assert!(verify_batch(&verifier, &[proof.clone(), proof.clone()]));
+        let mut corrupted = proof.clone();
+        corrupted.wrap_proof.proof.z1 += types::WrapField::from(1u64);
+        assert!(!verify_batch(&verifier, &[proof, corrupted]));
+    }
+
+    #[test]
+    fn segmented_ipa_batch_fallback_accepts_honest_and_rejects_corruption() {
+        let (verifier, proof) = mainnet_proof();
+        // Deliberately too short: the segmented callback must rebuild the
+        // complete MSM from its borrowed prefix plus h/tail, for both scalar
+        // layouts (single canonical proof and multi-proof field accumulation).
+        let bytes = crate::fixed_pallas::encode(&verifier.wrap_vk.srs.g[..2]);
+        let table = crate::fixed_pallas::decode(&bytes, 2);
+        let encoded_digest = crate::serialize::embedded_wrap_digest(&verifier.wrap_vk);
+        let digest = types::StepField::from_bigint(ark_ff::BigInt(core::array::from_fn(|i|
+            u64::from_le_bytes(encoded_digest[8*i..8*i+8].try_into().unwrap())))).unwrap();
+        for count in [1, 2] {
+            let mut proofs = vec![proof.clone(); count];
+            assert!(verify_batch_with_index_digest_and_vesta(&verifier, &proofs,
+                Some(digest), None, None, Some(&table)));
+            proofs[count - 1].wrap_proof.proof.z1 += types::WrapField::from(1u64);
+            assert!(!verify_batch_with_index_digest_and_vesta(&verifier, &proofs,
+                Some(digest), None, None, Some(&table)));
+        }
+    }
+
+    #[test]
+    fn accumulator_rejects_a_truncated_step_srs() {
+        let (mut verifier, proof) = mainnet_proof();
+        let mut truncated = VestaSrs::default();
+        truncated.g = verifier.vesta_srs.g[..(1usize << STEP_IPA_ROUNDS) - 1].to_vec().into();
+        verifier.vesta_srs = Arc::new(truncated);
+
+        assert!(!accumulator_check(&verifier, &proof));
+    }
+
+    #[test]
+    fn verify_rejects_mutated_deferred_plonk_challenge() {
+        use ark_ff::One;
+        let (verifier, mut proof) = mainnet_proof();
+        proof.raw_plonk.alpha += StepField::one();
+        assert!(!verify(&verifier, &proof));
+    }
+
+    #[test]
+    fn verify_rejects_mutated_bulletproof_challenge() {
+        use ark_ff::One;
+        let (verifier, mut proof) = mainnet_proof();
+        proof.raw_bulletproof_challenges[0] += StepField::one();
+        assert!(!verify(&verifier, &proof));
+    }
+
+    #[test]
+    fn verify_rejects_mutated_accumulator_commitment() {
+        use ark_ff::One;
+        let (verifier, mut proof) = mainnet_proof();
+        proof.challenge_polynomial_commitment.x += types::WrapField::one();
+        assert!(!verify(&verifier, &proof));
+    }
+
+    #[test]
+    fn verify_rejects_mutated_previous_proof_challenge() {
+        use ark_ff::One;
+        let (verifier, mut proof) = mainnet_proof();
+        proof.old_bulletproof_challenges[0][0] += StepField::one();
+        assert!(!verify(&verifier, &proof));
+    }
+
+    #[test]
+    fn verify_rejects_mutated_previous_evaluation() {
+        use ark_ff::One;
+        let (verifier, mut proof) = mainnet_proof();
+        proof.prev_evals.ft_eval1 += StepField::one();
+        assert!(!verify(&verifier, &proof));
+    }
+
+    #[test]
+    fn verify_rejects_mutated_feature_flag() {
+        let (verifier, mut proof) = compat_proof();
+        proof.raw_plonk.feature_flags.range_check0 = false;
+        assert!(!verify(&verifier, &proof));
+    }
+
+    #[test]
+    fn verify_rejects_mutated_joint_combiner() {
+        use ark_ff::One;
+        let (verifier, mut proof) = compat_proof();
+        *proof
+            .raw_plonk
+            .joint_combiner
+            .as_mut()
+            .expect("fixture includes lookup parameters") += StepField::one();
+        assert!(!verify(&verifier, &proof));
+    }
+
+    #[test]
+    fn verify_rejects_mutated_lookup_evaluation() {
+        use ark_ff::One;
+        let (verifier, mut proof) = compat_proof();
+        proof
+            .prev_evals
+            .lookup_aggregation
+            .as_mut()
+            .expect("fixture includes lookup aggregation")
+            .zeta[0] += StepField::one();
+        assert!(!verify(&verifier, &proof));
     }
 
     /// Encode→decode round-trip: build a [`Verifier`] from the mainnet
@@ -262,4 +643,202 @@ mod tests {
             "decoded verifier should accept mainnet blockchain SNARK"
         );
     }
+    #[test]
+    fn embedded_index_digest_matches_runtime_and_rejects_corruption() {
+        use crate::serialize::{decode_embedded_verifier, embedded_wrap_digest};
+        use ark_ec::AffineRepr;
+        for dir in ["mainnet-blockchain-snark", "nrr"] {
+            let ocaml = OcamlProof::parse(&fixture(dir, "public_input_skeleton.json")).unwrap();
+            let vk = parse_wrap_vk(&fixture(dir, "vk.serde.json")).unwrap();
+            let proof = parse_wrap_proof(&fixture(dir, "proof.serde.json")).unwrap();
+            let stmt = parse_app_statement_fields(&fixture(dir, "app_statement.json")).unwrap();
+            let vp = ocaml.into_verifiable(proof, &vk, &stmt).unwrap();
+            let digest = embedded_wrap_digest(&vk);
+            let mut changed_vk = vk.clone();
+            changed_vk.sigma_comm[0].chunks[0] =
+                (changed_vk.sigma_comm[0].chunks[0] + Pallas::generator()).into_affine();
+            let changed_digest = embedded_wrap_digest(&changed_vk);
+            assert_ne!(
+                digest, changed_digest,
+                "digest must bind changed commitments"
+            );
+            let bytes = crate::serialize::encode_embedded_verifier_blob(vesta_srs(), wrap_srs(), 1, &vk);
+            let bytes: &'static [u8] = Box::leak(bytes.into_boxed_slice());
+            let digest: &'static [u8; 32] = Box::leak(Box::new(digest));
+            let fixed = decode_embedded_verifier(bytes, digest);
+            let runtime = crate::serialize::decode_verifier_blob(bytes);
+            assert!(verify(&runtime, &vp), "runtime {dir}");
+            assert!(fixed.verify(&vp), "embedded {dir}");
+            let wrong = decode_embedded_verifier(bytes, Box::leak(Box::new(changed_digest)));
+            assert!(!wrong.verify(&vp), "mismatched digest must reject {dir}");
+            let mut corrupted = vp.clone();
+            corrupted.wrap_proof.proof.z1 += types::WrapField::from(1u64);
+            assert!(!verify(&runtime, &corrupted));
+            assert!(!fixed.verify(&corrupted));
+        }
+    }
+
+    #[test]
+    fn fixed_vesta_table_all_entries_match_srs_and_bind_the_commitment() {
+        use crate::serialize::{decode_embedded_verifier, embedded_wrap_digest};
+        let (verifier, proof) = mainnet_proof();
+        let bytes = crate::fixed_srs::encode(&verifier.vesta_srs.g);
+        let table = crate::fixed_srs::decode(&bytes, verifier.vesta_srs.g.len());
+        for (i, g) in verifier.vesta_srs.g.iter().enumerate() {
+            assert_eq!(table.point::<mina_curves::pasta::VestaParameters>(0,i), *g);
+            assert_eq!(table.point::<mina_curves::pasta::VestaParameters>(1,i),
+                g.mul_bigint(ark_ff::BigInt([0,0,1,0])).into_affine());
+        }
+        if matches!(option_env!("ZEKO_FIXED_VESTA_SRS"), Some("1")) {
+            let digest = Box::leak(Box::new(embedded_wrap_digest(&verifier.wrap_vk)));
+            let mut blob = crate::serialize::encode_embedded_verifier_blob(
+                &verifier.vesta_srs, &verifier.wrap_vk.srs, 1, &verifier.wrap_vk);
+            let start = blob.windows(8).rposition(|x| x == crate::fixed_srs::MAGIC).unwrap();
+            let changed = (verifier.vesta_srs.g[0] + Vesta::generator()).into_affine();
+            let at = start + crate::fixed_srs::HEADER;
+            for (i,word) in changed.x.into_bigint().0.into_iter().chain(changed.y.into_bigint().0).enumerate() {
+                blob[at+8*i..at+8*i+8].copy_from_slice(&word.to_le_bytes());
+            }
+            let blob = Box::leak(blob.into_boxed_slice());
+            assert!(!decode_embedded_verifier(blob, digest).verify(&proof), "changed table point must reject");
+            assert!(verify(&crate::serialize::decode_verifier_blob(blob), &proof),
+                "runtime verifier must still use its own original generators");
+        }
+    }
+
+    #[test]
+    fn embedded_pallas_borrows_exact_blob_prefix_and_runtime_outlives_its_input() {
+        use crate::serialize::{decode_embedded_verifier,decode_embedded_verifier_for_proof,decode_verifier_blob,embedded_wrap_digest};
+        let (verifier,proof)=mainnet_proof();
+        let blob=crate::serialize::encode_embedded_verifier_blob(&verifier.vesta_srs,&verifier.wrap_vk.srs,1,&verifier.wrap_vk);
+        let runtime={let input=blob.clone();let runtime=decode_verifier_blob(&input);assert!(!runtime.wrap_vk.srs.g.is_borrowed());runtime};
+        // Input has been freed; retained generators, basis/cache and full
+        // verification must remain usable on the ordinary runtime path.
+        assert_eq!(runtime.wrap_vk.srs.g.as_slice(),verifier.wrap_vk.srs.g.as_slice());assert!(verify(&runtime,&proof));
+        let bytes:&'static[u8]=Box::leak(blob.into_boxed_slice());
+        let digest=Box::leak(Box::new(embedded_wrap_digest(&verifier.wrap_vk)));
+        let vlen=u64::from_le_bytes(bytes[..8].try_into().unwrap()) as usize;
+        let at=8+72*vlen;let plen=u64::from_le_bytes(bytes[at..at+8].try_into().unwrap()) as usize;
+        let expected_ptr=bytes[at+8..].as_ptr();
+        let full=decode_embedded_verifier(bytes,digest);let prefix=decode_embedded_verifier_for_proof(bytes,digest,&proof);
+        let (full_g,_)=full.wrap_storage_for_test();let (short_g,_)=prefix.wrap_storage_for_test();
+        assert_eq!(full_g.len(),plen);assert_eq!(short_g.len(),1<<proof.wrap_proof.proof.lr.len());
+        assert_eq!(short_g,&full_g[..short_g.len()]);
+        if matches!(option_env!("ZEKO_BORROW_PALLAS_SRS"),Some("1")) {
+            assert_eq!(full_g.as_ptr() as *const u8,expected_ptr);assert_eq!(short_g.as_ptr() as *const u8,expected_ptr);
+        } else {assert_ne!(full_g.as_ptr() as *const u8,expected_ptr);assert_ne!(short_g.as_ptr() as *const u8,expected_ptr);}
+        assert!(full.verify(&proof));assert!(prefix.verify(&proof));
+        let mut changed=proof;changed.wrap_proof.proof.z1+=types::WrapField::from(1u64);
+        assert!(!full.verify(&changed));assert!(!prefix.verify(&changed));assert!(!verify(&runtime,&changed));
+    }
+
+    #[test]
+    fn embedded_vesta_storage_and_generator_binding() {
+        use crate::serialize::{decode_embedded_verifier, embedded_wrap_digest};
+        let dir = "mainnet-blockchain-snark";
+        let ocaml = OcamlProof::parse(&fixture(dir, "public_input_skeleton.json")).unwrap();
+        let vk = parse_wrap_vk(&fixture(dir, "vk.serde.json")).unwrap();
+        let proof = parse_wrap_proof(&fixture(dir, "proof.serde.json")).unwrap();
+        let stmt = parse_app_statement_fields(&fixture(dir, "app_statement.json")).unwrap();
+        let vp = ocaml.into_verifiable(proof, &vk, &stmt).unwrap();
+        let digest: &'static [u8; 32] = Box::leak(Box::new(embedded_wrap_digest(&vk)));
+        let blob = crate::serialize::encode_embedded_verifier_blob(vesta_srs(), wrap_srs(), 1, &vk);
+        let blob: &'static [u8] = Box::leak(blob.into_boxed_slice());
+        let fixed = decode_embedded_verifier(blob, digest);
+        let (borrowed, owned_len) = fixed.vesta_storage_for_test();
+        let enabled = matches!(option_env!("ZEKO_BORROW_VESTA_SRS"), Some("1"));
+        assert_eq!(borrowed.is_some(), enabled);
+        if let Some(g) = borrowed {
+            assert_eq!(owned_len, 0, "embedded path must not copy Vesta g");
+            assert_eq!(g.as_ptr() as usize, blob.as_ptr() as usize + 8);
+            assert_eq!(g, vesta_srs().g.as_slice());
+        } else {
+            assert_eq!(owned_len, vesta_srs().g.len());
+        }
+        let runtime = crate::serialize::decode_verifier_blob(blob);
+        assert_eq!(runtime.vesta_srs.g, vesta_srs().g,
+            "ordinary decoder must retain owned SRS semantics");
+        let g = vesta_srs().g.as_slice();
+        assert!(accumulator_check_with_generators(&runtime, &vp, g));
+        assert!(!accumulator_check_with_generators(&runtime, &vp, &g[..g.len() - 1]));
+        let mut changed = g.to_vec();
+        // Coefficient zero is always one, so this changes the MSM by exactly G.
+        changed[0] = (changed[0] + Vesta::generator()).into_affine();
+        assert!(!accumulator_check_with_generators(&runtime, &vp, &changed));
+        let mut bad_srs = VestaSrs::default();
+        bad_srs.g = changed.into();
+        let bad_blob = crate::serialize::encode_embedded_verifier_blob(&bad_srs, wrap_srs(), 1, &vk);
+        let bad_fixed = decode_embedded_verifier(Box::leak(bad_blob.into_boxed_slice()), digest);
+        assert!(!bad_fixed.verify(&vp), "embedded blob must bind its actual generators");
+        let mut corrupted = vp;
+        corrupted.challenge_polynomial_commitment =
+            (corrupted.challenge_polynomial_commitment + Vesta::generator()).into_affine();
+        assert!(!accumulator_check_with_generators(&runtime, &corrupted, g));
+    }
+
+
+    #[test]
+    fn wrap_prefix_uses_proof_geometry_and_preserves_verification() {
+        use crate::serialize::{decode_embedded_verifier, decode_embedded_verifier_for_proof, embedded_wrap_digest};
+        for dir in ["mainnet-blockchain-snark", "nrr"] {
+            let ocaml=OcamlProof::parse(&fixture(dir,"public_input_skeleton.json")).unwrap();
+            let vk=parse_wrap_vk(&fixture(dir,"vk.serde.json")).unwrap();
+            let proof=parse_wrap_proof(&fixture(dir,"proof.serde.json")).unwrap();
+            let stmt=parse_app_statement_fields(&fixture(dir,"app_statement.json")).unwrap();
+            let vp=ocaml.into_verifiable(proof,&vk,&stmt).unwrap();
+            let bytes: &'static [u8]=Box::leak(crate::serialize::encode_embedded_verifier_blob(vesta_srs(),wrap_srs(),1,&vk).into_boxed_slice());
+            let digest: &'static [u8;32]=Box::leak(Box::new(embedded_wrap_digest(&vk)));
+            let full=decode_embedded_verifier(bytes,digest);
+            let short=decode_embedded_verifier_for_proof(bytes,digest,&vp);
+            let active=1usize<<vp.wrap_proof.proof.lr.len();
+            let (full_g,full_max)=full.wrap_storage_for_test();
+            let (short_g,short_max)=short.wrap_storage_for_test();
+            assert_eq!(short_g,&full_g[..active]);
+            assert_eq!(short_max,full_max,"VK transcript/chunk exponent must not change");
+            assert_eq!(short_max,vk.max_poly_size);
+            assert!(full.verify(&vp)); assert!(short.verify(&vp));
+            let mut bad=vp.clone(); bad.wrap_proof.proof.z1+=types::WrapField::from(1u64);
+            assert!(!full.verify(&bad)); assert!(!short.verify(&bad));
+            if dir=="mainnet-blockchain-snark" {
+                for rounds in [0,1,14,16] {
+                    let mut changed=vp.clone();
+                    changed.wrap_proof.proof.lr.resize(rounds,(Pallas::generator(),Pallas::generator()));
+                    let prefix=decode_embedded_verifier_for_proof(bytes,digest,&changed);
+                    assert_eq!(full.verify(&changed),prefix.verify(&changed),"rounds={rounds}");
+                }
+                let mut smaller=vp.clone(); smaller.wrap_proof.proof.lr.clear();
+                let prefix=decode_embedded_verifier_for_proof(bytes,digest,&smaller);
+                assert!(!prefix.verify(&vp),"larger opening must reject without truncation/panic");
+                let mut oversized=vp.clone();
+                oversized.wrap_proof.proof.lr.resize(usize::BITS as usize,(Pallas::generator(),Pallas::generator()));
+                assert!(!full.verify(&oversized));
+                assert!(std::panic::catch_unwind(std::panic::AssertUnwindSafe(||
+                    decode_embedded_verifier_for_proof(bytes,digest,&oversized))).is_err());
+            }
+        }
+    }
+
+    #[test]
+    fn embedded_pallas_table_matches_every_generator_and_binds_verification() {
+        use crate::serialize::{decode_embedded_verifier,embedded_wrap_digest};
+        let (verifier,proof)=mainnet_proof();
+        let g=&verifier.wrap_vk.srs.g;let n=g.len().div_ceil(2);
+        let bytes=crate::fixed_pallas::encode(&g[..n]);
+        let table=crate::fixed_pallas::decode(&bytes,n);
+        for i in 0..n {
+            assert_eq!(table.point::<mina_curves::pasta::PallasParameters>(0,i),g[i]);
+            assert_eq!(table.point::<mina_curves::pasta::PallasParameters>(1,i),g[i].mul_bigint(ark_ff::BigInt([0,0,1,0])).into_affine());
+        }
+        if matches!(option_env!("ZEKO_FIXED_PALLAS_SRS"),Some("1")) {
+            let digest=Box::leak(Box::new(embedded_wrap_digest(&verifier.wrap_vk)));
+            let mut blob=crate::serialize::encode_embedded_verifier_blob(&verifier.vesta_srs,&verifier.wrap_vk.srs,1,&verifier.wrap_vk);
+            let start=blob.windows(8).rposition(|b|b==crate::fixed_pallas::MAGIC).unwrap()+crate::fixed_pallas::HEADER;
+            let changed=(g[0]+Pallas::generator()).into_affine();
+            for (i,w) in changed.x.into_bigint().0.into_iter().chain(changed.y.into_bigint().0).enumerate() {blob[start+8*i..start+8*i+8].copy_from_slice(&w.to_le_bytes());}
+            let blob=Box::leak(blob.into_boxed_slice());
+            assert!(!decode_embedded_verifier(blob,digest).verify(&proof),"changed Pallas table point must reject");
+            assert!(verify(&crate::serialize::decode_verifier_blob(blob),&proof),"runtime decoder must keep its own SRS");
+        }
+    }
+
 }

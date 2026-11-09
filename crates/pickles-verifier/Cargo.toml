@@ -13,8 +13,6 @@ std = [
   "dep:serde_json",
   "dep:hex",
   "ark-ff/std",
-  "kimchi/parallel",
-  "poly-commitment/parallel",
 ]
 
 [dependencies]
@@ -41,8 +39,15 @@ bytemuck = { version = "1", default-features = false, features = ["derive"] }
 # bare-`Fp`/`Fq` fields of `VerifiableProof` etc., so `sp1_zkvm::io::read::<VerifiableProof>()`
 # works in the guest (arkworks `Fp`/`Fq` don't impl native serde Serialize).
 serde_with = { version = "3", default-features = false, features = ["alloc", "macros"] }
-o1-utils = { path = "../../mina/src/lib/crypto/proof-systems/utils", default-features = false }
+o1-utils = { workspace = true }
 
 # std-only (fixture wire/parsing + host-side conversion)
 serde_json = { version = "1", optional = true }
 hex = { version = "0.4", optional = true }
+
+[target.'cfg(target_os = "zkvm")'.dependencies]
+sp1-lib = "=6.10.0"
+
+[dev-dependencies]
+once_cell = "=1.21.3"
+sha2 = "0.10"

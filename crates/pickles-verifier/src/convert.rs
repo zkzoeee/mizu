@@ -162,10 +162,11 @@ impl OcamlProof {
     ///     `old_bulletproof_challenges`,
     ///   * recompute the two message digests (the wire erases them).
     ///
-    /// The kimchi wrap proof + VK come from the sibling `proof.serde.json` /
-    /// `vk.serde.json`. `app_state` is the application statement's field
-    /// encoding (OCaml `Statement_value.to_field_elements`); for the
-    /// single-field fixture statements it is `[statement]`.
+    /// The Kimchi wrap proof + VK have already been reconstructed from either
+    /// the versioned compact OCaml wire or legacy serde fixtures. `app_state` is the
+    /// application statement's field encoding (OCaml
+    /// `Statement_value.to_field_elements`); for single-field fixture
+    /// statements it is `[statement]`.
     pub fn into_verifiable(
         self,
         wrap_proof: WrapProof,
@@ -230,6 +231,8 @@ impl OcamlProof {
             prev_evals: self.prev_evals,
             p_eval0_chunks: self.p_eval0_chunks,
             old_bulletproof_challenges,
+            app_state: app_state.to_vec(),
+            prev_step_sgs: self.prev_step_sgs,
             challenge_polynomial_commitment: self.challenge_polynomial_commitment,
             messages_for_next_step_proof_digest,
             messages_for_next_wrap_proof_digest,

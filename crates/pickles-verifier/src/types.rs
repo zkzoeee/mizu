@@ -69,6 +69,9 @@ pub struct PlonkMinimal {
     pub gamma: StepField,
     #[serde_as(as = "SerdeAs")]
     pub zeta: StepField,
+    #[serde_as(as = "Option<SerdeAs>")]
+    pub joint_combiner: Option<StepField>,
+    pub feature_flags: FeatureFlags,
 }
 
 /// `branch_data` — the proofs-verified prefix mask (CONSTANT `to_bool_vec`
@@ -97,6 +100,21 @@ pub struct ChunkedAllEvals {
     pub s: [PointEvaluations<Vec<StepField>>; 6],
     /// index selectors: generic, poseidon, complete_add, mul, emul, endomul_scalar.
     pub index: [PointEvaluations<Vec<StepField>>; 6],
+    pub range_check0_selector: Option<PointEvaluations<Vec<StepField>>>,
+    pub range_check1_selector: Option<PointEvaluations<Vec<StepField>>>,
+    pub foreign_field_add_selector: Option<PointEvaluations<Vec<StepField>>>,
+    pub foreign_field_mul_selector: Option<PointEvaluations<Vec<StepField>>>,
+    pub xor_selector: Option<PointEvaluations<Vec<StepField>>>,
+    pub rot_selector: Option<PointEvaluations<Vec<StepField>>>,
+    pub lookup_aggregation: Option<PointEvaluations<Vec<StepField>>>,
+    pub lookup_table: Option<PointEvaluations<Vec<StepField>>>,
+    pub lookup_sorted: [Option<PointEvaluations<Vec<StepField>>>; 5],
+    pub runtime_lookup_table: Option<PointEvaluations<Vec<StepField>>>,
+    pub runtime_lookup_table_selector: Option<PointEvaluations<Vec<StepField>>>,
+    pub xor_lookup_selector: Option<PointEvaluations<Vec<StepField>>>,
+    pub lookup_gate_lookup_selector: Option<PointEvaluations<Vec<StepField>>>,
+    pub range_check_lookup_selector: Option<PointEvaluations<Vec<StepField>>>,
+    pub foreign_field_mul_lookup_selector: Option<PointEvaluations<Vec<StepField>>>,
 }
 
 /// Per-tag verifier constants. Built once from the wrap VK + SRSes and reused
@@ -124,6 +142,30 @@ pub struct Verifier {
 }
 
 impl Verifier {
+    // Only the trusted embedded decoder supplies these build-derived parts.
+    // Runtime callers keep Verifier::new and its ordinary recomputation.
+    pub(crate) fn from_precomputed_setup(
+        mut wrap_vk: WrapVerifierIndex,
+        wrap_srs: Arc<WrapSrs>,
+        vesta_srs: Arc<VestaSrs>,
+        step_num_chunks: usize,
+        setup: crate::setup_data::PrecomputedSetup,
+    ) -> Verifier {
+        wrap_vk.srs = wrap_srs;
+        wrap_vk.linearization = setup.wrap;
+        wrap_vk.powers_of_alpha = setup.wrap_alphas;
+        wrap_vk.endo = endos::<Vesta>().0;
+        Verifier {
+            wrap_vk,
+            vesta_srs,
+            step_zk_rows: (16 * step_num_chunks + 5) / 7,
+            step_srs_length_log2: STEP_IPA_ROUNDS,
+            step_endo: endos::<Vesta>().1,
+            linearization: setup.step,
+            powers_of_alpha: setup.step_alphas,
+        }
+    }
+
     /// Build the per-tag verifier. `step_zk_rows` comes from `num_chunks`
     /// (`(16·nc + 5) / 7`); the step SRS length log2 is the protocol-fixed
     /// [`STEP_IPA_ROUNDS`]; the step linearization is the Tick polynomial
@@ -170,12 +212,11 @@ impl Verifier {
     }
 }
 
-/// The minimal data the verifier reads for one proof. The 9 carried fields
-/// come straight from the wire; the 3 recomputed ones
-/// (`old_bulletproof_challenges` + the two message digests) are produced by
-/// the conversion.
+/// The minimal data the verifier reads for one proof. In addition to the proof
+/// data, this carries the application statement and previous step commitments
+/// needed to recompute its Pickles message digest inside the guest.
 #[serde_as]
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct VerifiableProof {
     pub wrap_proof: WrapProof,
     pub raw_plonk: PlonkMinimal,
@@ -191,6 +232,13 @@ pub struct VerifiableProof {
     /// previous-proof bp challenges, ALREADY endo-expanded (length `mpv`).
     #[serde_as(as = "Vec<[SerdeAs; STEP_IPA_ROUNDS]>")]
     pub old_bulletproof_challenges: Vec<[StepField; STEP_IPA_ROUNDS]>,
+    /// Application statement fields (`Statement_value.to_field_elements`).
+    #[serde_as(as = "Vec<SerdeAs>")]
+    pub app_state: Vec<StepField>,
+    /// Previous step proof challenge-polynomial commitments. These are needed
+    /// to bind `app_state` to `messages_for_next_step_proof_digest` in-guest.
+    #[serde_as(as = "Vec<SerdeAs>")]
+    pub prev_step_sgs: Vec<Pallas>,
     /// the proof's own wrap challenge-polynomial commitment (`Vesta`).
     #[serde_as(as = "SerdeAs")]
     pub challenge_polynomial_commitment: Vesta,
