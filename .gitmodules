@@ -2,3 +2,18 @@
 	path = mina
 	url = https://github.com/MinaProtocol/mina.git
 	branch = compatible
+
+[submodule "vendor/algebra"]
+	path = vendor/algebra
+	url = https://github.com/arkworks-rs/algebra.git
+	branch = codex/mizu
+
+[submodule "vendor/proof-systems"]
+	path = vendor/proof-systems
+	url = https://github.com/o1-labs/proof-systems.git
+	branch = codex/mizu
+
+[submodule "vendor/sp1"]
+	path = vendor/sp1
+	url = https://github.com/succinctlabs/sp1.git
+	branch = codex/mizu

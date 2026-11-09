@@ -1,20 +1,52 @@
 [workspace]
 resolver = "2"
-members = ["crates/o1-verifier", "crates/o1-verifier-host", "crates/pickles-verifier"]
-exclude = ["mina/src/lib/crypto/proof-systems"]
+members = ["crates/pickles-verifier", "crates/o1-verifier", "crates/o1-verifier-host"]
+default-members = ["crates/pickles-verifier", "crates/o1-verifier-host"]
+exclude = ["mina/src/lib/crypto/proof-systems", "vendor/algebra", "vendor/proof-systems", "vendor/sp1", "examples/settlement", "tools/pasta-proof", "tools/pasta-guest"]
 
 [workspace.dependencies]
-kimchi = { path = "mina/src/lib/crypto/proof-systems/kimchi", default-features = false }
-poly-commitment = { path = "mina/src/lib/crypto/proof-systems/poly-commitment", default-features = false }
-mina-curves = { path = "mina/src/lib/crypto/proof-systems/curves", default-features = false }
-mina-poseidon = { path = "mina/src/lib/crypto/proof-systems/poseidon", default-features = false }
-groupmap = { path = "mina/src/lib/crypto/proof-systems/groupmap", default-features = false }
-sp1-zkvm = { git = "https://github.com/succinctlabs/sp1", tag = "v6.2.2" }
-sp1-sdk = { git = "https://github.com/succinctlabs/sp1", tag = "v6.2.2" }
-sp1-build = { git = "https://github.com/succinctlabs/sp1", tag = "v6.2.2" }
-serde = { version = "1", default-features = false, features = ["derive"] }
-serde_json = { version = "1", default-features = false, features = ["alloc"] }
-ark-ff = { version = "0.5", default-features = false }
-ark-ec = { version = "0.5", default-features = false }
-ark-serialize = { version = "0.5", default-features = false }
-bytemuck = { version = "1", default-features = false, features = ["derive"] }
+kimchi = { path = "vendor/proof-systems/kimchi" }
+poly-commitment = { path = "vendor/proof-systems/poly-commitment" }
+mina-curves = { path = "vendor/proof-systems/curves" }
+mina-poseidon = { path = "vendor/proof-systems/poseidon" }
+groupmap = { path = "vendor/proof-systems/groupmap" }
+o1-utils = { path = "vendor/proof-systems/utils" }
+sp1-zkvm = "=6.10.0"
+sp1-sdk = "=6.10.0"
+sp1-build = "=6.10.0"
+sp1-core-executor = "=6.10.0"
+sp1-core-executor-runner = "=6.10.0"
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = "1"
+ark-ff = { version = "0.5.0", features = ["std"] }
+ark-ec = { version = "0.5.0", features = ["std"] }
+ark-serialize = { version = "0.5.0", features = ["std"] }
+ark-poly = { version = "0.5.0", features = ["std"] }
+bytemuck = { version = "1", features = ["derive"] }
+anyhow = "1"
+bincode = "1.3.3"
+hex = "0.4"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+opt-level = 3
+
+[profile.release.build-override]
+opt-level = 3
+
+[profile.native-test]
+inherits = "release"
+lto = false
+codegen-units = 4
+
+[patch.crates-io]
+ark-ff = { path = "vendor/algebra/ff" }
+ark-ec = { path = "vendor/algebra/ec" }
+ark-serialize = { path = "vendor/algebra/serialize" }
+ark-poly = { path = "vendor/algebra/poly" }
+sp1-core-executor = { path = "vendor/sp1/crates/core/executor" }
+sp1-core-executor-runner = { path = "vendor/sp1/crates/core/runner" }
+sp1-core-machine = { path = "vendor/sp1/crates/core/machine" }
+sp1-curves = { path = "vendor/sp1/crates/curves" }
+crypto-bigint = { git = "https://github.com/sp1-patches/RustCrypto-bigint", tag = "patch-0.5.5-sp1-6.0.0" }

@@ -1,0 +1,199 @@
+{
+  "schema_version": 2,
+  "root_upstream": {
+    "repository": "https://github.com/o1-labs/o1js-to-zkvm.git",
+    "base": "095a5c0a46b903b7b126c857c9910567b16e2e6b"
+  },
+  "dependencies": [
+    {
+      "name": "algebra",
+      "path": "vendor/algebra",
+      "upstream": "https://github.com/arkworks-rs/algebra.git",
+      "base": "7ad88c46e859a94ab8e0b19fd8a217c3dc472f1c",
+      "revision": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+      "tree": "65ccbce6d022711bbbc30cbc36f6dd162b260a95",
+      "branch": "codex/mizu",
+      "bundle": "dependencies/bundles/algebra.bundle",
+      "bundle_sha256": "3a5509cfa7eda4eb47dc807f9fbe2e97991bdcaa0d68cb03ae8a543d857ff870",
+      "patches": [
+        {
+          "commit": "7b99b0e0f7243814c1414e3180bd51b643d2e5e2",
+          "subject": "Add SP1 field arithmetic and inversion fast paths",
+          "paths": [
+            "Cargo.toml",
+            "ff/Cargo.toml",
+            "ff/src/fields/arithmetic.rs",
+            "ff/src/fields/mod.rs",
+            "ff/src/fields/models/cubic_extension.rs",
+            "ff/src/fields/models/fp/montgomery_backend.rs",
+            "ff/src/fields/models/fp4.rs",
+            "ff/src/lib.rs"
+          ]
+        },
+        {
+          "commit": "712a6ae796d08e7572fd05d08fac54866bc93e6f",
+          "subject": "Add GLV and fixed/variable-base MSM optimizations",
+          "paths": [
+            "ec/Cargo.toml",
+            "ec/src/hashing/map_to_curve_hasher.rs",
+            "ec/src/lib.rs",
+            "ec/src/models/short_weierstrass/mod.rs",
+            "ec/src/models/twisted_edwards/mod.rs",
+            "ec/src/pairing.rs",
+            "ec/src/scalar_mul/fixed_base.rs",
+            "ec/src/scalar_mul/glv.rs",
+            "ec/src/scalar_mul/mod.rs",
+            "ec/src/scalar_mul/variable_base/affine_spike.rs",
+            "ec/src/scalar_mul/variable_base/mod.rs",
+            "ec/src/scalar_mul/variable_base/stream_pippenger.rs",
+            "ec/src/scalar_mul/wnaf.rs"
+          ]
+        },
+        {
+          "commit": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+          "subject": "Optimize polynomial evaluation for the verifier",
+          "paths": [
+            "poly/src/polynomial/univariate/dense.rs"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "proof-systems",
+      "path": "vendor/proof-systems",
+      "upstream": "https://github.com/o1-labs/proof-systems.git",
+      "base": "3abb66bbbe143e27845c88b6456ecab3a589e113",
+      "revision": "9a47c4973f5b5dac37bd146922e8d08045d049ec",
+      "tree": "20fc89335f22315531401b2afd287d1a8b2c39e2",
+      "branch": "codex/mizu",
+      "bundle": "dependencies/bundles/proof-systems.bundle",
+      "bundle_sha256": "eea487353e9665ef21054ad5ddef5756c33936fc189412a4b195fd0f965b3f13",
+      "patches": [
+        {
+          "commit": "02078de82fac3f3d851b1c664a885bcb97905eda",
+          "subject": "Add canonical Pasta arithmetic, GLV and SP1 point operations",
+          "paths": [
+            "Cargo.toml",
+            "curves/Cargo.toml",
+            "curves/src/pasta/canonical_pallas.rs",
+            "curves/src/pasta/canonical_words.rs",
+            "curves/src/pasta/curves/pallas.rs",
+            "curves/src/pasta/fields/fp.rs",
+            "curves/src/pasta/fields/fq.rs",
+            "curves/src/pasta/mod.rs",
+            "curves/src/pasta/pallas_glv.rs",
+            "curves/src/pasta/point_spikes.rs",
+            "curves/src/pasta/precompile_spikes.rs"
+          ]
+        },
+        {
+          "commit": "428e4d75a56336f41a03ee17524e622696ed91fe",
+          "subject": "Add canonical Poseidon and retained sponge fast paths",
+          "paths": [
+            "poseidon/src/canonical.rs",
+            "poseidon/src/lib.rs",
+            "poseidon/src/pasta/fp_kimchi.rs",
+            "poseidon/src/pasta/fp_legacy.rs",
+            "poseidon/src/pasta/fq_kimchi.rs",
+            "poseidon/src/pasta/fq_legacy.rs",
+            "poseidon/src/permutation.rs",
+            "poseidon/src/sponge.rs"
+          ]
+        },
+        {
+          "commit": "13607ce6b4d703522d6d02900b21add8e6374df6",
+          "subject": "Add canonical IPA and reusable SRS representations",
+          "paths": [
+            "poly-commitment/src/canonical_ipa.rs",
+            "poly-commitment/src/commitment.rs",
+            "poly-commitment/src/generators.rs",
+            "poly-commitment/src/ipa.rs",
+            "poly-commitment/src/lib.rs",
+            "poly-commitment/src/precomputed_srs.rs",
+            "poly-commitment/src/utils.rs"
+          ]
+        },
+        {
+          "commit": "9a47c4973f5b5dac37bd146922e8d08045d049ec",
+          "subject": "Optimize verifier challenges, expressions and borrowed commitments",
+          "paths": [
+            "kimchi/src/alphas.rs",
+            "kimchi/src/circuits/constraints.rs",
+            "kimchi/src/circuits/lookup/lookups.rs",
+            "kimchi/src/circuits/lookup/tables/mod.rs",
+            "kimchi/src/circuits/polynomials/permutation.rs",
+            "kimchi/src/prover.rs",
+            "kimchi/src/verifier.rs"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "sp1",
+      "path": "vendor/sp1",
+      "upstream": "https://github.com/succinctlabs/sp1.git",
+      "base": "d83ed91f96701209613720708f36ffce0e98ed33",
+      "revision": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1",
+      "tree": "af202e2d9b70ec2f1b3c5252ffad4953f7ce57b7",
+      "branch": "codex/mizu",
+      "bundle": "dependencies/bundles/sp1.bundle",
+      "bundle_sha256": "95b2ab9e97c1bcc2073636bf4b47cb2c8cfc3ca8514dbaa3adcb3aff650919ee",
+      "patches": [
+        {
+          "commit": "0fde0939bc84bed83160e7f2c3685a863430ff7d",
+          "subject": "Add Pasta curves and modular inversion support",
+          "paths": [
+            "crates/curves/src/lib.rs",
+            "crates/curves/src/weierstrass/mod.rs",
+            "crates/curves/src/weierstrass/pasta.rs"
+          ]
+        },
+        {
+          "commit": "7d7b32b1530dbddac728d31c2ecf6afd34718e65",
+          "subject": "Register Pasta execution, AIRs and lossless record streaming",
+          "paths": [
+            "crates/core/executor/src/air.rs",
+            "crates/core/executor/src/artifacts/rv64im_complexity.json",
+            "crates/core/executor/src/artifacts/rv64im_complexity_mprotect.json",
+            "crates/core/executor/src/artifacts/rv64im_costs.json",
+            "crates/core/executor/src/events/precompiles/mod.rs",
+            "crates/core/executor/src/minimal/ecall.rs",
+            "crates/core/executor/src/record.rs",
+            "crates/core/executor/src/retain.rs",
+            "crates/core/executor/src/syscall_code.rs",
+            "crates/core/executor/src/vm.rs",
+            "crates/core/executor/src/vm/gas.rs",
+            "crates/core/executor/src/vm/syscall.rs",
+            "crates/core/executor/src/vm/syscall/precompiles/weierstrass/add.rs",
+            "crates/core/executor/src/vm/syscall/precompiles/weierstrass/double.rs",
+            "crates/core/machine/src/operations/field/field_op.rs",
+            "crates/core/machine/src/riscv/mod.rs",
+            "crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_add.rs",
+            "crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_double.rs",
+            "crates/core/machine/src/utils/prove.rs",
+            "crates/core/runner/build.rs"
+          ]
+        },
+        {
+          "commit": "59fa996a5001d31f3112dd05307003111847c3e7",
+          "subject": "Keep the Pasta crates compatible with registry SP1 consumers",
+          "paths": [
+            "crates/core/executor/Cargo.toml",
+            "crates/core/machine/Cargo.toml",
+            "crates/core/runner/Cargo.toml",
+            "crates/curves/Cargo.toml"
+          ]
+        },
+        {
+          "commit": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1",
+          "subject": "Expose portable execution counters for cycle measurements",
+          "paths": [
+            "crates/core/executor/src/minimal.rs",
+            "crates/core/executor/src/minimal/arch/portable/mod.rs",
+            "crates/core/runner/src/portable.rs"
+          ]
+        }
+      ]
+    }
+  ]
+}
