@@ -68,3 +68,36 @@ not by preserving the original experimental commit history.
 ## OpenVM-inspired follow-up
 
 The [fused CIP prototype](openvm-experiments.md) removes 66 UInt256 calls versus the allocation candidate but adds 3,189 guest cycles and 1,005 units in the SP1 gas estimate. Keep the measured regression and raw data; do not select it from call counts alone.
+
+## Post-retention ceilings: Poseidon permutation chip and chained Pasta add
+
+Assessed 2026-11-10 against the retained boolean guest under the promoted
+`retain-pasta-and-uint` routing (27.84B main cells, 82 records):
+
+| Chip | Main cells | Share |
+| --- | ---: | ---: |
+| Global | 17,454,646,720 | 62.7% |
+| VestaAddAssign | 2,096,608,800 | 7.5% |
+| PallasAddAssign | 1,116,536,928 | 4.0% |
+| MemoryLocal | 627,776,640 | 2.3% |
+| Uint256MulMod | 198,119,936 | 0.7% |
+
+- **Chained Pasta add (`DESIGN-batched-pasta-add.md`): not pursued.** Its
+  1.5x case was the memory argument for operand words under deferred routing.
+  Retention already keeps add operands in CPU shards, where repeated bucket
+  accesses deduplicate; every addition still needs its own 1,599-column row.
+  What a chain could still remove is part of the residual operand traffic,
+  bounded by MemoryLocal's 2.3% plus the adds' share of Global, against a new
+  wide AIR at the 8,192-column ceiling with intermediate exceptional cases.
+  It is also not a cycle win: the guest would have to group additions by
+  bucket, and r108 measured that grouping at +74.7M to +78.3M cycles with
+  existing single adds. Revisit only if a measured per-chip split shows the
+  adds' Global share is large.
+- **Poseidon permutation chip: still worthwhile, not built here.** r110
+  measured about 11.0M guest cycles (7.7%) for the 229 permutations, with
+  264,495 field multiplications. A round-per-row chip linked by interactions
+  needs about 12,600 rows of roughly 2,600 columns (~33M cells), against an
+  estimated 1–2B cells and 7% of cycles today. It needs a new syscall, round
+  linkage through interactions (SP1 6.x has no next-row transitions), state
+  memory binding and its own adversarial proof matrix. It is a separate
+  multi-day project; the r110 prototype in `tools/pasta-proof` is its start.

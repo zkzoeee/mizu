@@ -21228,6 +21228,91 @@
         "surviving_columns": 0,
         "degenerate_parity": true
       }
+    },
+    {
+      "id": "mizu-proving-pipeline",
+      "status": "retained-producer-and-cpu-validated-consumer",
+      "document": "docs/optimizations/06-sp1-runtime-and-proving.md",
+      "owner": "sp1",
+      "proof_generated": true,
+      "evidence": "benchmarks/pipeline-sp1-6.10.json",
+      "source_revision": "codex/zakura-ragu",
+      "dependency_pins": {
+        "algebra": "6f81d7e1",
+        "proof-systems": "dbe478fc4",
+        "sp1": "70a005d67"
+      },
+      "retained_default": true,
+      "evidence_sha256": "d14a6bb1b6795a8de85f9bf1530f05e916a7733e2ea186f574ec3a0302c45f2b",
+      "validation": {
+        "producer_seconds_1_to_8_threads": [
+          84.1,
+          46.5
+        ],
+        "per_record_digests_identical": 148,
+        "cpu_proof_seconds_depth_1_to_3": [
+          16.9,
+          10.9
+        ],
+        "cuda_path_compiled": false
+      }
+    },
+    {
+      "id": "mizu-pasta-fp-precompile",
+      "status": "measured-opt-in-candidate",
+      "document": "docs/optimizations/06-sp1-runtime-and-proving.md",
+      "owner": "sp1",
+      "proof_generated": true,
+      "evidence": "benchmarks/pasta-fp-sp1-6.10.json",
+      "source_revision": "codex/zakura-ragu",
+      "dependency_pins": {
+        "algebra": "6f81d7e1",
+        "proof-systems": "dbe478fc4",
+        "sp1": "70a005d67"
+      },
+      "retained_default": false,
+      "evidence_sha256": "048e94947ebd56b99be2d9366f6a9c2048e471149deebd5f8872a69299d03fc7",
+      "validation": {
+        "cycles": [
+          142638298,
+          139610314
+        ],
+        "main_cells_delta_pct": -3.43,
+        "pasta_fp_check_ops": 144,
+        "cpu_proof_shards": 4,
+        "gpu_proof": false
+      }
+    },
+    {
+      "id": "mizu-retention-promotion",
+      "status": "promoted-for-core-proofs",
+      "document": "docs/optimizations/06-sp1-runtime-and-proving.md",
+      "owner": "o1js-to-zkvm",
+      "proof_generated": true,
+      "evidence": "benchmarks/retention-sp1-6.10.json",
+      "source_revision": "codex/zakura-ragu",
+      "dependency_pins": {
+        "algebra": "6f81d7e1",
+        "proof-systems": "dbe478fc4",
+        "sp1": "70a005d67"
+      },
+      "retained_default": true,
+      "evidence_sha256": "cf0048037e41f65d68ecb85a91ad26e98dae1ed0f4ade5a91e70cc1294c52b05",
+      "validation": {
+        "main_cells": [
+          43922703280,
+          27839873136
+        ],
+        "records": [
+          148,
+          82
+        ],
+        "cpu_proof_matrix": {
+          "honest_accepted": 4,
+          "malicious_rejected": 38
+        },
+        "recursion_vk_map": false
+      }
     }
   ],
   "mizu_workflows": [
