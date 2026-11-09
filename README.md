@@ -39,6 +39,9 @@ produce proofs.
 python3 scripts/benchmark.py run --output benchmarks/runs/first
 ```
 
+The fresh retained core baseline is **142,660,047 cycles**, with boolean `true`
+output. See [validation](docs/validation.md) and the [measurement](benchmarks/core-sp1-6.10.json).
+
 This builds and executes the core guest with `benchmarks/retained.json`, pins
 source/ELF/fixture identity, and records fresh cycles. Compatibility optimization
 variable names are preserved to keep the implementation stable. The receipt

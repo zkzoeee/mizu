@@ -57,5 +57,6 @@
     "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
     "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
     "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
-  }
+  },
+  "builder_commit": "d83ed91"
 }

@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "name": "mizu-pickles-core-sp1-6.10",
+  "date": "2026-11-09",
+  "root_upstream": {
+    "repository": "https://github.com/o1-labs/o1js-to-zkvm.git",
+    "base": "095a5c0a46b903b7b126c857c9910567b16e2e6b"
+  },
+  "measured_revision": "07abea2274add3b7067560ff699b0d8467929b84",
+  "dependency_pins": {
+    "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+    "proof-systems": "9a47c4973f5b5dac37bd146922e8d08045d049ec",
+    "sp1": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1"
+  },
+  "guest_abi": "one VerifiableProof input; one boolean output",
+  "sp1_version": "6.10.0",
+  "cycles": 142660047,
+  "cycle_metric": "MinimalExecutorRunner::global_clk",
+  "guest_exit_code": 0,
+  "accepted": true,
+  "public_values_len": 1,
+  "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+  "elf_sha256": "68389c53e152ee1037996766c2e793f3bfdec6b5666009ba0e459a6798dac90f",
+  "runner_sha256": "55362a07b70874e9b1893fd3d751b1a5ad92837fae566e0a9291f8196cc19ed0",
+  "fixture_sha256": {
+    "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+    "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+    "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+    "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+  },
+  "pasta_syscall_counts": {
+    "pallas_add": 697988,
+    "pallas_double": 369,
+    "vesta_add": 1310683,
+    "vesta_double": 112
+  },
+  "uint256_mul_count": 533878,
+  "elapsed_seconds": 127.406924292,
+  "optimization_env": {
+    "ZEKO_APPEND_B_POLY": "1",
+    "ZEKO_BORROW_PALLAS_SRS": "1",
+    "ZEKO_BORROW_POSITIONAL_SCALARS": "1",
+    "ZEKO_BORROW_VESTA_SRS": "1",
+    "ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS": "1",
+    "ZEKO_CANONICAL_MSM": "1",
+    "ZEKO_CANONICAL_PALLAS": "1",
+    "ZEKO_CANONICAL_POSEIDON": "1",
+    "ZEKO_DIRECT_MULMOD": "1",
+    "ZEKO_FIXED_PALLAS_SRS": "1",
+    "ZEKO_FIXED_VESTA_COUPLED": "1",
+    "ZEKO_FIXED_VESTA_SRS": "1",
+    "ZEKO_FUSE_PALLAS_BASE_CONVERSION": "1",
+    "ZEKO_FUSE_VESTA_BASE_CONVERSION": "1",
+    "ZEKO_HINTED_INVERSE": "1",
+    "ZEKO_INLINE_FINITE_COPY": "words",
+    "ZEKO_INTEGER_SCALAR_CHALLENGE": "1",
+    "ZEKO_IPA_BORROW_SRS_PREFIX": "1",
+    "ZEKO_IPA_CANONICAL_PREFIX": "1",
+    "ZEKO_IPA_DIRECT_COEFFICIENTS": "1",
+    "ZEKO_IPA_EXACT_CAPACITY": "1",
+    "ZEKO_MONT_DIRECT_MULMOD": "1",
+    "ZEKO_MSM_FILTER_ZERO": "1",
+    "ZEKO_OUTLINE_PALLAS_BUCKETS": "1",
+    "ZEKO_OUTLINE_VESTA_BUCKETS": "1",
+    "ZEKO_PACKED_PALLAS_HALVES": "1",
+    "ZEKO_PALLAS_AFFINE": "1",
+    "ZEKO_PALLAS_GLV": "1",
+    "ZEKO_PALLAS_POINT_PRECOMPILE": "1",
+    "ZEKO_PALLAS_WINDOW": "13",
+    "ZEKO_POSEIDON_PACKED_RHS": "1",
+    "ZEKO_PRECOMPUTED_SETUP": "1",
+    "ZEKO_PRECOMPUTED_VK_DIGEST": "1",
+    "ZEKO_TRIM_CONVERSIONS": "1",
+    "ZEKO_UNINIT_MSM_DIGITS": "1",
+    "ZEKO_VESTA_AFFINE": "1",
+    "ZEKO_VESTA_GLV": "1",
+    "ZEKO_VESTA_POINT_PRECOMPILE": "1",
+    "ZEKO_VESTA_WINDOW": "16",
+    "ZEKO_WRAP_SRS_PREFIX": "1"
+  },
+  "tools": {
+    "builder_sha256": "a2ae8c8c226e59e85aeeaef1677b22b02aa1fcf80a146a105bc302118d03eb09",
+    "host_rust": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+    "guest_rust": "rustc 1.96.0-dev",
+    "sp1_builder": "cargo-prove sp1 (d83ed91 2026-10-23T15:22:23.918277000Z)"
+  },
+  "source_files_sha256": "b8dee2af7ed1b6d2554cdb2d908d279aca40b7532cc57f29291526bb921bbcd4",
+  "corruption_control": {
+    "corrupt_accumulator_challenge": true,
+    "accepted": false,
+    "guest_exit_code": 1,
+    "cycles": 81824131
+  },
+  "native_tests": {
+    "core_and_execution_tools": {
+      "passed": 209,
+      "failed": 0,
+      "ignored": 0
+    },
+    "receipt_example": {
+      "passed": 20,
+      "failed": 0,
+      "ignored": 0
+    },
+    "pasta_harness": {
+      "passed": 20,
+      "failed": 0,
+      "ignored": 0
+    }
+  },
+  "native_tests_total": 249,
+  "checks": {
+    "no-std": "passed",
+    "receipt-tests": "passed",
+    "host-guest-check": "passed",
+    "pasta-tests": "passed",
+    "pasta-check": "passed"
+  },
+  "fresh_checkout_restoration": {
+    "passed": true,
+    "new_checkout": true,
+    "new_local_forks": true,
+    "upstream_bases_seeded_from_local_cache": true,
+    "bundled_patches_restored": true,
+    "source_pins_and_ancestry": "passed",
+    "locked_metadata": "passed",
+    "network_used": false
+  },
+  "dependency_source_preservation": {
+    "passed": true,
+    "files": {
+      "algebra": 115,
+      "proof-systems": 195,
+      "sp1": 317
+    },
+    "note": "Compared active implementation bytes with the archived pre-consolidation fork state; manifests/layout have intentional adapters."
+  },
+  "retired_applications_absent_from_every_new_commit": true,
+  "ci": "Workflow syntax checked; Linux jobs not executed in this local session",
+  "proof_generated": false,
+  "cuda_validated": false,
+  "scope": "New core boolean-ABI baseline. Historical 577-byte receipt measurements are separate; do not attribute their difference entirely to verifier performance."
+}

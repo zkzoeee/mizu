@@ -21,6 +21,10 @@ def run(command, env, output, cwd=ROOT):
         subprocess.run(command, cwd=cwd, env=env, check=True, stdout=log, stderr=subprocess.STDOUT)
     return {'command':command, 'seconds':time.monotonic()-start}
 
+def tool_identity(builder, env):
+    commands = {'host_rust': ['rustc', '--version'], 'guest_rust': ['rustc', '+succinct', '--version'], 'sp1_builder': [builder, 'prove', '--version']}
+    return {'builder_sha256': sha(builder), **{name: subprocess.check_output(command, cwd=ROOT, env=env, text=True).strip() for name, command in commands.items()}}
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('mode', choices=['build','run'])
@@ -41,10 +45,12 @@ def main():
         timings.append(run(['cargo','build','--profile','native-test','--locked','-p','cycle-runner','--bin','cycle-runner'],neutral,args.output/'runner-build.log'))
         shutil.copy2(runner,args.output/'cycle-runner');runner=args.output/'cycle-runner'
     builder = shutil.which('cargo-prove') or str(Path.home()/'.sp1/bin/cargo-prove')
+    tools = tool_identity(builder, neutral)
+    assert config['builder_commit'] in tools['sp1_builder'], 'builder commit differs from configuration'
     guest = config['guest'];elf=args.output/guest['binary']
     timings.append(run([builder,'prove','build','--locked','--rustflags=-C,passes=lower-atomic','--warning-level','minimal','--packages',guest['package'],'--binaries',guest['binary'],'--output-directory',str(args.output)],env,args.output/'guest-build.log',ROOT/guest['directory']))
     assert snapshot() == source, 'source changed during build'
-    receipt={'schema_version':1,'config':config,'revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'source_sha256':source,'elf_sha256':sha(elf),'timings':timings,'proof_generated':False}
+    receipt={'schema_version':1,'config':config,'tools':tools,'revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),'source_sha256':source,'elf_sha256':sha(elf),'timings':timings,'proof_generated':False}
     if args.mode == 'run':
         receipt['runner_sha256']=sha(runner)
         result_path=args.output/'result.json'
