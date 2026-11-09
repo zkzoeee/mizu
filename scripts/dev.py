@@ -25,6 +25,8 @@ def new_output(path):
 
 
 def native(config, args, output):
+    if args.all and (args.test or args.filter):
+        raise ValueError('--all cannot be combined with --test or --filter')
     env = s.environment(config['optimization_env'])
     tool = native_tool_identity(env)
     source = s.source_snapshot()
@@ -86,6 +88,8 @@ def baseline(config, args, output):
 def bench(config, args, output):
     if args.control_record:
         control, _, runner = frozen(args.control_record)
+        control = {**control, 'record': {**control['record'], 'cache_hit': True}}
+        s.write(output / 'control.json', control)
     else:
         runner = e.runners(); control_config = e.recipe(args.control)
         built = e.build(control_config); executed = e.execute(control_config, built, runner, fresh=args.fresh)
@@ -105,9 +109,29 @@ def bench(config, args, output):
         result['negative'] = {'case': args.negative, 'receipt': str(negative[0] / 'entry.json'), 'cache_hit': negative[3]}
     else:
         result['negative'] = {'scope': 'operation screening; native oracle checks; full guest rejection belongs in gate'}
+    result['bundles_sha256'] = {name: s.sha(output / (name + '.json')) for name in ('control', 'candidate')}
     result.update(proof_generated=False, control_cache_hit=control['record']['cache_hit'], candidate_cache_hit=executed[3])
     s.write(output / 'comparison.json', result)
     return result
+
+
+def validate_native_receipt(path, config, source):
+    record = s.read_record(path)
+    if record.get('source') != source or record.get('recipe', {}).get('optimization_env') != config['optimization_env'] or record.get('full_suite') is not True or record.get('no_std') is not True or record.get('proof_generated') is not False:
+        raise ValueError('native gate source, flags or completeness differs')
+    if record.get('tools') != native_tool_identity(s.environment(config['optimization_env'])):
+        raise ValueError('native gate compiler/configuration differs')
+    logs = record.get('logs_sha256', {})
+    if not {'all.log', 'nostd.log'} <= set(logs) or type(record.get('passed')) is not int or record['passed'] <= 0:
+        raise ValueError('native gate lacks full-suite logs/count')
+    for name, digest in logs.items():
+        log = path.parent / name
+        if not log.resolve().is_relative_to(path.parent.resolve()) or s.sha(log) != digest:
+            raise ValueError('native gate log changed')
+    counts = re.findall(r'test result: ok\. (\d+) passed; (\d+) failed', (path.parent / 'all.log').read_text())
+    if not counts or any(int(b) for _, b in counts) or sum(int(a) for a, _ in counts) != record['passed']:
+        raise ValueError('native gate test count differs from logs')
+    return record
 
 
 def gate(config, args, output):
@@ -119,13 +143,7 @@ def gate(config, args, output):
     s.command([sys.executable,'-B','-m','unittest','discover','-s','scripts/tests','-v'],tools_env,output/'tools.log')
     native_result = None
     if args.native_record:
-        native_record = s.read_record(args.native_record)
-        if native_record.get('source') != source or native_record.get('recipe',{}).get('optimization_env') != config['optimization_env'] or native_record.get('full_suite') is not True or native_record.get('no_std') is not True:
-            raise ValueError('native gate source, flags or completeness differs')
-        if native_record.get('tools') != native_tool_identity(s.environment(config['optimization_env'])):
-            raise ValueError('native gate compiler/configuration differs')
-        for name,digest in native_record['logs_sha256'].items():
-            if s.sha(args.native_record.parent/name) != digest: raise ValueError('native gate log changed')
+        validate_native_receipt(args.native_record, config, source)
         native_result = {'record':str(args.native_record),'sha256':s.sha(args.native_record)}
     elif not args.skip_native:
         (output/'native').mkdir()
@@ -186,7 +204,7 @@ def main():
     parser.add_argument('--skip-profile',action='store_true',help='partial gate; leave trace replay for promotion')
     args = parser.parse_args()
     if args.mode == 'bench' and bool(args.control) == bool(args.control_record): parser.error('bench needs exactly one of --control or --control-record')
-    if args.all and args.test: parser.error('--all and --test are mutually exclusive')
+    if args.all and (args.test or args.filter): parser.error('--all cannot be combined with --test or --filter')
     with s.serial():
         if args.mode in ('pins', 'tools-test'):
             command = [sys.executable, '-B', 'dependencies/verify.py'] if args.mode == 'pins' else [sys.executable, '-B', '-m', 'unittest', 'discover', '-s', 'scripts/tests', '-v']

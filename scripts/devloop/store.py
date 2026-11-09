@@ -91,7 +91,7 @@ def checked_entry(directory, identity):
     receipt = directory / 'entry.json'
     if not receipt.exists():
         if directory.exists() and any(directory.iterdir()):
-            raise ValueError(f'incomplete cache entry retained at {directory}; inspect it and use --fresh or a new cache')
+            raise ValueError(f'incomplete cache entry retained at {directory}; inspect the logs and move this incomplete entry aside before retrying')
         return None
     value = read_record(receipt)
     if key(value.get('identity')) != key(identity):
@@ -137,11 +137,18 @@ def archive_source(sources, store=STORE):
 def command(argv, env, logfile, cwd=ROOT, allow_failure=False):
     logfile = Path(logfile)
     logfile.parent.mkdir(parents=True, exist_ok=True)
-    print('Running ' + logfile.name, flush=True)
+    print('Running ' + str(logfile.relative_to(ROOT) if logfile.is_relative_to(ROOT) else logfile), flush=True)
     started = time.monotonic()
-    with logfile.open('w') as log:
-        result = subprocess.run(argv, env=env, cwd=cwd, stdout=log, stderr=subprocess.STDOUT)
-    receipt = {'command': argv, 'exit_code': result.returncode, 'seconds': time.monotonic() - started}
+    receipt = {'command': argv, 'cwd': str(cwd), 'status': 'started'}
+    receipt_path = logfile.with_suffix('.command.json')
+    write(receipt_path, receipt)
+    try:
+        with logfile.open('w') as log:
+            result = subprocess.run(argv, env=env, cwd=cwd, stdout=log, stderr=subprocess.STDOUT)
+    except BaseException:
+        write(receipt_path, {**receipt, 'status': 'interrupted', 'seconds': time.monotonic() - started})
+        raise
+    receipt.update(status='completed' if result.returncode == 0 else 'failed', exit_code=result.returncode, seconds=time.monotonic() - started)
     write(logfile.with_suffix('.command.json'), receipt)
     if result.returncode and not allow_failure:
         raise RuntimeError(f'command failed ({result.returncode}); see {logfile}')

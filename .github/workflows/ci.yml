@@ -11,6 +11,9 @@ jobs:
         with:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@1.92.0
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
       - uses: Swatinem/rust-cache@v2
       - name: Restore pinned dependency forks
         run: python3 dependencies/bootstrap.py

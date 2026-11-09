@@ -117,7 +117,7 @@ def validate_execution(raw, identity, status, expected):
         raise ValueError('execution needs positive uint64 cycles')
     if raw.get('elf_sha256') != identity['elf_sha256']:
         raise ValueError('execution ELF mismatch')
-    if raw.get('proof_generated', False) is not False:
+    if raw.get('proof_generated') is not False:
         raise ValueError('CPU observation unexpectedly claims a proof')
     if identity['abi'] == 'poseidon':
         if raw.get('input_sha256') != identity['operation_input_sha256'] or raw.get('iterations_per_field') != identity['iterations']:
@@ -137,6 +137,26 @@ def validate_execution(raw, identity, status, expected):
         raise ValueError('honest execution/output validation failed')
 
 
+def freeze_inputs(run_folder, fixture, identity):
+    inputs = run_folder / 'inputs'
+    inputs.mkdir()
+    names = []
+    for name in FILES:
+        data = (fixture / name).read_bytes()
+        if hashlib.sha256(data).hexdigest() != identity['fixtures'][name]:
+            raise ValueError('fixture changed while freezing input: ' + name)
+        (inputs / name).write_bytes(data)
+        names.append('inputs/' + name)
+    if identity['abi'] == 'poseidon':
+        data = identity['iterations'].to_bytes(4, 'little')
+        if hashlib.sha256(data).hexdigest() != identity['operation_input_sha256']:
+            raise ValueError('operation input differs from identity')
+        (inputs / 'iterations.bin').write_bytes(data)
+        s.write(inputs / 'oracle.json', identity['oracle'])
+        names += ['inputs/iterations.bin', 'inputs/oracle.json']
+    return names
+
+
 def execute(config, built, runner_folder, fixture=None, mutation='none', wrong_vk=False, fresh=False, profile=False):
     folder, build_receipt, _ = built
     abi = config['guest'].get('abi', 'boolean')
@@ -152,7 +172,7 @@ def execute(config, built, runner_folder, fixture=None, mutation='none', wrong_v
         # Digest output depends on the key and statement; the runner independently
         # computes it. For other producer families derive it from accepted output.
         expected = config.get('expected_public_values_sha256') if fixture == (s.ROOT / config['fixture_dir']).resolve() else None
-    identity = {'elf_sha256': s.sha(elf), 'runner_sha256': s.sha(runner), 'fixtures': fixture_hashes(fixture),
+    identity = {'input_storage_schema': 2, 'elf_sha256': s.sha(elf), 'runner_sha256': s.sha(runner), 'fixtures': fixture_hashes(fixture),
                 'abi': abi, 'batch_size': config['guest'].get('batch_size', 1), 'mutation': mutation,
                 'expect_reject': mutation != 'none' or wrong_vk, 'wrong_vk': wrong_vk, 'profile': profile,
                 'expected_output_sha256': expected, 'oracle': oracle,
@@ -168,10 +188,11 @@ def execute(config, built, runner_folder, fixture=None, mutation='none', wrong_v
         return run_folder, raw, prior, True
     run_folder.mkdir(parents=True, exist_ok=True)
     source = s.source_snapshot()
+    input_names = freeze_inputs(run_folder, fixture, identity)
     command = [str(runner), '--elf', str(elf), '--output', str(run_folder / 'result.json')]
     if operation: command += ['--iterations', str(identity['iterations'])]
     else:
-        command += ['--fixture-dir', str(fixture), '--guest-abi', abi, '--batch-size', str(identity['batch_size'])]
+        command += ['--fixture-dir', str(run_folder / 'inputs'), '--guest-abi', abi, '--batch-size', str(identity['batch_size'])]
         if mutation != 'none': command += ['--mutation', mutation]
         if profile: command += ['--profile-precompiles']
     timing = s.command(command, s.environment(), run_folder / 'execute.log', allow_failure=True)
@@ -185,7 +206,7 @@ def execute(config, built, runner_folder, fixture=None, mutation='none', wrong_v
         raise ValueError('trace replay did not account for every instruction')
     if s.source_snapshot() != source or s.sha(elf) != identity['elf_sha256'] or s.sha(runner) != identity['runner_sha256'] or fixture_hashes(fixture) != identity['fixtures']:
         raise ValueError('execution source or inputs changed')
-    prior = s.seal(run_folder, identity, ['result.json', 'execute.log', 'execute.command.json'],
+    prior = s.seal(run_folder, identity, ['result.json', 'execute.log', 'execute.command.json', *input_names],
                    command_status=timing['exit_code'], validated_output_sha256=expected, proof_generated=False)
     return run_folder, raw, prior, False
 
