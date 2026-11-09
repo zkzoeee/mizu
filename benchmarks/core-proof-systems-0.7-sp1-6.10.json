@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "name": "mizu-pickles-core-proof-systems-0.7-sp1-6.10",
+  "date": "2026-11-09",
+  "root_upstream": {
+    "repository": "https://github.com/o1-labs/o1js-to-zkvm.git",
+    "base": "095a5c0a46b903b7b126c857c9910567b16e2e6b"
+  },
+  "measured_revision": "d0bd6cb32b3cc0c9450a6b2e58df4384419a299d",
+  "proof_systems_upstream_base": "b1d9829fa0b2bb8e15494df1e5e0c6741394075b",
+  "dependency_pins": {
+    "algebra": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+    "proof-systems": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
+    "sp1": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1"
+  },
+  "guest_abi": "one VerifiableProof input; one boolean output",
+  "sp1_version": "6.10.0",
+  "cycles": 142650295,
+  "cycle_metric": "MinimalExecutorRunner::global_clk",
+  "guest_exit_code": 0,
+  "accepted": true,
+  "public_values_len": 1,
+  "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+  "elf_sha256": "792eefae7d3008a69a66861a29c3ff98eabee9ef451ba8d5cdb78b864f9a3a3e",
+  "fixture_sha256": {
+    "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+    "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+    "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+    "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+  },
+  "pasta_syscall_counts": {
+    "pallas_add": 697988,
+    "pallas_double": 369,
+    "vesta_add": 1310683,
+    "vesta_double": 112
+  },
+  "uint256_mul_count": 533878,
+  "elapsed_seconds": 124.809989041,
+  "stage_cycles": {
+    "pickles-accumulator": 75309755,
+    "pickles-wrap-kimchi": 54870559,
+    "pickles-wrap-prepare": 5800067,
+    "setup": 4233620,
+    "verify": 138357069
+  },
+  "stdin_proof_sha256": "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+  "runner_sha256": "6ce4bad09fdac86853e750cfb8e67d72ca97ff208dbb3b90955ca82014e9e2e0",
+  "optimization_env": {
+    "ZEKO_APPEND_B_POLY": "1",
+    "ZEKO_BORROW_PALLAS_SRS": "1",
+    "ZEKO_BORROW_POSITIONAL_SCALARS": "1",
+    "ZEKO_BORROW_VESTA_SRS": "1",
+    "ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS": "1",
+    "ZEKO_CANONICAL_MSM": "1",
+    "ZEKO_CANONICAL_PALLAS": "1",
+    "ZEKO_CANONICAL_POSEIDON": "1",
+    "ZEKO_DIRECT_MULMOD": "1",
+    "ZEKO_FIXED_PALLAS_SRS": "1",
+    "ZEKO_FIXED_VESTA_COUPLED": "1",
+    "ZEKO_FIXED_VESTA_SRS": "1",
+    "ZEKO_FUSE_PALLAS_BASE_CONVERSION": "1",
+    "ZEKO_FUSE_VESTA_BASE_CONVERSION": "1",
+    "ZEKO_HINTED_INVERSE": "1",
+    "ZEKO_INLINE_FINITE_COPY": "words",
+    "ZEKO_INTEGER_SCALAR_CHALLENGE": "1",
+    "ZEKO_IPA_BORROW_SRS_PREFIX": "1",
+    "ZEKO_IPA_CANONICAL_PREFIX": "1",
+    "ZEKO_IPA_DIRECT_COEFFICIENTS": "1",
+    "ZEKO_IPA_EXACT_CAPACITY": "1",
+    "ZEKO_MONT_DIRECT_MULMOD": "1",
+    "ZEKO_MSM_FILTER_ZERO": "1",
+    "ZEKO_OUTLINE_PALLAS_BUCKETS": "1",
+    "ZEKO_OUTLINE_VESTA_BUCKETS": "1",
+    "ZEKO_PACKED_PALLAS_HALVES": "1",
+    "ZEKO_PALLAS_AFFINE": "1",
+    "ZEKO_PALLAS_GLV": "1",
+    "ZEKO_PALLAS_POINT_PRECOMPILE": "1",
+    "ZEKO_PALLAS_WINDOW": "13",
+    "ZEKO_POSEIDON_PACKED_RHS": "1",
+    "ZEKO_PRECOMPUTED_SETUP": "1",
+    "ZEKO_PRECOMPUTED_VK_DIGEST": "1",
+    "ZEKO_TRIM_CONVERSIONS": "1",
+    "ZEKO_UNINIT_MSM_DIGITS": "1",
+    "ZEKO_VESTA_AFFINE": "1",
+    "ZEKO_VESTA_GLV": "1",
+    "ZEKO_VESTA_POINT_PRECOMPILE": "1",
+    "ZEKO_VESTA_WINDOW": "16",
+    "ZEKO_WRAP_SRS_PREFIX": "1"
+  },
+  "tools": {
+    "builder_sha256": "a2ae8c8c226e59e85aeeaef1677b22b02aa1fcf80a146a105bc302118d03eb09",
+    "host_rust": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+    "guest_rust": "rustc 1.96.0-dev",
+    "sp1_builder": "cargo-prove sp1 (d83ed91 2026-10-23T15:22:23.918277000Z)"
+  },
+  "source_manifest_encoding": "UTF-8 json.dumps(source_sha256, sort_keys=True), default separators",
+  "source_files_sha256": "2e9074c43aa21295b13145f621a78590ac9234786d541dbb68a0995452ec078d",
+  "corruption_control": {
+    "corrupt_accumulator_challenge": true,
+    "accepted": false,
+    "guest_exit_code": 1,
+    "cycles": 81831898,
+    "elf_sha256": "792eefae7d3008a69a66861a29c3ff98eabee9ef451ba8d5cdb78b864f9a3a3e",
+    "public_values_len": 0
+  },
+  "wrap_opening_control": {
+    "corrupt_wrap_opening": true,
+    "accepted": false,
+    "guest_exit_code": 1,
+    "cycles": 142597609,
+    "elf_sha256": "792eefae7d3008a69a66861a29c3ff98eabee9ef451ba8d5cdb78b864f9a3a3e",
+    "public_values_len": 0
+  },
+  "native_tests": {
+    "core_and_execution_tools": {
+      "passed": 209,
+      "failed": 0,
+      "ignored": 0
+    },
+    "receipt_example": {
+      "passed": 20,
+      "failed": 0,
+      "ignored": 0
+    },
+    "pasta_harness": {
+      "passed": 20,
+      "failed": 0,
+      "ignored": 0
+    }
+  },
+  "checks": {
+    "no_std": "passed",
+    "host_and_guest_compilation": "passed",
+    "optional_receipt_guest_compilation": "passed",
+    "cold_bootstrap_and_locked_offline_metadata": "passed",
+    "dependency_pin_bundle_and_tree_verification": "passed",
+    "four_consuming_workspaces_sp1_versions": [
+      "6.10.0"
+    ]
+  },
+  "comparison": {
+    "baseline": "core-sp1-6.10.json",
+    "baseline_proof_systems_base": "3abb66bbbe143e27845c88b6456ecab3a589e113",
+    "baseline_proof_systems_pin": "9a47c4973f5b5dac37bd146922e8d08045d049ec",
+    "baseline_cycles": 142660047,
+    "delta_cycles": -9752,
+    "delta_percent": -0.006835831198064865,
+    "matched_fixture": true,
+    "matched_optimization_settings": true,
+    "matched_toolchains_and_builder": true,
+    "matched_output_abi": true,
+    "matched_memory_limit": true,
+    "serialized_stdin_unchanged": true,
+    "pasta_syscall_counts_unchanged": true,
+    "uint256_mul_count_unchanged": true,
+    "stage_cycles": {
+      "pickles-accumulator": {
+        "before": 75309755,
+        "after": 75309755,
+        "delta": 0
+      },
+      "pickles-wrap-kimchi": {
+        "before": 54852878,
+        "after": 54870559,
+        "delta": 17681
+      },
+      "pickles-wrap-prepare": {
+        "before": 5835975,
+        "after": 5800067,
+        "delta": -35908
+      },
+      "setup": {
+        "before": 4234120,
+        "after": 4233620,
+        "delta": -500
+      },
+      "verify": {
+        "before": 138367029,
+        "after": 138357069,
+        "delta": -9960
+      }
+    }
+  },
+  "proof_generated": false,
+  "limitations": [
+    "No new proof generation or Linux/CUDA run.",
+    "One retained fixture/configuration; no per-optimization ablation."
+  ],
+  "artifacts": {
+    "directory": "../mizu-proof-systems-0.7-validation-20261109",
+    "sha256": {
+      "core-benchmark/build.json": "81198800daab3b8533805f79aa54fd077232d41bb7ebf358d89d6d2c4205dcb8",
+      "core-benchmark/result.json": "b2447688f2a8a8295a9c52a60b839ce7fdbcbc9a84ef67b4f8ee1e330e7d4172",
+      "corrupt-accumulator.json": "f49281fbfaf0138518a65470ff077f1be5134a4b6186cf60f879e3be1860af08",
+      "corrupt-wrap-opening.json": "fe3f1dd72c0bdd4f4071ff5249440fb8cc00581f2239e20dcb8f0701954ca6be",
+      "negative-controls.json": "0da8f468cc3f23245c60141e5835129bea1867abe7327c4413e927b7f9ceec08",
+      "core-tests.log": "a05820e6c1e744161b0c86d8c45c6fd5498a42fe99a93990b058db42b3a6a786",
+      "receipt-tests.log": "ff2f04adcbcc6b5f5b3347874a540feef7261ee83790a4d30c40d4d7ee6d0763",
+      "pasta-tests.log": "64b9360f676a3aa278b90d7a582c2f95b4ff67759c365d9d13c65863b1200346",
+      "no-std.log": "0907b14df4ca30b16fdca2d8d04b552019259f1a000c2adc8abdbb29433bae26",
+      "host-guest-check.log": "b88ba09b8565567c3aa70a4c1f8b3a07e56b82f488e4843f58409f5d43e46440",
+      "cold-final-bootstrap.log": "bef4e87960efada19a7d5b89f51ae2482b24fdcfb282148074bb5872e9c0af11",
+      "receipt-guest/build.json": "d7473e72ef66c8895736f4754ace5bd5934c277118ce34186ad0d44f631d0c93",
+      "receipt-guest-build.log": "1fa03f25164c73b70e76ace40465b443767c10f62df1441f44af44ea5d2ae6c0"
+    }
+  }
+}

@@ -2,7 +2,8 @@
 
 Mizu consolidates verifier and Pasta-optimization iterations on the official
 [o1js-to-zkvm](https://github.com/o1-labs/o1js-to-zkvm) repository. Its guest/host
-paths and boolean-output interface follow upstream. SP1 is pinned to **6.10.0**.
+paths and boolean-output interface follow upstream. SP1 is pinned to **6.10.0**;
+proof-systems uses upstream **0.7.0 / `b1d9829`** plus our four optimization commits.
 
 | Area | Location | Responsibility |
 | --- | --- | --- |
@@ -39,8 +40,10 @@ produce proofs.
 python3 scripts/benchmark.py run --output benchmarks/runs/first
 ```
 
-The fresh retained core baseline is **142,660,047 cycles**, with boolean `true`
-output. See [validation](docs/validation.md) and the [measurement](benchmarks/core-sp1-6.10.json).
+The current retained core benchmark is **142,650,295 cycles**, with boolean `true`
+output. This is 9,752 fewer cycles than the previous optimized proof-systems 0.4.1
+baseline. See [upgrade validation](docs/proof-systems-upgrade.md) and the
+[measurement](benchmarks/core-proof-systems-0.7-sp1-6.10.json).
 
 This builds and executes the core guest with `benchmarks/retained.json`, pins
 source/ELF/fixture identity, and records fresh cycles. Compatibility optimization

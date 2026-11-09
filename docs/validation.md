@@ -1,5 +1,9 @@
 # Consolidation validation — 2026-11-09
 
+This records the original consolidation baseline. For the subsequent
+proof-systems 0.7 migration and current cycle result, see
+[upgrade validation](proof-systems-upgrade.md).
+
 The clean root patch stack starts directly at official o1js-to-zkvm `095a5c0`.
 Every new commit excludes the retired application folders; upstream authors are
 unchanged and our commits use `0xStruct <0xstruct@gmail.com>`. Three dependency

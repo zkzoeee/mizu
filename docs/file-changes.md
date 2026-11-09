@@ -1,10 +1,10 @@
 # Changed files by upstream repository
 
-Implementation snapshot: `0a19aeb0b0d870f30a271828fdad0b873178f74c`. Generated from Git diffs against the official bases in `dependencies/lock.json`. Inventory documentation added afterward is excluded from its own baseline. `A` = added, `M` = modified. Files within forks are relative to that fork, not the root consumer.
+Implementation snapshot: `d0bd6cb32b3cc0c9450a6b2e58df4384419a299d`. Generated from Git diffs against the official bases in `dependencies/lock.json`. Subsequent documentation-only edits are outside this snapshot. `A` = added, `M` = modified. Files within forks are relative to that fork, not the root consumer.
 
-## o1js-to-zkvm — 115 changed files
+## o1js-to-zkvm — 118 changed files
 
-Location: `.`. Official base: `095a5c0a46b903b7b126c857c9910567b16e2e6b`. Our pin: `0a19aeb0b0d870f30a271828fdad0b873178f74c`.
+Location: `.`. Official base: `095a5c0a46b903b7b126c857c9910567b16e2e6b`. Our pin: `d0bd6cb32b3cc0c9450a6b2e58df4384419a299d`.
 
 ```text
 M .github/workflows/ci.yml
@@ -74,8 +74,11 @@ A dependencies/bootstrap.py
 A dependencies/bundles/algebra.bundle
 A dependencies/bundles/proof-systems.bundle
 A dependencies/bundles/sp1.bundle
+A dependencies/inventory.json
 A dependencies/lock.json
 A dependencies/verify.py
+A docs/dependencies-and-optimizations.md
+A docs/file-changes.md
 A docs/modules.md
 A docs/validation.md
 A examples/settlement/Cargo.lock
@@ -153,9 +156,9 @@ M ff/src/lib.rs
 M poly/src/polynomial/univariate/dense.rs
 ```
 
-## proof-systems — 33 changed files
+## proof-systems — 28 changed files
 
-Location: `vendor/proof-systems`. Official base: `3abb66bbbe143e27845c88b6456ecab3a589e113`. Our pin: `9a47c4973f5b5dac37bd146922e8d08045d049ec`.
+Location: `vendor/proof-systems`. Official base: `b1d9829fa0b2bb8e15494df1e5e0c6741394075b`. Our pin: `e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a`.
 
 ```text
 M Cargo.toml
@@ -163,18 +166,13 @@ M curves/Cargo.toml
 A curves/src/pasta/canonical_pallas.rs
 A curves/src/pasta/canonical_words.rs
 M curves/src/pasta/curves/pallas.rs
-M curves/src/pasta/fields/fp.rs
-M curves/src/pasta/fields/fq.rs
 M curves/src/pasta/mod.rs
 A curves/src/pasta/pallas_glv.rs
 A curves/src/pasta/point_spikes.rs
 A curves/src/pasta/precompile_spikes.rs
 M kimchi/src/alphas.rs
 M kimchi/src/circuits/constraints.rs
-M kimchi/src/circuits/lookup/lookups.rs
-M kimchi/src/circuits/lookup/tables/mod.rs
 M kimchi/src/circuits/polynomials/permutation.rs
-M kimchi/src/prover.rs
 M kimchi/src/verifier.rs
 A poly-commitment/src/canonical_ipa.rs
 M poly-commitment/src/commitment.rs
@@ -237,13 +235,13 @@ Values come from `benchmarks/retained.json`. References include callers/build sc
 | Setting | Value | References |
 | --- | --- | --- |
 
-| `ZEKO_APPEND_B_POLY` | `1` | `vendor/proof-systems/poly-commitment/src/commitment.rs:546` |
+| `ZEKO_APPEND_B_POLY` | `1` | `vendor/proof-systems/poly-commitment/src/commitment.rs:547` |
 
-| `ZEKO_BORROW_PALLAS_SRS` | `1` | `crates/o1-verifier/build.rs:37`; `crates/pickles-verifier/src/lib.rs:727`; `crates/pickles-verifier/src/serialize.rs:496`; `examples/settlement/program/build.rs:38` |
+| `ZEKO_BORROW_PALLAS_SRS` | `1` | `crates/o1-verifier/build.rs:37`; `crates/pickles-verifier/src/lib.rs:727`; `crates/pickles-verifier/src/serialize.rs:491`; `examples/settlement/program/build.rs:38` |
 
 | `ZEKO_BORROW_POSITIONAL_SCALARS` | `1` | `crates/o1-verifier/build.rs:34`; `crates/pickles-verifier/src/canonical_msm.rs:316`; `examples/settlement/program/build.rs:35` |
 
-| `ZEKO_BORROW_VESTA_SRS` | `1` | `crates/pickles-verifier/src/lib.rs:749`; `crates/pickles-verifier/src/serialize.rs:492` |
+| `ZEKO_BORROW_VESTA_SRS` | `1` | `crates/pickles-verifier/src/lib.rs:749`; `crates/pickles-verifier/src/serialize.rs:487` |
 
 | `ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS` | `1` | `crates/pickles-verifier/src/lib.rs:237` |
 
@@ -255,11 +253,11 @@ Values come from `benchmarks/retained.json`. References include callers/build sc
 
 | `ZEKO_DIRECT_MULMOD` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:103`; `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:106` |
 
-| `ZEKO_FIXED_PALLAS_SRS` | `1` | `crates/o1-verifier/build.rs:36,70`; `crates/pickles-verifier/src/lib.rs:832`; `crates/pickles-verifier/src/serialize.rs:282,495`; `examples/settlement/program/build.rs:37,71` |
+| `ZEKO_FIXED_PALLAS_SRS` | `1` | `crates/o1-verifier/build.rs:36,70`; `crates/pickles-verifier/src/lib.rs:832`; `crates/pickles-verifier/src/serialize.rs:277,490`; `examples/settlement/program/build.rs:37,71` |
 
 | `ZEKO_FIXED_VESTA_COUPLED` | `1` | `crates/o1-verifier/build.rs:33`; `crates/pickles-verifier/src/canonical_msm.rs:311`; `examples/settlement/program/build.rs:34` |
 
-| `ZEKO_FIXED_VESTA_SRS` | `1` | `crates/o1-verifier/build.rs:32,69`; `crates/pickles-verifier/src/lib.rs:692`; `crates/pickles-verifier/src/serialize.rs:278,494`; `examples/settlement/program/build.rs:33,70` |
+| `ZEKO_FIXED_VESTA_SRS` | `1` | `crates/o1-verifier/build.rs:32,69`; `crates/pickles-verifier/src/lib.rs:692`; `crates/pickles-verifier/src/serialize.rs:273,489`; `examples/settlement/program/build.rs:33,70` |
 
 | `ZEKO_FUSE_PALLAS_BASE_CONVERSION` | `1` | `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:436` |
 
@@ -271,13 +269,13 @@ Values come from `benchmarks/retained.json`. References include callers/build sc
 
 | `ZEKO_INTEGER_SCALAR_CHALLENGE` | `1` | `vendor/proof-systems/poseidon/src/sponge.rs:194` |
 
-| `ZEKO_IPA_BORROW_SRS_PREFIX` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:321` |
+| `ZEKO_IPA_BORROW_SRS_PREFIX` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:432` |
 
-| `ZEKO_IPA_CANONICAL_PREFIX` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:329` |
+| `ZEKO_IPA_CANONICAL_PREFIX` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:440` |
 
-| `ZEKO_IPA_DIRECT_COEFFICIENTS` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:397` |
+| `ZEKO_IPA_DIRECT_COEFFICIENTS` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:508` |
 
-| `ZEKO_IPA_EXACT_CAPACITY` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:304` |
+| `ZEKO_IPA_EXACT_CAPACITY` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:415` |
 
 | `ZEKO_MONT_DIRECT_MULMOD` | `1` | `vendor/algebra/ff/src/fields/models/fp/montgomery_backend.rs:64` |
 
@@ -299,7 +297,7 @@ Values come from `benchmarks/retained.json`. References include callers/build sc
 
 | `ZEKO_POSEIDON_PACKED_RHS` | `1` | `vendor/proof-systems/poseidon/src/canonical.rs:134,149` |
 
-| `ZEKO_PRECOMPUTED_SETUP` | `1` | `crates/o1-verifier/build.rs:31,68`; `crates/pickles-verifier/src/serialize.rs:493`; `examples/settlement/program/build.rs:32,69` |
+| `ZEKO_PRECOMPUTED_SETUP` | `1` | `crates/o1-verifier/build.rs:31,68`; `crates/pickles-verifier/src/serialize.rs:488`; `examples/settlement/program/build.rs:32,69` |
 
 | `ZEKO_PRECOMPUTED_VK_DIGEST` | `1` | `crates/o1-verifier/src/main.rs:30,36`; `examples/settlement/program/src/main.rs:56,62` |
 

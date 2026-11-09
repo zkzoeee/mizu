@@ -1,6 +1,6 @@
 # Dependency versions, optimization inventory and upgrades
 
-This inventory describes the implementation at `0a19aeb0b0d870f30a271828fdad0b873178f74c`.
+This inventory describes the implementation at `d0bd6cb32b3cc0c9450a6b2e58df4384419a299d`.
 Exact pins and patch order are maintained in `dependencies/lock.json`; ordinary
 Cargo package resolutions live in each workspace's `Cargo.lock`. This is a
 local-state audit, not a claim that the pinned upstream revisions are the latest
@@ -10,9 +10,9 @@ available releases.
 
 | Component | Upstream version/base | Our current pin | What is modified |
 | --- | --- | --- | --- |
-| o1js-to-zkvm | Commit `095a5c0` (2026-05-26); no repository release version asserted | `0a19aeb0b` at this audit | Root verifier, guest/host integration, tools, optional receipt example and documentation |
+| o1js-to-zkvm | Commit `095a5c0` (2026-05-26); no repository release version asserted | `d0bd6cb32` at this audit | Root verifier, guest/host integration, tools, optional receipt example and documentation |
 | Arkworks `algebra` repository | Tag `v0.5.0`, `7ad88c4` | `8bcb64d` | Three commits; source changes in `ark-ff`, `ark-ec`, `ark-poly` |
-| o1-labs proof-systems | Workspace version **0.4.1**, official commit `3abb66b` | `9a47c4973` | Four commits; `mina-curves`, `mina-poseidon`, `poly-commitment`, `kimchi` |
+| o1-labs proof-systems | Workspace version **0.7.0**, official commit `b1d9829` | `e7f63a64d` | Four commits; `mina-curves`, `mina-poseidon`, `poly-commitment`, `kimchi` |
 | SP1 fork | **6.10.0**, official commit `d83ed91` | `7d0c4646a` | Four commits; executor, executor-runner, core-machine and curves |
 | Other SP1/SLOP crates | **6.10.0**, crates.io | Exact lockfile versions | Unmodified SDK, build, zkVM/lib, JIT, primitives, hypercube, recursion/verifier and SLOP packages |
 | crypto-bigint | **0.5.5**, SP1-maintained tag `patch-0.5.5-sp1-6.0.0`, commit `ef85da8668` | Same external commit | Consumed by root and receipt workspace; **not authored or edited by Mizu** |
@@ -32,9 +32,10 @@ Older Ark 0.3/0.4 packages also appear in the lockfiles; current default host
 our Pickles verifier uses a mixed Ark 0.3/0.4/0.5 field API.
 
 Within proof-systems, `groupmap`, `o1-utils`, `hasher`, `internal-tracing` and
-`msm` have no changes against our selected official base. The chosen 0.4.1 base
-matches the implementation's API. It is deliberately distinct from the newer
-0.7/no-std line; moving to that line is a compatibility migration.
+`msm` have no changes against our selected official base. The chosen 0.7.0 base
+is the exact revision pinned through Mina by our official o1js-to-zkvm baseline.
+Our four optimization commits retain its no-std feature
+split and SRS ownership conventions, while aligning its SP1 dependency to 6.10.0.
 
 There are **three external source forks and eleven modified external crates**.
 The crypto-bigint override is a fourth external patched source, maintained by
@@ -68,8 +69,8 @@ are retained in the implementation. Multiple settings compose or supersede one
 another, so these are not forty independently measured speedups.
 
 The tables abbreviate repeated parent directories. The complete file list and
-flag-to-file/line map use exact repository-relative paths in the generated
-appendices and JSON inventory.
+flag-to-file/line map use exact repository-relative paths in the appendices and
+JSON inventory.
 
 | Optimization | Selection / effect | Primary implementation files |
 | --- | --- | --- |
@@ -118,13 +119,14 @@ retained configuration: generic MSM window sweeps (`ZEKO_MSM_WINDOW_BITS`),
 Vesta prepared-lane tables (`ZEKO_VESTA_PREPARED_LANES`), alternative compact
 backends, the generic Arkworks affine-batch-inversion implementation, and
 `debug-log` features in `ark-ff` / `ark-ec`. Their presence is not evidence that
-they contributed to 142,660,047 cycles. The guest's `mina-curves/sp1` Cargo
+they contributed to 142,650,295 cycles. The guest's `mina-curves/sp1` Cargo
 feature is available but not enabled by the current host build script or the
 retained benchmark configuration.
 
 Wire canonicality checks, application-statement binding, deterministic lookup
 ordering, the Montgomery squaring predicate correction, and invalid-proof
-rejection are correctness changes. Their primary files are
+rejection are correctness behavior. Some, including deterministic lookup ordering,
+are now provided by the selected upstream base rather than local patches. Primary files are
 `crates/pickles-verifier/src/{wire.rs,convert.rs,statement.rs,types.rs,lib.rs}`,
 `vendor/proof-systems/kimchi/src/circuits/lookup/{lookups.rs,tables/mod.rs}`, and
 `vendor/algebra/ff/src/fields/models/fp/montgomery_backend.rs`.
@@ -135,7 +137,7 @@ arithmetic optimizations. Receipt types/logic live only in `examples/settlement`
 
 Treat an upgrade as a reviewed dependency change, not an unbounded `cargo update`.
 The component version and our fork revision are distinct: a crate still reports
-0.5.0 / 0.4.1 / 6.10.0 even though our pinned commit adds local changes.
+0.5.0 / 0.7.0 / 6.10.0 even though our pinned commit adds local changes.
 
 1. Choose the official new base and preserve the old base/tip. Work on an upgrade
    branch. For the root, fetch `upstream` and rebase the root module series onto
@@ -145,8 +147,8 @@ The component version and our fork revision are distinct: a crate still reports
    the changed-file appendix. Do not transplant another full source snapshot.
 3. Resolve related API changes as one migration. Arkworks major changes require
    coherent versions across fields, curves, polynomial, serialization and macro
-   crates and the proof-systems users. proof-systems 0.4.1 to the 0.7/no-std API
-   needs a deliberate feature/constructor/borrowed-SRS compatibility port.
+   crates and the proof-systems users. Preserve proof-systems' no-std feature split,
+   SRS ownership and authenticated setup interfaces when porting local changes.
 4. An SP1 upgrade must align the SDK, guest runtime/lib, build crate, executor,
    machine, curves, JIT, primitives, SLOP and enabled GPU crates. Update the
    SP1 references in the algebra and proof-systems fork manifests too. Review
@@ -177,13 +179,13 @@ API/version coupling above.
 
 ## Validation and measurement scope
 
-The retained boolean guest measured **142,660,047 cycles** with 249 native tests
+The retained boolean guest measured **142,650,295 cycles** with 249 native tests
 passing, successful guest/host and harness compilation, fresh-checkout
 restoration, and a rejected corrupted accumulator challenge. The old receipt
 measurements used a different 577-byte output and are not direct per-optimization
 comparisons. No new per-toggle ablation was performed for this inventory; do not
 sum hypothetical savings. Fresh real proofs and Linux/CUDA validation remain
-pending. See `benchmarks/core-sp1-6.10.json` and `docs/validation.md`.
+pending. See `benchmarks/core-proof-systems-0.7-sp1-6.10.json` and `docs/proof-systems-upgrade.md`.
 
 ## File and flag appendices
 
@@ -191,5 +193,5 @@ pending. See `benchmarks/core-sp1-6.10.json` and `docs/validation.md`.
 exact diff baseline and status. [Machine-readable inventory](../dependencies/inventory.json)
 contains full commit IDs, all forty configured flags and their file/line
 references, and the four lockfile version inventories. These generated lists
-cover the implementation snapshot stated at the top; the new inventory documents
-are outside their own baseline.
+cover the committed implementation snapshot stated at the top; subsequent
+documentation-only edits are outside that snapshot.
