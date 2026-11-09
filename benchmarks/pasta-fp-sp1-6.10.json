@@ -1,0 +1,86 @@
+{
+ "schema_version": 1,
+ "name": "mizu-pasta-fp-precompile",
+ "date": "2026-11-10",
+ "sp1_version": "6.10.0",
+ "fork_commits": {
+  "sp1": "70a005d67",
+  "proof-systems": "dbe478fc4",
+  "algebra": "6f81d7e13"
+ },
+ "flag": "MIZU_PASTA_FP_PRECOMPILE=1",
+ "default": false,
+ "full_guest": {
+  "control_cycles": 142638298,
+  "candidate_cycles": 139610314,
+  "uint256_mul": [
+   533878,
+   0
+  ],
+  "pasta_fp_calls": {
+   "PALLAS_FP_ADD": 400111,
+   "VESTA_FP_ADD": 133767
+  },
+  "accepted": true,
+  "corrupted_accumulator_rejected": true
+ },
+ "trace_default_routing": {
+  "main_cells": [
+   43922703280,
+   42414408432
+  ],
+  "main_shape_area": [
+   44067454976,
+   42561699840
+  ],
+  "global_interaction_events": [
+   136299445,
+   130836329
+  ],
+  "preprocessed_cells": [
+   706838528,
+   687016960
+  ],
+  "records": [
+   148,
+   145
+  ]
+ },
+ "soundness_checks": [
+  {
+   "chip": "PallasFpOpAssign",
+   "events_checked": 72,
+   "honest_rows_satisfy_air": true,
+   "surviving_arithmetic_columns": 0,
+   "surviving_columns": 0,
+   "tampered_result_rejected": true,
+   "width": 306
+  },
+  {
+   "chip": "VestaFpOpAssign",
+   "events_checked": 72,
+   "honest_rows_satisfy_air": true,
+   "surviving_arithmetic_columns": 0,
+   "surviving_columns": 0,
+   "tampered_result_rejected": true,
+   "width": 306
+  }
+ ],
+ "cpu_proof": {
+  "complete_verifier_accepted": true,
+  "cycles": 2985,
+  "kind": "CPU core proof of a synthetic program",
+  "proof_seconds": 4.328858375,
+  "shards": 4
+ },
+ "not_done": [
+  "No GPU proof with the new chips",
+  "Recursion VK map not rebuilt for the new clusters",
+  "Not combined with the deferred MDS flag in one measurement"
+ ],
+ "artifact_sha256": {
+  "pasta-fp-check.json": "456accf013acce381a5a0b87591f3b2aca4d0aa36c5a67b14d9ebf2277d76e58",
+  "trace-candidate.json": "21fd44e553df06f5b3625fd0ab2801b291e809203c98e9fe784bf151ecb0d807",
+  "trace-control.json": "c10b9293dda8a4d94e2618083f454f54bf6d1be05920b4da82b24fe0207c5ab9"
+ }
+}

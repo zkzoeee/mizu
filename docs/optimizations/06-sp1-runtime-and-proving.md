@@ -168,3 +168,36 @@ not by preserving the original experimental commit history.
   Earlier runs of the same binary at 242 s were contaminated by other machine
   load; only interleaved runs are reported. Evidence:
   [summary](../../benchmarks/pipeline-sp1-6.10.json).
+
+## mizu-pasta-fp-precompile: fixed-modulus Pallas and Vesta field ops
+
+- **Status:** opt-in measured candidate. SP1 fork `70a005d67`, proof-systems
+  `dbe478fc4`, algebra `6f81d7e13`; flag `MIZU_PASTA_FP_PRECOMPILE=1`, recipe
+  `benchmarks/dev/pasta-fp.json`. Not in the retained recipe.
+- **Mechanism:** `PALLAS_FP_*` / `VESTA_FP_*` syscalls served by SP1's existing
+  `FpOpChip` at the Pasta base fields (no new AIR). Each multiply touches 8
+  operand words instead of 12, and the modulus is an AIR constant instead of
+  a witnessed memory operand. Guest call sites pick the field at compile time
+  where the type fixes it; the generic Montgomery path matches the modulus.
+- **Result (retained mainnet guest, default routing):**
+
+| Measurement | Control | Candidate | Change |
+| --- | ---: | ---: | ---: |
+| Guest cycles | 142,638,298 | 139,610,314 | −2.12% |
+| `UINT256_MUL` calls | 533,878 | 0 | moved to 400,111 Pallas + 133,767 Vesta |
+| Main cells | 43,922,703,280 | 42,414,408,432 | −3.43% |
+| Global interaction events | 136,299,445 | 130,836,329 | −4.01% |
+| Records | 148 | 145 | −3 |
+
+- **Correctness evidence:** registered costs equal the AIR widths (306/354);
+  `pasta-fp-check` runs 144 add/sub/mul operations on random and edge
+  operands in both fields: executor results match the integer reference,
+  honest rows satisfy the AIR, a tampered result limb is rejected, no column
+  survives perturbation, and a 4-shard CPU core proof passes the complete
+  verifier against the committed digest. The full guest accepts the mainnet
+  proof and rejects a corrupted accumulator; trace accounting accepts the
+  complete execution.
+- **Limits:** no GPU proof with the new chips and no recursion VK map for the
+  new precompile clusters, so it stays opt-in. Not yet measured together with
+  the deferred MDS flag, whose saving overlaps (both remove `UINT256_MUL`
+  traffic). Evidence: [summary](../../benchmarks/pasta-fp-sp1-6.10.json).
