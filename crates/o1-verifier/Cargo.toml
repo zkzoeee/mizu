@@ -25,3 +25,10 @@ sp1 = ["mina-curves/sp1"]
 pickles-verifier = { path = "../pickles-verifier" }
 mina-curves = { workspace = true }
 poly-commitment = { workspace = true }
+sha2 = "0.10"
+
+[[bin]]
+name = "o1-verifier"
+path = "src/main.rs"
+test = false
+bench = false

@@ -23,7 +23,7 @@ use std::time::Duration;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use pickles_verifier::types::VerifiableProof;
-use pickles_verifier::wire::{parse_app_statement, parse_wrap_proof, parse_wrap_vk, OcamlProof};
+use pickles_verifier::wire::{parse_app_statement_fields, parse_wrap_proof, parse_wrap_vk, OcamlProof};
 use sp1_sdk::network::{get_explorer_url_for_mode, B256};
 use sp1_sdk::{include_elf, Elf, ProveRequest, Prover, ProverClient, ProvingKey, SP1Stdin};
 
@@ -156,10 +156,10 @@ fn load_verifiable(fixture_dir: &Path) -> VerifiableProof {
     let wrap_vk = parse_wrap_vk(&vk_json).expect("parse vk.serde.json");
     let wrap_proof = parse_wrap_proof(&proof_json).expect("parse proof.serde.json");
     let ocaml = OcamlProof::parse(&skeleton_json).expect("parse public_input_skeleton.json");
-    let app_stmt = parse_app_statement(&app_stmt_json).expect("parse app_statement.json");
+    let app_stmt = parse_app_statement_fields(&app_stmt_json).expect("parse app_statement.json");
 
     ocaml
-        .into_verifiable(wrap_proof, &wrap_vk, &[app_stmt])
+        .into_verifiable(wrap_proof, &wrap_vk, &app_stmt)
         .expect("OcamlProof::into_verifiable")
 }
 
@@ -184,20 +184,19 @@ async fn main() {
 }
 
 async fn run_execute(stdin: SP1Stdin) {
-    let client = ProverClient::builder().cpu().build().await;
-    let (mut public_values, report) = client.execute(ELF, stdin).await.expect("execution failed");
-
-    let valid: bool = public_values.read();
-    assert!(valid, "Pickles proof verification failed inside SP1 zkVM");
-
+    let program = std::sync::Arc::new(sp1_core_executor::Program::from(&ELF).expect("disassemble guest"));
+    let mut executor = sp1_core_executor_runner::MinimalExecutorRunner::new(
+        program, false, None, 2 * 1024 * 1024 * 1024, 0,
+    );
+    for input in stdin.buffer { executor.with_input(&input); }
+    while executor.try_execute_chunk().expect("execute guest").is_some() {}
+    assert_eq!(executor.exit_code(), 0, "guest rejected the proof");
+    assert_eq!(executor.public_values_stream().as_slice(), &[1], "expected boolean true");
     println!("Pickles proof verified successfully inside SP1 zkVM!");
-    println!("Execution used {} cycles", report.total_instruction_count());
-
-    let mut entries: Vec<(&String, &u64)> = report.cycle_tracker.iter().collect();
-    entries.sort_by(|a, b| a.0.cmp(b.0));
-    for (name, cycles) in entries {
-        println!("  {name}: {cycles} cycles");
-    }
+    println!("Execution used {} cycles", executor.global_clk());
+    let mut entries: Vec<_> = executor.take_cycle_tracker_totals().into_iter().collect();
+    entries.sort_by(|a, b| a.0.cmp(&b.0));
+    for (name, cycles) in entries { println!("  {name}: {cycles} cycles"); }
 }
 
 async fn run_cpu(stdin: SP1Stdin) {
