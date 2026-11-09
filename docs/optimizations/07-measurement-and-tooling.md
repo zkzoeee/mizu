@@ -63,3 +63,10 @@ Root-specific code stays in the o1js-to-zkvm module series. Current pins and
 ordered commits are in [the dependency lock](../../dependencies/lock.json).
 Historical evidence and current implementation are connected by this record,
 not by preserving the original experimental commit history.
+
+## Local validation review
+
+The [Miza validation review](miza-validation-review.md) records stronger comparator,
+guest-matrix and proof-handoff patterns, existing coverage overlaps, 13 selected
+Python gates actually run, and the distinction between compiled/simulated proof
+matrices and completed cryptographic verification. No dependency code was ported.

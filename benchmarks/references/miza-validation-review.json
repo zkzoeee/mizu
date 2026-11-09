@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "kind": "local-validation-tooling-review",
+  "reviewed_on": "2026-11-09",
+  "miza_revision": "aab33db009b40d4f92ec77bdd6f4a7628fb0339b",
+  "miza_dirty": false,
+  "sources_sha256": {
+    "miza/compare_runs.py": "4f5be9f8f48a1c071de863b81e449f6feb64294d3cebd03c672d27dcfe758ac1",
+    "miza/test_compare_runs.py": "20bc57eaf3263e6725fe539d8405318058e1ea2921ac22444c4d8f043572d5e6",
+    "miza/cache_identity.py": "66e3c73c6822d6e5549a3cde248ff642d19f1dd7d2c50123280d989613c62210",
+    "miza/test_cache_identity.py": "971bd45627032874a32aa099548e2e45780224f56263ebada7fe86903342a205",
+    "miza/guest_regressions.py": "92dd2f82cab97aab60ee94a39bb7b3e219e9f93d9836d4ac3a9cfc35cd1e3eb3",
+    "miza/local_cycles.py": "8d9ab6c3e0fdbce1ef0b274a333b6a0cc25f146a29ffaf19c86a3c0b30d74d0a",
+    "miza/run_fast_matrix.py": "e064bbb399a23f3b947499a95a0201034351676c8cbe8d2ddbfa8264c6056ec4",
+    "miza/run_positive_fixtures.py": "2fc60aacabb455063d06239fab3bdf1029b8e3a86f29a8972cbfbc0d40b0f06b",
+    "miza/verify_stock_field_parity.py": "eae9c6402f341c2f67ca0997a38488e8f89e8e04a202ab25f68632f4e87788a6",
+    "miza/verify_release_readiness.py": "a8ce61ef312ffd8a2319797488723a451b6964f9ca697ca94709b869f23ce1d6",
+    "miza/runtime/README.md": "8d9bead1f09a2c8224e7e31ab18dac499d5b1b5652a3a167b4fd587c90bdc949",
+    "miza/validation/2026-11-09-proof-matrix-readiness-v7/README.md": "301a3269e75bcfb2d7163d0dd93c3e380b360e9326323f8500f3576082fda03e",
+    "miza/validation/2026-11-09-malicious-page-core/README.md": "da2eb94c15736d31fb71ee8f607926073e81e54dec2b3efbc89a2f4ad8eaf0c5"
+  },
+  "selected_tests": {
+    "command": "python3 -B -m unittest -v test_compare_runs test_cache_identity",
+    "working_directory_relative_to_repository": "../miza-o1js-to-zkvm/miza",
+    "passed": 13,
+    "scope": "synthetic comparison and cache-identity gates only; no build, guest or proof run",
+    "log_relative_to_repository": "../mizu-openvm-experiments-20261109/miza-comparison-gates.log",
+    "log_sha256": "c3e1b2da264d33675b29a3ab8e4931b2f239c5cf4be079b520e9718ac3fffe8c"
+  },
+  "proof_matrix": {
+    "expected_artifacts": 100,
+    "status": "compile-only plus simulated local orchestration; cryptographic proof gates remain open"
+  },
+  "runtime_source_difference": {
+    "file": "crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_double.rs",
+    "miza_runtime_revision": "5f36fbb08c5abb4b839f2b1891863665948fcf85",
+    "miza_runtime_file_sha256": "e3200bec54131fc920f98379e05ab95b63c4c90e286fd68e6a47b0819da3a6ac",
+    "mizu_file_sha256": "8f2f131bedd7d4059f278d4b452291a239e284dad48b8ac9c5c64f3c1d0b57c5",
+    "observation": "Miza has explicit slope denominator inverse-check columns and constraints absent from the Mizu fork file. Narrow adversarial-AIR review is pending; no guest exploit demonstrated or runtime change imported."
+  },
+  "original_repositories_modified": false
+}
