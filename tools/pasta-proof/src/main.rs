@@ -3285,6 +3285,65 @@ fn interaction_balance(
     (counts.len(), counts.values().filter(|c| **c != 0).count())
 }
 
+/// Every round row of every event carries its event's clock, pointer and round
+/// index, its input is the reference's state before that round, its MDS
+/// outputs are the state after it, and no padding row is real.
+fn poseidon_rows_check<P: sp1_core_machine::syscall::precompiles::pasta_poseidon::PastaPoseidonField>(
+    round_trace: &slop_matrix::dense::RowMajorMatrix<SP1Field>,
+    events: &[(sp1_core_executor::events::SyscallEvent, PrecompileEvent)],
+    params: &PoseidonParameters,
+) -> Result<usize> {
+    use sp1_core_machine::syscall::precompiles::pasta_poseidon::{
+        num_pasta_poseidon_round_cols, PastaField, PastaPoseidonRoundCols, ROUNDS,
+    };
+    let round_name = match P::FIELD {
+        PastaField::Pallas => "PallasPoseidonPermute",
+        PastaField::Vesta => "VestaPoseidonPermute",
+    };
+    let round_width = num_pasta_poseidon_round_cols::<P>();
+    let clk_high = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, clk_high);
+    let clk_low = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, clk_low);
+    let index = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, index);
+    let is_real = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, is_real);
+    let input = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, input);
+    let mds = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, mds);
+    let mds_stride =
+        core::mem::size_of::<sp1_core_machine::operations::field::field_inner_product::FieldInnerProductCols<u8, P>>();
+    let rows = round_trace.values.chunks_exact(round_width).collect::<Vec<_>>();
+    ensure!(rows.len() >= events.len() * ROUNDS, "{round_name}: too few rows");
+    for (n, (_, event)) in events.iter().enumerate() {
+        let e = match event {
+            PrecompileEvent::PallasPoseidon(e) | PrecompileEvent::VestaPoseidon(e) => e,
+            _ => unreachable!(),
+        };
+        let states = poseidon_reference_states(params, &poseidon_elements(&e.pre_state));
+        for r in 0..ROUNDS {
+            let row = rows[n * ROUNDS + r];
+            ensure!(
+                row[is_real] == SP1Field::one()
+                    && row[index] == SP1Field::from_canonical_usize(r)
+                    && row[clk_high] == SP1Field::from_canonical_u32((e.clk >> 24) as u32)
+                    && row[clk_low] == SP1Field::from_canonical_u32((e.clk & 0xFF_FFFF) as u32),
+                "{round_name}: event {n} round {r} row header is wrong"
+            );
+            for i in 0..3 {
+                ensure!(
+                    limbs_at(row, input + 32 * i) == states[r][i],
+                    "{round_name}: event {n} round {r} input {i} is not the reference state"
+                );
+                ensure!(
+                    limbs_at(row, mds + mds_stride * i) == states[r + 1][i],
+                    "{round_name}: event {n} round {r} output {i} is not the reference state"
+                );
+            }
+        }
+    }
+    for row in &rows[events.len() * ROUNDS..] {
+        ensure!(row[is_real] == SP1Field::zero(), "{round_name}: a padding row is real");
+    }
+    Ok(events.len() * ROUNDS)
+}
+
 fn poseidon_field_check<P: sp1_core_machine::syscall::precompiles::pasta_poseidon::PastaPoseidonField>(
     chips: &[Chip<SP1Field, Air>],
     records: &[ExecutionRecord],
@@ -3379,51 +3438,7 @@ fn poseidon_field_check<P: sp1_core_machine::syscall::precompiles::pasta_poseido
         honest_ok &= eval_rows(round_chip, round_trace.clone()).is_empty();
         honest_ok &= eval_rows(control_chip, control_trace.clone()).is_empty();
 
-        // Every round row carries its event's clock, pointer and round index,
-        // its input is the reference's state before that round, and its MDS
-        // outputs are the state after it.
-        {
-            let clk_high = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, clk_high);
-            let clk_low = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, clk_low);
-            let index = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, index);
-            let is_real = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, is_real);
-            let input = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, input);
-            let mds = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, mds);
-            let mds_stride =
-                core::mem::size_of::<sp1_core_machine::operations::field::field_inner_product::FieldInnerProductCols<u8, P>>();
-            let rows = round_trace.values.chunks_exact(round_width).collect::<Vec<_>>();
-            ensure!(rows.len() >= events.len() * ROUNDS, "{round_name}: too few rows");
-            for (n, (_, event)) in events.iter().enumerate() {
-                let e = match event {
-                    PrecompileEvent::PallasPoseidon(e) | PrecompileEvent::VestaPoseidon(e) => e,
-                    _ => unreachable!(),
-                };
-                let states = poseidon_reference_states(params, &poseidon_elements(&e.pre_state));
-                for r in 0..ROUNDS {
-                    let row = rows[n * ROUNDS + r];
-                    ensure!(
-                        row[is_real] == SP1Field::one()
-                            && row[index] == SP1Field::from_canonical_usize(r)
-                            && row[clk_high] == SP1Field::from_canonical_u32((e.clk >> 24) as u32)
-                            && row[clk_low] == SP1Field::from_canonical_u32((e.clk & 0xFF_FFFF) as u32),
-                        "{round_name}: event {n} round {r} row header is wrong"
-                    );
-                    for i in 0..3 {
-                        ensure!(
-                            limbs_at(row, input + 32 * i) == states[r][i],
-                            "{round_name}: event {n} round {r} input {i} is not the reference state"
-                        );
-                        ensure!(
-                            limbs_at(row, mds + mds_stride * i) == states[r + 1][i],
-                            "{round_name}: event {n} round {r} output {i} is not the reference state"
-                        );
-                    }
-                }
-            }
-            for row in &rows[events.len() * ROUNDS..] {
-                ensure!(row[is_real] == SP1Field::zero(), "{round_name}: a padding row is real");
-            }
-        }
+        poseidon_rows_check::<P>(&round_trace, events, params)?;
 
         if !swept {
             swept = true;
@@ -3998,11 +4013,21 @@ impl FuzzRng {
     }
 }
 
+/// A decimal or `0x`-prefixed integer from the environment, or `default` when
+/// unset. A value that does not parse is an error, not a silent fallback: the
+/// first fuzz runs passed hex seeds to a decimal-only parser and all ran on
+/// the default seed.
 fn fuzz_env_u64(name: &str, default: u64) -> u64 {
-    std::env::var(name)
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(default)
+    match std::env::var(name) {
+        Err(_) => default,
+        Ok(v) => {
+            let parsed = match v.strip_prefix("0x").or_else(|| v.strip_prefix("0X")) {
+                Some(hex) => u64::from_str_radix(hex, 16),
+                None => v.parse(),
+            };
+            parsed.unwrap_or_else(|_| panic!("{name}={v:?} is not a decimal or 0x-prefixed integer"))
+        }
+    }
 }
 
 fn run_pasta_fuzz(output: &Path) -> Result<()> {
@@ -4015,6 +4040,7 @@ fn run_pasta_fuzz(output: &Path) -> Result<()> {
     let executor = fuzz_executor(&mut rng, iterations)?;
     let witness = fuzz_witness(&mut rng, iterations)?;
     let columns = fuzz_columns(&mut rng)?;
+    let poseidon = fuzz_poseidon(&mut rng, iterations)?;
     fs::create_dir_all(output)?;
     let report = json!({
         "mode": "pasta-fuzz",
@@ -4024,6 +4050,7 @@ fn run_pasta_fuzz(output: &Path) -> Result<()> {
         "executor": executor,
         "witness": witness,
         "columns": columns,
+        "poseidon": poseidon,
         "seconds": started.elapsed().as_secs_f64(),
     });
     write_json(output.join("result.json"), &report)?;
@@ -4256,6 +4283,352 @@ const INTERACTION_BOUND_FIELDS: [&str; 10] = [
 ];
 
 /// Perturb every column of one honest row, twice, and evaluate the AIR.
+/// Poseidon layers of `pasta-fuzz`, both fields: P1 host permutation vs the
+/// BigUint reference vs the export-derived reference on random, edge and
+/// noncanonical inputs; P2 random states through a real program with every
+/// executor result and round row checked; P3 the column sweep on several rows
+/// of both chips; P4 random single-cell mutations of real rows, each of which
+/// the row algebra must reject, the round chain must leave unbalanced, or a
+/// memory-only field must own.
+fn fuzz_poseidon(rng: &mut FuzzRng, iterations: usize) -> Result<Value> {
+    use sp1_curves::weierstrass::pasta_poseidon::{PallasPoseidonField, VestaPoseidonField};
+    let pallas = fuzz_poseidon_field::<PallasPoseidonField>(rng, iterations, "fp")?;
+    let vesta = fuzz_poseidon_field::<VestaPoseidonField>(rng, iterations, "fq")?;
+    Ok(json!({"pallas": pallas, "vesta": vesta}))
+}
+
+fn fuzz_poseidon_field<
+    P: sp1_core_machine::syscall::precompiles::pasta_poseidon::PastaPoseidonField,
+>(
+    rng: &mut FuzzRng,
+    iterations: usize,
+    export_field: &str,
+) -> Result<Value> {
+    use sp1_core_machine::{
+        syscall::precompiles::pasta_poseidon::{
+            num_pasta_poseidon_control_cols_supervisor, num_pasta_poseidon_round_cols,
+            syscall_code, PastaField, PastaPoseidonControlChip, PastaPoseidonControlCols,
+            PastaPoseidonRoundChip, PastaPoseidonRoundCols, CHAIN_KIND, ROUNDS,
+        },
+        SupervisorMode as S,
+    };
+    use sp1_curves::weierstrass::pasta_poseidon::{permute, permute_biguint};
+    let params = poseidon_parameters(export_field)?;
+    let code = syscall_code(P::FIELD);
+    let (round_name, control_name) = match P::FIELD {
+        PastaField::Pallas => ("PallasPoseidonPermute", "PallasPoseidonControl"),
+        PastaField::Vesta => ("VestaPoseidonPermute", "VestaPoseidonControl"),
+    };
+    let p = &params.modulus;
+    let random_element = |rng: &mut FuzzRng| {
+        let mut v = BigUint::zero();
+        for _ in 0..4 {
+            v = (v << 64) + BigUint::from(rng.next_u64());
+        }
+        v
+    };
+
+    // P1: host permutation (fixed-limb Montgomery) against the BigUint
+    // reference inside the fork and the reference evaluated from the export.
+    // Noncanonical inputs (>= p) are a defined input class: every path
+    // reduces them first, and the three must still agree.
+    let max: BigUint = (BigUint::one() << 256u32) - BigUint::one();
+    let mut edge: Vec<([BigUint; 3], &str)> = vec![
+        (core::array::from_fn(|_| BigUint::zero()), "zero"),
+        ([BigUint::one(), BigUint::from(2u8), BigUint::from(3u8)], "one-two-three"),
+        (core::array::from_fn(|_| p - BigUint::one()), "p-1"),
+        ([p.clone(), p + BigUint::one(), max.clone()], "noncanonical p, p+1, 2^256-1"),
+        ([p - BigUint::one(), BigUint::zero(), BigUint::one()], "p-1, 0, 1"),
+    ];
+    let mut random_canonical = 0usize;
+    let mut random_noncanonical = 0usize;
+    let mut inputs: Vec<([BigUint; 3], &str)> = Vec::new();
+    for _ in 0..iterations {
+        let canonical: [BigUint; 3] = core::array::from_fn(|_| random_element(rng) % p);
+        inputs.push((canonical, "random canonical"));
+        random_canonical += 1;
+        // Random 256-bit words are above p with probability ~1 - p/2^256.
+        let raw: [BigUint; 3] = core::array::from_fn(|_| random_element(rng));
+        if raw.iter().any(|v| v >= p) {
+            inputs.push((raw, "random noncanonical"));
+            random_noncanonical += 1;
+        }
+    }
+    inputs.append(&mut edge);
+    let mut p1_checked = 0usize;
+    for (input, label) in &inputs {
+        let mut words: [u64; 12] = poseidon_words(input).try_into().unwrap();
+        let host = catch_unwind(AssertUnwindSafe(|| {
+            permute(P::FIELD, &mut words);
+            poseidon_elements(&words)
+        }));
+        let host = match host {
+            Ok(h) => h,
+            Err(_) => bail!("{round_name}: host permutation panicked on {label}"),
+        };
+        let fork_reference = permute_biguint(P::FIELD, input);
+        let export_reference = poseidon_reference(&params, input);
+        ensure!(
+            host == fork_reference && host == export_reference,
+            "{round_name}: host, fork reference and export reference disagree on {label}"
+        );
+        ensure!(host.iter().all(|v| v < p), "{round_name}: host output not canonical on {label}");
+        p1_checked += 1;
+    }
+
+    // P2: random canonical states through a real program; executor outputs
+    // and every round row against the reference.
+    let calls: Vec<PoseidonCall> = (0..iterations)
+        .map(|_| {
+            let input: [BigUint; 3] = core::array::from_fn(|_| random_element(rng) % p);
+            let expected = poseidon_reference(&params, &input);
+            PoseidonCall { code, input, expected }
+        })
+        .collect();
+    let program = build_poseidon_program(&calls, 0x9052)?;
+    let (records, _) =
+        generate_records::<SP1Field>(program, SP1Stdin::new(), core_opts(), [0; 4])?;
+    let machine = Air::machine();
+    let round_chip = machine.chips().iter().find(|c| c.name() == round_name).context("round chip")?;
+    let control_chip =
+        machine.chips().iter().find(|c| c.name() == control_name).context("control chip")?;
+    let mut p2_events = 0usize;
+    let mut p2_rows = 0usize;
+    for record in &records {
+        let Some(events) = record.precompile_events.get_events(code) else { continue };
+        if events.is_empty() {
+            continue;
+        }
+        for (_, event) in events.iter() {
+            let e = match event {
+                PrecompileEvent::PallasPoseidon(e) | PrecompileEvent::VestaPoseidon(e) => e,
+                _ => bail!("{round_name}: unexpected event"),
+            };
+            let pre = poseidon_elements(&e.pre_state);
+            ensure!(
+                poseidon_elements(&e.post_state) == poseidon_reference(&params, &pre),
+                "{round_name}: executor output differs from the reference"
+            );
+            p2_events += 1;
+        }
+        let round_trace = MachineAir::<SP1Field>::generate_trace(
+            &PastaPoseidonRoundChip::<P>::new(),
+            record,
+            &mut ExecutionRecord::default(),
+        );
+        let control_trace = MachineAir::<SP1Field>::generate_trace(
+            &PastaPoseidonControlChip::<P, S>::new(),
+            record,
+            &mut ExecutionRecord::default(),
+        );
+        ensure!(eval_rows(round_chip, round_trace.clone()).is_empty(), "{round_name}: honest row fails");
+        ensure!(
+            eval_rows(control_chip, control_trace.clone()).is_empty(),
+            "{control_name}: honest row fails"
+        );
+        p2_rows += poseidon_rows_check::<P>(&round_trace, events, &params)?;
+    }
+    ensure!(p2_events == iterations, "{round_name}: {p2_events} events for {iterations} calls");
+
+    // P3 and P4 work on a two-permutation program, small enough to evaluate
+    // the whole trace once per perturbation.
+    let small: Vec<PoseidonCall> = (0..2)
+        .map(|_| {
+            let input: [BigUint; 3] = core::array::from_fn(|_| random_element(rng) % p);
+            let expected = poseidon_reference(&params, &input);
+            PoseidonCall { code, input, expected }
+        })
+        .collect();
+    let program = build_poseidon_program(&small, 0x9053)?;
+    let (records, _) =
+        generate_records::<SP1Field>(program, SP1Stdin::new(), core_opts(), [0; 4])?;
+    let record = records
+        .iter()
+        .find(|r| r.precompile_events.get_events(code).is_some_and(|e| !e.is_empty()))
+        .context("no shard carried the Poseidon events")?;
+    let round_trace = MachineAir::<SP1Field>::generate_trace(
+        &PastaPoseidonRoundChip::<P>::new(),
+        record,
+        &mut ExecutionRecord::default(),
+    );
+    let control_trace = MachineAir::<SP1Field>::generate_trace(
+        &PastaPoseidonControlChip::<P, S>::new(),
+        record,
+        &mut ExecutionRecord::default(),
+    );
+    let round_width = num_pasta_poseidon_round_cols::<P>();
+    let control_width = num_pasta_poseidon_control_cols_supervisor::<P>();
+    let real_round_rows = 2 * ROUNDS;
+    let real_control_rows = 2;
+    macro_rules! fields {
+        ($ty:ty; $($f:ident),*) => {{
+            let mut v: Vec<(&'static str, usize)> = vec![$((stringify!($f), core::mem::offset_of!($ty, $f))),*];
+            v.sort_by_key(|(_, o)| *o);
+            v
+        }};
+    }
+    let round_fields = fields!(PastaPoseidonRoundCols<u8, P>; clk_high, clk_low, state_addr, index,
+        step_flags, input, powers, mds, is_real);
+    let control_fields = fields!(PastaPoseidonControlCols<u8, P, S>; clk_high, clk_low, state_addr,
+        addrs, initial_memory_access, final_memory_access, final_state, final_range,
+        read_state_slice_page_prot_access, write_state_slice_page_prot_access, is_real);
+    // Fields the row algebra leaves to interactions. The chain binds every
+    // round-row field here and the controller's clock, pointer, read bytes and
+    // final state; `final_memory_access` (previous timestamps and values) is
+    // bound only by the memory argument, which this harness does not evaluate.
+    let round_bound = ["clk_high", "clk_low", "state_addr", "input"];
+    let control_bound = [
+        "clk_high", "clk_low", "state_addr", "initial_memory_access", "final_memory_access",
+        "final_state",
+    ];
+    let memory_only = ["final_memory_access"];
+
+    // P3: column sweep on the first, a middle and the last round of the first
+    // permutation plus the first round of the second, and both controller rows.
+    let middle = 1 + (rng.next_u64() % (ROUNDS as u64 - 2)) as usize;
+    let mut sweep_chip = |chip: &Chip<SP1Field, Air>,
+                          trace: &slop_matrix::dense::RowMajorMatrix<SP1Field>,
+                          width: usize,
+                          rows: &[usize],
+                          fields: &[(&'static str, usize)],
+                          bound: &[&str],
+                          name: &str|
+     -> Result<Value> {
+        let mut surviving: BTreeMap<&str, usize> = BTreeMap::new();
+        let mut cells = 0usize;
+        for &row in rows {
+            for column in 0..width {
+                let random = 1 + (rng.next_u64() % (SP1Field::ORDER_U32 as u64 - 1)) as u32;
+                let survives = [1u32, random].iter().all(|delta| {
+                    let mut t = trace.clone();
+                    t.values[row * width + column] += SP1Field::from_canonical_u32(*delta);
+                    eval_rows(chip, t).is_empty()
+                });
+                cells += 1;
+                if survives {
+                    *surviving.entry(column_field(fields, column)).or_default() += 1;
+                }
+            }
+        }
+        let unexpected: Vec<&str> =
+            surviving.keys().copied().filter(|f| !bound.contains(f)).collect();
+        ensure!(unexpected.is_empty(), "{name}: algebraically unconstrained fields {unexpected:?}");
+        Ok(json!({"rows": rows, "cells_perturbed": cells, "surviving_by_field": surviving}))
+    };
+    let round_sweep = sweep_chip(
+        round_chip,
+        &round_trace,
+        round_width,
+        &[0, middle, ROUNDS - 1, ROUNDS],
+        &round_fields,
+        &round_bound,
+        round_name,
+    )?;
+    let control_sweep = sweep_chip(
+        control_chip,
+        &control_trace,
+        control_width,
+        &[0, 1],
+        &control_fields,
+        &control_bound,
+        control_name,
+    )?;
+
+    // P4: random single-cell mutations of real rows. Each must be rejected by
+    // the row algebra or leave the round chain unbalanced, unless it lands in
+    // a memory-only field.
+    let honest_open = interaction_balance(
+        &[(round_chip, &round_trace), (control_chip, &control_trace)],
+        CHAIN_KIND,
+    )
+    .1;
+    ensure!(honest_open == 0, "{round_name}: honest chain is not balanced");
+    let mut by_air = 0usize;
+    let mut by_chain = 0usize;
+    let mut memory_owned = 0usize;
+    let mut survivors: Vec<Value> = Vec::new();
+    let mutations = 2 * iterations.max(16);
+    for _ in 0..mutations {
+        let on_round = rng.next_u64() % 4 != 0;
+        let (chip, trace, width, rows, fields, name) = if on_round {
+            (round_chip, &round_trace, round_width, real_round_rows, &round_fields, round_name)
+        } else {
+            (control_chip, &control_trace, control_width, real_control_rows, &control_fields, control_name)
+        };
+        let row = (rng.next_u64() % rows as u64) as usize;
+        // Half the mutations land anywhere, half inside the interaction-bound
+        // fields, which the row algebra alone never rejects.
+        let bound = if on_round { &round_bound[..] } else { &control_bound[..] };
+        let column = if rng.next_u64() % 2 == 0 {
+            (rng.next_u64() % width as u64) as usize
+        } else {
+            let candidates: Vec<usize> =
+                (0..width).filter(|c| bound.contains(&column_field(fields, *c))).collect();
+            candidates[(rng.next_u64() % candidates.len() as u64) as usize]
+        };
+        let delta = 1 + (rng.next_u64() % (SP1Field::ORDER_U32 as u64 - 1)) as u32;
+        let mut mutated = trace.clone();
+        mutated.values[row * width + column] += SP1Field::from_canonical_u32(delta);
+        let field = column_field(fields, column);
+        if !eval_rows(chip, mutated.clone()).is_empty() {
+            by_air += 1;
+            continue;
+        }
+        let open = if on_round {
+            interaction_balance(&[(chip, &mutated), (control_chip, &control_trace)], CHAIN_KIND).1
+        } else {
+            interaction_balance(&[(round_chip, &round_trace), (chip, &mutated)], CHAIN_KIND).1
+        };
+        if open > 0 {
+            by_chain += 1;
+        } else if memory_only.contains(&field) {
+            memory_owned += 1;
+        } else {
+            survivors.push(json!({"chip": name, "row": row, "column": column, "field": field, "delta": delta}));
+        }
+    }
+    ensure!(
+        survivors.is_empty(),
+        "{round_name}: mutations survive algebra and chain outside memory-only fields: {survivors:?}"
+    );
+    // Two coordinated attacks on the chain itself: a round row re-labelled to
+    // another round (flags and index moved together), and the two events'
+    // controller outputs swapped.
+    let flags = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, step_flags);
+    let index = core::mem::offset_of!(PastaPoseidonRoundCols<u8, P>, index);
+    let r = (rng.next_u64() % ROUNDS as u64) as usize;
+    let r2 = (r + 1 + (rng.next_u64() % (ROUNDS as u64 - 1)) as usize) % ROUNDS;
+    let mut relabelled = round_trace.clone();
+    relabelled.values[r * round_width + flags + r] = SP1Field::zero();
+    relabelled.values[r * round_width + flags + r2] = SP1Field::one();
+    relabelled.values[r * round_width + index] = SP1Field::from_canonical_usize(r2);
+    let relabel_rejected = !eval_rows(round_chip, relabelled.clone()).is_empty()
+        || interaction_balance(&[(round_chip, &relabelled), (control_chip, &control_trace)], CHAIN_KIND).1 > 0;
+    ensure!(relabel_rejected, "{round_name}: a re-labelled round row passes algebra and chain");
+    let final_state = core::mem::offset_of!(PastaPoseidonControlCols<u8, P, S>, final_state);
+    let mut swapped = control_trace.clone();
+    for k in 0..96 {
+        let (a, b) = (final_state + k, control_width + final_state + k);
+        swapped.values.swap(a, b);
+    }
+    let swap_rejected = !eval_rows(control_chip, swapped.clone()).is_empty()
+        || interaction_balance(&[(round_chip, &round_trace), (control_chip, &swapped)], CHAIN_KIND).1 > 0;
+    ensure!(swap_rejected, "{control_name}: swapped outputs pass algebra and chain");
+
+    Ok(json!({
+        "field": format!("{:?}", P::FIELD),
+        "p1_host_vs_references": {"inputs": p1_checked, "random_canonical": random_canonical,
+            "random_noncanonical": random_noncanonical, "edge_cases": 5, "panics": 0, "disagreements": 0},
+        "p2_witness": {"events": p2_events, "round_rows_checked": p2_rows, "honest_rows_satisfy_air": true},
+        "p3_column_sweep": {"round": round_sweep, "control": control_sweep,
+            "interaction_bound_fields": {"round": round_bound, "control": control_bound}},
+        "p4_mutations": {"mutations": mutations, "rejected_by_air": by_air,
+            "rejected_by_chain": by_chain, "memory_only_field": memory_owned, "unexplained": 0,
+            "relabelled_round_rejected": relabel_rejected, "swapped_outputs_rejected": swap_rejected,
+            "memory_only_fields": memory_only},
+    }))
+}
+
 fn fuzz_columns(rng: &mut FuzzRng) -> Result<Value> {
     let mut results = Vec::new();
     for op in &OPS {

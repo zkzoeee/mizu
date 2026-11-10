@@ -21308,7 +21308,26 @@
         "poseidon_permutations": 229,
         "pasta_poseidon_check_permutations": 16,
         "cpu_proof_shards": 4,
-        "gpu_proof": false
+        "gpu_proof": false,
+        "fuzz": {
+          "evidence": "benchmarks/pasta-poseidon-fuzz-sp1-6.10.json",
+          "evidence_sha256": "85ab673aa8a22f6a1d7f6396197d050ff6b63862b084409befa011e422ed3fad",
+          "seeds": [
+            "0x5eed0005",
+            "0x5eed0006",
+            "0x5eed0007"
+          ],
+          "iterations": 32,
+          "p4_mutations": [
+            384,
+            {
+              "rejected_by_air": 333,
+              "rejected_by_chain": 45,
+              "memory_only_field": 6,
+              "unexplained": 0
+            }
+          ]
+        }
       }
     },
     {

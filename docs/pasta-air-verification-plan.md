@@ -136,14 +136,25 @@ are planned.
 | F4 lookup-aware mutation | F3's survivors re-run through the full CPU proof of the small Pasta guest, so byte, memory and syscall arguments are evaluated too | Planned; reuse the r123 proof matrix |
 | F5 Rust–Lean evaluation | The randomized evaluation check above, also run with fuzzed rather than random points | Planned, with the Lean model |
 | F6 cross-curve | The same shapes at secp256k1 and BN254, where SP1 upstream already tests, to separate fork bugs from upstream ones | Planned |
+| P1 Poseidon host | The fork's fixed-limb permutation vs its BigUint reference vs a reference evaluated from the proof-systems parameter export, on random canonical, random noncanonical (`>= p`) and edge inputs (`0`, `p − 1`, `p`, `p + 1`, `2^256 − 1`); outputs canonical; panics counted | Implemented |
+| P2 Poseidon witness | Random states through a real program: every executor output, and every round row's clock, pointer, index, input and output against the reference's 56 intermediate states; honest rows of both chips satisfy the AIRs | Implemented |
+| P3 Poseidon column sweep | F3 on four round rows (first, random middle, last, and the next permutation's first) and both controller rows; survivors must lie in the interaction-bound fields | Implemented |
+| P4 Poseidon lookup-aware mutation | Random single-cell mutations of real rows, half of them inside interaction-bound fields: each must fail the row algebra, leave the round chain unbalanced, or sit in the one memory-only field (`final_memory_access`); plus a round row re-labelled to another round and two permutations' outputs swapped | Implemented (chain only; memory and syscall arguments are not evaluated) |
 
-Every fuzz run takes a seed (`PASTA_FUZZ_SEED`, printed and recorded) and an
-iteration count (`PASTA_FUZZ_ITERS`). Run F1 to F3 on every fork change; run a
+Every fuzz run takes a seed (`PASTA_FUZZ_SEED`, decimal or `0x`-prefixed,
+printed and recorded) and an iteration count (`PASTA_FUZZ_ITERS`). Run F1 to F3 on every fork change; run a
 longer seed sweep nightly. The recorded survivor set for arithmetic fields is
 empty, and the sweep now fails on any new survivor (checked on seed
 `0x5eed0004`).
 
 ### First run (2026-11-10)
+
+**Correction (same day):** the seed parser accepted decimal only, so the hex
+seeds below silently fell back to the default `0x5eed0001`. This run was one
+seed, not three, and the iteration counts differed as stated. The parser now
+accepts `0x` values and fails on anything it cannot parse; the second run
+below is the first with distinct seeds, and its curve layers passed on all of
+them.
 
 Three seeds (`0x5eed0001` with 32 iterations, `0x5eed0002` and `0x5eed0003`
 with 64) on the candidate fork with batched witness inversion and the
@@ -169,11 +180,36 @@ multi-column forgeries. The double chip's slope forgery at `(0, 0)` needs a
 crafted input and a matching slope, and F3 does not see it. That is what the
 Lean soundness theorem, and its `2y ≠ 0` precondition, are for.
 
+### Second run (2026-11-10): Poseidon layers, distinct seeds
+
+Seeds `0x5eed0005`, `0x5eed0006`, `0x5eed0007`, 32 iterations each, SP1 fork
+`a418319a0`, about two minutes a run. Curve layers F1 to F3 passed on all
+three with zero surviving columns. Poseidon layers, both fields, every seed:
+
+- **P1:** 68 or 69 inputs per field and seed (32 random canonical, 31 or 32
+  random noncanonical, 5 edge cases); host, fork reference and export
+  reference agreed on every input, every output canonical, no panics.
+- **P2:** 32 permutations per field; 1,760 round rows checked against the
+  reference's intermediate states; all honest rows satisfied both AIRs.
+- **P3:** 8,192 round cells and 1,014 controller cells perturbed per field;
+  survivors only in `clk_high`, `clk_low`, `state_addr` (round) and
+  `initial_memory_access`, `final_memory_access`, `final_state` (controller),
+  186 of 192 final-state bytes among them, which the chain and the memory
+  write bind.
+- **P4:** 384 mutations in all: 333 rejected by the row algebra, 45 by the
+  chain balance, 6 in `final_memory_access`, 0 unexplained. The re-labelled
+  round row and the swapped outputs were rejected on every seed.
+
+What P4 does not show: `final_memory_access` (previous timestamps and values
+of the written state) and the controller's syscall columns are bound by SP1's
+memory and syscall arguments, which this harness does not evaluate; a real
+proof does. Evidence: [summary](../benchmarks/pasta-poseidon-fuzz-sp1-6.10.json).
+
 ## Phases
 
 | Phase | Deliverable | Exit criterion | Effort |
 | --- | --- | --- | --- |
-| 0 | `pasta-fuzz` F1–F3; F3 survivor set recorded (currently empty) | Clean run on three seeds | Done locally; CI wiring open |
+| 0 | `pasta-fuzz` F1–F3 and Poseidon P1–P4; survivor sets recorded | Clean run on three distinct seeds | Done locally (second run); CI wiring open |
 | 1 | Rust extractor and fingerprints for the four instances | Stable fingerprint across two builds; any constraint edit changes it | 1 week |
 | 2 | Lean limb-identity, field-op and range lemmas | No `sorry`; axioms listed | 2–3 weeks |
 | 3 | Lean add and double models; fingerprint match; randomized check in CI | Both checks pass in CI | 2 weeks |

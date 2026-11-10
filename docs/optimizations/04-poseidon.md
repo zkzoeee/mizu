@@ -184,6 +184,15 @@ not by preserving the original experimental commit history.
   before it reached a proof: the round trace generator sliced its buffer by
   rows instead of rows × width, so no event row was populated; the chain
   balance check caught it, and a per-row witness check now guards it.
+  Differential fuzzing (`pasta-fuzz` layers P1 to P4, three distinct seeds,
+  32 iterations each) passed: host permutation against two references on
+  random, noncanonical and edge inputs; 1,760 round rows per field and seed
+  against the reference; column sweeps on four round rows and both controller
+  rows; 384 single-cell mutations, each rejected by the algebra or the chain
+  or inside the memory-only field; re-labelled rounds and swapped outputs
+  rejected. Details in the
+  [verification plan](../pasta-air-verification-plan.md) and its
+  [summary](../../benchmarks/pasta-poseidon-fuzz-sp1-6.10.json).
 - **Validation scope:** compilation, CPU execution, row and AIR tests, lookup
   balance, one CPU core proof with complete verification. No fresh GPU proof,
   no recursion, no Linux/CUDA.

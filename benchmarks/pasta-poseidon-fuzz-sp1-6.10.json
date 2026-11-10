@@ -1,0 +1,339 @@
+{
+ "schema_version": 1,
+ "name": "mizu-pasta-poseidon-fuzz",
+ "date": "2026-11-10",
+ "sp1_version": "6.10.0",
+ "fork_commits": {
+  "sp1": "a418319a0",
+  "proof-systems": "ddb617200"
+ },
+ "mode": "pasta-fuzz (curve layers F1-F3 plus Poseidon layers P1-P4)",
+ "proof_generated": false,
+ "iterations": 32,
+ "seed_correction": "fuzz_env_u64 parsed decimal only, so the hex seeds of the first recorded run (0x5eed0001..0x5eed0004) all fell back to the default 0x5eed0001; fixed to accept 0x-prefixed values and to fail on unparsable ones. These three runs are the first with distinct seeds.",
+ "runs": [
+  {
+   "seed": "0x5eed0005",
+   "seconds": 121.3,
+   "curve_layers": {
+    "executor": "passed",
+    "witness": "passed",
+    "columns_surviving": {
+     "vesta-add": 0,
+     "vesta-double": 0,
+     "pallas-add": 0,
+     "pallas-double": 0
+    }
+   },
+   "poseidon": {
+    "pallas": {
+     "p1": {
+      "disagreements": 0,
+      "edge_cases": 5,
+      "inputs": 69,
+      "panics": 0,
+      "random_canonical": 32,
+      "random_noncanonical": 32
+     },
+     "p2": {
+      "events": 32,
+      "honest_rows_satisfy_air": true,
+      "round_rows_checked": 1760
+     },
+     "p3": {
+      "round_rows": [
+       0,
+       28,
+       54,
+       55
+      ],
+      "round_surviving_by_field": {
+       "clk_high": 4,
+       "clk_low": 4,
+       "state_addr": 12
+      },
+      "control_surviving_by_field": {
+       "final_memory_access": 96,
+       "final_state": 186,
+       "initial_memory_access": 192
+      }
+     },
+     "p4": {
+      "memory_only_field": 1,
+      "memory_only_fields": [
+       "final_memory_access"
+      ],
+      "mutations": 64,
+      "rejected_by_air": 56,
+      "rejected_by_chain": 7,
+      "relabelled_round_rejected": true,
+      "swapped_outputs_rejected": true,
+      "unexplained": 0
+     }
+    },
+    "vesta": {
+     "p1": {
+      "disagreements": 0,
+      "edge_cases": 5,
+      "inputs": 69,
+      "panics": 0,
+      "random_canonical": 32,
+      "random_noncanonical": 32
+     },
+     "p2": {
+      "events": 32,
+      "honest_rows_satisfy_air": true,
+      "round_rows_checked": 1760
+     },
+     "p3": {
+      "round_rows": [
+       0,
+       15,
+       54,
+       55
+      ],
+      "round_surviving_by_field": {
+       "clk_high": 4,
+       "clk_low": 4,
+       "state_addr": 12
+      },
+      "control_surviving_by_field": {
+       "final_memory_access": 96,
+       "final_state": 186,
+       "initial_memory_access": 192
+      }
+     },
+     "p4": {
+      "memory_only_field": 1,
+      "memory_only_fields": [
+       "final_memory_access"
+      ],
+      "mutations": 64,
+      "rejected_by_air": 57,
+      "rejected_by_chain": 6,
+      "relabelled_round_rejected": true,
+      "swapped_outputs_rejected": true,
+      "unexplained": 0
+     }
+    }
+   }
+  },
+  {
+   "seed": "0x5eed0006",
+   "seconds": 121.1,
+   "curve_layers": {
+    "executor": "passed",
+    "witness": "passed",
+    "columns_surviving": {
+     "vesta-add": 0,
+     "vesta-double": 0,
+     "pallas-add": 0,
+     "pallas-double": 0
+    }
+   },
+   "poseidon": {
+    "pallas": {
+     "p1": {
+      "disagreements": 0,
+      "edge_cases": 5,
+      "inputs": 68,
+      "panics": 0,
+      "random_canonical": 32,
+      "random_noncanonical": 31
+     },
+     "p2": {
+      "events": 32,
+      "honest_rows_satisfy_air": true,
+      "round_rows_checked": 1760
+     },
+     "p3": {
+      "round_rows": [
+       0,
+       37,
+       54,
+       55
+      ],
+      "round_surviving_by_field": {
+       "clk_high": 4,
+       "clk_low": 4,
+       "state_addr": 12
+      },
+      "control_surviving_by_field": {
+       "final_memory_access": 96,
+       "final_state": 186,
+       "initial_memory_access": 192
+      }
+     },
+     "p4": {
+      "memory_only_field": 0,
+      "memory_only_fields": [
+       "final_memory_access"
+      ],
+      "mutations": 64,
+      "rejected_by_air": 59,
+      "rejected_by_chain": 5,
+      "relabelled_round_rejected": true,
+      "swapped_outputs_rejected": true,
+      "unexplained": 0
+     }
+    },
+    "vesta": {
+     "p1": {
+      "disagreements": 0,
+      "edge_cases": 5,
+      "inputs": 69,
+      "panics": 0,
+      "random_canonical": 32,
+      "random_noncanonical": 32
+     },
+     "p2": {
+      "events": 32,
+      "honest_rows_satisfy_air": true,
+      "round_rows_checked": 1760
+     },
+     "p3": {
+      "round_rows": [
+       0,
+       51,
+       54,
+       55
+      ],
+      "round_surviving_by_field": {
+       "clk_high": 4,
+       "clk_low": 4,
+       "state_addr": 12
+      },
+      "control_surviving_by_field": {
+       "final_memory_access": 96,
+       "final_state": 186,
+       "initial_memory_access": 192
+      }
+     },
+     "p4": {
+      "memory_only_field": 3,
+      "memory_only_fields": [
+       "final_memory_access"
+      ],
+      "mutations": 64,
+      "rejected_by_air": 52,
+      "rejected_by_chain": 9,
+      "relabelled_round_rejected": true,
+      "swapped_outputs_rejected": true,
+      "unexplained": 0
+     }
+    }
+   }
+  },
+  {
+   "seed": "0x5eed0007",
+   "seconds": 121.2,
+   "curve_layers": {
+    "executor": "passed",
+    "witness": "passed",
+    "columns_surviving": {
+     "vesta-add": 0,
+     "vesta-double": 0,
+     "pallas-add": 0,
+     "pallas-double": 0
+    }
+   },
+   "poseidon": {
+    "pallas": {
+     "p1": {
+      "disagreements": 0,
+      "edge_cases": 5,
+      "inputs": 69,
+      "panics": 0,
+      "random_canonical": 32,
+      "random_noncanonical": 32
+     },
+     "p2": {
+      "events": 32,
+      "honest_rows_satisfy_air": true,
+      "round_rows_checked": 1760
+     },
+     "p3": {
+      "round_rows": [
+       0,
+       38,
+       54,
+       55
+      ],
+      "round_surviving_by_field": {
+       "clk_high": 4,
+       "clk_low": 4,
+       "state_addr": 12
+      },
+      "control_surviving_by_field": {
+       "final_memory_access": 96,
+       "final_state": 186,
+       "initial_memory_access": 192
+      }
+     },
+     "p4": {
+      "memory_only_field": 1,
+      "memory_only_fields": [
+       "final_memory_access"
+      ],
+      "mutations": 64,
+      "rejected_by_air": 52,
+      "rejected_by_chain": 11,
+      "relabelled_round_rejected": true,
+      "swapped_outputs_rejected": true,
+      "unexplained": 0
+     }
+    },
+    "vesta": {
+     "p1": {
+      "disagreements": 0,
+      "edge_cases": 5,
+      "inputs": 69,
+      "panics": 0,
+      "random_canonical": 32,
+      "random_noncanonical": 32
+     },
+     "p2": {
+      "events": 32,
+      "honest_rows_satisfy_air": true,
+      "round_rows_checked": 1760
+     },
+     "p3": {
+      "round_rows": [
+       0,
+       5,
+       54,
+       55
+      ],
+      "round_surviving_by_field": {
+       "clk_high": 4,
+       "clk_low": 4,
+       "state_addr": 12
+      },
+      "control_surviving_by_field": {
+       "final_memory_access": 96,
+       "final_state": 186,
+       "initial_memory_access": 192
+      }
+     },
+     "p4": {
+      "memory_only_field": 0,
+      "memory_only_fields": [
+       "final_memory_access"
+      ],
+      "mutations": 64,
+      "rejected_by_air": 57,
+      "rejected_by_chain": 7,
+      "relabelled_round_rejected": true,
+      "swapped_outputs_rejected": true,
+      "unexplained": 0
+     }
+    }
+   }
+  }
+ ],
+ "artifact_sha256": {
+  "pasta-fuzz-poseidon-5/result.json": "ff29c181ed0bafa176a03c53dd1d8bd2e88a669916b018cdac9f7012cc2f6f79",
+  "pasta-fuzz-poseidon-6/result.json": "6329f9e6fe7519de08f249d66d4c91bf7f40e263cabbd5cef22e0dcac9aa55b7",
+  "pasta-fuzz-poseidon-7/result.json": "8f3b482e042f42199f694011614401e812e9a7ed2f66aee68d7dd2f9de2583a5"
+ }
+}

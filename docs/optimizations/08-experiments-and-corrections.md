@@ -48,6 +48,11 @@ All candidate cycle figures above are historical receipt-ABI measurements.
 - r124 replaces cross-host SP1 timing attribution with a matched-host comparison.
 - r125 corrects r126 despite the numerical round order. Round numbers alone are
   not a chronology or a dependency graph.
+- The first `pasta-fuzz` run (2026-11-10) reported three seeds but ran one: the
+  seed parser read decimal only and hex seeds fell back to the default. The
+  parser now accepts `0x` values and fails on bad input; the second run in the
+  [verification plan](../pasta-air-verification-plan.md) is the first with
+  distinct seeds.
 
 The [catalog](../../benchmarks/optimization-history.json) preserves these
 relationships and hashes of the original evidence. A future attempt should cite
@@ -93,7 +98,11 @@ Assessed 2026-11-10 against the retained boolean guest under the promoted
   bucket, and r108 measured that grouping at +74.7M to +78.3M cycles with
   existing single adds. Revisit only if a measured per-chip split shows the
   adds' Global share is large.
-- **Poseidon permutation chip: still worthwhile, not built here.** r110
+- **Poseidon permutation chip: built later the same day** as
+  [`mizu-pasta-poseidon-precompile`](04-poseidon.md#mizu-pasta-poseidon-precompile-the-kimchi-permutation-as-one-syscall)
+  (−6.62% cycles, −5.22% main cells against the Pasta Fp control; 25.95M cells
+  for the new chips, close to the estimate below). The assessment as written
+  before it was built: r110
   measured about 11.0M guest cycles (7.7%) for the 229 permutations, with
   264,495 field multiplications. A round-per-row chip linked by interactions
   needs about 12,600 rows of roughly 2,600 columns (~33M cells), against an
