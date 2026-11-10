@@ -54,6 +54,7 @@ example's historical 142,692,323-cycle result is recorded separately in
 Read [the module map](docs/modules.md), [upstream sync guide](dependencies/README.md),
 the [dependency and optimization inventory](docs/dependencies-and-optimizations.md),
 [optimization work records by area](docs/optimizations/README.md),
+[the fuzzing reference](docs/fuzzing.md),
 [changed-file list](docs/file-changes.md), and [receipt example](examples/settlement/README.md). Full historical runs and
 retired applications are recoverable from the external consolidation archive.
 

@@ -160,7 +160,7 @@ for every real addition, not just for the one-event `witness-digest` fixtures.
   and Poseidon P4), `crates/cycle-runner/src/bin/verifier-fuzz.rs` (new
   binary), `crates/pickles-verifier/tests/canonical_words_fuzz.rs` (new test).
   No fork change, so the pins are unmoved.
-- **Implementation identity:** root commits `568c696` (harness) and `1c124a8`
+- **Implementation identity:** root commits `568c696` (harness) and `17a5628`
   (native harnesses) on `codex/zakura-ragu`, over the fork pins of
   `mizu-pasta-poseidon-precompile` (SP1 `a418319a0`, proof-systems
   `ddb617200`), which this work does not touch. The measurements come from
@@ -310,5 +310,6 @@ for every real addition, not just for the one-event `witness-digest` fixtures.
 - **Source provenance:** [pasta-fuzz expansion
   summary](../../benchmarks/pasta-fuzz-expansion-sp1-6.10.json) and [verifier
   mutation summary](../../benchmarks/verifier-mutation-fuzz.json), both with
-  the raw report hashes.
+  the raw report hashes. [The fuzzing reference](../fuzzing.md) collects what
+  every layer covers, how to run it and what it does not cover.
 - **Upstream sync:** none. No fork file changed, so there is nothing to replay.

@@ -135,7 +135,9 @@ fits here.
 ## Differential fuzzing (runs now, and stays after the proofs)
 
 Fuzzing finds bugs fast and keeps finding regressions after the proofs land.
-Every layer below except F5 and F6 is implemented. The curve layers F1 to F4,
+Every layer below except F5 and F6 is implemented. [The fuzzing
+reference](fuzzing.md) is the operator's view of the same layers: what each one
+covers, how to run it, what makes a run fail and what none of it covers. The curve layers F1 to F4,
 the Poseidon layers P1 to P4, the fixed-modulus field layers FP1 to FP4, the
 multi-row and forgery layers C1 and C2 and the executor differential D1 and D2
 are the harness's `pasta-fuzz` mode; V1 and V2 are the native verifier harness
