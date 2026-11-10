@@ -216,7 +216,9 @@ not by preserving the original experimental commit history.
   `pasta-uint`; the next GPU run's manifest,
   `benchmarks/gpu/next-core-proof-manifest.json`, makes `retain-pasta-and-uint`
   its primary arm with default routing as the control. Its spending cap is 0:
-  it grants nothing until the user sets one. It also needs the expected
+  it grants nothing until the user sets one. The drivers that run it on a
+  rented pod, and the measured costs behind their choices, are in
+  [the rented-GPU runbook](../gpu-run-on-runpod.md). It also needs the expected
   `public-values.bin` (one byte `01`) in its input directory.
 - **Result (current boolean guest):** records 148 → 82, main cells
   43,922,703,280 → 27,839,873,136 (−36.6%), Global interaction events −46.9%,

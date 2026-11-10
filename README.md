@@ -55,6 +55,7 @@ Read [the module map](docs/modules.md), [upstream sync guide](dependencies/READM
 the [dependency and optimization inventory](docs/dependencies-and-optimizations.md),
 [optimization work records by area](docs/optimizations/README.md),
 [the fuzzing reference](docs/fuzzing.md),
+[the rented-GPU runbook](docs/gpu-run-on-runpod.md),
 [changed-file list](docs/file-changes.md), and [receipt example](examples/settlement/README.md). Full historical runs and
 retired applications are recoverable from the external consolidation archive.
 
