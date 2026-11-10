@@ -36,6 +36,16 @@ verification targets:
   the limb polynomials (`eval_with_polynomials`, `eval_field_operation`).
 - **`FieldLtCols`**: the canonical-output range check `x3, y3 < p`.
 
+The Poseidon permutation chips added on 2026-11-10 (`PastaPoseidonRoundCols`,
+`PastaPoseidonControlCols`, at both Pasta base fields and both trust modes)
+widen this scope: the round chip composes `FieldOpCols` (four multiplications
+for `x^7`) with a four-term `FieldInnerProductCols` whose witness offset is
+`2^15`, and its 55 rows are linked by a chip-local lookup chain rather than by
+row algebra. The limb-identity lemma must therefore be proved at the larger
+offset and for the n-term inner product, and the chain becomes a stated
+interaction assumption like the memory bindings below. Their harness mode is
+`pasta-poseidon-check` (`docs/optimizations/04-poseidon.md`).
+
 Out of scope for proofs: SP1's lookup and memory arguments, the recursion
 verifier, the executor, and the guest's MSM logic. Interactions are treated as
 stated assumptions (below), and argued by SP1's own soundness.
