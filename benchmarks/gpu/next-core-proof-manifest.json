@@ -21,8 +21,8 @@
   "max_log_row_count": 22
  },
  "authorization": {
-  "total_usd_cap": 0.0,
-  "note": "Template. This file grants no spending or proving permission; the user sets a cap before any rental."
+  "total_usd_cap": 2.0,
+  "note": "Authorized by the user in session on 2026-11-10: $2.00 total, covering setup, builds, failed attempts, compute, storage and transfer. No earlier cap applies and it was not raised."
  },
  "arms": [
   {
