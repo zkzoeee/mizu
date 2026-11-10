@@ -1,0 +1,342 @@
+{
+  "schema": "mizu-channel-depth-sweep/1",
+  "id": "mizu-record-channel-depth",
+  "captured": "2026-11-10T17:33:00Z",
+  "question": "A single proof is bounded by neither side's work but by the handshake between them: at PASTA_R5_INFLIGHT=2 the producer blocked ~72 s on a full channel while the prover starved ~41 s on an empty one. Does a deeper channel buy wall clock, and where is the knee?",
+  "answer": "Yes. Depth 8 is -16.2% of wall (160.67 s -> 134.67 s) against a within-side spread of 0.8-0.9%, with starvation collapsing from 41.5 s to under 1.2 s. 16 is indistinguishable from 8 (-0.7%); 32 is worse (+2.0%). The default is now 8.",
+  "method": "Six passes on one pod, one arm, same binary, same statement, interleaved 2/8/2/8 and then 16, 32 \u2014 r124's discipline, so host drift shows up as within-side spread rather than as the effect. Only PASTA_R5_INFLIGHT varied.",
+  "host": {
+    "pod_id": "re9fy8hs6yx5gj",
+    "cloud": "SECURE",
+    "data_center": "EU-SE-1",
+    "gpu": "NVIDIA A40",
+    "gpu_memory_total": "46068 MiB",
+    "compute_cap": "8.6",
+    "driver": "595.91.07",
+    "cpu_model": "Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz",
+    "vcpu_allocated": 9,
+    "ram_allocated_gb": 50,
+    "image": "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404"
+  },
+  "passes": [
+    {
+      "tag": "inflight2-pass0 (driver pass, also verified from disk)",
+      "depth": 2,
+      "total_s": 161.3821159,
+      "executor_s": 152.7090132,
+      "gpu_prove_s": 135.886871356,
+      "gpu_setup_s": 7.156719966,
+      "producer_blocked_s": 71.682157839,
+      "producer_on_record_s": 73.104314361,
+      "producer_deps_s": 45.57110260700001,
+      "consumer_starved_s": 41.45260380399999,
+      "consumer_proving_s": 94.43418889999998,
+      "consumer_max_in_flight": 1,
+      "shards": 82,
+      "proof_bytes": 132029932,
+      "accepted": true,
+      "telemetry": {
+        "samples": 807,
+        "span_s": 161.7,
+        "gpu_busy_s": 68.1,
+        "gpu_idle_s": 93.6,
+        "gpu_idle_pct": 57.9,
+        "util_mean_pct": 42.1,
+        "util_median_pct": 10,
+        "peak_vram_mib": 18991
+      }
+    },
+    {
+      "tag": "inflight8-pass1",
+      "depth": 8,
+      "total_s": 134.157783577,
+      "executor_s": 124.989823757,
+      "gpu_prove_s": 107.7389539,
+      "gpu_setup_s": 7.081350487,
+      "producer_blocked_s": 47.949005168,
+      "producer_on_record_s": 32.065303438,
+      "producer_deps_s": 51.16989602300001,
+      "consumer_starved_s": 0.760716078,
+      "consumer_proving_s": 106.97812895400004,
+      "consumer_max_in_flight": 1,
+      "shards": 82,
+      "proof_bytes": 132029932,
+      "accepted": true,
+      "telemetry": {
+        "samples": 674,
+        "span_s": 135.0,
+        "gpu_busy_s": 68.6,
+        "gpu_idle_s": 66.4,
+        "gpu_idle_pct": 49.2,
+        "util_mean_pct": 50.8,
+        "util_median_pct": 64,
+        "peak_vram_mib": 18991
+      }
+    },
+    {
+      "tag": "inflight2-pass2",
+      "depth": 2,
+      "total_s": 159.960477558,
+      "executor_s": 151.376528958,
+      "gpu_prove_s": 135.266278577,
+      "gpu_setup_s": 7.375483705,
+      "producer_blocked_s": 69.983983729,
+      "producer_on_record_s": 72.52274610700002,
+      "producer_deps_s": 44.846534362999996,
+      "consumer_starved_s": 41.50748860800003,
+      "consumer_proving_s": 93.75869702599998,
+      "consumer_max_in_flight": 1,
+      "shards": 82,
+      "proof_bytes": 132029932,
+      "accepted": true,
+      "telemetry": {
+        "samples": 801,
+        "span_s": 160.5,
+        "gpu_busy_s": 69.5,
+        "gpu_idle_s": 91.0,
+        "gpu_idle_pct": 56.7,
+        "util_mean_pct": 43.2,
+        "util_median_pct": 14,
+        "peak_vram_mib": 18991
+      }
+    },
+    {
+      "tag": "inflight8-pass3",
+      "depth": 8,
+      "total_s": 135.17795085,
+      "executor_s": 126.639778368,
+      "gpu_prove_s": 109.408637402,
+      "gpu_setup_s": 7.182835648,
+      "producer_blocked_s": 49.067429442,
+      "producer_on_record_s": 33.47154997199999,
+      "producer_deps_s": 51.571895262000005,
+      "consumer_starved_s": 1.1413421789999998,
+      "consumer_proving_s": 108.267232669,
+      "consumer_max_in_flight": 1,
+      "shards": 82,
+      "proof_bytes": 132029932,
+      "accepted": true,
+      "telemetry": {
+        "samples": 677,
+        "span_s": 135.6,
+        "gpu_busy_s": 68.6,
+        "gpu_idle_s": 67.1,
+        "gpu_idle_pct": 49.5,
+        "util_mean_pct": 50.5,
+        "util_median_pct": 65,
+        "peak_vram_mib": 18991
+      }
+    },
+    {
+      "tag": "inflight16-pass1",
+      "depth": 16,
+      "total_s": 133.694684635,
+      "executor_s": 125.830609488,
+      "gpu_prove_s": 109.128628019,
+      "gpu_setup_s": 8.07812186,
+      "producer_blocked_s": 38.044281035,
+      "producer_on_record_s": 21.207671206000004,
+      "producer_deps_s": 53.11478338599999,
+      "consumer_starved_s": 1.0657770830000006,
+      "consumer_proving_s": 108.06273858200001,
+      "consumer_max_in_flight": 1,
+      "shards": 82,
+      "proof_bytes": 132029932,
+      "accepted": true,
+      "telemetry": {
+        "samples": 672,
+        "span_s": 134.6,
+        "gpu_busy_s": 68.5,
+        "gpu_idle_s": 66.0,
+        "gpu_idle_pct": 49.1,
+        "util_mean_pct": 50.9,
+        "util_median_pct": 59,
+        "peak_vram_mib": 18991
+      }
+    },
+    {
+      "tag": "inflight32-pass2",
+      "depth": 32,
+      "total_s": 137.428413374,
+      "executor_s": 128.584357552,
+      "gpu_prove_s": 112.157270891,
+      "gpu_setup_s": 7.285809299,
+      "producer_blocked_s": 29.508530296,
+      "producer_on_record_s": 9.166734939,
+      "producer_deps_s": 50.544090720999996,
+      "consumer_starved_s": 0.625665391,
+      "consumer_proving_s": 111.53151519499997,
+      "consumer_max_in_flight": 1,
+      "shards": 82,
+      "proof_bytes": 132029932,
+      "accepted": true,
+      "telemetry": {
+        "samples": 688,
+        "span_s": 138.4,
+        "gpu_busy_s": 68.0,
+        "gpu_idle_s": 70.4,
+        "gpu_idle_pct": 50.9,
+        "util_mean_pct": 49.0,
+        "util_median_pct": 50,
+        "peak_vram_mib": 19258
+      }
+    }
+  ],
+  "means_by_depth_seconds": {
+    "2": 160.67,
+    "8": 134.67,
+    "16": 133.69,
+    "32": 137.43
+  },
+  "spread_by_depth_seconds": {
+    "2": 1.42,
+    "8": 1.02
+  },
+  "deltas": {
+    "2_to_8_pct": -16.2,
+    "8_to_16_pct": -0.7,
+    "8_to_32_pct": 2.0
+  },
+  "mechanism": {
+    "consumer_starved_s": {
+      "depth2": [
+        41.45,
+        41.51
+      ],
+      "depth8": [
+        0.76,
+        1.14
+      ],
+      "depth16": [
+        1.07
+      ],
+      "depth32": [
+        0.63
+      ]
+    },
+    "producer_on_record_s": {
+      "depth2": [
+        73.1,
+        72.52
+      ],
+      "depth8": [
+        32.07,
+        33.47
+      ],
+      "depth16": [
+        21.21
+      ],
+      "depth32": [
+        9.17
+      ]
+    },
+    "consumer_proving_s": {
+      "depth2": [
+        94.43,
+        93.76
+      ],
+      "depth8": [
+        106.98,
+        108.27
+      ],
+      "depth16": [
+        108.06
+      ],
+      "depth32": [
+        111.53
+      ]
+    },
+    "reading": "Starvation dies at depth 8 and stays dead. Producer blocking keeps falling monotonically past 8 (73 -> 33 -> 21 -> 9 s) but buys no more wall, because the consumer is then continuously busy and is the critical path: proving occupies 107-112 s of a 134 s wall. At 32 the extra buffering costs a little wall back."
+  },
+  "device_time_is_not_consumer_time": {
+    "gpu_busy_s_by_depth": {
+      "2": [
+        68.1,
+        69.5
+      ],
+      "8": [
+        68.6,
+        68.6
+      ],
+      "16": [
+        68.5
+      ],
+      "32": [
+        68.0
+      ]
+    },
+    "gpu_idle_pct_by_depth": {
+      "2": [
+        57.9,
+        56.7
+      ],
+      "8": [
+        49.2,
+        49.5
+      ],
+      "16": [
+        49.1
+      ],
+      "32": [
+        50.9
+      ]
+    },
+    "util_median_pct_by_depth": {
+      "2": [
+        10,
+        14
+      ],
+      "8": [
+        64,
+        65
+      ],
+      "16": [
+        59
+      ],
+      "32": [
+        50
+      ]
+    },
+    "reading": "Device busy time is constant at 68-69 s, as it must be for identical work; what changed is how much of the wall it occupies. The card still idles ~49% at the best depth, so the ~40 s gap between consumer_proving (108 s) and device busy (68.5 s) is host-side prover work, not kernels. This weakens, without reversing, the earlier 'do not buy a bigger GPU': device time is now 51% of wall where it was 42%."
+  },
+  "correctness": {
+    "passes": 6,
+    "all_accepted": true,
+    "shards": [
+      82
+    ],
+    "proof_bytes": [
+      132029932
+    ],
+    "peak_vram_mib": [
+      18991,
+      19258
+    ],
+    "note": "82 shards and 132,029,932 proof bytes at every depth, and the driver pass was also reloaded from disk and accepted with the key derived from the pinned ELF. Channel depth changes scheduling, not the proof. Peak VRAM is unchanged: the buffer is host memory."
+  },
+  "cost": {
+    "authorized_usd_cap": 2.0,
+    "rate_usd_per_hour": 0.59,
+    "pod_life_minutes": 41.5,
+    "estimated_usd": 0.41,
+    "creates_refused_before_one_landed": 2,
+    "pods_remaining": 0,
+    "watchdog_fired": false
+  },
+  "limits": [
+    "One host, one arm, one card. 16 and 32 have a single pass each, so their small deltas carry no spread.",
+    "The 2 -> 8 result is two passes a side; r124's measured spread for this workload is 2.6-4.2%, and this sweep's own within-side spread was 0.8-0.9%.",
+    "No off-pod verification this run: proof bytes were left on the pod by request.",
+    "Dependency batching (wazabi PASTA_DEPS_BATCH) does not exist in this tree and is untested here; r128 argues it and channel depth are complements."
+  ],
+  "evidence": {
+    "receipts_directory": "benchmarks/gpu/runs/20261110T1655Z-inflight-sweep",
+    "receipt_hashes": {
+      "sweep-summary.jsonl": "3d128a402efdbcc8bc09febf9cc5ba7b2c78352738e99d585a0b37d3dd96050d",
+      "retain-pasta-and-uint/result.json": "c407845a507093e267eba9b3df473ba6065099b3a65eda5d7806115f2153d384",
+      "build-identity.json": "3ac2b388243db65776f88930af7a778662158a28aaac1cff69961535b4e73f2b",
+      "sweep.log": "46de25ec61c09db9c4dbfc3622c7aa4af503fbfa540044002bfa255ea5a9caae",
+      "run.log": "9b6bdc8cf96d1f4677321d981d8ff4fc5e12cba151d72db0f0590c6656c85020"
+    }
+  }
+}

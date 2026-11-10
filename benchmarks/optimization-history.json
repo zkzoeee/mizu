@@ -21509,6 +21509,63 @@
         "creates_refused_before_one_landed": 9,
         "pods_remaining": 0
       }
+    },
+    {
+      "id": "mizu-record-channel-depth",
+      "owner": "o1js-to-zkvm",
+      "status": "retained",
+      "document": "docs/optimizations/06-sp1-runtime-and-proving.md",
+      "predecessor": "mizu-gpu-core-proof-a40",
+      "settles": "wazabi r128's untested item: whether a deeper record channel recovers the blocked time",
+      "retained_default": true,
+      "setting": "PASTA_R5_INFLIGHT=8",
+      "proof_generated": true,
+      "evidence": "benchmarks/gpu-inflight-sweep-a40-sp1-6.10.json",
+      "evidence_sha256": "dab7db88b94db562c8a19abd8bea68c88b927a09e267b73c3da1b08281a804a0",
+      "receipts_directory": "benchmarks/gpu/runs/20261110T1655Z-inflight-sweep",
+      "hardware": "RunPod SECURE EU-SE-1, NVIDIA A40, Intel Xeon Gold 6342 @ 2.80GHz, 9 vCPU",
+      "measurements": {
+        "method": "six passes, interleaved 2/8/2/8 then 16 and 32, one pod, one arm",
+        "wall_mean_seconds": {
+          "2": 160.67,
+          "8": 134.67,
+          "16": 133.69,
+          "32": 137.43
+        },
+        "within_side_spread_seconds": {
+          "2": 1.42,
+          "8": 1.02
+        },
+        "delta_2_to_8_pct": -16.2,
+        "delta_8_to_16_pct": -0.7,
+        "delta_8_to_32_pct": 2.0,
+        "consumer_starved_seconds": {
+          "2": 41.5,
+          "8": 1.0,
+          "16": 1.1,
+          "32": 0.6
+        },
+        "gpu_busy_seconds_constant": 68.6,
+        "gpu_idle_pct": {
+          "2": 57.3,
+          "8": 49.4,
+          "16": 49.1,
+          "32": 50.9
+        },
+        "shards": 82,
+        "proof_bytes": 132029932,
+        "peak_vram_mib": 18991
+      },
+      "qualifies": [
+        "r120/r123: 'the GPU is idle, so a faster card buys nothing' holds at depth 2 and is weaker at depth 8 (device time 42% -> 51% of wall)",
+        "this session's claim that the executor's ~155 s was irreducible work"
+      ],
+      "cost": {
+        "rate_usd_per_hour": 0.59,
+        "pod_life_minutes": 41.5,
+        "estimated_usd": 0.41,
+        "pods_remaining": 0
+      }
     }
   ],
   "mizu_workflows": [

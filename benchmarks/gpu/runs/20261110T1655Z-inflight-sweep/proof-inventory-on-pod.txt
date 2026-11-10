@@ -1,0 +1,12 @@
+685ff88813dfdfac86f4727cacceda57cb116d4d4cd901b85b07d8b0ef54ef8e  ./retain-pasta-and-uint/retain-pasta-and-uint.proof.bin
+-rw-r--r-- 1 root root 132029932 Nov 10 17:06 ./retain-pasta-and-uint/retain-pasta-and-uint.proof.bin
+2baf1e8d8d2762186eafe558b452ecd144df3828eb47367bde66d04d759b27dc  ./sweep-inflight8-pass1/retain-pasta-and-uint.proof.bin
+-rw-r--r-- 1 root root 132029932 Nov 10 17:09 ./sweep-inflight8-pass1/retain-pasta-and-uint.proof.bin
+d21d0d7f3e5d0bfcd58fce69598891d0e79bb99fc0651f00b0376f6ac43bbfaf  ./sweep-inflight2-pass2/retain-pasta-and-uint.proof.bin
+-rw-r--r-- 1 root root 132029932 Nov 10 17:12 ./sweep-inflight2-pass2/retain-pasta-and-uint.proof.bin
+b1c3a8120af3a0f2e58de4fbde142ca00f225d84a4aa0c1b50ff2f68ccfd7631  ./sweep-inflight8-pass3/retain-pasta-and-uint.proof.bin
+-rw-r--r-- 1 root root 132029932 Nov 10 17:14 ./sweep-inflight8-pass3/retain-pasta-and-uint.proof.bin
+4476223441b5dd9d5ca6df993552fb8c888f92732e6e7d1608583b8395913b75  ./sweep-inflight16-pass1/retain-pasta-and-uint.proof.bin
+-rw-r--r-- 1 root root 132029932 Nov 10 17:29 ./sweep-inflight16-pass1/retain-pasta-and-uint.proof.bin
+621f1c28ccfe6940a661d9869b8d3b06b01fed202c5c31757f30521f614c43dd  ./sweep-inflight32-pass2/retain-pasta-and-uint.proof.bin
+-rw-r--r-- 1 root root 132029932 Nov 10 17:31 ./sweep-inflight32-pass2/retain-pasta-and-uint.proof.bin

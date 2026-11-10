@@ -1,0 +1,145 @@
+=== pass 1: PASTA_R5_INFLIGHT=8 2026-11-10T17:07:34Z ===
+}
+CORE_PROOF_PASSED
+	Command being timed: "/workspace/bin/pasta-precompile-proof-6-10 --mode manifest-core-gpu --manifest /workspace/mizu/gpu/run-manifest.json --arm retain-pasta-and-uint --elf /workspace/mizu/gpu/elf/guest-program --input /workspace/mizu/gpu/input --output /workspace/results/sweep-inflight8-pass1"
+	User time (seconds): 530.30
+	System time (seconds): 53.57
+	Percent of CPU this job got: 432%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:15.10
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 21749556
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 26071086
+	Voluntary context switches: 32821
+	Involuntary context switches: 5390
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 257896
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+{"tag": "inflight8-pass1", "depth": 8, "total_s": 134.157783577, "executor_s": 124.989823757, "gpu_prove_s": 107.7389539, "gpu_setup_s": 7.081350487, "producer_blocked_s": 47.949005168, "producer_on_record_s": 32.065303438, "producer_deps_s": 51.16989602300001, "consumer_starved_s": 0.760716078, "consumer_proving_s": 106.97812895400004, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}
+=== pass 2: PASTA_R5_INFLIGHT=2 2026-11-10T17:09:50Z ===
+}
+CORE_PROOF_PASSED
+	Command being timed: "/workspace/bin/pasta-precompile-proof-6-10 --mode manifest-core-gpu --manifest /workspace/mizu/gpu/run-manifest.json --arm retain-pasta-and-uint --elf /workspace/mizu/gpu/elf/guest-program --input /workspace/mizu/gpu/input --output /workspace/results/sweep-inflight2-pass2"
+	User time (seconds): 523.76
+	System time (seconds): 49.56
+	Percent of CPU this job got: 357%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:40.58
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 17182444
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 24846597
+	Voluntary context switches: 32812
+	Involuntary context switches: 4886
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 257896
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+{"tag": "inflight2-pass2", "depth": 2, "total_s": 159.960477558, "executor_s": 151.376528958, "gpu_prove_s": 135.266278577, "gpu_setup_s": 7.375483705, "producer_blocked_s": 69.983983729, "producer_on_record_s": 72.52274610700002, "producer_deps_s": 44.846534362999996, "consumer_starved_s": 41.50748860800003, "consumer_proving_s": 93.75869702599998, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}
+=== pass 3: PASTA_R5_INFLIGHT=8 2026-11-10T17:12:30Z ===
+}
+CORE_PROOF_PASSED
+	Command being timed: "/workspace/bin/pasta-precompile-proof-6-10 --mode manifest-core-gpu --manifest /workspace/mizu/gpu/run-manifest.json --arm retain-pasta-and-uint --elf /workspace/mizu/gpu/elf/guest-program --input /workspace/mizu/gpu/input --output /workspace/results/sweep-inflight8-pass3"
+	User time (seconds): 529.29
+	System time (seconds): 49.94
+	Percent of CPU this job got: 426%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:15.79
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 21849332
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 24400531
+	Voluntary context switches: 34811
+	Involuntary context switches: 4778
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 257896
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+{"tag": "inflight8-pass3", "depth": 8, "total_s": 135.17795085, "executor_s": 126.639778368, "gpu_prove_s": 109.408637402, "gpu_setup_s": 7.182835648, "producer_blocked_s": 49.067429442, "producer_on_record_s": 33.47154997199999, "producer_deps_s": 51.571895262000005, "consumer_starved_s": 1.1413421789999998, "consumer_proving_s": 108.267232669, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}
+=== sweep finished 2026-11-10T17:14:46Z ===
+{"tag": "inflight8-pass1", "depth": 8, "total_s": 134.157783577, "executor_s": 124.989823757, "gpu_prove_s": 107.7389539, "gpu_setup_s": 7.081350487, "producer_blocked_s": 47.949005168, "producer_on_record_s": 32.065303438, "producer_deps_s": 51.16989602300001, "consumer_starved_s": 0.760716078, "consumer_proving_s": 106.97812895400004, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}
+{"tag": "inflight2-pass2", "depth": 2, "total_s": 159.960477558, "executor_s": 151.376528958, "gpu_prove_s": 135.266278577, "gpu_setup_s": 7.375483705, "producer_blocked_s": 69.983983729, "producer_on_record_s": 72.52274610700002, "producer_deps_s": 44.846534362999996, "consumer_starved_s": 41.50748860800003, "consumer_proving_s": 93.75869702599998, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}
+{"tag": "inflight8-pass3", "depth": 8, "total_s": 135.17795085, "executor_s": 126.639778368, "gpu_prove_s": 109.408637402, "gpu_setup_s": 7.182835648, "producer_blocked_s": 49.067429442, "producer_on_record_s": 33.47154997199999, "producer_deps_s": 51.571895262000005, "consumer_starved_s": 1.1413421789999998, "consumer_proving_s": 108.267232669, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}
+=== pass 1: PASTA_R5_INFLIGHT=16 2026-11-10T17:27:03Z ===
+}
+CORE_PROOF_PASSED
+	Command being timed: "/workspace/bin/pasta-precompile-proof-6-10 --mode manifest-core-gpu --manifest /workspace/mizu/gpu/run-manifest.json --arm retain-pasta-and-uint --elf /workspace/mizu/gpu/elf/guest-program --input /workspace/mizu/gpu/input --output /workspace/results/sweep-inflight16-pass1"
+	User time (seconds): 536.62
+	System time (seconds): 61.90
+	Percent of CPU this job got: 444%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:14.63
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 27832664
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 29613345
+	Voluntary context switches: 32395
+	Involuntary context switches: 5431
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 257896
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+{"tag": "inflight16-pass1", "depth": 16, "total_s": 133.694684635, "executor_s": 125.830609488, "gpu_prove_s": 109.128628019, "gpu_setup_s": 8.07812186, "producer_blocked_s": 38.044281035, "producer_on_record_s": 21.207671206000004, "producer_deps_s": 53.11478338599999, "consumer_starved_s": 1.0657770830000006, "consumer_proving_s": 108.06273858200001, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}
+=== pass 2: PASTA_R5_INFLIGHT=32 2026-11-10T17:29:18Z ===
+}
+CORE_PROOF_PASSED
+	Command being timed: "/workspace/bin/pasta-precompile-proof-6-10 --mode manifest-core-gpu --manifest /workspace/mizu/gpu/run-manifest.json --arm retain-pasta-and-uint --elf /workspace/mizu/gpu/elf/guest-program --input /workspace/mizu/gpu/input --output /workspace/results/sweep-inflight32-pass2"
+	User time (seconds): 535.28
+	System time (seconds): 61.50
+	Percent of CPU this job got: 430%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:18.51
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 34740692
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 29922267
+	Voluntary context switches: 33053
+	Involuntary context switches: 5201
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 257896
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+{"tag": "inflight32-pass2", "depth": 32, "total_s": 137.428413374, "executor_s": 128.584357552, "gpu_prove_s": 112.157270891, "gpu_setup_s": 7.285809299, "producer_blocked_s": 29.508530296, "producer_on_record_s": 9.166734939, "producer_deps_s": 50.544090720999996, "consumer_starved_s": 0.625665391, "consumer_proving_s": 111.53151519499997, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}
+=== sweep finished 2026-11-10T17:31:37Z ===
+{"tag": "inflight8-pass1", "depth": 8, "total_s": 134.157783577, "executor_s": 124.989823757, "gpu_prove_s": 107.7389539, "gpu_setup_s": 7.081350487, "producer_blocked_s": 47.949005168, "producer_on_record_s": 32.065303438, "producer_deps_s": 51.16989602300001, "consumer_starved_s": 0.760716078, "consumer_proving_s": 106.97812895400004, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}
+{"tag": "inflight2-pass2", "depth": 2, "total_s": 159.960477558, "executor_s": 151.376528958, "gpu_prove_s": 135.266278577, "gpu_setup_s": 7.375483705, "producer_blocked_s": 69.983983729, "producer_on_record_s": 72.52274610700002, "producer_deps_s": 44.846534362999996, "consumer_starved_s": 41.50748860800003, "consumer_proving_s": 93.75869702599998, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}
+{"tag": "inflight8-pass3", "depth": 8, "total_s": 135.17795085, "executor_s": 126.639778368, "gpu_prove_s": 109.408637402, "gpu_setup_s": 7.182835648, "producer_blocked_s": 49.067429442, "producer_on_record_s": 33.47154997199999, "producer_deps_s": 51.571895262000005, "consumer_starved_s": 1.1413421789999998, "consumer_proving_s": 108.267232669, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}
+{"tag": "inflight16-pass1", "depth": 16, "total_s": 133.694684635, "executor_s": 125.830609488, "gpu_prove_s": 109.128628019, "gpu_setup_s": 8.07812186, "producer_blocked_s": 38.044281035, "producer_on_record_s": 21.207671206000004, "producer_deps_s": 53.11478338599999, "consumer_starved_s": 1.0657770830000006, "consumer_proving_s": 108.06273858200001, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}
+{"tag": "inflight32-pass2", "depth": 32, "total_s": 137.428413374, "executor_s": 128.584357552, "gpu_prove_s": 112.157270891, "gpu_setup_s": 7.285809299, "producer_blocked_s": 29.508530296, "producer_on_record_s": 9.166734939, "producer_deps_s": 50.544090720999996, "consumer_starved_s": 0.625665391, "consumer_proving_s": 111.53151519499997, "consumer_max_in_flight": 1, "shards": 82, "proof_bytes": 132029932, "accepted": true}

@@ -1,0 +1,2 @@
+685ff88813dfdfac86f4727cacceda57cb116d4d4cd901b85b07d8b0ef54ef8e  /workspace/results/retain-pasta-and-uint/retain-pasta-and-uint.proof.bin
+-rw-r--r-- 1 root root 132029932 Nov 10 17:06 /workspace/results/retain-pasta-and-uint/retain-pasta-and-uint.proof.bin

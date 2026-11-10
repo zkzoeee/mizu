@@ -569,10 +569,18 @@ async fn prove_core_gpu(
         !opts.full_size_shards,
         "full_size_shards requires separately validated GPU memory tuning"
     );
-    // Records buffered between producer and prover. Raised from 2 to 4: the
-    // pipelined producer runs ahead of the prover, and records live in host
-    // memory, not VRAM.
-    let inflight = env_usize("PASTA_R5_INFLIGHT", 4);
+    // Records buffered between producer and prover. **8, measured.**
+    //
+    // The depth is the whole handshake. At 2 the producer spent ~72 s blocked
+    // inside the consumer callback on a full channel while the prover starved
+    // ~41 s on an empty one, on a 161 s proof. An interleaved six-pass sweep
+    // on one A40 (2/8/2/8 then 16, 32) gives means of 160.67 s at depth 2 and
+    // 134.67 s at depth 8 — **-16.2%** against a within-side spread of 0.8-0.9%
+    // — with starvation collapsing from 41.5 s to under 1.2 s. 16 is
+    // indistinguishable from 8 (-0.7%) and 32 is worse (+2.0%), so 8 is the
+    // knee and the smaller buffer wins on host memory. Records live in host
+    // memory, not VRAM: peak VRAM was 18,991 MiB at every depth.
+    let inflight = env_usize("PASTA_R5_INFLIGHT", 8);
     // Shard proofs in flight at once. Each acquires one of the CUDA prover's
     // buffers before generating traces, so VRAM stays bounded by the worker
     // count; extra depth only overlaps host-side trace generation.

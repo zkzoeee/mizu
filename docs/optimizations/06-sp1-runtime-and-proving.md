@@ -359,3 +359,67 @@ verify mode now takes an optional `--arm`, and `pod-run.sh` verifies per proved
 arm. Evidence:
 [gpu-core-proof-a40-repeat-sp1-6.10.json](../../benchmarks/gpu-core-proof-a40-repeat-sp1-6.10.json),
 receipts in `benchmarks/gpu/runs/20261110T1436Z-a40-montreal`.
+
+## mizu-record-channel-depth: the record channel was the bottleneck, not either side
+
+- **Status:** retained. `PASTA_R5_INFLIGHT` now defaults to **8**, in the
+  harness and in the pod driver. No fork change, no fixture, ELF, FRI or
+  verifier change.
+- **Area and owner:** `tools/pasta-proof/src/gpu.rs` (the default),
+  `scripts/gpu/pod-run.sh` (the knob), `scripts/gpu/sweep-inflight.sh` (new).
+- **Implementation identity:** root `26171d4` plus this change, over the fork
+  pins of `mizu-pasta-poseidon-precompile`.
+- **Predecessors/corrections:** reads the receipts of
+  [mizu-gpu-core-proof-a40](#mizu-gpu-core-proof-a40-the-first-real-gpu-proof-from-this-repository)
+  and settles wazabi r128's open item ("that `PASTA_R5_INFLIGHT=8` recovers
+  r125's 23 s — that is now the obvious experiment and it is untested").
+- **Mechanism:** nothing about the proof changed; only how many records may sit
+  between the producer and the shard prover. At depth 2 the two halves
+  deadlocked against each other by turns — the producer spent ~72 s blocked
+  inside the consumer callback on a full channel while the prover starved ~41 s
+  on an empty one.
+- **Selection:** `PASTA_R5_INFLIGHT`, default 8, overridable. The sweep script
+  takes a list of depths and runs them interleaved.
+- **Control/candidate:** six passes, one pod (`re9fy8hs6yx5gj`, A40, EU-SE-1,
+  Xeon Gold 6342), one arm, same binary and statement, order **2 / 8 / 2 / 8**
+  then 16 and 32 — r124's alternation, so host drift lands in the within-side
+  spread rather than in the effect.
+
+| Depth | Wall (mean) | Spread | Starved | Producer in callback | Proving | Device busy | Device idle |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 | **160.67 s** | 1.42 s (0.9%) | 41.5 s | 72.8 s | 94.1 s | 68.8 s | 57% |
+| 8 | **134.67 s** | 1.02 s (0.8%) | 1.0 s | 32.8 s | 107.6 s | 68.6 s | 49% |
+| 16 | 133.69 s | — | 1.1 s | 21.2 s | 108.1 s | 68.5 s | 49% |
+| 32 | 137.43 s | — | 0.6 s | 9.2 s | 111.5 s | 68.0 s | 51% |
+
+- **Result:** **−16.2% of wall from 2 to 8**, against a within-side spread of
+  0.8–0.9%. 16 is indistinguishable from 8 (−0.7%) and 32 is worse (+2.0%), so
+  8 is the knee, and the smaller buffer is preferable at equal wall because the
+  records sit in host memory. Starvation collapses from 41.5 s to under 1.2 s
+  and stays dead. Producer blocking keeps falling monotonically past 8 (73 → 33
+  → 21 → 9 s) but buys nothing more, because the consumer is by then
+  continuously busy and *is* the critical path.
+- **Correctness evidence:** 82 shards and 132,029,932 proof bytes at every
+  depth, all six passes accepted by the complete verifier, and the driver's
+  pass additionally reloaded from disk in a fresh process under a key derived
+  from the pinned ELF. Peak VRAM 18,991 MiB at every depth: the buffer is host
+  memory, not device memory.
+- **Validation scope:** real CUDA core proofs on Linux, complete-execution
+  verification in process for all six and from disk for one. No recursion, no
+  wrap, no off-pod verification this run.
+- **Decision and limits:** retained as the default. **It also qualifies this
+  area's standing advice about the card.** Device busy time is constant at
+  68–69 s — identical work — but it now occupies 51% of the wall where it
+  occupied 42%, and the ~40 s gap between `consumer_proving` (108 s) and device
+  busy (68.5 s) is host-side prover work rather than kernels. So "do not buy a
+  bigger GPU" is weakened, not reversed: there is now real headroom on the
+  device side, and the next levers are the prover's own host work and the
+  producer's dependency pass (51 s), for which wazabi's `PASTA_DEPS_BATCH` does
+  not exist in this tree. 16 and 32 have one pass each, so their small deltas
+  carry no spread.
+- **Source provenance:**
+  [gpu-inflight-sweep-a40-sp1-6.10.json](../../benchmarks/gpu-inflight-sweep-a40-sp1-6.10.json),
+  receipts in `benchmarks/gpu/runs/20261110T1655Z-inflight-sweep`. ~$0.41 of
+  the authorized $2.00; pod terminated, no pods remain.
+- **Upstream sync:** none.
+

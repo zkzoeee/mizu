@@ -1,0 +1,1 @@
+-rwxr-xr-x 1 root root 58556504 Nov 10 17:03 /workspace/bin/pasta-precompile-proof-6-10

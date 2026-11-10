@@ -59,6 +59,14 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   a column surviving the sweep is not thereby unconstrained, and Poseidon P4's
   memory-only class is now checked rather than deferred. The earlier survivor
   sets stand as measured; what changed is what they mean.
+- "The executor's ~155 s is the irreducible floor of a proof" was wrong, and
+  stated in this session before it was measured. About 72 s of it was the
+  producer blocked on a two-deep record channel. Depth 8 removes 26 s of wall;
+  see [mizu-record-channel-depth](06-sp1-runtime-and-proving.md#mizu-record-channel-depth-the-record-channel-was-the-bottleneck-not-either-side).
+- "The GPU is idle most of the run, so a faster card buys nothing" holds at
+  channel depth 2 and is weaker at depth 8: device busy time is unchanged at
+  68-69 s but is now 51% of the wall rather than 42%, and the card's idle
+  fraction falls from 57% to 49%. The claim must be quoted with the depth.
 - The GPU prove-loop pipelining (`PASTA_PROVE_INFLIGHT`, r120's ranked idea 3)
   was written and defaulted to 2 before any GPU had run it. The first real GPU
   proof from this repository (2026-11-10) found that two shards in flight panic

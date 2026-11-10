@@ -312,7 +312,8 @@ for ARM in $ARMS; do
   # timings stay comparable with those runs.
   RUST_LOG="${RUST_LOG:-sp1_core_machine=info}" \
   PASTA_FRI_CONFIG=core PASTA_LOG_STACKING_HEIGHT=21 PASTA_MAX_LOG_ROW_COUNT=22 \
-  PASTA_GPU_MAX_TRACE_SIZE=404750336 PASTA_GPU_WORKERS=2 PASTA_R5_INFLIGHT=2 \
+  PASTA_GPU_MAX_TRACE_SIZE=404750336 PASTA_GPU_WORKERS=2 \
+  PASTA_R5_INFLIGHT="${PASTA_R5_INFLIGHT:-8}" \
   PASTA_PROVE_INFLIGHT="${PASTA_PROVE_INFLIGHT:-1}" \
   /usr/bin/time -v "$GPU_BIN" --mode manifest-core-gpu \
     --manifest "$MANIFEST" --arm "$ARM" --elf "$ELF" \
