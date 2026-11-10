@@ -1,0 +1,23 @@
+{
+  "run": "next-core-proof-retained-boolean-guest",
+  "authorized_usd_cap": 2.0,
+  "rustc": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+  "cargo": "cargo 1.92.0 (344c4567c 2025-10-21)",
+  "cmake": "cmake version 4.4.4",
+  "nvcc": "release 12.8",
+  "cuda_archs": "86",
+  "nvidia_smi_driver": "595.91.07",
+  "gpu_name": "NVIDIA A40",
+  "gpu_uuid": "GPU-352a2d77-5090-513d-8ff4-750e5a9c82df",
+  "gpu_memory_total": "46068 MiB",
+  "compute_cap": "8.6",
+  "host_vcpu_visible": 96,
+  "host_mem_kb": 527972292,
+  "cpu_model": "Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz",
+  "disk_avail_kb": 82813764,
+  "cargo_build_jobs": 8,
+  "bundle_sha256": "ec740b50003c603be0aa625461cd64f15eee29564fb5c62fa84eee732c6d8a91",
+  "elf_sha256": "0cfb3eafeea0d450e3ae8efd9a472a363495d49a5ff055b31b7cb50541c5a871",
+  "manifest_sha256": "92c23e6e185d6a9ed6d13a98aa69280056cdc0b7d466b5099d789102cc0b1fc2",
+  "cargo_lock_sha256": "bd77fb2b12be138e977dfd8c9628fd954c25b681f43c9824af8e2cdbb7f7cf87"
+}

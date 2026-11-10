@@ -1,0 +1,1 @@
+retain-pasta-and-uint samples=809 span_s=162.7 gpu_busy_s=68.3 gpu_idle_s=94.4 util_mean_pct=42.0 util_median_pct=16 zero_samples_pct=46.2 peak_vram_mib=19256

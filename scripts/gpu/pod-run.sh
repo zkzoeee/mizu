@@ -359,16 +359,22 @@ done
 # a fresh process, derives the key from the pinned ELF and checks the
 # committed digest against the expected public values exported before any
 # proving. It generates nothing.
-stamp "fresh-process reload verification of every arm"
-set +e
-"$GPU_BIN" --mode manifest-core-verify \
-  --manifest "$MANIFEST" --elf "$ELF" \
-  --input "$RESULTS" \
-  --reference "$INPUTS/public-values.bin" \
-  --output "$RESULTS/verification" 2>&1 | tee "$RESULTS/verification.log"
-RC=${PIPESTATUS[0]}
-set -e
-[ "$RC" -eq 0 ] || fail "on-pod reload verification exited $RC"
+stamp "fresh-process reload verification of every arm proved here"
+# Per arm, with --arm, because a run that proves a subset of the manifest's
+# arms must be able to pass: verifying the whole manifest fails on the arms it
+# never proved, which is how the 2026-11-10 Montreal run ended with a passing
+# proof and an exit code of 1.
+for ARM in $ARMS; do
+  set +e
+  "$GPU_BIN" --mode manifest-core-verify \
+    --manifest "$MANIFEST" --elf "$ELF" --arm "$ARM" \
+    --input "$RESULTS" \
+    --reference "$INPUTS/public-values.bin" \
+    --output "$RESULTS/verification-$ARM" 2>&1 | tee -a "$RESULTS/verification.log"
+  RC=${PIPESTATUS[0]}
+  set -e
+  [ "$RC" -eq 0 ] || fail "on-pod reload verification of $ARM exited $RC"
+done
 
 nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv > "$RESULTS/gpu-info.csv"
 sha256sum "$RESULTS"/*/*.proof.bin 2>/dev/null | tee "$RESULTS/proof-hashes.txt" || true

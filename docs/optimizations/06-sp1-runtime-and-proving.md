@@ -316,3 +316,46 @@ not by preserving the original experimental commit history.
   proof bytes kept outside Git at `/Users/user/000/_Z/mizu-gpu-proofs-20261110`
   (343 MB). Procedure and costs: [the runbook](../gpu-run-on-runpod.md).
 - **Upstream sync:** none. No fork file changed.
+
+### Second draw, same card, another data centre (2026-11-10, 14:36Z)
+
+One arm, no proof download, on a second A40 — pod `a9okellgv9d0hd`, SECURE,
+**CA-MTL-1**, $0.59/hr, 16.3 minutes, ~$0.16. It took **nine refused creates**
+across A6000/EU-SE-1, A40/EU-SE-1, A40/CA-MTL-1 and RTX 3090/EU-CZ-1 before one
+was accepted; the cheap tier's stock is real but it is a race, and re-reading
+availability between attempts only wastes the window.
+
+It was meant to vary the host. It did not: RunPod reports the **same Intel Xeon
+Gold 6342 @ 2.80 GHz** behind the A40 pool in both data centres, so the run
+became a reproducibility check instead.
+
+| | EU-SE-1 | CA-MTL-1 | Δ |
+| --- | ---: | ---: | ---: |
+| Wall | 168.63 s | **162.02 s** | −3.9% |
+| Executor | 159.80 s | 154.16 s | −3.5% |
+| GPU prove loop | 141.97 s | 137.58 s | −3.1% |
+| Shards | 82 | 82 | same |
+| Proof bytes | 132,029,932 | 132,029,932 | same |
+
+−3.9% on identical silicon and an identical statement sits inside r124's
+measured 2.6–4.2% within-side spread. The verification key, the committed
+digest, the shard count and the byte count are identical; only the proof hash
+differs, because FRI draws randomness. The proof was reloaded from disk on the
+pod and accepted, with the key derived from the pinned ELF.
+
+**This run lifts the first one's telemetry limit**, because it went through
+`pod-run.sh` rather than being launched by hand. Integrating its 809-sample
+series over the 162.7 s span: **GPU busy 68.3 s against 94.4 s idle — 58%
+idle**, mean utilization 42.0%, median sample 16%, 46.2% of samples at exactly
+zero, peak VRAM **19,256 MiB** of 46,068, peak host RSS 16.1 GB. Less extreme
+than r123's 82.9% idle on a 5090 and consistent with r120's 33–41% mean: a
+faster card could address at most the 68.3 s, while the 94.4 s of waiting is
+the executor's.
+
+It also found one more defect, in the drivers rather than the prover:
+`manifest-core-verify` iterated every manifest arm, so a one-arm run failed on
+the arm it never proved and exited 1 **after** its own proof had passed. The
+verify mode now takes an optional `--arm`, and `pod-run.sh` verifies per proved
+arm. Evidence:
+[gpu-core-proof-a40-repeat-sp1-6.10.json](../../benchmarks/gpu-core-proof-a40-repeat-sp1-6.10.json),
+receipts in `benchmarks/gpu/runs/20261110T1436Z-a40-montreal`.

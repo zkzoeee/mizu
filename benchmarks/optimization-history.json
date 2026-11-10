@@ -21467,6 +21467,48 @@
         "billing_read": "recordCount 0; estimated from pod timestamps",
         "pods_remaining": 0
       }
+    },
+    {
+      "id": "mizu-gpu-core-proof-a40-repeat",
+      "owner": "o1js-to-zkvm",
+      "status": "validation-only-retained",
+      "document": "docs/optimizations/06-sp1-runtime-and-proving.md",
+      "predecessor": "mizu-gpu-core-proof-a40",
+      "retained_default": false,
+      "proof_generated": true,
+      "evidence": "benchmarks/gpu-core-proof-a40-repeat-sp1-6.10.json",
+      "evidence_sha256": "7ff84dee0a0e195f35e00101773d4a479d3282bc73be835b00759319e2ce6c0d",
+      "receipts_directory": "benchmarks/gpu/runs/20261110T1436Z-a40-montreal",
+      "hardware": "RunPod SECURE CA-MTL-1, NVIDIA A40, Intel Xeon Gold 6342 @ 2.80GHz, 9 vCPU \u2014 the same CPU model as the EU-SE-1 draw",
+      "measurements": {
+        "arm": "retain-pasta-and-uint",
+        "shards": 82,
+        "wall_seconds": 162.01603802,
+        "executor_seconds": 154.155033513,
+        "proof_bytes": 132029932,
+        "proof_sha256": "a16da602cca96a3ad512c314e20b8dab47e71de7ecafb1cd9c9968f145852261",
+        "wall_delta_vs_first_pct": -3.92,
+        "gpu_busy_seconds": 68.3,
+        "gpu_idle_seconds": 94.4,
+        "gpu_idle_pct": 58.0,
+        "util_mean_pct": 42.0,
+        "util_median_pct": 16.0,
+        "peak_vram_mib": 19256,
+        "peak_host_rss_gb": 16.1
+      },
+      "lifts_limits": [
+        "mizu-gpu-core-proof-a40: no utilization series for a successful arm"
+      ],
+      "defects_found": [
+        "manifest-core-verify iterated every manifest arm, failing a one-arm run after its proof had passed; it now takes an optional --arm and pod-run.sh verifies per proved arm"
+      ],
+      "cost": {
+        "rate_usd_per_hour": 0.59,
+        "pod_life_minutes": 16.3,
+        "estimated_usd": 0.16,
+        "creates_refused_before_one_landed": 9,
+        "pods_remaining": 0
+      }
     }
   ],
   "mizu_workflows": [

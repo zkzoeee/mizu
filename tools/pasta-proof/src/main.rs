@@ -6425,12 +6425,19 @@ async fn run_prove(output: &Path, selected: &[Op]) -> Result<()> {
 
 /// Reload downloaded core proofs without executing or proving the guest.
 /// The ELF supplies the trusted key; saved keys are only equality checks.
+/// Verify the saved proofs of a manifest run, reloaded from disk.
+///
+/// `only_arm` restricts the check to one arm. A run that proved a subset of
+/// the manifest's arms — the usual case when a pod is rented for one proof —
+/// would otherwise fail on the arms it never proved, which is how the
+/// 2026-11-10 Montreal run ended with a passing proof and an exit code of 1.
 async fn run_manifest_verify(
     manifest_path: &Path,
     elf_path: &Path,
     input: &Path,
     expected_public_values: &Path,
     output: &Path,
+    only_arm: Option<&str>,
 ) -> Result<()> {
     use bincode::Options;
     use pasta_precompile_proof::run_manifest::{
@@ -6487,7 +6494,20 @@ async fn run_manifest_verify(
     );
 
     let mut results = Vec::new();
-    for arm in &manifest.arms {
+    let selected: Vec<&pasta_precompile_proof::run_manifest::Arm> = match only_arm {
+        Some(name) => {
+            let picked: Vec<_> = manifest.arms.iter().filter(|a| a.name == name).collect();
+            ensure!(
+                !picked.is_empty(),
+                "no arm named {name:?}; manifest has {:?}",
+                manifest.arms.iter().map(|a| a.name.as_str()).collect::<Vec<_>>()
+            );
+            picked
+        }
+        None => manifest.arms.iter().collect(),
+    };
+    let selected_arms = selected.len();
+    for arm in selected {
         let result = (|| -> Result<Value> {
             let dir = input.join(&arm.name);
             let proof_path = dir.join(format!("{}.proof.bin", arm.name));
@@ -6570,7 +6590,9 @@ async fn run_manifest_verify(
         write_json(output.join(format!("{}.json", arm.name)), &row)?;
         results.push(row);
     }
-    let accepted = results.len() == manifest.arms.len()
+    // Against the arms actually verified, not the manifest's whole list: a
+    // one-arm run must be able to pass.
+    let accepted = results.len() == selected_arms
         && results
             .iter()
             .all(|r| r["status"] == "passed" && r["committed_digest_matches"] == true);
@@ -9353,7 +9375,14 @@ fn main() -> Result<()> {
             let expected =
                 reference.context("--reference is required (expected public-values.bin)")?;
             let output = output.context("--output is required")?;
-            runtime.block_on(run_manifest_verify(&spec, &elf, &input, &expected, &output))
+            runtime.block_on(run_manifest_verify(
+                &spec,
+                &elf,
+                &input,
+                &expected,
+                &output,
+                arm.as_deref(),
+            ))
         }
         "verify" => {
             let input = input.context("--input is required")?;
