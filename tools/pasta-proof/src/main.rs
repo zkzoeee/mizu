@@ -18,7 +18,7 @@ use slop_challenger::IopCtx;
 use slop_multilinear::{Mle, PaddedMle};
 use sp1_core_executor::{
     add_halt,
-    events::{EllipticCurveAddEvent, EllipticCurveDoubleEvent, PrecompileEvent},
+    events::{EllipticCurveAddEvent, EllipticCurveDoubleEvent, FieldOperation, PrecompileEvent},
     rv64im_costs, ExecutionRecord, Instruction, Opcode, Program, RiscvAirId, SP1CoreOpts,
     SyscallCode,
 };
@@ -48,7 +48,7 @@ use sp1_hypercube::{
 use sp1_primitives::{SP1Field, SP1GlobalContext};
 use std::{
     borrow::{Borrow, BorrowMut},
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     fs,
     panic::{catch_unwind, AssertUnwindSafe},
     path::{Path, PathBuf},
@@ -3218,68 +3218,85 @@ fn build_poseidon_program(calls: &[PoseidonCall], tag: u32) -> Result<Arc<Progra
 
 /// Send/receive balance of one lookup kind over the given chip traces: the
 /// distinct messages seen and those whose sends and receives do not cancel.
+/// The signed multiset one chip's trace contributes to an interaction kind:
+/// the interaction values are the key, sends count positive and receives
+/// negative.
+fn interaction_multiset(
+    chip: &Chip<SP1Field, Air>,
+    trace: &slop_matrix::dense::RowMajorMatrix<SP1Field>,
+    kind: sp1_hypercube::InteractionKind,
+) -> BTreeMap<Vec<u32>, i64> {
+    let debug = std::env::var_os("PASTA_DEBUG_CHAIN").is_some();
+    let mut counts: BTreeMap<Vec<u32>, i64> = BTreeMap::new();
+    let width = trace.width;
+    let interactions = chip
+        .sends()
+        .iter()
+        .map(|i| (true, i))
+        .chain(chip.receives().iter().map(|i| (false, i)))
+        .filter(|(_, i)| i.kind == kind)
+        .collect::<Vec<_>>();
+    if debug {
+        eprintln!(
+            "{}: {} rows x {} cols, {} sends, {} receives of kind {kind:?} ({} / {} total)",
+            chip.name(),
+            trace.values.len() / width,
+            width,
+            interactions.iter().filter(|(s, _)| *s).count(),
+            interactions.iter().filter(|(s, _)| !*s).count(),
+            chip.sends().len(),
+            chip.receives().len()
+        );
+        for (is_send, interaction) in &interactions {
+            eprintln!(
+                "  {} mult {:?} values[..8] {:?}",
+                if *is_send { "send" } else { "recv" },
+                (&interaction.multiplicity.column_weights, interaction.multiplicity.constant),
+                interaction
+                    .values
+                    .iter()
+                    .take(8)
+                    .map(|v| (&v.column_weights, v.constant))
+                    .collect::<Vec<_>>()
+            );
+        }
+    }
+    for (r, row) in trace.values.chunks_exact(width).enumerate() {
+        for (is_send, interaction) in &interactions {
+            let multiplicity: SP1Field = interaction.multiplicity.apply(&[], row);
+            if multiplicity == SP1Field::zero() {
+                continue;
+            }
+            let key: Vec<u32> = interaction
+                .values
+                .iter()
+                .map(|v| v.apply::<SP1Field, SP1Field>(&[], row).as_canonical_u32())
+                .collect();
+            if debug && r < 3 {
+                eprintln!(
+                    "  row {r} {} mult {} key[..12] {:?}",
+                    if *is_send { "send" } else { "recv" },
+                    multiplicity.as_canonical_u32(),
+                    &key[..key.len().min(12)]
+                );
+            }
+            let delta = multiplicity.as_canonical_u32() as i64;
+            *counts.entry(key).or_default() += if *is_send { delta } else { -delta };
+        }
+    }
+    counts
+}
+
+/// The distinct messages of one kind across several chips' traces, and how many
+/// of them do not cancel. A balanced argument leaves none open.
 fn interaction_balance(
     chips: &[(&Chip<SP1Field, Air>, &slop_matrix::dense::RowMajorMatrix<SP1Field>)],
     kind: sp1_hypercube::InteractionKind,
 ) -> (usize, usize) {
-    let debug = std::env::var_os("PASTA_DEBUG_CHAIN").is_some();
     let mut counts: BTreeMap<Vec<u32>, i64> = BTreeMap::new();
     for (chip, trace) in chips {
-        let width = trace.width;
-        let interactions = chip
-            .sends()
-            .iter()
-            .map(|i| (true, i))
-            .chain(chip.receives().iter().map(|i| (false, i)))
-            .filter(|(_, i)| i.kind == kind)
-            .collect::<Vec<_>>();
-        if debug {
-            eprintln!(
-                "{}: {} rows x {} cols, {} sends, {} receives of kind {kind:?} ({} / {} total)",
-                chip.name(),
-                trace.values.len() / width,
-                width,
-                interactions.iter().filter(|(s, _)| *s).count(),
-                interactions.iter().filter(|(s, _)| !*s).count(),
-                chip.sends().len(),
-                chip.receives().len()
-            );
-            for (is_send, interaction) in &interactions {
-                eprintln!(
-                    "  {} mult {:?} values[..8] {:?}",
-                    if *is_send { "send" } else { "recv" },
-                    (&interaction.multiplicity.column_weights, interaction.multiplicity.constant),
-                    interaction
-                        .values
-                        .iter()
-                        .take(8)
-                        .map(|v| (&v.column_weights, v.constant))
-                        .collect::<Vec<_>>()
-                );
-            }
-        }
-        for (r, row) in trace.values.chunks_exact(width).enumerate() {
-            for (is_send, interaction) in &interactions {
-                let multiplicity: SP1Field = interaction.multiplicity.apply(&[], row);
-                if multiplicity == SP1Field::zero() {
-                    continue;
-                }
-                let key: Vec<u32> = interaction
-                    .values
-                    .iter()
-                    .map(|v| v.apply::<SP1Field, SP1Field>(&[], row).as_canonical_u32())
-                    .collect();
-                if debug && r < 3 {
-                    eprintln!(
-                        "  row {r} {} mult {} key[..12] {:?}",
-                        if *is_send { "send" } else { "recv" },
-                        multiplicity.as_canonical_u32(),
-                        &key[..key.len().min(12)]
-                    );
-                }
-                let delta = multiplicity.as_canonical_u32() as i64;
-                *counts.entry(key).or_default() += if *is_send { delta } else { -delta };
-            }
+        for (key, delta) in interaction_multiset(chip, trace, kind) {
+            *counts.entry(key).or_default() += delta;
         }
     }
     (counts.len(), counts.values().filter(|c| **c != 0).count())
@@ -4037,24 +4054,46 @@ fn run_pasta_fuzz(output: &Path) -> Result<()> {
     eprintln!("pasta-fuzz seed={seed:#x} iterations={iterations}");
     let started = Instant::now();
     let mut rng = FuzzRng(seed);
+    // The fixed lookup tables, built once: their rows come from the
+    // preprocessed trace, which no record and no mutation can change.
+    let (table_program, _) = build_program(&[make_call(OPS[0], generator(OPS[0].curve), Some(multiples(OPS[0].curve, 2)[1].clone()))?])?;
+    let tables = fixed_table_messages(&table_program);
     let executor = fuzz_executor(&mut rng, iterations)?;
     let witness = fuzz_witness(&mut rng, iterations)?;
     let columns = fuzz_columns(&mut rng)?;
-    let poseidon = fuzz_poseidon(&mut rng, iterations)?;
+    let poseidon = fuzz_poseidon(&mut rng, iterations, &tables)?;
+    let fp = fuzz_fp(&mut rng, iterations, &tables)?;
+    let curve_rows = fuzz_curve_rows(&mut rng, iterations, &tables)?;
+    let differential = fuzz_executor_differential(&mut rng, iterations)?;
     fs::create_dir_all(output)?;
     let report = json!({
         "mode": "pasta-fuzz",
         "seed": format!("{seed:#x}"),
         "iterations_per_operation": iterations,
         "proved": false,
+        "fixed_table_messages": tables.len(),
         "executor": executor,
         "witness": witness,
         "columns": columns,
         "poseidon": poseidon,
+        "fp": fp,
+        "curve_rows": curve_rows,
+        "executor_differential": differential,
         "seconds": started.elapsed().as_secs_f64(),
     });
     write_json(output.join("result.json"), &report)?;
     println!("{}", serde_json::to_string_pretty(&report)?);
+    // The report is written before this check so a divergence leaves its
+    // evidence behind rather than only a message.
+    let divergences = report["executor_differential"]["unexplained_divergences"]
+        .as_array()
+        .context("the differential report has no divergence list")?;
+    ensure!(
+        divergences.is_empty(),
+        "the two executors disagree on {} programs: {}",
+        divergences.len(),
+        serde_json::to_string(divergences)?
+    );
     Ok(())
 }
 
@@ -4290,10 +4329,14 @@ const INTERACTION_BOUND_FIELDS: [&str; 10] = [
 /// of both chips; P4 random single-cell mutations of real rows, each of which
 /// the row algebra must reject, the round chain must leave unbalanced, or a
 /// memory-only field must own.
-fn fuzz_poseidon(rng: &mut FuzzRng, iterations: usize) -> Result<Value> {
+fn fuzz_poseidon(
+    rng: &mut FuzzRng,
+    iterations: usize,
+    tables: &BTreeSet<Vec<u32>>,
+) -> Result<Value> {
     use sp1_curves::weierstrass::pasta_poseidon::{PallasPoseidonField, VestaPoseidonField};
-    let pallas = fuzz_poseidon_field::<PallasPoseidonField>(rng, iterations, "fp")?;
-    let vesta = fuzz_poseidon_field::<VestaPoseidonField>(rng, iterations, "fq")?;
+    let pallas = fuzz_poseidon_field::<PallasPoseidonField>(rng, iterations, "fp", tables)?;
+    let vesta = fuzz_poseidon_field::<VestaPoseidonField>(rng, iterations, "fq", tables)?;
     Ok(json!({"pallas": pallas, "vesta": vesta}))
 }
 
@@ -4303,6 +4346,7 @@ fn fuzz_poseidon_field<
     rng: &mut FuzzRng,
     iterations: usize,
     export_field: &str,
+    tables: &BTreeSet<Vec<u32>>,
 ) -> Result<Value> {
     use sp1_core_machine::{
         syscall::precompiles::pasta_poseidon::{
@@ -4456,6 +4500,7 @@ fn fuzz_poseidon_field<
         record,
         &mut ExecutionRecord::default(),
     );
+    let poseidon_shard_arguments = machine_argument_balance(record)?;
     let round_width = num_pasta_poseidon_round_cols::<P>();
     let control_width = num_pasta_poseidon_control_cols_supervisor::<P>();
     let real_round_rows = 2 * ROUNDS;
@@ -4546,6 +4591,8 @@ fn fuzz_poseidon_field<
     let mut by_air = 0usize;
     let mut by_chain = 0usize;
     let mut memory_owned = 0usize;
+    let mut by_argument: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut by_table = 0usize;
     let mut survivors: Vec<Value> = Vec::new();
     let mutations = 2 * iterations.max(16);
     for _ in 0..mutations {
@@ -4581,15 +4628,29 @@ fn fuzz_poseidon_field<
         };
         if open > 0 {
             by_chain += 1;
-        } else if memory_only.contains(&field) {
-            memory_owned += 1;
-        } else {
-            survivors.push(json!({"chip": name, "row": row, "column": column, "field": field, "delta": delta}));
+            continue;
+        }
+        // The chain does not bind the controller's previous timestamps and
+        // values. The memory argument does, so ask it before calling a
+        // mutation a survivor: it balances over the whole shard, and the rest
+        // of this shard is honest.
+        match argument_contribution_changed(chip, trace, &mutated) {
+            Some(kind) => {
+                *by_argument.entry(kind).or_default() += 1;
+                if memory_only.contains(&field) {
+                    memory_owned += 1;
+                }
+            }
+            None if sends_an_unservable_byte_lookup(chip, &mutated, tables) => by_table += 1,
+            None => survivors.push(
+                json!({"chip": name, "row": row, "column": column, "field": field, "delta": delta}),
+            ),
         }
     }
     ensure!(
         survivors.is_empty(),
-        "{round_name}: mutations survive algebra and chain outside memory-only fields: {survivors:?}"
+        "{round_name}: mutations rejected by neither the row algebra, the round chain nor an \
+         argument: {survivors:?}"
     );
     // Two coordinated attacks on the chain itself: a round row re-labelled to
     // another round (flags and index moved together), and the two events'
@@ -4623,9 +4684,12 @@ fn fuzz_poseidon_field<
         "p3_column_sweep": {"round": round_sweep, "control": control_sweep,
             "interaction_bound_fields": {"round": round_bound, "control": control_bound}},
         "p4_mutations": {"mutations": mutations, "rejected_by_air": by_air,
-            "rejected_by_chain": by_chain, "memory_only_field": memory_owned, "unexplained": 0,
+            "rejected_by_chain": by_chain, "rejected_by_argument": by_argument,
+            "rejected_by_a_fixed_table": by_table,
+            "memory_only_field_rejected_by_an_argument": memory_owned, "unexplained": 0,
             "relabelled_round_rejected": relabel_rejected, "swapped_outputs_rejected": swap_rejected,
             "memory_only_fields": memory_only},
+        "shard_arguments": poseidon_shard_arguments,
     }))
 }
 
@@ -4691,6 +4755,1352 @@ fn fuzz_columns(rng: &mut FuzzRng) -> Result<Value> {
         "scope": "algebraic row constraints only; interaction-bound fields are expected to survive",
         "interaction_bound_fields": INTERACTION_BOUND_FIELDS,
         "results": results,
+    }))
+}
+
+// ---------------------------------------------------------------------------
+// The lookup arguments as a rejection channel.
+//
+// `debug_constraints` evaluates one chip's algebraic constraints and nothing
+// else, so a column the row algebra leaves free looks unconstrained to the
+// column sweeps even when it is not. What binds those columns is the lookup
+// arguments — memory, page protection and the syscall argument — each of
+// which balances over every chip of a shard. A mutation that changes the
+// chip's own contribution to one of them cannot be absorbed by an otherwise
+// honest shard, so it is a rejection, and these helpers establish it without
+// generating a proof.
+//
+// Limit: a prover that also rewrites the chips on the other side of an
+// argument is outside what this measures. Byte lookups are excluded for that
+// reason, their multiplicities being prover-supplied columns of the byte
+// table: a surviving byte limb is reported, not excused.
+// ---------------------------------------------------------------------------
+
+const ARGUMENT_KINDS: [sp1_hypercube::InteractionKind; 3] = [
+    sp1_hypercube::InteractionKind::Memory,
+    sp1_hypercube::InteractionKind::PageProtAccess,
+    sp1_hypercube::InteractionKind::Syscall,
+];
+
+fn argument_kind_name(kind: sp1_hypercube::InteractionKind) -> &'static str {
+    match kind {
+        sp1_hypercube::InteractionKind::Memory => "memory",
+        sp1_hypercube::InteractionKind::PageProtAccess => "page-prot",
+        _ => "syscall",
+    }
+}
+
+/// The first argument whose multiset the mutated trace no longer matches.
+fn argument_contribution_changed(
+    chip: &Chip<SP1Field, Air>,
+    honest: &slop_matrix::dense::RowMajorMatrix<SP1Field>,
+    mutated: &slop_matrix::dense::RowMajorMatrix<SP1Field>,
+) -> Option<&'static str> {
+    ARGUMENT_KINDS
+        .into_iter()
+        .find(|kind| {
+            interaction_multiset(chip, honest, *kind) != interaction_multiset(chip, mutated, *kind)
+        })
+        .map(argument_kind_name)
+}
+
+const BYTE_KIND: sp1_hypercube::InteractionKind = sp1_hypercube::InteractionKind::Byte;
+
+/// The byte-lookup messages the machine's fixed tables can serve.
+///
+/// A fixed table's rows come from its preprocessed trace, which the program
+/// determines; only the multiplicity columns are in its main trace. So a
+/// message outside this set cannot be matched at any multiplicity, whatever
+/// the prover writes there, while one inside it can be matched by changing a
+/// multiplicity. Set membership, not balance, is therefore the right question
+/// to ask of a byte lookup, and it is the one constraint on the byte
+/// decomposition of a memory word: `U16toU8Operation` keeps only the low byte
+/// of each 16-bit limb as a column and derives the high byte as
+/// `(limb - low) / 256`, so a single-cell mutation of a low byte moves both
+/// bytes and leaves the limb intact. Nothing but the range check rejects it.
+fn fixed_table_messages(program: &Arc<Program>) -> BTreeSet<Vec<u32>> {
+    let machine = Air::machine();
+    let mut messages = BTreeSet::new();
+    for chip in machine.chips() {
+        let receives: Vec<_> =
+            chip.receives().iter().filter(|i| i.kind == BYTE_KIND).collect();
+        if receives.is_empty() {
+            continue;
+        }
+        let Some(preprocessed) = MachineAir::<SP1Field>::generate_preprocessed_trace(chip, program)
+        else {
+            continue;
+        };
+        let width = preprocessed.width;
+        // A fixed table's message values read preprocessed columns only; its
+        // main columns hold the multiplicities this check ignores.
+        let main = vec![
+            SP1Field::zero();
+            <Chip<SP1Field, Air> as slop_air::BaseAir<SP1Field>>::width(chip)
+        ];
+        for row in preprocessed.values.chunks_exact(width) {
+            for interaction in &receives {
+                messages.insert(
+                    interaction
+                        .values
+                        .iter()
+                        .map(|v| v.apply::<SP1Field, SP1Field>(row, &main).as_canonical_u32())
+                        .collect(),
+                );
+            }
+        }
+    }
+    messages
+}
+
+/// Whether the chip sends a byte lookup no fixed table can serve.
+fn sends_an_unservable_byte_lookup(
+    chip: &Chip<SP1Field, Air>,
+    trace: &slop_matrix::dense::RowMajorMatrix<SP1Field>,
+    tables: &BTreeSet<Vec<u32>>,
+) -> bool {
+    let sends: Vec<_> = chip.sends().iter().filter(|i| i.kind == BYTE_KIND).collect();
+    trace.values.chunks_exact(trace.width).any(|row| {
+        sends.iter().any(|interaction| {
+            let multiplicity: SP1Field = interaction.multiplicity.apply(&[], row);
+            if multiplicity == SP1Field::zero() {
+                return false;
+            }
+            let key: Vec<u32> = interaction
+                .values
+                .iter()
+                .map(|v| v.apply::<SP1Field, SP1Field>(&[], row).as_canonical_u32())
+                .collect();
+            !tables.contains(&key)
+        })
+    })
+}
+
+/// The honest memory, page-protection and syscall arguments of one real shard,
+/// summed over every chip that participates in them. This is the premise the
+/// per-chip comparison rests on, so it is checked directly rather than assumed:
+/// each argument must leave no open message.
+fn machine_argument_balance(record: &ExecutionRecord) -> Result<Value> {
+    let machine = Air::machine();
+    let mut traces = Vec::new();
+    for chip in machine.chips() {
+        let participates = ARGUMENT_KINDS.iter().any(|kind| {
+            chip.sends().iter().chain(chip.receives().iter()).any(|i| i.kind == *kind)
+        });
+        if !participates || !MachineAir::<SP1Field>::included(chip, record) {
+            continue;
+        }
+        let trace = MachineAir::<SP1Field>::generate_trace(
+            chip,
+            record,
+            &mut ExecutionRecord::default(),
+        );
+        traces.push((chip, trace));
+    }
+    let refs: Vec<(&Chip<SP1Field, Air>, &slop_matrix::dense::RowMajorMatrix<SP1Field>)> =
+        traces.iter().map(|(chip, trace)| (*chip, trace)).collect();
+    let mut by_kind = Vec::new();
+    for kind in ARGUMENT_KINDS {
+        let (distinct, open) = interaction_balance(&refs, kind);
+        ensure!(
+            open == 0,
+            "the honest shard leaves {open} open {} messages",
+            argument_kind_name(kind)
+        );
+        by_kind.push(json!({
+            "argument": argument_kind_name(kind),
+            "distinct_messages": distinct,
+            "open_messages": open,
+        }));
+    }
+    Ok(json!({
+        "chips": refs.iter().map(|(chip, _)| chip.name()).collect::<Vec<_>>(),
+        "by_argument": by_kind,
+        "scope": "one shard's local arguments; the global accumulation and the byte table are not evaluated",
+    }))
+}
+
+/// How a single-cell mutation was rejected, or that nothing rejected it.
+enum Verdict {
+    Air,
+    Argument(&'static str),
+    /// The row now asks a fixed table for a message it does not hold, which no
+    /// multiplicity can supply.
+    FixedTable,
+    /// A padding row whose multiplicity stayed zero contributes nothing to any
+    /// argument and is constrained by nothing, which is why it is sound.
+    InertPadding,
+    Survived,
+}
+
+/// Mutate one cell of `honest` and classify the outcome.
+fn classify_mutation(
+    chip: &Chip<SP1Field, Air>,
+    honest: &slop_matrix::dense::RowMajorMatrix<SP1Field>,
+    row: usize,
+    column: usize,
+    delta: u32,
+    is_real_column: usize,
+    tables: &BTreeSet<Vec<u32>>,
+) -> Verdict {
+    let width = honest.width;
+    let mut mutated = honest.clone();
+    mutated.values[row * width + column] += SP1Field::from_canonical_u32(delta);
+    if !eval_rows(chip, mutated.clone()).is_empty() {
+        return Verdict::Air;
+    }
+    if let Some(kind) = argument_contribution_changed(chip, honest, &mutated) {
+        return Verdict::Argument(kind);
+    }
+    if sends_an_unservable_byte_lookup(chip, &mutated, tables) {
+        return Verdict::FixedTable;
+    }
+    let was_padding = honest.values[row * width + is_real_column] == SP1Field::zero();
+    let still_padding = mutated.values[row * width + is_real_column] == SP1Field::zero();
+    if was_padding && still_padding {
+        return Verdict::InertPadding;
+    }
+    Verdict::Survived
+}
+
+// ---------------------------------------------------------------------------
+// The Pasta Fp layers of `pasta-fuzz`.
+//
+// FP1 the executor against a BigUint reference on random canonical, edge and
+// noncanonical operands; FP2 the same operands through a real program with
+// every row's result read back from its limbs; FP3 the column sweep on several
+// rows of the trace rather than the first; FP4 random single-cell mutations,
+// each of which the row algebra or one of the arguments must reject.
+//
+// The chip reads its operands from memory without reducing them, while the
+// executor reduces, so noncanonical operands are a separate class: the
+// executor result is still checked against the reference, and whether an
+// honest row for such an operand satisfies the AIR is reported per operation
+// rather than assumed.
+// ---------------------------------------------------------------------------
+
+/// The field element four little-endian words encode.
+fn words_to_biguint(words: &[u64]) -> BigUint {
+    let mut value = BigUint::zero();
+    for word in words.iter().rev() {
+        value = (value << 64) + BigUint::from(*word);
+    }
+    value
+}
+
+fn fp_reference(x: &BigUint, y: &BigUint, op: FieldOperation, m: &BigUint) -> Result<BigUint> {
+    let (x, y) = (x % m, y % m);
+    Ok(match op {
+        FieldOperation::Add => (&x + &y) % m,
+        FieldOperation::Sub => (&x + m - &y) % m,
+        FieldOperation::Mul => (&x * &y) % m,
+        other => bail!("unexpected field operation {other:?}"),
+    })
+}
+
+/// Every Fp event of `records` against the reference, in order.
+fn fp_events_check(
+    records: &[ExecutionRecord],
+    key: SyscallCode,
+    m: &BigUint,
+    chip_name: &str,
+) -> Result<Vec<(BigUint, BigUint, FieldOperation, BigUint)>> {
+    let mut checked = Vec::new();
+    for record in records {
+        let events = record.get_precompile_events(key);
+        for (_, event) in events.iter() {
+            let e = match event {
+                PrecompileEvent::PallasFp(e) | PrecompileEvent::VestaFp(e) => e,
+                _ => bail!("{chip_name}: unexpected event kind"),
+            };
+            let x = words_to_biguint(&e.x);
+            let y = words_to_biguint(&e.y);
+            let written =
+                words_to_biguint(&e.x_memory_records.iter().map(|r| r.value).collect::<Vec<_>>());
+            let expected = fp_reference(&x, &y, e.op, m)?;
+            ensure!(
+                written == expected,
+                "{chip_name}: executor result differs from the reference for {:?}",
+                e.op
+            );
+            checked.push((x, y, e.op, written));
+        }
+    }
+    Ok(checked)
+}
+
+/// Operand pairs by class, for one modulus.
+fn fp_operands(
+    rng: &mut FuzzRng,
+    iterations: usize,
+    m: &BigUint,
+) -> Vec<(&'static str, BigUint, BigUint)> {
+    let random = |rng: &mut FuzzRng| {
+        let mut v = BigUint::zero();
+        for _ in 0..4 {
+            v = (v << 64) + BigUint::from(rng.next_u64());
+        }
+        v
+    };
+    let max: BigUint = (BigUint::one() << 256u32) - BigUint::one();
+    let mut operands: Vec<(&'static str, BigUint, BigUint)> = vec![
+        ("edge", BigUint::zero(), BigUint::zero()),
+        ("edge", BigUint::zero(), BigUint::one()),
+        ("edge", BigUint::one(), BigUint::zero()),
+        ("edge", m - 1u32, m - 1u32),
+        ("edge", m - 1u32, BigUint::one()),
+        ("edge", BigUint::one(), m - 1u32),
+    ];
+    for _ in 0..iterations {
+        operands.push(("random canonical", random(rng) % m, random(rng) % m));
+    }
+    operands.push(("noncanonical", m.clone(), BigUint::one()));
+    operands.push(("noncanonical", BigUint::one(), m.clone()));
+    operands.push(("noncanonical", m + 1u32, m - 1u32));
+    operands.push(("noncanonical", max.clone(), max.clone()));
+    for _ in 0..iterations.min(4) {
+        let raw = random(rng);
+        if &raw >= m {
+            operands.push(("noncanonical", raw, random(rng) % m));
+        }
+    }
+    operands
+}
+
+fn fuzz_fp(
+    rng: &mut FuzzRng,
+    iterations: usize,
+    tables: &BTreeSet<Vec<u32>>,
+) -> Result<Value> {
+    let pallas = fuzz_fp_field::<PallasBaseField>(
+        rng,
+        iterations,
+        "PallasFpOpAssign",
+        [SyscallCode::PALLAS_FP_ADD, SyscallCode::PALLAS_FP_SUB, SyscallCode::PALLAS_FP_MUL],
+        tables,
+    )?;
+    let vesta = fuzz_fp_field::<VestaBaseField>(
+        rng,
+        iterations,
+        "VestaFpOpAssign",
+        [SyscallCode::VESTA_FP_ADD, SyscallCode::VESTA_FP_SUB, SyscallCode::VESTA_FP_MUL],
+        tables,
+    )?;
+    Ok(json!({"pallas": pallas, "vesta": vesta}))
+}
+
+fn fuzz_fp_field<P: sp1_curves::weierstrass::FpOpField>(
+    rng: &mut FuzzRng,
+    iterations: usize,
+    chip_name: &'static str,
+    codes: [SyscallCode; 3],
+    tables: &BTreeSet<Vec<u32>>,
+) -> Result<Value> {
+    use sp1_core_machine::{
+        operations::field::{field_op::FieldOpCols, range::FieldLtCols},
+        syscall::precompiles::fptower::{num_fp_cols_supervisor, FpOpChip, FpOpCols},
+        SupervisorMode as S,
+    };
+    let m = P::modulus();
+    let key = codes[0];
+    let width = num_fp_cols_supervisor::<P>();
+    let lt_size = core::mem::size_of::<FieldLtCols<u8, P>>();
+    let op_size = core::mem::size_of::<FieldOpCols<u8, P>>();
+    let machine = Air::machine();
+    let chip =
+        machine.chips().iter().find(|c| c.name() == chip_name).context("Fp chip not in machine")?;
+
+    // The column map: the public prefix from `offset_of!`, then the two
+    // arithmetic blocks, whose own offsets follow from their sizes because
+    // they are the last two fields of the row.
+    let output = width - op_size - lt_size;
+    let carry = output + core::mem::offset_of!(FieldOpCols<u8, P>, carry);
+    let mut fields: Vec<(&'static str, usize)> = vec![
+        ("is_real", core::mem::offset_of!(FpOpCols<u8, P, S>, is_real)),
+        ("clk_high", core::mem::offset_of!(FpOpCols<u8, P, S>, clk_high)),
+        ("clk_low", core::mem::offset_of!(FpOpCols<u8, P, S>, clk_low)),
+        ("is_add", core::mem::offset_of!(FpOpCols<u8, P, S>, is_add)),
+        ("is_sub", core::mem::offset_of!(FpOpCols<u8, P, S>, is_sub)),
+        ("is_mul", core::mem::offset_of!(FpOpCols<u8, P, S>, is_mul)),
+        ("x_ptr", core::mem::offset_of!(FpOpCols<u8, P, S>, x_ptr)),
+        ("y_ptr", core::mem::offset_of!(FpOpCols<u8, P, S>, y_ptr)),
+        ("x_addrs", core::mem::offset_of!(FpOpCols<u8, P, S>, x_addrs)),
+        ("y_addrs", core::mem::offset_of!(FpOpCols<u8, P, S>, y_addrs)),
+        ("x_access", core::mem::offset_of!(FpOpCols<u8, P, S>, x_access)),
+        ("y_access", core::mem::offset_of!(FpOpCols<u8, P, S>, y_access)),
+        (
+            "read_slice_page_prot_access",
+            core::mem::offset_of!(FpOpCols<u8, P, S>, read_slice_page_prot_access),
+        ),
+        (
+            "write_slice_page_prot_access",
+            core::mem::offset_of!(FpOpCols<u8, P, S>, write_slice_page_prot_access),
+        ),
+        ("output_result", output),
+        ("output_carry", carry),
+        ("output_witness", carry + P::NB_LIMBS),
+        ("output_range", width - lt_size),
+    ];
+    fields.sort_by_key(|(_, offset)| *offset);
+    // Fields no row constraint determines: the clock, the pointers, the
+    // addresses, the memory values and the page-protection records all come
+    // from the syscall, memory and page-protection arguments.
+    let bound = [
+        "clk_high",
+        "clk_low",
+        "x_ptr",
+        "y_ptr",
+        "x_addrs",
+        "y_addrs",
+        "x_access",
+        "y_access",
+        "read_slice_page_prot_access",
+        "write_slice_page_prot_access",
+    ];
+
+    let is_real_col = core::mem::offset_of!(FpOpCols<u8, P, S>, is_real);
+    let operands = fp_operands(rng, iterations, &m);
+    let mut canonical_calls = Vec::new();
+    let mut noncanonical_calls = Vec::new();
+    for (class, x, y) in &operands {
+        for (i, code) in codes.into_iter().enumerate() {
+            let op = match i {
+                0 => FieldOperation::Add,
+                1 => FieldOperation::Sub,
+                _ => FieldOperation::Mul,
+            };
+            let call =
+                FpCall { code, x: x.clone(), y: y.clone(), expected: fp_reference(x, y, op, &m)? };
+            if *class == "noncanonical" {
+                noncanonical_calls.push(call);
+            } else {
+                canonical_calls.push(call);
+            }
+        }
+    }
+
+    // FP1 and FP2 on the canonical and edge operands: the program traps in-guest
+    // on a wrong result, every event is re-checked here, and both the row
+    // results and the honest rows' constraints must hold.
+    let program = build_fp_program(&canonical_calls, 0xF1F1)?;
+    let (records, _) = generate_records::<SP1Field>(program, SP1Stdin::new(), core_opts(), [0; 4])?;
+    let checked = fp_events_check(&records, key, &m, chip_name)?;
+    ensure!(
+        checked.len() == canonical_calls.len(),
+        "{chip_name}: {} events for {} canonical calls",
+        checked.len(),
+        canonical_calls.len()
+    );
+    let record = records
+        .iter()
+        .find(|r| !r.get_precompile_events(key).is_empty())
+        .context("no shard carried the Fp events")?;
+    ensure!(
+        records.iter().filter(|r| !r.get_precompile_events(key).is_empty()).count() == 1,
+        "{chip_name}: the Fp events span several shards; the row check assumes one"
+    );
+    let trace = MachineAir::<SP1Field>::generate_trace(
+        &FpOpChip::<P, S>::new(),
+        record,
+        &mut ExecutionRecord::default(),
+    );
+    ensure!(eval_rows(chip, trace.clone()).is_empty(), "{chip_name}: an honest row fails the AIR");
+    let real_rows = record.get_precompile_events(key).len();
+    for (row, (x, y, op, result)) in checked.iter().enumerate() {
+        let values = &trace.values[row * width..(row + 1) * width];
+        ensure!(
+            limbs_at(values, output) == *result,
+            "{chip_name}: row {row} result limbs differ from the executor's result"
+        );
+        ensure!(
+            limbs_at(values, output) == fp_reference(x, y, *op, &m)?,
+            "{chip_name}: row {row} result limbs differ from the reference"
+        );
+    }
+    for row in real_rows..trace.values.len() / width {
+        ensure!(
+            trace.values[row * width] == SP1Field::zero(),
+            "{chip_name}: a padding row is real"
+        );
+    }
+
+    // The honest arguments of this shard, which the mutation classes below
+    // treat as the rest of the shard being honest.
+    let shard_arguments = machine_argument_balance(record)?;
+
+    // FP1b: the noncanonical class. The executor reduces its operands; the chip
+    // does not, so the row for such an operand may have no satisfying witness.
+    // The executor result is required to be right; whether the honest row
+    // satisfies the AIR is observed per operation, and a row that does satisfy
+    // it must still carry the reduced result.
+    let program = build_fp_program(&noncanonical_calls, 0xF1F2)?;
+    let (noncanonical_records, _) =
+        generate_records::<SP1Field>(program, SP1Stdin::new(), core_opts(), [0; 4])?;
+    let noncanonical_checked = fp_events_check(&noncanonical_records, key, &m, chip_name)?;
+    ensure!(
+        noncanonical_checked.len() == noncanonical_calls.len(),
+        "{chip_name}: {} events for {} noncanonical calls",
+        noncanonical_checked.len(),
+        noncanonical_calls.len()
+    );
+    let mut noncanonical_rows = Vec::new();
+    for record in &noncanonical_records {
+        if record.get_precompile_events(key).is_empty() {
+            continue;
+        }
+        let trace = MachineAir::<SP1Field>::generate_trace(
+            &FpOpChip::<P, S>::new(),
+            record,
+            &mut ExecutionRecord::default(),
+        );
+        let failing: Vec<usize> =
+            eval_rows(chip, trace.clone()).into_iter().map(|(row, _, _)| row).collect();
+        for (row, (_, event)) in record.get_precompile_events(key).iter().enumerate() {
+            let e = match event {
+                PrecompileEvent::PallasFp(e) | PrecompileEvent::VestaFp(e) => e,
+                _ => bail!("{chip_name}: unexpected event kind"),
+            };
+            let (x, y) = (words_to_biguint(&e.x), words_to_biguint(&e.y));
+            let satisfied = !failing.contains(&row);
+            if satisfied {
+                let values = &trace.values[row * width..(row + 1) * width];
+                ensure!(
+                    limbs_at(values, output) == fp_reference(&x, &y, e.op, &m)?,
+                    "{chip_name}: a noncanonical row satisfies the AIR with a result that is not \
+                     the reduced reference"
+                );
+            }
+            noncanonical_rows.push(json!({
+                "operation": format!("{:?}", e.op),
+                "x_at_least_modulus": x >= m,
+                "y_at_least_modulus": y >= m,
+                "honest_row_satisfies_air": satisfied,
+            }));
+        }
+    }
+
+    // FP3: the column sweep on the first, a middle and the last real row and on
+    // the first padding row. A column that survives both deltas is constrained,
+    // if at all, by an argument, so each survivor is classified rather than
+    // only named.
+    ensure!(real_rows >= 3, "{chip_name}: {real_rows} real rows is too few to sweep");
+    let middle = 1 + (rng.next_u64() % (real_rows as u64 - 2)) as usize;
+    let rows = [0, middle, real_rows - 1, real_rows];
+    let mut surviving: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut by_argument: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut by_table = 0usize;
+    let mut inert = 0usize;
+    let mut free: Vec<Value> = Vec::new();
+    let mut cells = 0usize;
+    for row in rows {
+        for column in 0..width {
+            let random = 1 + (rng.next_u64() % (SP1Field::ORDER_U32 as u64 - 1)) as u32;
+            cells += 1;
+            let verdicts: Vec<Verdict> = [1u32, random]
+                .into_iter()
+                .map(|delta| {
+                    classify_mutation(chip, &trace, row, column, delta, is_real_col, tables)
+                })
+                .collect();
+            if verdicts.iter().any(|v| matches!(v, Verdict::Air)) {
+                continue;
+            }
+            let field = column_field(&fields, column);
+            *surviving.entry(field).or_default() += 1;
+            match &verdicts[0] {
+                Verdict::Argument(kind) => *by_argument.entry(kind).or_default() += 1,
+                Verdict::FixedTable => by_table += 1,
+                Verdict::InertPadding => inert += 1,
+                _ => free.push(json!({"row": row, "column": column, "field": field})),
+            }
+        }
+    }
+    ensure!(
+        free.is_empty(),
+        "{chip_name}: cells no constraint, argument or fixed table rejects: {free:?}"
+    );
+
+    // FP4: random single-cell mutations of real rows, half of them aimed at the
+    // fields the row algebra never constrains.
+    let mutations = 2 * iterations.max(16);
+    let mut by_air = 0usize;
+    let mut by_arg: BTreeMap<&str, usize> = BTreeMap::new();
+    let mut mutations_by_table = 0usize;
+    let mut survivors: Vec<Value> = Vec::new();
+    for _ in 0..mutations {
+        let row = (rng.next_u64() % real_rows as u64) as usize;
+        let column = if rng.next_u64() % 2 == 0 {
+            (rng.next_u64() % width as u64) as usize
+        } else {
+            let candidates: Vec<usize> =
+                (0..width).filter(|c| bound.contains(&column_field(&fields, *c))).collect();
+            candidates[(rng.next_u64() % candidates.len() as u64) as usize]
+        };
+        let delta = 1 + (rng.next_u64() % (SP1Field::ORDER_U32 as u64 - 1)) as u32;
+        match classify_mutation(chip, &trace, row, column, delta, is_real_col, tables) {
+            Verdict::Air => by_air += 1,
+            Verdict::Argument(kind) => *by_arg.entry(kind).or_default() += 1,
+            Verdict::FixedTable => mutations_by_table += 1,
+            Verdict::InertPadding => bail!("{chip_name}: a real row classified as padding"),
+            Verdict::Survived => survivors.push(json!({
+                "row": row, "column": column, "field": column_field(&fields, column),
+                "delta": delta,
+            })),
+        }
+    }
+    ensure!(
+        survivors.is_empty(),
+        "{chip_name}: mutations no constraint, argument or fixed table rejects: {survivors:?}"
+    );
+
+    Ok(json!({
+        "chip": chip_name,
+        "width": width,
+        "fp1_executor_vs_reference": {
+            "calls": checked.len() + noncanonical_checked.len(),
+            "operand_classes": ["random canonical", "edge", "noncanonical"],
+            "disagreements": 0,
+        },
+        "fp1b_noncanonical_operands": {
+            "rows": noncanonical_rows,
+            "note": "the executor reduces its operands and the chip does not, so a row for a \
+                     noncanonical operand may have no satisfying witness; a row that does satisfy \
+                     the AIR is required to carry the reduced result",
+        },
+        "fp2_witness": {
+            "real_rows": real_rows,
+            "honest_rows_satisfy_air": true,
+            "row_results_match_reference": true,
+        },
+        "fp3_column_sweep": {
+            "rows": rows,
+            "cells_perturbed": cells,
+            "surviving_the_row_algebra_by_field": surviving,
+            "rejected_by_argument": by_argument,
+            "rejected_by_a_fixed_table": by_table,
+            "inert_padding_cells": inert,
+            "constrained_by_nothing": free,
+        },
+        "fp4_mutations": {
+            "mutations": mutations,
+            "rejected_by_air": by_air,
+            "rejected_by_argument": by_arg,
+            "rejected_by_a_fixed_table": mutations_by_table,
+            "unexplained": 0,
+        },
+        "shard_arguments": shard_arguments,
+    }))
+}
+
+// ---------------------------------------------------------------------------
+// The curve layers of `pasta-fuzz` beyond the first row.
+//
+// C1 extends the column sweep from the first row of a one-call trace to
+// several rows of a multi-call trace, the first padding row included, and
+// classifies each survivor against the arguments instead of only naming its
+// field. C2 attacks the two degenerate cases the fixed suite pins at one
+// point each — the double chip's `slope * 2y == 3x^2 + a` when `y = 0`, and
+// the add chip's equal-x rows — with random inputs and random forged slopes,
+// so the boundary between what the row algebra rejects and the one case it
+// cannot is measured rather than asserted once. Every forged row also goes to
+// the arguments, which answer a different question: a forgery that rewrites an
+// honest trace's claimed input no longer matches the memory the rest of the
+// shard recorded.
+// ---------------------------------------------------------------------------
+
+fn fuzz_curve_rows(
+    rng: &mut FuzzRng,
+    iterations: usize,
+    tables: &BTreeSet<Vec<u32>>,
+) -> Result<Value> {
+    const CALLS_PER_OP: usize = 6;
+    let mut results = Vec::new();
+    for op in &OPS {
+        let calls: Vec<Call> = (0..CALLS_PER_OP)
+            .map(|_| match op.kind {
+                Kind::Add => {
+                    let (p, q) = rng.add_operands(op.curve);
+                    make_call(*op, p, Some(q))
+                }
+                Kind::Double => make_call(*op, rng.point(op.curve), None),
+            })
+            .collect::<Result<_>>()?;
+        let (program, _) = build_program(&calls)?;
+        let (records, _) =
+            generate_records::<SP1Field>(program, SP1Stdin::new(), core_opts(), [0; 4])?;
+        let machine = Air::machine();
+        let chip = chip_for(&machine, op)?;
+        let width = op_width(op);
+        let record = records
+            .iter()
+            .find(|r| !r.get_precompile_events(op.syscall).is_empty())
+            .context("no shard carried the precompile events")?;
+        let real_rows = record.get_precompile_events(op.syscall).len();
+        ensure!(
+            real_rows == CALLS_PER_OP,
+            "{}: {real_rows} rows for {CALLS_PER_OP} calls",
+            op.id
+        );
+        let honest = generate_chip_trace(&mut record.clone(), op);
+        ensure!(eval_rows(chip, honest.clone()).is_empty(), "{}: an honest row fails", op.id);
+        let fields = column_fields(op);
+        let shard_arguments = machine_argument_balance(record)?;
+
+        // C1: the sweep across rows.
+        let middle = 1 + (rng.next_u64() % (real_rows as u64 - 2)) as usize;
+        let rows = [0, middle, real_rows - 1, real_rows];
+        let mut surviving: BTreeMap<&str, usize> = BTreeMap::new();
+        let mut by_argument: BTreeMap<&str, usize> = BTreeMap::new();
+        let mut by_table = 0usize;
+        let mut inert = 0usize;
+        let mut free: Vec<Value> = Vec::new();
+        let mut cells = 0usize;
+        for row in rows {
+            for column in 0..width {
+                let random = 1 + (rng.next_u64() % (SP1Field::ORDER_U32 as u64 - 1)) as u32;
+                cells += 1;
+                // `is_real` is the first column of both curve row structs.
+                let verdicts: Vec<Verdict> = [1u32, random]
+                    .into_iter()
+                    .map(|delta| {
+                        classify_mutation(chip, &honest, row, column, delta, 0, tables)
+                    })
+                    .collect();
+                if verdicts.iter().any(|v| matches!(v, Verdict::Air)) {
+                    continue;
+                }
+                let field = column_field(&fields, column);
+                *surviving.entry(field).or_default() += 1;
+                match &verdicts[0] {
+                    Verdict::Argument(kind) => *by_argument.entry(kind).or_default() += 1,
+                    Verdict::FixedTable => by_table += 1,
+                    Verdict::InertPadding => inert += 1,
+                    _ => free.push(json!({"row": row, "column": column, "field": field})),
+                }
+            }
+        }
+        ensure!(
+            free.is_empty(),
+            "{}: cells no constraint, argument or fixed table rejects: {free:?}",
+            op.id
+        );
+
+        // C2: randomized forgeries of the degenerate cases, written over a row
+        // the honest trace already carries.
+        let mut forgeries = Vec::new();
+        for i in 0..iterations.min(8) {
+            let slope = BigUint::from((rng.next_u64() % 1_000_000_007).max(2));
+            let row = (rng.next_u64() % real_rows as u64) as usize;
+            let span = row * width..(row + 1) * width;
+            let mut trace = honest.clone();
+            let case = match op.kind {
+                Kind::Double => {
+                    // `y = 0` with a random x. Only x = 0 makes the numerator
+                    // vanish too, and that is the one input the relation
+                    // leaves free; every other x must be rejected.
+                    let x = if i == 0 { BigUint::zero() } else { rng.point(op.curve).0 };
+                    let label = if x.is_zero() {
+                        "double y = 0, x = 0: both sides of the slope relation vanish"
+                    } else {
+                        "double y = 0, x random nonzero"
+                    };
+                    match op.curve {
+                        Curve::Vesta => forge_double_row_at::<VestaBaseField>(
+                            &mut trace.values[span],
+                            &x,
+                            &BigUint::zero(),
+                            &slope,
+                        )?,
+                        Curve::Pallas => forge_double_row_at::<PallasBaseField>(
+                            &mut trace.values[span],
+                            &x,
+                            &BigUint::zero(),
+                            &slope,
+                        )?,
+                    };
+                    label
+                }
+                Kind::Add => {
+                    // A second operand carrying p's x coordinate: q == p,
+                    // q == -p, or an off-curve point. The denominator vanishes
+                    // in every case.
+                    let q_y = match i % 3 {
+                        0 => ForgedQy::EqualToP,
+                        1 => ForgedQy::NegatedP,
+                        _ => ForgedQy::Arbitrary(rng.next_u64()),
+                    };
+                    match op.curve {
+                        Curve::Vesta => forge_add_same_x_row::<VestaBaseField>(
+                            &mut trace.values[span],
+                            q_y,
+                            &slope,
+                        )?,
+                        Curve::Pallas => forge_add_same_x_row::<PallasBaseField>(
+                            &mut trace.values[span],
+                            q_y,
+                            &slope,
+                        )?,
+                    }
+                }
+            };
+            let air_rejects = !eval_rows(chip, trace.clone()).is_empty();
+            let argument = argument_contribution_changed(chip, &honest, &trace);
+            ensure!(
+                air_rejects || argument.is_some(),
+                "{}: a forged row ({case}) is rejected by neither the row algebra nor an argument",
+                op.id
+            );
+            // The one case the row algebra is known not to reject is the
+            // double chip's (0, 0) input. A change either way here is a change
+            // to the documented contract.
+            let free_slope = op.kind == Kind::Double && case.contains("x = 0");
+            ensure!(
+                air_rejects != free_slope,
+                "{}: the row algebra {} the forged row ({case}), against the pinned expectation",
+                op.id,
+                if air_rejects { "now rejects" } else { "accepted" }
+            );
+            forgeries.push(json!({
+                "case": case,
+                "forged_slope": slope.to_string(),
+                "row": row,
+                "row_algebra_rejects": air_rejects,
+                "argument_rejects": argument,
+            }));
+        }
+        results.push(json!({
+            "operation": op.id,
+            "c1_column_sweep": {
+                "rows": rows,
+                "real_rows": real_rows,
+                "cells_perturbed": cells,
+                "surviving_the_row_algebra_by_field": surviving,
+                "rejected_by_argument": by_argument,
+                "rejected_by_a_fixed_table": by_table,
+                "inert_padding_cells": inert,
+                "constrained_by_nothing": free,
+            },
+            "c2_forged_degenerate_rows": forgeries,
+            "shard_arguments": shard_arguments,
+        }));
+    }
+    Ok(json!({
+        "scope": "the row algebra from debug_constraints, plus the chip's own contribution to the \
+                  memory, page-protection and syscall arguments",
+        "results": results,
+    }))
+}
+
+// ---------------------------------------------------------------------------
+// The executor differential layers of `pasta-fuzz`.
+//
+// Every Pasta syscall is served twice in the fork: once by the minimal
+// executor, which does the arithmetic, and once by the tracing executor, which
+// records the accesses while replaying the minimal executor's trace.
+// `generate_records` runs both in sequence, so a disagreement between them
+// never shows up as a wrong result. It shows up as one side accepting a program
+// the other refuses: a guest that executes but cannot be traced, and so cannot
+// be proved.
+//
+// D1 walks a table of deliberately malformed register arguments — misaligned
+// pointers, addresses outside the valid range, a nonzero second argument where
+// the ABI requires zero — for each syscall family; D2 draws random pointer
+// offsets. Both require the two executors to reach the same verdict, and in
+// the well-formed case to leave the same words in memory.
+// ---------------------------------------------------------------------------
+
+/// The first address below SP1's 2^16 data floor that is page-aligned, and the
+/// name of the table case that uses it.
+const FLOOR_ADDRESS: u64 = 0x1000;
+const FLOOR_CASE: &str = "a0 below the address floor";
+const ZERO_OPERAND_CASE: &str = "operand words all zero";
+const NONCANONICAL_CASE: &str = "an operand word above the modulus";
+/// D2 case prefixes: a whole number of operands, which keeps the value well
+/// formed, and a whole number of words, which rotates it.
+const ALIGNED_CASE: &str = "a0 + whole operands";
+const ROTATED_CASE: &str = "a0 + whole words, rotating the operand";
+
+/// Which operand image a differential case runs over. A pointer that is not
+/// operand-aligned reads a rotation of the page's words, whose coordinates are
+/// no longer canonical, and a pointer into untouched memory reads the all-zero
+/// encoding. Both are documented input *values*, pinned by the invalid-input
+/// suite, so the table reaches them deliberately and the random offsets stay
+/// operand-aligned rather than stumbling into them.
+#[derive(Clone, Copy, PartialEq)]
+enum Operands {
+    Valid,
+    Zero,
+    AboveTheModulus,
+}
+
+/// How many times an operand is repeated across its page, so that a shifted
+/// pointer still reads well-formed operand words. Without this a random offset
+/// would read untouched memory, whose all-zero encoding is a documented
+/// degenerate input rather than a pointer question: the D1 table has a case of
+/// its own for it.
+const OPERAND_REPEATS: usize = 64;
+
+/// A syscall family with an operand image that is valid whenever the register
+/// arguments are.
+struct Family {
+    name: &'static str,
+    /// The syscall the program issues.
+    code: SyscallCode,
+    /// The code its events are filed under, which for the field operations is
+    /// the add code for all three.
+    event_code: SyscallCode,
+    image: Vec<(u64, Vec<u64>)>,
+    /// The same image with one operand word raised above the modulus.
+    noncanonical: Vec<(u64, Vec<u64>)>,
+    a0: u64,
+    a1: u64,
+    /// Words the call writes back, read from both executors and compared.
+    result_words: usize,
+}
+
+/// One syscall with chosen register arguments over `image`.
+fn build_syscall_program(
+    code: SyscallCode,
+    image: &[(u64, Vec<u64>)],
+    a0: u64,
+    a1: u64,
+    tag: u32,
+) -> Result<Arc<Program>> {
+    let mut instructions = Vec::new();
+    load_address(&mut instructions, 10, a0);
+    load_address(&mut instructions, 11, a1);
+    let code = code as u32 as u64;
+    instructions.push(Instruction::new(Opcode::LUI, 5, code & !0xfff, code & !0xfff, true, true));
+    instructions.push(Instruction::new(Opcode::ADDI, 5, 5, code & 0xfff, false, true));
+    instructions.push(Instruction::new(Opcode::ECALL, 5, 10, 11, false, false));
+    add_commitments(&mut instructions, tag);
+    add_halt(&mut instructions);
+    ensure!(0x2000 + 4 * instructions.len() as u64 <= FIXTURE_BASE, "program overlaps its data");
+    let mut program = Program::new(instructions, 0x2000, 0x2000);
+    let memory = Arc::make_mut(&mut program.memory_image);
+    for (address, words) in image {
+        for repeat in 0..OPERAND_REPEATS {
+            let base = address + 8 * (words.len() * repeat) as u64;
+            for (i, word) in words.iter().enumerate() {
+                memory.insert(base + 8 * i as u64, *word);
+            }
+        }
+    }
+    Ok(Arc::new(program))
+}
+
+/// How one executor ended: completed, returned an error, or panicked.
+fn outcome_label(result: std::thread::Result<Result<String>>) -> (String, Value) {
+    match result {
+        Ok(Ok(status)) => (status, Value::Null),
+        Ok(Err(error)) => ("error".to_string(), json!(error.to_string())),
+        Err(payload) => {
+            let message = payload
+                .downcast_ref::<String>()
+                .cloned()
+                .or_else(|| payload.downcast_ref::<&str>().map(|s| (*s).to_string()))
+                .unwrap_or_else(|| "non-string panic payload".into());
+            ("panic".to_string(), json!(message))
+        }
+    }
+}
+
+/// The minimal executor alone, plus the operand words it leaves in memory.
+fn minimal_outcome(program: Arc<Program>, read_at: u64, words: usize) -> (String, Value, Vec<u64>) {
+    let mut left: Vec<u64> = Vec::new();
+    let result = {
+        let read = &mut left;
+        catch_unwind(AssertUnwindSafe(move || -> Result<String> {
+            let mut runner = sp1_core_executor_runner::MinimalExecutorRunner::simple(program);
+            loop {
+                match runner.try_execute_chunk() {
+                    Ok(Some(_)) => (),
+                    Ok(None) => break,
+                    Err(error) => bail!("{error:?}"),
+                }
+            }
+            for i in 0..words {
+                read.push(runner.get_memory_value(read_at + 8 * i as u64).value);
+            }
+            Ok(format!("ok exit_code={}", runner.exit_code()))
+        }))
+    };
+    let (status, detail) = outcome_label(result);
+    (status, detail, left)
+}
+
+/// The tracing replay: `generate_records` runs the minimal executor and then
+/// traces its chunks through the tracing syscall handlers.
+fn tracing_outcome(program: Arc<Program>, code: Option<SyscallCode>) -> (String, Value, Vec<u64>) {
+    let mut left: Vec<u64> = Vec::new();
+    let result = {
+        let read = &mut left;
+        catch_unwind(AssertUnwindSafe(move || -> Result<String> {
+            let (records, _) =
+                generate_records::<SP1Field>(program, SP1Stdin::new(), core_opts(), [0; 4])?;
+            let mut events = 0usize;
+            let mut traps = 0usize;
+            for record in &records {
+                let Some(found) = code.and_then(|code| record.precompile_events.get_events(code))
+                else {
+                    continue;
+                };
+                for (syscall_event, event) in found.iter() {
+                    events += 1;
+                    if syscall_event.trap_error.is_some() {
+                        traps += 1;
+                    }
+                    let written: Vec<u64> = match event {
+                        PrecompileEvent::PallasPoseidon(e) | PrecompileEvent::VestaPoseidon(e) => {
+                            e.state_write_records.iter().map(|r| r.value).collect()
+                        }
+                        PrecompileEvent::PallasFp(e) | PrecompileEvent::VestaFp(e) => {
+                            e.x_memory_records.iter().map(|r| r.value).collect()
+                        }
+                        PrecompileEvent::PallasAdd(e) | PrecompileEvent::VestaAdd(e) => {
+                            e.p_memory_records.iter().map(|r| r.value).collect()
+                        }
+                        PrecompileEvent::PallasDouble(e) | PrecompileEvent::VestaDouble(e) => {
+                            e.p_memory_records.iter().map(|r| r.value).collect()
+                        }
+                        _ => bail!("unexpected event kind"),
+                    };
+                    read.extend(written);
+                }
+            }
+            Ok(format!("ok events={events} traps={traps}"))
+        }))
+    };
+    let (status, detail) = outcome_label(result);
+    (status, detail, left)
+}
+
+/// A plain store and load at `address` with no syscall in the program: the
+/// control that says whether a divergence belongs to the syscall under test or
+/// to any program touching that address. `seed_image` decides whether the
+/// address is part of the program's memory image, as every syscall operand
+/// above is, or is first touched at run time.
+fn store_control(address: u64, seed_image: bool) -> Result<Value> {
+    let mut instructions = Vec::new();
+    load_address(&mut instructions, 10, address);
+    instructions.push(Instruction::new(Opcode::ADDI, 11, 0, 7, false, true));
+    instructions.push(Instruction::new(Opcode::SD, 11, 10, 0, false, true));
+    instructions.push(Instruction::new(Opcode::LD, 12, 10, 0, false, true));
+    add_commitments(&mut instructions, 0xD0);
+    add_halt(&mut instructions);
+    let mut program = Program::new(instructions, 0x2000, 0x2000);
+    if seed_image {
+        Arc::make_mut(&mut program.memory_image).insert(address, 0);
+    }
+    let program = Arc::new(program);
+    let minimal = minimal_outcome(program.clone(), address, 1);
+    let tracing = tracing_outcome(program, None);
+    Ok(json!({
+        "address": address,
+        "in_the_memory_image": seed_image,
+        "minimal": minimal.0,
+        "minimal_detail": minimal.1,
+        "tracing": tracing.0,
+        "tracing_detail": tracing.1,
+        "diverges": minimal.0.starts_with("ok") != tracing.0.starts_with("ok"),
+    }))
+}
+
+/// The syscall families the differential covers.
+fn differential_families() -> Result<Vec<Family>> {
+    let mut families = Vec::new();
+    for op in &OPS {
+        let points = multiples(op.curve, 2);
+        let mut image = vec![(FIXTURE_BASE + P_OFFSET, words(&points[0]).to_vec())];
+        let a1 = match op.kind {
+            Kind::Add => {
+                image.push((FIXTURE_BASE + Q_OFFSET, words(&points[1]).to_vec()));
+                FIXTURE_BASE + Q_OFFSET
+            }
+            Kind::Double => 0,
+        };
+        // The same point with `x + p` in place of `x`: below 2^256, since
+        // both Pasta primes are below 2^255, and above the modulus.
+        let m = modulus(op.curve);
+        let raised = (&points[0].0 + &m, points[0].1.clone());
+        let mut noncanonical = vec![(FIXTURE_BASE + P_OFFSET, words(&raised).to_vec())];
+        if op.kind == Kind::Add {
+            noncanonical.push((FIXTURE_BASE + Q_OFFSET, words(&points[1]).to_vec()));
+        }
+        families.push(Family {
+            name: op.id,
+            code: op.syscall,
+            event_code: op.syscall,
+            image,
+            noncanonical,
+            a0: FIXTURE_BASE + P_OFFSET,
+            a1,
+            result_words: 8,
+        });
+    }
+    for (name, code, event_code, modulus) in [
+        (
+            "pallas-fp-mul",
+            SyscallCode::PALLAS_FP_MUL,
+            SyscallCode::PALLAS_FP_ADD,
+            PallasBaseField::modulus(),
+        ),
+        (
+            "vesta-fp-mul",
+            SyscallCode::VESTA_FP_MUL,
+            SyscallCode::VESTA_FP_ADD,
+            VestaBaseField::modulus(),
+        ),
+    ] {
+        let image = vec![
+            (FIXTURE_BASE + P_OFFSET, fp_words(&(&modulus - 2u32)).to_vec()),
+            (FIXTURE_BASE + Q_OFFSET, fp_words(&(&modulus - 3u32)).to_vec()),
+        ];
+        let noncanonical = vec![
+            (FIXTURE_BASE + P_OFFSET, fp_words(&(&modulus + 1u32)).to_vec()),
+            (FIXTURE_BASE + Q_OFFSET, fp_words(&(&modulus - 3u32)).to_vec()),
+        ];
+        families.push(Family {
+            name,
+            code,
+            event_code,
+            image,
+            noncanonical,
+            a0: FIXTURE_BASE + P_OFFSET,
+            a1: FIXTURE_BASE + Q_OFFSET,
+            result_words: 4,
+        });
+    }
+    for (name, code) in [
+        ("pallas-poseidon", SyscallCode::PALLAS_POSEIDON),
+        ("vesta-poseidon", SyscallCode::VESTA_POSEIDON),
+    ] {
+        let state: [BigUint; 3] = core::array::from_fn(|i| BigUint::from(i as u32 + 1));
+        let raised: [BigUint; 3] = core::array::from_fn(|i| {
+            if i == 0 {
+                (BigUint::one() << 256u32) - BigUint::one()
+            } else {
+                BigUint::from(i as u32 + 1)
+            }
+        });
+        families.push(Family {
+            name,
+            code,
+            event_code: code,
+            image: vec![(FIXTURE_BASE + P_OFFSET, poseidon_words(&state))],
+            noncanonical: vec![(FIXTURE_BASE + P_OFFSET, poseidon_words(&raised))],
+            a0: FIXTURE_BASE + P_OFFSET,
+            a1: 0,
+            result_words: 12,
+        });
+    }
+    Ok(families)
+}
+
+/// Whether the two executors reached the same verdict, and left the same words
+/// when both completed.
+fn executors_agree(
+    minimal: &(String, Value, Vec<u64>),
+    tracing: &(String, Value, Vec<u64>),
+) -> bool {
+    fn class(status: &str) -> &str {
+        if status.starts_with("ok") {
+            "ok"
+        } else {
+            status
+        }
+    }
+    if class(&minimal.0) != class(&tracing.0) {
+        return false;
+    }
+    if !minimal.0.starts_with("ok") {
+        return true;
+    }
+    // The tracing side reports no words when the call trapped before writing.
+    tracing.2.is_empty() || minimal.2 == tracing.2
+}
+
+fn fuzz_executor_differential(rng: &mut FuzzRng, iterations: usize) -> Result<Value> {
+    // A malformed argument is expected to panic one or both executors; keep
+    // the messages out of the log.
+    let hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(|_| {}));
+    let result = fuzz_executor_differential_inner(rng, iterations);
+    std::panic::set_hook(hook);
+    result
+}
+
+fn fuzz_executor_differential_inner(rng: &mut FuzzRng, iterations: usize) -> Result<Value> {
+    let families = differential_families()?;
+    let mut cases = Vec::new();
+    let mut divergences = Vec::new();
+    let mut agreements = 0usize;
+    for family in &families {
+        // `0x1_0000_0000_0000` is 2^48, the first address above SP1's range;
+        // `0x1000` is below its 2^16 floor.
+        let mut table: Vec<(&'static str, u64, u64, Operands)> = vec![
+            ("well formed", family.a0, family.a1, Operands::Valid),
+            ("a0 misaligned by 1", family.a0 + 1, family.a1, Operands::Valid),
+            ("a0 misaligned by 4", family.a0 + 4, family.a1, Operands::Valid),
+            ("a0 above the address range", 0x1_0000_0000_0000, family.a1, Operands::Valid),
+            (FLOOR_CASE, FLOOR_ADDRESS, family.a1, Operands::Valid),
+            // The two documented operand values, reached deliberately at a
+            // well-formed pointer. The invalid-input suite pins what the
+            // witness generator does with them; these cases ask only whether
+            // the two executors agree.
+            (ZERO_OPERAND_CASE, family.a0, family.a1, Operands::Zero),
+            (NONCANONICAL_CASE, family.a0, family.a1, Operands::AboveTheModulus),
+        ];
+        if family.a1 == 0 {
+            table.push(("a1 nonzero where the ABI requires zero", family.a0, 8, Operands::Valid));
+        } else {
+            table.push(("a1 misaligned by 1", family.a0, family.a1 + 1, Operands::Valid));
+            table.push((
+                "a1 above the address range",
+                family.a0,
+                0x1_0000_0000_0000,
+                Operands::Valid,
+            ));
+        }
+        for (case, a0, a1, operands) in table {
+            let image: &[(u64, Vec<u64>)] = match operands {
+                Operands::Valid => &family.image,
+                Operands::Zero => &[],
+                Operands::AboveTheModulus => &family.noncanonical,
+            };
+            let program = build_syscall_program(family.code, image, a0, a1, 0xD1)?;
+            let minimal = minimal_outcome(program.clone(), a0, family.result_words);
+            let tracing = tracing_outcome(program, Some(family.event_code));
+            // The baseline is also the test that the table is testing
+            // anything: the call must happen and both sides must leave the
+            // same words, or the malformed cases prove nothing.
+            if case == "well formed" {
+                ensure!(
+                    tracing.0 == "ok events=1 traps=0" && minimal.2 == tracing.2,
+                    "{}: the well-formed call did not run on both executors: minimal {} {:?}, \
+                     tracing {} {:?}",
+                    family.name,
+                    minimal.0,
+                    minimal.2,
+                    tracing.0,
+                    tracing.2
+                );
+            }
+            let agree = executors_agree(&minimal, &tracing);
+            if agree {
+                agreements += 1;
+            } else {
+                divergences.push(json!({
+                    "family": family.name, "case": case,
+                    "minimal": minimal.0, "minimal_detail": minimal.1,
+                    "tracing": tracing.0, "tracing_detail": tracing.1,
+                    "minimal_words": minimal.2, "tracing_words": tracing.2,
+                }));
+            }
+            cases.push(json!({
+                "family": family.name, "case": case, "a0": a0, "a1": a1,
+                "minimal": minimal.0, "tracing": tracing.0, "agree": agree,
+            }));
+        }
+    }
+
+    // D2: random pointer offsets, the family drawn at random each time.
+    let mut random_cases = 0usize;
+    for _ in 0..iterations {
+        let family = &families[(rng.next_u64() % families.len() as u64) as usize];
+        // Two kinds of offset. A whole number of operands reads another copy
+        // of the same well-formed value, so the case is about the address
+        // alone. A whole number of words reads a rotation of the page, whose
+        // coordinates are a malformed value: that is the documented class, and
+        // its divergences are attributed there rather than to the address.
+        let stride = 8 * family.result_words as u64;
+        let whole = rng.next_u64() % 2 == 0;
+        let offset = if whole {
+            stride * (1 + rng.next_u64() % (0x700 / stride))
+        } else {
+            8 * (1 + rng.next_u64() % 0xe0)
+        };
+        let a0 = family.a0 + offset;
+        let case = if whole {
+            format!("{ALIGNED_CASE} {offset:#x}")
+        } else {
+            format!("{ROTATED_CASE} {offset:#x}")
+        };
+        let program = build_syscall_program(family.code, &family.image, a0, family.a1, 0xD2)?;
+        let minimal = minimal_outcome(program.clone(), a0, family.result_words);
+        let tracing = tracing_outcome(program, Some(family.event_code));
+        random_cases += 1;
+        if executors_agree(&minimal, &tracing) {
+            agreements += 1;
+        } else {
+            divergences.push(json!({
+                "family": family.name, "case": case,
+                "minimal": minimal.0, "minimal_detail": minimal.1,
+                "tracing": tracing.0, "tracing_detail": tracing.1,
+                "minimal_words": minimal.2, "tracing_words": tracing.2,
+            }));
+        }
+    }
+    // Whether a program that only writes below SP1's address floor already
+    // diverges without any syscall. When it does, the floor case above says
+    // nothing about the syscalls, and the divergence is attributed to the
+    // address rather than counted against them.
+    let controls: Vec<Value> = [
+        (FIXTURE_BASE, true),
+        (FIXTURE_BASE + 0x2000, false),
+        (FLOOR_ADDRESS, true),
+        (FLOOR_ADDRESS, false),
+    ]
+    .into_iter()
+    .map(|(address, seed)| store_control(address, seed))
+    .collect::<Result<_>>()?;
+    // The syscall case points its pointer at an address the program image does
+    // not carry, so the matching control is the one with `in_the_memory_image`
+    // false.
+    let floor_diverges = controls[3]["diverges"] == json!(true);
+    ensure!(
+        controls[0]["diverges"] == json!(false),
+        "the plain-store control inside the valid range does not run on both executors: {}",
+        controls[0]
+    );
+    let (explained, rest): (Vec<Value>, Vec<Value>) = divergences
+        .into_iter()
+        .partition(|d| floor_diverges && d["case"] == json!(FLOOR_CASE));
+    // The all-zero operand is the degenerate input the invalid-input suite
+    // pins. Here it is only required to be the curve chips that disagree about
+    // it: their slope divides by `2y` or by `q.x - p.x`, and the fixed-limb
+    // executor path returns zero for an inverse the witness generator refuses
+    // to take.
+    let (degenerate, unexplained): (Vec<Value>, Vec<Value>) = rest.into_iter().partition(|d| {
+        let case = d["case"].as_str().unwrap_or_default();
+        case == ZERO_OPERAND_CASE || case == NONCANONICAL_CASE || case.starts_with(ROTATED_CASE)
+    });
+    let unexpected: Vec<&Value> = degenerate
+        .iter()
+        .filter(|d| !OPS.iter().any(|op| d["family"] == json!(op.id)))
+        .collect();
+    ensure!(
+        unexpected.is_empty(),
+        "a documented operand value divides the two executors outside the curve chips: \
+         {unexpected:?}"
+    );
+    Ok(json!({
+        "d1_table": cases,
+        "d2_random_offsets": random_cases,
+        "agreements": agreements,
+        "plain_store_controls": {
+            "program": "one plain store and load, no syscall",
+            "cases": controls,
+            "address_floor_diverges_without_a_syscall": floor_diverges,
+        },
+        "divergences_from_the_address_alone": explained,
+        "divergences_from_a_documented_operand_value": degenerate,
+        "unexplained_divergences": unexplained,
+        "note": "a divergence is a program one executor accepts and the other does not: it \
+                 executes but cannot be traced, so it cannot be proved. A divergence the \
+                 plain-store control reproduces without any syscall belongs to the address, \
+                 and one a deliberately malformed operand value produces belongs to that \
+                 value; neither is a disagreement about a well-formed call",
     }))
 }
 
@@ -6056,75 +7466,151 @@ fn set_input_word<P: FieldParameters + NumWords>(
     let _ = core::marker::PhantomData::<P>;
 }
 
-/// Repopulate the double chip's arithmetic for input (0, 0) with a chosen slope.
-fn forge_double_row<P: FieldParameters + NumWords>(
+/// Which second operand a forged equal-x add row claims.
+#[derive(Clone, Copy)]
+enum ForgedQy {
+    EqualToP,
+    NegatedP,
+    Arbitrary(u64),
+}
+
+/// Repopulate the double chip's arithmetic for the claimed input `(x, y)` with
+/// a chosen slope. For `y = 0` the denominator `2y` vanishes, and for `x = 0`
+/// so does the numerator `a + 3x^2`, which is the one input for which
+/// `slope * 2y == 3x^2 + a` leaves the slope free.
+fn forge_double_row_at<P: FieldParameters + NumWords>(
     row: &mut [SP1Field],
+    x: &BigUint,
+    y: &BigUint,
     slope: &BigUint,
 ) -> Result<([u64; 4], [u64; 4])> {
     use sp1_core_executor::events::FieldOperation;
     let cols: &mut WeierstrassDoubleAssignCols<SP1Field, P, sp1_core_machine::SupervisorMode> =
         row.borrow_mut();
     let m = P::modulus();
-    let zero = BigUint::zero();
     let mut blu = Vec::new();
 
-    // Claim the all-zero input encoding in the memory-value columns.
-    for i in 0..cols.p_access.len() {
-        set_input_word::<P>(&mut cols.p_access[i], 0);
+    // Claim the input in the memory-value columns.
+    let half = cols.p_access.len() / 2;
+    let (x_words, y_words) = (biguint_to_words(x), biguint_to_words(y));
+    for i in 0..half {
+        set_input_word::<P>(&mut cols.p_access[i], x_words[i]);
+        set_input_word::<P>(&mut cols.p_access[half + i], y_words[i]);
     }
 
-    // slope_numerator = a + 3 * x^2 = 0 for x = 0 and a = 0.
-    let x_squared = cols
-        .p_x_squared
-        .populate(&mut blu, &zero, &zero, FieldOperation::Mul);
+    // slope_numerator = a + 3 * x^2, with a = 0 for both Pasta curves.
+    let x_squared = cols.p_x_squared.populate(&mut blu, x, x, FieldOperation::Mul);
     let x_squared_times_3 = cols.p_x_squared_times_3.populate(
         &mut blu,
         &x_squared,
         &BigUint::from(3u32),
         FieldOperation::Mul,
     );
-    let numerator =
-        cols.slope_numerator
-            .populate(&mut blu, &zero, &x_squared_times_3, FieldOperation::Add);
-    ensure!(numerator.is_zero(), "forged numerator should vanish");
-
-    // slope_denominator = 2 * y = 0 for y = 0.
+    let numerator = cols.slope_numerator.populate(
+        &mut blu,
+        &BigUint::zero(),
+        &x_squared_times_3,
+        FieldOperation::Add,
+    );
+    if x.is_zero() {
+        ensure!(numerator.is_zero(), "forged numerator should vanish for x = 0");
+    }
+    // slope_denominator = 2 * y.
     let denominator =
-        cols.slope_denominator
-            .populate(&mut blu, &BigUint::from(2u32), &zero, FieldOperation::Mul);
-    ensure!(denominator.is_zero(), "forged denominator should vanish");
+        cols.slope_denominator.populate(&mut blu, &BigUint::from(2u32), y, FieldOperation::Mul);
+    if y.is_zero() {
+        ensure!(denominator.is_zero(), "forged denominator should vanish for y = 0");
+    }
 
-    // The division column: `slope * denominator == numerator` is 0 == 0 for any
-    // slope, so populate the reversed multiplication witness by hand. The
-    // library's `populate` refuses to divide by zero, which is exactly the
-    // honest-prover guard a malicious prover would skip.
-    cols.slope
-        .populate_carry_and_witness(slope, &denominator, FieldOperation::Mul, &m);
+    // The division column: `slope * denominator == numerator`. The library's
+    // `populate` refuses to divide by zero, which is exactly the honest-prover
+    // guard a malicious prover would skip, so the reversed multiplication
+    // witness is populated by hand.
+    cols.slope.populate_carry_and_witness(slope, &denominator, FieldOperation::Mul, &m);
     cols.slope.result = P::to_limbs_field::<SP1Field, SP1Field>(slope);
 
     // Everything downstream follows from the forged slope.
-    let slope_squared = cols
-        .slope_squared
-        .populate(&mut blu, slope, slope, FieldOperation::Mul);
-    let x_plus_x = cols
-        .p_x_plus_p_x
-        .populate(&mut blu, &zero, &zero, FieldOperation::Add);
-    let x3 = cols
-        .x3_ins
-        .populate(&mut blu, &slope_squared, &x_plus_x, FieldOperation::Sub);
+    let slope_squared = cols.slope_squared.populate(&mut blu, slope, slope, FieldOperation::Mul);
+    let x_plus_x = cols.p_x_plus_p_x.populate(&mut blu, x, x, FieldOperation::Add);
+    let x3 = cols.x3_ins.populate(&mut blu, &slope_squared, &x_plus_x, FieldOperation::Sub);
     cols.x3_range.populate(&mut blu, &x3, &m);
-    let x_minus_x3 = cols
-        .p_x_minus_x
-        .populate(&mut blu, &zero, &x3, FieldOperation::Sub);
+    let x_minus_x3 = cols.p_x_minus_x.populate(&mut blu, x, &x3, FieldOperation::Sub);
     let product =
-        cols.slope_times_p_x_minus_x
-            .populate(&mut blu, slope, &x_minus_x3, FieldOperation::Mul);
-    let y3 = cols
-        .y3_ins
-        .populate(&mut blu, &product, &zero, FieldOperation::Sub);
+        cols.slope_times_p_x_minus_x.populate(&mut blu, slope, &x_minus_x3, FieldOperation::Mul);
+    let y3 = cols.y3_ins.populate(&mut blu, &product, y, FieldOperation::Sub);
     cols.y3_range.populate(&mut blu, &y3, &m);
 
     Ok((biguint_to_words(&x3), biguint_to_words(&y3)))
+}
+
+/// Repopulate the double chip's arithmetic for the off-curve input (0, 0).
+fn forge_double_row<P: FieldParameters + NumWords>(
+    row: &mut [SP1Field],
+    slope: &BigUint,
+) -> Result<([u64; 4], [u64; 4])> {
+    forge_double_row_at::<P>(row, &BigUint::zero(), &BigUint::zero(), slope)
+}
+
+/// Repopulate the add chip's arithmetic for a second operand carrying p's x
+/// coordinate and the y coordinate `q_y` selects, with a chosen slope. The
+/// denominator `q.x - p.x` vanishes in every case; only `q == p` makes the
+/// numerator vanish with it. Returns the case's label.
+fn forge_add_same_x_row<P: FieldParameters + NumWords>(
+    row: &mut [SP1Field],
+    q_y: ForgedQy,
+    slope: &BigUint,
+) -> Result<&'static str> {
+    use sp1_core_executor::events::FieldOperation;
+    let cols: &mut WeierstrassAddAssignCols<SP1Field, P, sp1_core_machine::SupervisorMode> =
+        row.borrow_mut();
+    let m = P::modulus();
+    let one = BigUint::one();
+    let mut blu = Vec::new();
+
+    // Recover p's coordinates from the (unchanged) input columns.
+    let half = cols.p_access.len() / 2;
+    let mut words = [0u64; 8];
+    for i in 0..half {
+        words[i] = word_to_u64(&cols.p_access[i].memory_access.prev_value);
+        words[half + i] = word_to_u64(&cols.p_access[half + i].memory_access.prev_value);
+    }
+    let (p_x, p_y) = point_from_words(&words);
+    let (label, q_y) = match q_y {
+        ForgedQy::EqualToP => ("q == p", p_y.clone()),
+        ForgedQy::NegatedP => ("q == -p", (&m - &p_y) % &m),
+        ForgedQy::Arbitrary(seed) => ("q.x == p.x with another q.y", BigUint::from(seed) % &m),
+    };
+
+    // Claim a second operand with p's x coordinate.
+    let (q_x_words, q_y_words) = (biguint_to_words(&p_x), biguint_to_words(&q_y));
+    for i in 0..half {
+        set_input_word::<P>(&mut cols.q_access[i], q_x_words[i]);
+        set_input_word::<P>(&mut cols.q_access[half + i], q_y_words[i]);
+    }
+
+    let denominator = cols.slope_denominator.populate(&mut blu, &p_x, &p_x, FieldOperation::Sub);
+    ensure!(denominator.is_zero(), "forged add denominator should vanish");
+    cols.slope_numerator.populate(&mut blu, &q_y, &p_y, FieldOperation::Sub);
+
+    // The add chip's nonzero-denominator column: `inverse_check * 0 == 1` has
+    // no solution, but populate the best-effort witness so the row is
+    // otherwise well formed and the failure is attributable.
+    cols.inverse_check.populate_carry_and_witness(&one, &denominator, FieldOperation::Mul, &m);
+    cols.inverse_check.result = P::to_limbs_field::<SP1Field, SP1Field>(&one);
+
+    cols.slope.populate_carry_and_witness(slope, &denominator, FieldOperation::Mul, &m);
+    cols.slope.result = P::to_limbs_field::<SP1Field, SP1Field>(slope);
+
+    let slope_squared = cols.slope_squared.populate(&mut blu, slope, slope, FieldOperation::Mul);
+    let x_plus_x = cols.p_x_plus_q_x.populate(&mut blu, &p_x, &p_x, FieldOperation::Add);
+    let x3 = cols.x3_ins.populate(&mut blu, &slope_squared, &x_plus_x, FieldOperation::Sub);
+    cols.x3_range.populate(&mut blu, &x3, &m);
+    let x_minus_x3 = cols.p_x_minus_x.populate(&mut blu, &p_x, &x3, FieldOperation::Sub);
+    let product =
+        cols.slope_times_p_x_minus_x.populate(&mut blu, slope, &x_minus_x3, FieldOperation::Mul);
+    let y3 = cols.y3_ins.populate(&mut blu, &product, &p_y, FieldOperation::Sub);
+    cols.y3_range.populate(&mut blu, &y3, &m);
+    Ok(label)
 }
 
 /// Repopulate the add chip's arithmetic for q == p with a chosen slope.
@@ -6132,78 +7618,7 @@ fn forge_add_equal_points_row<P: FieldParameters + NumWords>(
     row: &mut [SP1Field],
     slope: &BigUint,
 ) -> Result<()> {
-    use sp1_core_executor::events::FieldOperation;
-    let cols: &mut WeierstrassAddAssignCols<SP1Field, P, sp1_core_machine::SupervisorMode> =
-        row.borrow_mut();
-    let m = P::modulus();
-    let zero = BigUint::zero();
-    let one = BigUint::one();
-    let mut blu = Vec::new();
-
-    // Copy p's claimed input words into q's, so the row describes q == p.
-    for i in 0..cols.p_access.len() {
-        cols.q_access[i].memory_access.prev_value = cols.p_access[i].memory_access.prev_value;
-        cols.q_access[i].prev_value_u8 = cols.p_access[i].prev_value_u8;
-    }
-    // Recover p's coordinates from the (unchanged) input columns.
-    let half = cols.p_access.len() / 2;
-    let mut x_words = [0u64; 4];
-    let mut y_words = [0u64; 4];
-    for i in 0..half {
-        x_words[i] = word_to_u64(&cols.p_access[i].memory_access.prev_value);
-        y_words[i] = word_to_u64(&cols.p_access[half + i].memory_access.prev_value);
-    }
-    let (p_x, p_y) = point_from_words(&[
-        x_words[0], x_words[1], x_words[2], x_words[3], y_words[0], y_words[1], y_words[2],
-        y_words[3],
-    ]);
-
-    // Both the numerator and the denominator vanish when q == p.
-    let denominator = cols
-        .slope_denominator
-        .populate(&mut blu, &p_x, &p_x, FieldOperation::Sub);
-    ensure!(
-        denominator.is_zero(),
-        "forged add denominator should vanish"
-    );
-    let numerator = cols
-        .slope_numerator
-        .populate(&mut blu, &p_y, &p_y, FieldOperation::Sub);
-    ensure!(numerator.is_zero(), "forged add numerator should vanish");
-
-    // The add chip's nonzero-denominator column: `inverse_check * 0 == 1` has no
-    // solution, but populate the best-effort witness so the row is otherwise
-    // well formed and the failure is attributable to this constraint alone.
-    cols.inverse_check
-        .populate_carry_and_witness(&one, &denominator, FieldOperation::Mul, &m);
-    cols.inverse_check.result = P::to_limbs_field::<SP1Field, SP1Field>(&one);
-
-    cols.slope
-        .populate_carry_and_witness(slope, &denominator, FieldOperation::Mul, &m);
-    cols.slope.result = P::to_limbs_field::<SP1Field, SP1Field>(slope);
-
-    let slope_squared = cols
-        .slope_squared
-        .populate(&mut blu, slope, slope, FieldOperation::Mul);
-    let x_plus_x = cols
-        .p_x_plus_q_x
-        .populate(&mut blu, &p_x, &p_x, FieldOperation::Add);
-    let x3 = cols
-        .x3_ins
-        .populate(&mut blu, &slope_squared, &x_plus_x, FieldOperation::Sub);
-    cols.x3_range.populate(&mut blu, &x3, &m);
-    let x_minus_x3 = cols
-        .p_x_minus_x
-        .populate(&mut blu, &p_x, &x3, FieldOperation::Sub);
-    let product =
-        cols.slope_times_p_x_minus_x
-            .populate(&mut blu, slope, &x_minus_x3, FieldOperation::Mul);
-    let y3 = cols
-        .y3_ins
-        .populate(&mut blu, &product, &p_y, FieldOperation::Sub);
-    cols.y3_range.populate(&mut blu, &y3, &m);
-    ensure!(zero.is_zero(), "unreachable");
-    Ok(())
+    forge_add_same_x_row::<P>(row, ForgedQy::EqualToP, slope).map(|_| ())
 }
 
 fn biguint_to_words(value: &BigUint) -> [u64; 4] {
