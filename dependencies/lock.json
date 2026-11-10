@@ -70,11 +70,11 @@
       "path": "vendor/proof-systems",
       "upstream": "https://github.com/o1-labs/proof-systems.git",
       "base": "b1d9829fa0b2bb8e15494df1e5e0c6741394075b",
-      "revision": "dbe478fc4cda3a51ee5a365158fe89954f0d7863",
-      "tree": "32d3ce31d03c67880deb4c34f8bb43f5e099ae81",
+      "revision": "ddb617200040ce1c69809f14962735eed9b4479b",
+      "tree": "e71a72e42faef0164bb8644e03258608cd5329b8",
       "branch": "codex/proof-systems-0.7",
       "bundle": "dependencies/bundles/proof-systems.bundle",
-      "bundle_sha256": "15cefb9e1a0b0b64f772039da76e8a8865e17754f6db1facfd0d17b0e27e09f1",
+      "bundle_sha256": "1531bdd137ef25953b8339e50250dd35351106def315672055339455086ab624",
       "patches": [
         {
           "commit": "9f37ee019fb855c08884fe2c5681093b8b979806",
@@ -143,6 +143,14 @@
             "curves/src/pasta/canonical_pallas.rs",
             "curves/src/pasta/canonical_words.rs"
           ]
+        },
+        {
+          "commit": "ddb617200040ce1c69809f14962735eed9b4479b",
+          "subject": "Route the kimchi Poseidon permutation to the Pasta Poseidon syscalls",
+          "paths": [
+            "curves/src/pasta/canonical_words.rs",
+            "poseidon/src/canonical.rs"
+          ]
         }
       ]
     },
@@ -151,11 +159,11 @@
       "path": "vendor/sp1",
       "upstream": "https://github.com/succinctlabs/sp1.git",
       "base": "d83ed91f96701209613720708f36ffce0e98ed33",
-      "revision": "70a005d67f95fb7175073ddf2384502c04424017",
-      "tree": "8ff3b40687bbfa27999244a6a2bfbe53a6fa7b22",
+      "revision": "a418319a0fd386e52982b22b495859a2c4609800",
+      "tree": "f768283504f6e05a50dd9a77d9f77286608a4d33",
       "branch": "codex/mizu",
       "bundle": "dependencies/bundles/sp1.bundle",
-      "bundle_sha256": "1996a2094dd2a8f5e5c7b91fd04773c8b958efdcdf7ebf400999efb23b7ee4ad",
+      "bundle_sha256": "0cf64243a7eb82aace2fcb955cfc2469d2c24f906aa85d0fd436c33df391e26f",
       "patches": [
         {
           "commit": "0fde0939bc84bed83160e7f2c3685a863430ff7d",
@@ -255,6 +263,40 @@
             "crates/core/machine/src/syscall/precompiles/fptower/fp2_mul.rs",
             "crates/curves/src/weierstrass/mod.rs",
             "crates/curves/src/weierstrass/pasta.rs"
+          ]
+        },
+        {
+          "commit": "a418319a0fd386e52982b22b495859a2c4609800",
+          "subject": "Add Pasta Poseidon permutation precompiles for Mina's kimchi sponge",
+          "paths": [
+            "crates/core/executor/src/air.rs",
+            "crates/core/executor/src/artifacts/rv64im_complexity.json",
+            "crates/core/executor/src/artifacts/rv64im_complexity_mprotect.json",
+            "crates/core/executor/src/artifacts/rv64im_costs.json",
+            "crates/core/executor/src/events/precompiles/mod.rs",
+            "crates/core/executor/src/events/precompiles/pasta_poseidon.rs",
+            "crates/core/executor/src/minimal.rs",
+            "crates/core/executor/src/minimal/arch/portable/mod.rs",
+            "crates/core/executor/src/minimal/ecall.rs",
+            "crates/core/executor/src/minimal/precompiles/fptower/fp.rs",
+            "crates/core/executor/src/minimal/precompiles/fptower/mod.rs",
+            "crates/core/executor/src/minimal/precompiles/mod.rs",
+            "crates/core/executor/src/minimal/precompiles/pasta_poseidon.rs",
+            "crates/core/executor/src/syscall_code.rs",
+            "crates/core/executor/src/vm/syscall.rs",
+            "crates/core/executor/src/vm/syscall/precompiles/mod.rs",
+            "crates/core/executor/src/vm/syscall/precompiles/pasta_poseidon.rs",
+            "crates/core/machine/src/operations/field/field_inner_product.rs",
+            "crates/core/machine/src/riscv/mod.rs",
+            "crates/core/machine/src/syscall/precompiles/mod.rs",
+            "crates/core/machine/src/syscall/precompiles/pasta_poseidon/columns.rs",
+            "crates/core/machine/src/syscall/precompiles/pasta_poseidon/control.rs",
+            "crates/core/machine/src/syscall/precompiles/pasta_poseidon/mod.rs",
+            "crates/core/machine/src/syscall/precompiles/pasta_poseidon/round.rs",
+            "crates/curves/src/weierstrass/mod.rs",
+            "crates/curves/src/weierstrass/pasta_arith.rs",
+            "crates/curves/src/weierstrass/pasta_poseidon.rs",
+            "crates/curves/src/weierstrass/pasta_poseidon_constants.rs"
           ]
         }
       ]
