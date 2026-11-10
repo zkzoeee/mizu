@@ -21284,6 +21284,34 @@
       }
     },
     {
+      "id": "mizu-pasta-poseidon-precompile",
+      "status": "measured-opt-in-candidate",
+      "document": "docs/optimizations/04-poseidon.md",
+      "owner": "sp1",
+      "proof_generated": true,
+      "evidence": "benchmarks/pasta-poseidon-sp1-6.10.json",
+      "source_revision": "codex/zakura-ragu",
+      "dependency_pins": {
+        "algebra": "6f81d7e1",
+        "proof-systems": "ddb617200",
+        "sp1": "a418319a0"
+      },
+      "retained_default": false,
+      "evidence_sha256": "e3f13f763651f9661446d4c30e6ea6a1d71780671f0258cd20129784662e15be",
+      "validation": {
+        "cycles": [
+          139610314,
+          130367324
+        ],
+        "cycles_delta_pct": -6.62,
+        "main_cells_delta_pct": -5.22,
+        "poseidon_permutations": 229,
+        "pasta_poseidon_check_permutations": 16,
+        "cpu_proof_shards": 4,
+        "gpu_proof": false
+      }
+    },
+    {
       "id": "mizu-retention-promotion",
       "status": "promoted-for-core-proofs",
       "document": "docs/optimizations/06-sp1-runtime-and-proving.md",

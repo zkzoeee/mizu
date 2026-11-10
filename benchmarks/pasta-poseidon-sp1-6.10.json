@@ -1,0 +1,310 @@
+{
+ "schema_version": 1,
+ "name": "mizu-pasta-poseidon-precompile",
+ "date": "2026-11-10",
+ "sp1_version": "6.10.0",
+ "fork_commits": {
+  "sp1": "a418319a0",
+  "proof-systems": "ddb617200",
+  "algebra": "6f81d7e13"
+ },
+ "flag": "MIZU_POSEIDON_PRECOMPILE=1 (with MIZU_PASTA_FP_PRECOMPILE=1)",
+ "default": false,
+ "syscalls": {
+  "PALLAS_POSEIDON": "0x0001017A",
+  "VESTA_POSEIDON": "0x0001017B"
+ },
+ "air_ids": {
+  "PallasPoseidonPermute": 134,
+  "PallasPoseidonControl": 135,
+  "PallasPoseidonControlUser": 136,
+  "VestaPoseidonPermute": 137,
+  "VestaPoseidonControl": 138,
+  "VestaPoseidonControlUser": 139
+ },
+ "registered_costs": {
+  "round": 2048,
+  "control": 507,
+  "control_user": 555
+ },
+ "full_guest": {
+  "control_recipe": "benchmarks/dev/pasta-fp.json",
+  "candidate_recipe": "benchmarks/dev/pasta-poseidon.json",
+  "control_elf_sha256": "49e23ca22209c41bb7f7ab8982bef68cbc83c81cd8f3f7545aa1c133b3c0f4c7",
+  "candidate_elf_sha256": "1f27156b78f95c5ca3937d2e4c90bb717321819b8a4d98979b19b234c810daf6",
+  "control_cycles": 139610314,
+  "candidate_cycles": 130367324,
+  "delta_percent": -6.6206,
+  "stage_cycles": {
+   "control": {
+    "pickles-accumulator": 75046840,
+    "pickles-wrap-kimchi": 53800406,
+    "pickles-wrap-prepare": 5146693,
+    "setup": 3540439,
+    "verify": 136010269
+   },
+   "candidate": {
+    "pickles-accumulator": 75046840,
+    "pickles-wrap-kimchi": 48960261,
+    "pickles-wrap-prepare": 2642383,
+    "setup": 3540439,
+    "verify": 126767279
+   }
+  },
+  "precompile_calls": {
+   "control": {
+    "PALLAS_ADD": 697988,
+    "PALLAS_DOUBLE": 369,
+    "PALLAS_FP_ADD": 400111,
+    "VESTA_ADD": 1310683,
+    "VESTA_DOUBLE": 112,
+    "VESTA_FP_ADD": 133767
+   },
+   "candidate": {
+    "PALLAS_ADD": 697988,
+    "PALLAS_DOUBLE": 369,
+    "PALLAS_FP_ADD": 206071,
+    "PALLAS_POSEIDON": 168,
+    "VESTA_ADD": 1310683,
+    "VESTA_DOUBLE": 112,
+    "VESTA_FP_ADD": 63312,
+    "VESTA_POSEIDON": 61
+   }
+  },
+  "accepted": true,
+  "corrupted_accumulator_rejected": true,
+  "negative_receipt": "/Users/user/000/_Z/o1js-to-zkvm/benchmarks/.dev-cache/executions/1b0697b33072adacf7965918a86e9ccdf3a7eabbd282b601380eff111fe48722/entry.json"
+ },
+ "trace_default_routing": {
+  "main_cells": [
+   42414408432,
+   40201470720
+  ],
+  "main_shape_area": [
+   42561699840,
+   40338718720
+  ],
+  "global_interaction_events": [
+   130836329,
+   123706642
+  ],
+  "preprocessed_cells": [
+   687016960,
+   647008256
+  ],
+  "records": [
+   145,
+   137
+  ],
+  "poseidon_chips": [
+   {
+    "chip": "PallasPoseidonControl",
+    "main_cells": 97344,
+    "main_width": 507,
+    "preprocessed_cells": 0,
+    "preprocessed_width": 0,
+    "shards_included": 2,
+    "stored_rows": 192
+   },
+   {
+    "chip": "PallasPoseidonPermute",
+    "main_cells": 18939904,
+    "main_width": 2048,
+    "preprocessed_cells": 0,
+    "preprocessed_width": 0,
+    "shards_included": 2,
+    "stored_rows": 9248
+   },
+   {
+    "chip": "VestaPoseidonControl",
+    "main_cells": 32448,
+    "main_width": 507,
+    "preprocessed_cells": 0,
+    "preprocessed_width": 0,
+    "shards_included": 1,
+    "stored_rows": 64
+   },
+   {
+    "chip": "VestaPoseidonPermute",
+    "main_cells": 6881280,
+    "main_width": 2048,
+    "preprocessed_cells": 0,
+    "preprocessed_width": 0,
+    "shards_included": 1,
+    "stored_rows": 3360
+   }
+  ],
+  "poseidon_main_cells": 25950976
+ },
+ "soundness_checks": [
+  {
+   "column_sweep": {
+    "control": {
+     "columns": 507,
+     "interaction_bound_fields": [
+      "clk_high",
+      "clk_low",
+      "state_addr",
+      "initial_memory_access",
+      "final_memory_access",
+      "final_state"
+     ],
+     "surviving_by_field": {
+      "final_memory_access": 48,
+      "final_state": 93,
+      "initial_memory_access": 96
+     }
+    },
+    "round": {
+     "columns": 2048,
+     "interaction_bound_fields": [
+      "clk_high",
+      "clk_low",
+      "state_addr",
+      "input"
+     ],
+     "surviving_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "state_addr": 3
+     }
+    }
+   },
+   "control_chip": {
+    "constraints": 363,
+    "name": "PallasPoseidonControl",
+    "width": 507
+   },
+   "executor_matches_reference": true,
+   "field": "Pallas",
+   "honest_rows_satisfy_air": true,
+   "permutations_checked": 8,
+   "round_chain": {
+    "forged_output_unbalanced": 2,
+    "honest_messages": 448,
+    "honest_unbalanced": 0,
+    "kind": "Keccak"
+   },
+   "round_chip": {
+    "constraints": 1003,
+    "name": "PallasPoseidonPermute",
+    "width": 2048
+   },
+   "round_rows": 440,
+   "tampered_rows_rejected": {
+    "mds_result": true,
+    "power_result": true,
+    "second_round_flag": true
+   }
+  },
+  {
+   "column_sweep": {
+    "control": {
+     "columns": 507,
+     "interaction_bound_fields": [
+      "clk_high",
+      "clk_low",
+      "state_addr",
+      "initial_memory_access",
+      "final_memory_access",
+      "final_state"
+     ],
+     "surviving_by_field": {
+      "final_memory_access": 48,
+      "final_state": 93,
+      "initial_memory_access": 96
+     }
+    },
+    "round": {
+     "columns": 2048,
+     "interaction_bound_fields": [
+      "clk_high",
+      "clk_low",
+      "state_addr",
+      "input"
+     ],
+     "surviving_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "state_addr": 3
+     }
+    }
+   },
+   "control_chip": {
+    "constraints": 363,
+    "name": "VestaPoseidonControl",
+    "width": 507
+   },
+   "executor_matches_reference": true,
+   "field": "Vesta",
+   "honest_rows_satisfy_air": true,
+   "permutations_checked": 8,
+   "round_chain": {
+    "forged_output_unbalanced": 2,
+    "honest_messages": 448,
+    "honest_unbalanced": 0,
+    "kind": "Keccak"
+   },
+   "round_chip": {
+    "constraints": 1003,
+    "name": "VestaPoseidonPermute",
+    "width": 2048
+   },
+   "round_rows": 440,
+   "tampered_rows_rejected": {
+    "mds_result": true,
+    "power_result": true,
+    "second_round_flag": true
+   }
+  }
+ ],
+ "constants": [
+  {
+   "field": "fp",
+   "matches_export": true,
+   "mds_entries": 9,
+   "oracle_cases": 4,
+   "round_constants": 165
+  },
+  {
+   "field": "fq",
+   "matches_export": true,
+   "mds_entries": 9,
+   "oracle_cases": 4,
+   "round_constants": 165
+  }
+ ],
+ "chain": {
+  "kind": "Keccak",
+  "tags": {
+   "pallas": 5259596,
+   "vesta": 5653843
+  },
+  "values": 106
+ },
+ "parameters_fixture_sha256": "0eb7b577e205c32cb96cfff91c76275e37f1fab7912c592c346b380f938e41a6",
+ "cpu_proof": {
+  "complete_verifier_accepted": true,
+  "cycles": 793,
+  "kind": "CPU core proof of a synthetic program",
+  "proof_seconds": 18.570927958,
+  "shards": 4
+ },
+ "fork_tests": [
+  "test_interaction_counts",
+  "pasta_poseidon::tests::chain_message_shape_matches_the_borrowed_kind",
+  "sp1-curves pasta_poseidon tests (oracle vectors, random and noncanonical inputs, canonical constants)"
+ ],
+ "not_done": [
+  "No GPU proof with the new chips",
+  "Recursion VK map not rebuilt for the new clusters",
+  "Not measured under retain-UInt routing",
+  "Not combined with the deferred MDS flag"
+ ],
+ "artifact_sha256": {
+  "pasta-poseidon-check.json": "06e247c3c7a20617a8fd753efdba0e5db90ed7a8bf053b1cab32963f2f98a68c",
+  "trace-candidate.json": "e2a3fd66ea9d0b293d59743faf93b4197a1dbd9b81adeb37b7dab5df06b9f12b",
+  "trace-control.json": "f7c1fcb244d1760d4559315a5f38b678ae21e15dfb8febe4184066c331b65927",
+  "comparison.json": "285ca5ce21236cec2cb46b7e908d503bfeabfd18fb99747415b7c1484d71d893"
+ }
+}

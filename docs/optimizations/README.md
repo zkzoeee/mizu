@@ -94,3 +94,7 @@ cells), and a batch-transcript review in the
 adapted in the [Pasta AIR verification plan](../pasta-air-verification-plan.md),
 whose first fuzzing layer is recorded in [measurement](07-measurement-and-tooling.md).
 Evidence: [summary JSON](../../benchmarks/zakura-ragu-experiments-sp1-6.10.json).
+The follow-up's Poseidon permutation chips, one syscall per kimchi permutation
+with a 55-row round chain, are recorded in
+[Poseidon](04-poseidon.md#mizu-pasta-poseidon-precompile-the-kimchi-permutation-as-one-syscall)
+(−6.62% cycles, −5.22% main cells against the Pasta Fp precompile; opt-in).

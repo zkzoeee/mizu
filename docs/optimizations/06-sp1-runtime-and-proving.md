@@ -201,6 +201,9 @@ not by preserving the original experimental commit history.
   new precompile clusters, so it stays opt-in. Not yet measured together with
   the deferred MDS flag, whose saving overlaps (both remove `UINT256_MUL`
   traffic). Evidence: [summary](../../benchmarks/pasta-fp-sp1-6.10.json).
+- **Follow-up:** the whole-permutation Poseidon chips that replace these calls
+  inside the sponge are recorded in
+  [Poseidon](04-poseidon.md#mizu-pasta-poseidon-precompile-the-kimchi-permutation-as-one-syscall).
 
 ## mizu-retention-promotion: Pasta and UInt256 retention on the core-proof path
 
