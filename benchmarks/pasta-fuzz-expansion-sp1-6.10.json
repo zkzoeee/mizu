@@ -1,0 +1,1910 @@
+{
+ "schema_version": 1,
+ "name": "mizu-fuzz-expansion",
+ "date": "2026-11-10",
+ "sp1_version": "6.10.0",
+ "fork_commits": {
+  "sp1": "a418319a0",
+  "proof-systems": "ddb617200"
+ },
+ "mode": "pasta-fuzz (Fp layers F1-F4, curve layers C1-C2, executor differential D1-D2; the argument channel also reclassifies Poseidon P4)",
+ "proof_generated": false,
+ "runs": [
+  {
+   "seed": "0x5eed0301",
+   "seconds": 236.2,
+   "iterations": 32,
+   "fixed_table_messages": 459007,
+   "fp_layers": {
+    "pallas": {
+     "chip": "PallasFpOpAssign",
+     "width": 306,
+     "fp1_calls": 135,
+     "fp1_disagreements": 0,
+     "fp1b_noncanonical_rows": 21,
+     "fp1b_rows_with_a_satisfying_witness": 14,
+     "fp1b_operations_without_one": [
+      "Mul",
+      "Sub"
+     ],
+     "fp2_real_rows": 114,
+     "fp3_rows": [
+      0,
+      58,
+      113,
+      114
+     ],
+     "fp3_cells_perturbed": 1224,
+     "fp3_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "output_range": 34,
+      "x_access": 20,
+      "x_addrs": 12,
+      "x_ptr": 6,
+      "y_access": 20,
+      "y_addrs": 12,
+      "y_ptr": 6
+     },
+     "fp3_rejected_by_argument": {},
+     "fp3_inert_padding_cells": 112,
+     "fp3_constrained_by_nothing": 0,
+     "fp4": {
+      "mutations": 64,
+      "rejected_by_a_fixed_table": 0,
+      "rejected_by_air": 64,
+      "rejected_by_argument": {},
+      "unexplained": 0
+     },
+     "shard_arguments": [
+      {
+       "argument": "memory",
+       "distinct_messages": 1824,
+       "open_messages": 0
+      },
+      {
+       "argument": "page-prot",
+       "distinct_messages": 0,
+       "open_messages": 0
+      },
+      {
+       "argument": "syscall",
+       "distinct_messages": 114,
+       "open_messages": 0
+      }
+     ],
+     "shard_chips": [
+      "PallasFpOpAssign",
+      "SyscallPrecompile",
+      "MemoryLocal"
+     ]
+    },
+    "vesta": {
+     "chip": "VestaFpOpAssign",
+     "width": 306,
+     "fp1_calls": 138,
+     "fp1_disagreements": 0,
+     "fp1b_noncanonical_rows": 24,
+     "fp1b_rows_with_a_satisfying_witness": 16,
+     "fp1b_operations_without_one": [
+      "Mul",
+      "Sub"
+     ],
+     "fp2_real_rows": 114,
+     "fp3_rows": [
+      0,
+      10,
+      113,
+      114
+     ],
+     "fp3_cells_perturbed": 1224,
+     "fp3_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "output_range": 34,
+      "x_access": 20,
+      "x_addrs": 12,
+      "x_ptr": 6,
+      "y_access": 20,
+      "y_addrs": 12,
+      "y_ptr": 6
+     },
+     "fp3_rejected_by_argument": {},
+     "fp3_inert_padding_cells": 112,
+     "fp3_constrained_by_nothing": 0,
+     "fp4": {
+      "mutations": 64,
+      "rejected_by_a_fixed_table": 0,
+      "rejected_by_air": 64,
+      "rejected_by_argument": {},
+      "unexplained": 0
+     },
+     "shard_arguments": [
+      {
+       "argument": "memory",
+       "distinct_messages": 1824,
+       "open_messages": 0
+      },
+      {
+       "argument": "page-prot",
+       "distinct_messages": 0,
+       "open_messages": 0
+      },
+      {
+       "argument": "syscall",
+       "distinct_messages": 114,
+       "open_messages": 0
+      }
+     ],
+     "shard_chips": [
+      "VestaFpOpAssign",
+      "SyscallPrecompile",
+      "MemoryLocal"
+     ]
+    }
+   },
+   "curve_layers": {
+    "vesta-add": {
+     "c1_rows": [
+      0,
+      4,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6396,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "q_access": 40,
+      "q_addrs": 24,
+      "q_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 210,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    },
+    "vesta-double": {
+     "c1_rows": [
+      0,
+      4,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6364,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 140,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "double y = 0, x = 0: both sides of the slope relation vanish",
+       "row_algebra_rejects": false,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    },
+    "pallas-add": {
+     "c1_rows": [
+      0,
+      2,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6396,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "q_access": 40,
+      "q_addrs": 24,
+      "q_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 210,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    },
+    "pallas-double": {
+     "c1_rows": [
+      0,
+      4,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6364,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 140,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "double y = 0, x = 0: both sides of the slope relation vanish",
+       "row_algebra_rejects": false,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    }
+   },
+   "poseidon_p4": {
+    "pallas": {
+     "mutations": 64,
+     "rejected_by_air": 53,
+     "rejected_by_chain": 9,
+     "rejected_by_argument": {
+      "memory": 2
+     },
+     "memory_only_field_rejected_by_an_argument": 2,
+     "unexplained": 0
+    },
+    "vesta": {
+     "mutations": 64,
+     "rejected_by_air": 55,
+     "rejected_by_chain": 9,
+     "rejected_by_argument": {},
+     "memory_only_field_rejected_by_an_argument": 0,
+     "unexplained": 0
+    }
+   },
+   "executor_differential": {
+    "cases": 68,
+    "random_offsets": 32,
+    "agreements": 90,
+    "divergences_from_the_address_alone": 8,
+    "divergences_from_a_documented_operand_value": [
+     {
+      "family": "vesta-double",
+      "case": "operand words all zero"
+     },
+     {
+      "family": "pallas-double",
+      "case": "operand words all zero"
+     }
+    ],
+    "unexplained_divergences": 0,
+    "plain_store_controls": [
+     {
+      "address": 65536,
+      "diverges": false,
+      "in_the_memory_image": true,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "ok events=0 traps=0",
+      "tracing_detail": null
+     },
+     {
+      "address": 73728,
+      "diverges": false,
+      "in_the_memory_image": false,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "ok events=0 traps=0",
+      "tracing_detail": null
+     },
+     {
+      "address": 4096,
+      "diverges": true,
+      "in_the_memory_image": true,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "panic",
+      "tracing_detail": "Tried to invert zero"
+     },
+     {
+      "address": 4096,
+      "diverges": true,
+      "in_the_memory_image": false,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "panic",
+      "tracing_detail": "Tried to invert zero"
+     }
+    ]
+   }
+  },
+  {
+   "seed": "0x5eed0302",
+   "seconds": 230.8,
+   "iterations": 32,
+   "fixed_table_messages": 459007,
+   "fp_layers": {
+    "pallas": {
+     "chip": "PallasFpOpAssign",
+     "width": 306,
+     "fp1_calls": 129,
+     "fp1_disagreements": 0,
+     "fp1b_noncanonical_rows": 15,
+     "fp1b_rows_with_a_satisfying_witness": 10,
+     "fp1b_operations_without_one": [
+      "Mul",
+      "Sub"
+     ],
+     "fp2_real_rows": 114,
+     "fp3_rows": [
+      0,
+      31,
+      113,
+      114
+     ],
+     "fp3_cells_perturbed": 1224,
+     "fp3_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "output_range": 34,
+      "x_access": 20,
+      "x_addrs": 12,
+      "x_ptr": 6,
+      "y_access": 20,
+      "y_addrs": 12,
+      "y_ptr": 6
+     },
+     "fp3_rejected_by_argument": {},
+     "fp3_inert_padding_cells": 112,
+     "fp3_constrained_by_nothing": 0,
+     "fp4": {
+      "mutations": 64,
+      "rejected_by_a_fixed_table": 0,
+      "rejected_by_air": 64,
+      "rejected_by_argument": {},
+      "unexplained": 0
+     },
+     "shard_arguments": [
+      {
+       "argument": "memory",
+       "distinct_messages": 1824,
+       "open_messages": 0
+      },
+      {
+       "argument": "page-prot",
+       "distinct_messages": 0,
+       "open_messages": 0
+      },
+      {
+       "argument": "syscall",
+       "distinct_messages": 114,
+       "open_messages": 0
+      }
+     ],
+     "shard_chips": [
+      "PallasFpOpAssign",
+      "SyscallPrecompile",
+      "MemoryLocal"
+     ]
+    },
+    "vesta": {
+     "chip": "VestaFpOpAssign",
+     "width": 306,
+     "fp1_calls": 135,
+     "fp1_disagreements": 0,
+     "fp1b_noncanonical_rows": 21,
+     "fp1b_rows_with_a_satisfying_witness": 14,
+     "fp1b_operations_without_one": [
+      "Mul",
+      "Sub"
+     ],
+     "fp2_real_rows": 114,
+     "fp3_rows": [
+      0,
+      85,
+      113,
+      114
+     ],
+     "fp3_cells_perturbed": 1224,
+     "fp3_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "output_range": 34,
+      "x_access": 20,
+      "x_addrs": 12,
+      "x_ptr": 6,
+      "y_access": 20,
+      "y_addrs": 12,
+      "y_ptr": 6
+     },
+     "fp3_rejected_by_argument": {},
+     "fp3_inert_padding_cells": 112,
+     "fp3_constrained_by_nothing": 0,
+     "fp4": {
+      "mutations": 64,
+      "rejected_by_a_fixed_table": 0,
+      "rejected_by_air": 64,
+      "rejected_by_argument": {},
+      "unexplained": 0
+     },
+     "shard_arguments": [
+      {
+       "argument": "memory",
+       "distinct_messages": 1824,
+       "open_messages": 0
+      },
+      {
+       "argument": "page-prot",
+       "distinct_messages": 0,
+       "open_messages": 0
+      },
+      {
+       "argument": "syscall",
+       "distinct_messages": 114,
+       "open_messages": 0
+      }
+     ],
+     "shard_chips": [
+      "VestaFpOpAssign",
+      "SyscallPrecompile",
+      "MemoryLocal"
+     ]
+    }
+   },
+   "curve_layers": {
+    "vesta-add": {
+     "c1_rows": [
+      0,
+      4,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6396,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "q_access": 40,
+      "q_addrs": 24,
+      "q_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 210,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    },
+    "vesta-double": {
+     "c1_rows": [
+      0,
+      1,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6364,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 140,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "double y = 0, x = 0: both sides of the slope relation vanish",
+       "row_algebra_rejects": false,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    },
+    "pallas-add": {
+     "c1_rows": [
+      0,
+      1,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6396,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "q_access": 40,
+      "q_addrs": 24,
+      "q_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 210,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    },
+    "pallas-double": {
+     "c1_rows": [
+      0,
+      1,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6364,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 140,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "double y = 0, x = 0: both sides of the slope relation vanish",
+       "row_algebra_rejects": false,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    }
+   },
+   "poseidon_p4": {
+    "pallas": {
+     "mutations": 64,
+     "rejected_by_air": 53,
+     "rejected_by_chain": 10,
+     "rejected_by_argument": {
+      "memory": 1
+     },
+     "memory_only_field_rejected_by_an_argument": 1,
+     "unexplained": 0
+    },
+    "vesta": {
+     "mutations": 64,
+     "rejected_by_air": 59,
+     "rejected_by_chain": 4,
+     "rejected_by_argument": {
+      "memory": 1
+     },
+     "memory_only_field_rejected_by_an_argument": 1,
+     "unexplained": 0
+    }
+   },
+   "executor_differential": {
+    "cases": 68,
+    "random_offsets": 32,
+    "agreements": 90,
+    "divergences_from_the_address_alone": 8,
+    "divergences_from_a_documented_operand_value": [
+     {
+      "family": "vesta-double",
+      "case": "operand words all zero"
+     },
+     {
+      "family": "pallas-double",
+      "case": "operand words all zero"
+     }
+    ],
+    "unexplained_divergences": 0,
+    "plain_store_controls": [
+     {
+      "address": 65536,
+      "diverges": false,
+      "in_the_memory_image": true,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "ok events=0 traps=0",
+      "tracing_detail": null
+     },
+     {
+      "address": 73728,
+      "diverges": false,
+      "in_the_memory_image": false,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "ok events=0 traps=0",
+      "tracing_detail": null
+     },
+     {
+      "address": 4096,
+      "diverges": true,
+      "in_the_memory_image": true,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "panic",
+      "tracing_detail": "Tried to invert zero"
+     },
+     {
+      "address": 4096,
+      "diverges": true,
+      "in_the_memory_image": false,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "panic",
+      "tracing_detail": "Tried to invert zero"
+     }
+    ]
+   }
+  },
+  {
+   "seed": "0x5eed0303",
+   "seconds": 233.9,
+   "iterations": 32,
+   "fixed_table_messages": 459007,
+   "fp_layers": {
+    "pallas": {
+     "chip": "PallasFpOpAssign",
+     "width": 306,
+     "fp1_calls": 132,
+     "fp1_disagreements": 0,
+     "fp1b_noncanonical_rows": 18,
+     "fp1b_rows_with_a_satisfying_witness": 12,
+     "fp1b_operations_without_one": [
+      "Mul",
+      "Sub"
+     ],
+     "fp2_real_rows": 114,
+     "fp3_rows": [
+      0,
+      3,
+      113,
+      114
+     ],
+     "fp3_cells_perturbed": 1224,
+     "fp3_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "output_range": 34,
+      "x_access": 20,
+      "x_addrs": 12,
+      "x_ptr": 6,
+      "y_access": 20,
+      "y_addrs": 12,
+      "y_ptr": 6
+     },
+     "fp3_rejected_by_argument": {},
+     "fp3_inert_padding_cells": 112,
+     "fp3_constrained_by_nothing": 0,
+     "fp4": {
+      "mutations": 64,
+      "rejected_by_a_fixed_table": 0,
+      "rejected_by_air": 64,
+      "rejected_by_argument": {},
+      "unexplained": 0
+     },
+     "shard_arguments": [
+      {
+       "argument": "memory",
+       "distinct_messages": 1824,
+       "open_messages": 0
+      },
+      {
+       "argument": "page-prot",
+       "distinct_messages": 0,
+       "open_messages": 0
+      },
+      {
+       "argument": "syscall",
+       "distinct_messages": 114,
+       "open_messages": 0
+      }
+     ],
+     "shard_chips": [
+      "PallasFpOpAssign",
+      "SyscallPrecompile",
+      "MemoryLocal"
+     ]
+    },
+    "vesta": {
+     "chip": "VestaFpOpAssign",
+     "width": 306,
+     "fp1_calls": 135,
+     "fp1_disagreements": 0,
+     "fp1b_noncanonical_rows": 21,
+     "fp1b_rows_with_a_satisfying_witness": 14,
+     "fp1b_operations_without_one": [
+      "Mul",
+      "Sub"
+     ],
+     "fp2_real_rows": 114,
+     "fp3_rows": [
+      0,
+      14,
+      113,
+      114
+     ],
+     "fp3_cells_perturbed": 1224,
+     "fp3_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "output_range": 34,
+      "x_access": 20,
+      "x_addrs": 12,
+      "x_ptr": 6,
+      "y_access": 20,
+      "y_addrs": 12,
+      "y_ptr": 6
+     },
+     "fp3_rejected_by_argument": {},
+     "fp3_inert_padding_cells": 112,
+     "fp3_constrained_by_nothing": 0,
+     "fp4": {
+      "mutations": 64,
+      "rejected_by_a_fixed_table": 0,
+      "rejected_by_air": 64,
+      "rejected_by_argument": {},
+      "unexplained": 0
+     },
+     "shard_arguments": [
+      {
+       "argument": "memory",
+       "distinct_messages": 1824,
+       "open_messages": 0
+      },
+      {
+       "argument": "page-prot",
+       "distinct_messages": 0,
+       "open_messages": 0
+      },
+      {
+       "argument": "syscall",
+       "distinct_messages": 114,
+       "open_messages": 0
+      }
+     ],
+     "shard_chips": [
+      "VestaFpOpAssign",
+      "SyscallPrecompile",
+      "MemoryLocal"
+     ]
+    }
+   },
+   "curve_layers": {
+    "vesta-add": {
+     "c1_rows": [
+      0,
+      2,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6396,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "q_access": 40,
+      "q_addrs": 24,
+      "q_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 210,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    },
+    "vesta-double": {
+     "c1_rows": [
+      0,
+      4,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6364,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 140,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "double y = 0, x = 0: both sides of the slope relation vanish",
+       "row_algebra_rejects": false,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    },
+    "pallas-add": {
+     "c1_rows": [
+      0,
+      4,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6396,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "q_access": 40,
+      "q_addrs": 24,
+      "q_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 210,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    },
+    "pallas-double": {
+     "c1_rows": [
+      0,
+      3,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6364,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 140,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "double y = 0, x = 0: both sides of the slope relation vanish",
+       "row_algebra_rejects": false,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    }
+   },
+   "poseidon_p4": {
+    "pallas": {
+     "mutations": 64,
+     "rejected_by_air": 52,
+     "rejected_by_chain": 10,
+     "rejected_by_argument": {
+      "memory": 2
+     },
+     "memory_only_field_rejected_by_an_argument": 2,
+     "unexplained": 0
+    },
+    "vesta": {
+     "mutations": 64,
+     "rejected_by_air": 55,
+     "rejected_by_chain": 7,
+     "rejected_by_argument": {
+      "memory": 2
+     },
+     "memory_only_field_rejected_by_an_argument": 2,
+     "unexplained": 0
+    }
+   },
+   "executor_differential": {
+    "cases": 68,
+    "random_offsets": 32,
+    "agreements": 88,
+    "divergences_from_the_address_alone": 8,
+    "divergences_from_a_documented_operand_value": [
+     {
+      "family": "vesta-double",
+      "case": "operand words all zero"
+     },
+     {
+      "family": "pallas-double",
+      "case": "operand words all zero"
+     },
+     {
+      "family": "pallas-double",
+      "case": "a0 + whole words, rotating the operand 0x3b0"
+     },
+     {
+      "family": "vesta-double",
+      "case": "a0 + whole words, rotating the operand 0x430"
+     }
+    ],
+    "unexplained_divergences": 0,
+    "plain_store_controls": [
+     {
+      "address": 65536,
+      "diverges": false,
+      "in_the_memory_image": true,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "ok events=0 traps=0",
+      "tracing_detail": null
+     },
+     {
+      "address": 73728,
+      "diverges": false,
+      "in_the_memory_image": false,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "ok events=0 traps=0",
+      "tracing_detail": null
+     },
+     {
+      "address": 4096,
+      "diverges": true,
+      "in_the_memory_image": true,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "panic",
+      "tracing_detail": "Tried to invert zero"
+     },
+     {
+      "address": 4096,
+      "diverges": true,
+      "in_the_memory_image": false,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "panic",
+      "tracing_detail": "Tried to invert zero"
+     }
+    ]
+   }
+  },
+  {
+   "seed": "0x5eed0202",
+   "seconds": 216.7,
+   "iterations": 16,
+   "fixed_table_messages": 459007,
+   "fp_layers": {
+    "pallas": {
+     "chip": "PallasFpOpAssign",
+     "width": 306,
+     "fp1_calls": 78,
+     "fp1_disagreements": 0,
+     "fp1b_noncanonical_rows": 12,
+     "fp1b_rows_with_a_satisfying_witness": 8,
+     "fp1b_operations_without_one": [
+      "Mul",
+      "Sub"
+     ],
+     "fp2_real_rows": 66,
+     "fp3_rows": [
+      0,
+      12,
+      65,
+      66
+     ],
+     "fp3_cells_perturbed": 1224,
+     "fp3_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "output_range": 34,
+      "x_access": 20,
+      "x_addrs": 12,
+      "x_ptr": 6,
+      "y_access": 20,
+      "y_addrs": 12,
+      "y_ptr": 6
+     },
+     "fp3_rejected_by_argument": {},
+     "fp3_inert_padding_cells": 112,
+     "fp3_constrained_by_nothing": 0,
+     "fp4": {
+      "mutations": 32,
+      "rejected_by_a_fixed_table": 1,
+      "rejected_by_air": 31,
+      "rejected_by_argument": {},
+      "unexplained": 0
+     },
+     "shard_arguments": [
+      {
+       "argument": "memory",
+       "distinct_messages": 1056,
+       "open_messages": 0
+      },
+      {
+       "argument": "page-prot",
+       "distinct_messages": 0,
+       "open_messages": 0
+      },
+      {
+       "argument": "syscall",
+       "distinct_messages": 66,
+       "open_messages": 0
+      }
+     ],
+     "shard_chips": [
+      "PallasFpOpAssign",
+      "SyscallPrecompile",
+      "MemoryLocal"
+     ]
+    },
+    "vesta": {
+     "chip": "VestaFpOpAssign",
+     "width": 306,
+     "fp1_calls": 84,
+     "fp1_disagreements": 0,
+     "fp1b_noncanonical_rows": 18,
+     "fp1b_rows_with_a_satisfying_witness": 12,
+     "fp1b_operations_without_one": [
+      "Mul",
+      "Sub"
+     ],
+     "fp2_real_rows": 66,
+     "fp3_rows": [
+      0,
+      12,
+      65,
+      66
+     ],
+     "fp3_cells_perturbed": 1224,
+     "fp3_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "output_range": 34,
+      "x_access": 20,
+      "x_addrs": 12,
+      "x_ptr": 6,
+      "y_access": 20,
+      "y_addrs": 12,
+      "y_ptr": 6
+     },
+     "fp3_rejected_by_argument": {},
+     "fp3_inert_padding_cells": 112,
+     "fp3_constrained_by_nothing": 0,
+     "fp4": {
+      "mutations": 32,
+      "rejected_by_a_fixed_table": 0,
+      "rejected_by_air": 32,
+      "rejected_by_argument": {},
+      "unexplained": 0
+     },
+     "shard_arguments": [
+      {
+       "argument": "memory",
+       "distinct_messages": 1056,
+       "open_messages": 0
+      },
+      {
+       "argument": "page-prot",
+       "distinct_messages": 0,
+       "open_messages": 0
+      },
+      {
+       "argument": "syscall",
+       "distinct_messages": 66,
+       "open_messages": 0
+      }
+     ],
+     "shard_chips": [
+      "VestaFpOpAssign",
+      "SyscallPrecompile",
+      "MemoryLocal"
+     ]
+    }
+   },
+   "curve_layers": {
+    "vesta-add": {
+     "c1_rows": [
+      0,
+      1,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6396,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "q_access": 40,
+      "q_addrs": 24,
+      "q_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 210,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    },
+    "vesta-double": {
+     "c1_rows": [
+      0,
+      1,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6364,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 140,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "double y = 0, x = 0: both sides of the slope relation vanish",
+       "row_algebra_rejects": false,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    },
+    "pallas-add": {
+     "c1_rows": [
+      0,
+      3,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6396,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "q_access": 40,
+      "q_addrs": 24,
+      "q_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 210,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q.x == p.x with another q.y",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "q == -p",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    },
+    "pallas-double": {
+     "c1_rows": [
+      0,
+      1,
+      5,
+      6
+     ],
+     "c1_cells_perturbed": 6364,
+     "c1_surviving_the_row_algebra_by_field": {
+      "clk_high": 1,
+      "clk_low": 1,
+      "p_access": 40,
+      "p_addrs": 24,
+      "p_ptr": 6,
+      "x3_range": 34,
+      "y3_range": 34
+     },
+     "c1_rejected_by_argument": {},
+     "c1_inert_padding_cells": 140,
+     "c1_constrained_by_nothing": 0,
+     "c2_forgeries": [
+      {
+       "case": "double y = 0, x = 0: both sides of the slope relation vanish",
+       "row_algebra_rejects": false,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      },
+      {
+       "case": "double y = 0, x random nonzero",
+       "row_algebra_rejects": true,
+       "argument_rejects": "memory"
+      }
+     ]
+    }
+   },
+   "poseidon_p4": {
+    "pallas": {
+     "mutations": 32,
+     "rejected_by_air": 25,
+     "rejected_by_chain": 6,
+     "rejected_by_argument": {
+      "memory": 1
+     },
+     "memory_only_field_rejected_by_an_argument": 1,
+     "unexplained": 0
+    },
+    "vesta": {
+     "mutations": 32,
+     "rejected_by_air": 25,
+     "rejected_by_chain": 6,
+     "rejected_by_argument": {
+      "memory": 1
+     },
+     "memory_only_field_rejected_by_an_argument": 1,
+     "unexplained": 0
+    }
+   },
+   "executor_differential": {
+    "cases": 68,
+    "random_offsets": 16,
+    "agreements": 74,
+    "divergences_from_the_address_alone": 8,
+    "divergences_from_a_documented_operand_value": [
+     {
+      "family": "vesta-double",
+      "case": "operand words all zero"
+     },
+     {
+      "family": "pallas-double",
+      "case": "operand words all zero"
+     }
+    ],
+    "unexplained_divergences": 0,
+    "plain_store_controls": [
+     {
+      "address": 65536,
+      "diverges": false,
+      "in_the_memory_image": true,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "ok events=0 traps=0",
+      "tracing_detail": null
+     },
+     {
+      "address": 73728,
+      "diverges": false,
+      "in_the_memory_image": false,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "ok events=0 traps=0",
+      "tracing_detail": null
+     },
+     {
+      "address": 4096,
+      "diverges": true,
+      "in_the_memory_image": true,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "panic",
+      "tracing_detail": "Tried to invert zero"
+     },
+     {
+      "address": 4096,
+      "diverges": true,
+      "in_the_memory_image": false,
+      "minimal": "ok exit_code=0",
+      "minimal_detail": null,
+      "tracing": "panic",
+      "tracing_detail": "Tried to invert zero"
+     }
+    ]
+   }
+  }
+ ],
+ "artifact_sha256": {
+  "pasta-fuzz-0x5eed0301/result.json": "a373cd3a5374c30fcba1e770d483ff406115991eb13a06afdca5adb23de52523",
+  "pasta-fuzz-0x5eed0302/result.json": "f48ea9304a5a9a23ec4804fa58b6dfd2b0a576ed73c27470c0455f54ef1bc94c",
+  "pasta-fuzz-0x5eed0303/result.json": "d15b24f141ef58d8ad14284dd1b771213e699c00cb122ef86cbab0154054ec7a",
+  "pasta-fuzz-0x5eed0202/result.json": "42e0b89f472eed3c29aea5d15d827dd78763cea20297e860b33cb5147fc34913"
+ }
+}

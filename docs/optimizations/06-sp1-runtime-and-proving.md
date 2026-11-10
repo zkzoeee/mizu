@@ -204,6 +204,10 @@ not by preserving the original experimental commit history.
 - **Follow-up:** the whole-permutation Poseidon chips that replace these calls
   inside the sponge are recorded in
   [Poseidon](04-poseidon.md#mizu-pasta-poseidon-precompile-the-kimchi-permutation-as-one-syscall).
+  The chip's own fuzz layers FP1 to FP4, including what it does with a
+  noncanonical operand, are in
+  [measurement and tooling](07-measurement-and-tooling.md#mizu-fuzz-expansion-five-more-fuzz-surfaces-and-the-argument-channel);
+  `pasta-fp-check` remains the fixed-vector mode.
 
 ## mizu-retention-promotion: Pasta and UInt256 retention on the core-proof path
 

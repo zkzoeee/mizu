@@ -53,6 +53,17 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   parser now accepts `0x` values and fails on bad input; the second run in the
   [verification plan](../pasta-air-verification-plan.md) is the first with
   distinct seeds.
+- Two limits stated with those runs were superseded the same day by the
+  argument channel in
+  [mizu-fuzz-expansion](07-measurement-and-tooling.md#mizu-fuzz-expansion-five-more-fuzz-surfaces-and-the-argument-channel):
+  a column surviving the sweep is not thereby unconstrained, and Poseidon P4's
+  memory-only class is now checked rather than deferred. The earlier survivor
+  sets stand as measured; what changed is what they mean.
+- The first version of the executor differential compared the minimal
+  executor's result words against an empty list for the field operations,
+  because their events are filed under the add syscall code, and so passed
+  without comparing anything. Its baseline case now asserts that the
+  well-formed call produced one event and the same words on both sides.
 
 The [catalog](../../benchmarks/optimization-history.json) preserves these
 relationships and hashes of the original evidence. A future attempt should cite

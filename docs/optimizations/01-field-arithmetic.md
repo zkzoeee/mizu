@@ -30,6 +30,13 @@ onto the current boolean guest.
   [root canonical MSM preparation](../../crates/pickles-verifier/src/canonical_msm.rs).
 - Tests: `mont_direct_spike`, `precompile_spikes`, `pallas_field_spikes`,
   `msm_spikes` and the real fixture/negative guest executions.
+- `canonical_words_fuzz` (added 2026-11-10) is the seeded differential for the
+  canonical residues against arkworks, over boundary classes and random
+  operands. On the host their products are arkworks, so what it covers is the
+  logic around them: the conditional subtraction in `add_assign`, the `pow7`
+  schedules, and the wide accumulation, `2^256 mod p` folding and up-to-three
+  reductions of the three-term inner products. See
+  [measurement and tooling](07-measurement-and-tooling.md#mizu-fuzz-expansion-five-more-fuzz-surfaces-and-the-argument-channel).
 
 Arkworks' inverse backend itself still delegates to its configured inverse;
 checked guest inverse hints and host witness inversion are different mechanisms.

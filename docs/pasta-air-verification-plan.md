@@ -1,7 +1,8 @@
 # Pasta AIR verification plan: Lean proofs and differential fuzzing
 
-Status: plan, 2026-11-10. The first fuzzing layer exists (`pasta-fuzz`, below);
-no Lean development exists yet. Nothing here changes the retained verifier.
+Status: plan, 2026-11-10. The fuzzing layers exist (`pasta-fuzz` and the two
+native harnesses, below); no Lean development exists yet. Nothing here changes
+the retained verifier.
 
 ## Why these chips, and why both methods
 
@@ -46,9 +47,18 @@ offset and for the n-term inner product, and the chain becomes a stated
 interaction assumption like the memory bindings below. Their harness mode is
 `pasta-poseidon-check` (`docs/optimizations/04-poseidon.md`).
 
+The fixed-modulus field chip the Pasta syscalls also use is SP1's own
+`FpOpChip` at the two Pasta moduli, with no new constraint code, so it is out
+of scope for the proofs. It is in scope for the fuzzing, because what the fork
+chose is which modulus and which operands reach it: layers FP1 to FP4 cover
+that, including what the chip does with an operand the executor would reduce.
+
 Out of scope for proofs: SP1's lookup and memory arguments, the recursion
 verifier, the executor, and the guest's MSM logic. Interactions are treated as
-stated assumptions (below), and argued by SP1's own soundness.
+stated assumptions (below), and argued by SP1's own soundness. The fuzzing is
+narrower about one of them: a mutation that changes a chip's contribution to
+the memory, page-protection or syscall argument, or asks a fixed table for a
+message it does not hold, is rejected without that assumption.
 
 ## Properties to prove
 
@@ -125,27 +135,69 @@ fits here.
 ## Differential fuzzing (runs now, and stays after the proofs)
 
 Fuzzing finds bugs fast and keeps finding regressions after the proofs land.
-Layers F1 to F3 are implemented as the harness's `pasta-fuzz` mode; F4 to F6
-are planned.
+Every layer below except F5 and F6 is implemented. The curve layers F1 to F4,
+the Poseidon layers P1 to P4, the fixed-modulus field layers FP1 to FP4, the
+multi-row and forgery layers C1 and C2 and the executor differential D1 and D2
+are the harness's `pasta-fuzz` mode; V1 and V2 are the native verifier harness
+(`crates/cycle-runner/src/bin/verifier-fuzz.rs`) and A1 a native test
+(`crates/pickles-verifier/tests/canonical_words_fuzz.rs`), neither of which
+touches an AIR.
+
+F4 is implemented, but not the way this plan proposed it. Rather than re-running
+survivors through a full CPU proof, the harness compares the chip's own
+contribution to the memory, page-protection and syscall arguments before and
+after a mutation. Those arguments balance over every chip of a shard, so a
+changed contribution cannot be absorbed by an otherwise honest shard: it is a
+rejection, established without generating a proof. The honest balance itself is
+checked per run over every participating chip.
+
+Byte lookups are asked a different question, because the byte and range tables'
+multiplicity columns are supplied by the prover while their rows come from a
+preprocessed trace. Balance there proves nothing; membership does. The harness
+enumerates the message set those tables can serve, once per run from their
+preprocessed traces, and a mutation that makes a row request a message no table
+holds is a rejection at any multiplicity. This is the only thing that binds the
+low-byte columns of a memory word: `U16toU8Operation` keeps the low byte of
+each 16-bit limb as a column and derives the high byte as `(limb - low) / 256`,
+so a single-cell mutation of a low byte moves both bytes, leaves the limb
+intact, and changes no memory message. One of the two bytes must then leave
+`[0, 256)`, which is what the range check refuses.
+
+A prover that also rewrites the chips on the other side of an argument is
+outside what any of this measures, and remains the planned full-proof work.
 
 | Layer | What is compared | Status |
 | --- | --- | --- |
 | F1 executor | Host curve operations (`ec_add`, `ec_double`) vs the generic formulas vs the independent integer reference, plus degenerate inputs (`P + (-P)`, `P = Q`, `y = 0`, noncanonical coordinates) that must behave identically on both paths, panics included | Implemented |
 | F2 witness | Random operands through a real program: every executor result and every trace row's `x3`, `y3` limbs vs the reference; every honest row satisfies the AIR | Implemented |
 | F3 column sweep | Every column of an honest row perturbed (+1 and a random nonzero step); columns whose perturbation the algebraic constraints accept are listed by field | Implemented |
-| F4 lookup-aware mutation | F3's survivors re-run through the full CPU proof of the small Pasta guest, so byte, memory and syscall arguments are evaluated too | Planned; reuse the r123 proof matrix |
+| F4 argument-aware mutation | Whether a mutation changes the chip's own contribution to the memory, page-protection or syscall argument, which the honest remainder of the shard can no longer balance, or makes a row request a byte-lookup message no fixed table holds | Implemented without a proof (see above); the full-proof variant stays open |
 | F5 Rust–Lean evaluation | The randomized evaluation check above, also run with fuzzed rather than random points | Planned, with the Lean model |
 | F6 cross-curve | The same shapes at secp256k1 and BN254, where SP1 upstream already tests, to separate fork bugs from upstream ones | Planned |
 | P1 Poseidon host | The fork's fixed-limb permutation vs its BigUint reference vs a reference evaluated from the proof-systems parameter export, on random canonical, random noncanonical (`>= p`) and edge inputs (`0`, `p − 1`, `p`, `p + 1`, `2^256 − 1`); outputs canonical; panics counted | Implemented |
 | P2 Poseidon witness | Random states through a real program: every executor output, and every round row's clock, pointer, index, input and output against the reference's 56 intermediate states; honest rows of both chips satisfy the AIRs | Implemented |
 | P3 Poseidon column sweep | F3 on four round rows (first, random middle, last, and the next permutation's first) and both controller rows; survivors must lie in the interaction-bound fields | Implemented |
-| P4 Poseidon lookup-aware mutation | Random single-cell mutations of real rows, half of them inside interaction-bound fields: each must fail the row algebra, leave the round chain unbalanced, or sit in the one memory-only field (`final_memory_access`); plus a round row re-labelled to another round and two permutations' outputs swapped | Implemented (chain only; memory and syscall arguments are not evaluated) |
+| P4 Poseidon argument-aware mutation | Random single-cell mutations of real rows, half of them inside interaction-bound fields: each must fail the row algebra, leave the round chain unbalanced, or change the chip's contribution to an argument; plus a round row re-labelled to another round and two permutations' outputs swapped | Implemented; the memory-only class of the first two runs is now checked rather than deferred |
+| FP1 fixed-modulus executor | The `PALLAS_FP_*` / `VESTA_FP_*` syscalls against a BigUint reference on random canonical, edge and noncanonical operands, through a real program that also compares each result in-guest | Implemented |
+| FP1b noncanonical operands | The executor reduces its operands and `FpOpChip` does not, so a noncanonical operand's honest row may have no satisfying witness. Which operations do is reported per operation, and a row that does satisfy the AIR must carry the reduced result | Implemented |
+| FP2 fixed-modulus witness | Every real row's result limbs against the executor and the reference; honest rows satisfy the AIR; no padding row is real | Implemented |
+| FP3 fixed-modulus column sweep | F3 on the first, a random middle and the last real row and on the first padding row, with every survivor classified against the arguments and the fixed tables | Implemented |
+| FP4 fixed-modulus mutation | Random single-cell mutations of real rows, half inside the fields the row algebra never constrains; each must fail the algebra or change an argument | Implemented |
+| C1 curve multi-row sweep | F3 across four rows of a six-call trace instead of the first row of a one-call trace, with survivors classified against the arguments and padding rows separated | Implemented |
+| C2 randomized degenerate forgeries | The double chip's `y = 0` rows at random x with random forged slopes, and the add chip's equal-x rows at `q = p`, `q = -p` and a random `q.y`: all must be rejected, except the one input the relation leaves free (`x = y = 0`), which must still be caught by the memory argument when written over an honest trace | Implemented |
+| D1 executor argument table | Each syscall family under malformed register arguments (misaligned pointers, addresses outside the valid range, a nonzero second argument where the ABI requires zero), with the minimal and tracing executors required to reach the same verdict, and the same words in the well-formed case | Implemented |
+| D2 executor random offsets | The same comparison at random pointer offsets, plus plain store-and-load controls that attribute a divergence to the address rather than the syscall | Implemented |
+| V1 verifier typed mutation | Every typed mutator once and then random draws over one field of a `VerifiableProof` — statement field, deferred challenge, evaluation, commitment, IPA response — with a random field element or a negated point; the native verifier must reject, over all nine fixtures, except for the one field it reads nowhere | Implemented |
+| V2 verifier single-bit mutation | One random bit of the serialized proof flipped; most do not deserialize, which is counted apart, and every one that does must be rejected unless restoring the ignored field reproduces the honest bytes | Implemented |
+| A1 canonical arithmetic | The canonical Pasta residues against arkworks on boundary classes and random operands: the conditional subtraction of `add_assign`, the `pow7` schedules and the deferred three-term inner products. Host products are arkworks, so the subject is the logic around them | Implemented |
 
-Every fuzz run takes a seed (`PASTA_FUZZ_SEED`, decimal or `0x`-prefixed,
-printed and recorded) and an iteration count (`PASTA_FUZZ_ITERS`). Run F1 to F3 on every fork change; run a
-longer seed sweep nightly. The recorded survivor set for arithmetic fields is
-empty, and the sweep now fails on any new survivor (checked on seed
-`0x5eed0004`).
+Every `pasta-fuzz` run takes a seed (`PASTA_FUZZ_SEED`, decimal or
+`0x`-prefixed, printed and recorded) and an iteration count
+(`PASTA_FUZZ_ITERS`); `verifier-fuzz` takes `--seed`, `--typed` and `--bytes`.
+Run the harness on every fork change and a longer seed sweep nightly. Every
+sweep now fails on a cell that neither a constraint, an argument nor a fixed
+table rejects, and the differential fails on a divergence its controls do not
+attribute to the address.
 
 ### First run (2026-11-10)
 
@@ -200,21 +252,130 @@ three with zero surviving columns. Poseidon layers, both fields, every seed:
   chain balance, 6 in `final_memory_access`, 0 unexplained. The re-labelled
   round row and the swapped outputs were rejected on every seed.
 
-What P4 does not show: `final_memory_access` (previous timestamps and values
-of the written state) and the controller's syscall columns are bound by SP1's
-memory and syscall arguments, which this harness does not evaluate; a real
-proof does. Evidence: [summary](../benchmarks/pasta-poseidon-fuzz-sp1-6.10.json).
+What P4 did not show at the time: `final_memory_access` (previous timestamps
+and values of the written state) and the controller's syscall columns are bound
+by SP1's memory and syscall arguments, which this run did not evaluate. The
+third run does, and the class is checked there rather than deferred. Evidence:
+[summary](../benchmarks/pasta-poseidon-fuzz-sp1-6.10.json).
+
+### Third run (2026-11-10): the argument channel, the field chip and the executors
+
+Four runs on the same fork pins as the second: seeds `0x5eed0301`,
+`0x5eed0302` and `0x5eed0303` at 32 iterations, and `0x5eed0202` at 16, which
+is the seed whose low-byte cell prompted the fixed-table check and the only one
+of the four that exercises it. 217 to 236 seconds a run. The curve layers F1 to
+F3 and the Poseidon layers P1 to P3 passed unchanged; what follows is the new
+material. The fixed byte and range tables contribute 459,007 distinct messages,
+enumerated once per run from their preprocessed traces.
+
+- **F4, the argument channel.** The honest shard of every layer balances its
+  memory, page-protection and syscall arguments with no open message, over the
+  chips the shard includes, which for these synthetic programs are the chip
+  under test, the syscall chip and the local memory chip. Every mutation that
+  survived the row algebra was then classified, and none was left unexplained.
+- **P4 with the argument channel.** 448 mutations across the four runs: 377
+  rejected by the row algebra, 61 by the round chain and 10 by the memory
+  argument, none unexplained. The memory-only class of the second run is what
+  those last ten are, and it is now checked rather than deferred: such a
+  mutation has to change the chip's own contribution to the memory argument.
+- **FP1 and FP1b.** 474 Pallas and 492 Vesta field operations through a real
+  program, on random canonical, edge and noncanonical operands; the executor
+  matched the reference on every one. For noncanonical operands the chip and
+  the executor part company: the executor reduces and the chip does not, so
+  the honest row may have no satisfying witness, the carry having outgrown its
+  limbs. Which rows do is reported per row rather than ruled: in these runs
+  most subtractions had none and most additions and multiplications had one.
+  Every row that satisfies the AIR is required to carry the reduced result, so
+  this is a liveness boundary, like the curve chips' noncanonical inputs, and
+  not a second meaning for the same memory words.
+- **FP2.** 114 real rows per field and run, 66 on the 16-iteration seed, every
+  result read back from its limbs and matched against both the executor and
+  the reference; honest rows satisfied the AIR and no padding row was real.
+- **FP3 and FP4.** 1,224 cells per field swept over four rows, and 448
+  mutations in all. Every surviving cell of the sweep was on the padding row,
+  where the row is not real and contributes to nothing. Of the mutations, 447
+  were rejected by the row algebra and one by a fixed table: a low byte of a
+  memory limb, which `U16toU8Operation` pairs with a derived high byte, so
+  moving it alone leaves the limb and every memory message intact and only the
+  range check refuses it.
+- **C1.** 6,396 add and 6,364 double cells swept over four rows of a six-call
+  trace. Every surviving cell was on the padding row: 210 of them for the add
+  chips and 140 for the double chips, in every run.
+- **C2.** Eight forged rows per operation with random inputs and random
+  slopes. The add chip's `inverse_check` rejects every equal-x row, whether the
+  second operand is `p`, `-p` or off the curve. The double chip rejects every
+  `y = 0` row with `x != 0`, where the numerator `3x^2` does not vanish, and
+  accepts the one case where it does, `x = y = 0`, exactly as the fixed suite
+  records. Written over an honest trace, that forgery changes the claimed
+  input in memory, so the memory argument rejects it; the algebraic gap and
+  the `2y != 0` precondition are unchanged.
+- **D1 and D2.** 68 table cases per run, with 32 random pointer offsets (16
+  on the 16-iteration seed) and 4 plain-store controls: 74 to 90
+  agreements, and two divergence classes, each attributed by a control.
+
+  A pointer below SP1's 2^16 data floor: the minimal executor completes and
+  the tracing replay panics inverting zero. A plain store and load at the same
+  address, with no syscall in the program, reproduces it, while the same
+  control inside the valid range runs on both executors, so the divergence
+  belongs to the address and not to the syscall.
+
+  A malformed operand value, on the two double chips only. For the all-zero
+  encoding the minimal executor's fixed-limb path returns zero for the inverse
+  of zero and completes, while record generation panics in the witness
+  generator's division. The add chips do not diverge, because their
+  batched-inversion path populates the same columns without asserting, so the
+  record is built and the row is merely unsatisfiable. These are the degenerate
+  inputs the invalid-input suite pins. The table now reaches both of them
+  deliberately -- the all-zero encoding and a coordinate above the modulus --
+  at a well-formed pointer, and the operand pages are filled with repeated
+  valid words so that a pointer shifted by whole operands still reads a
+  well-formed value. Shifting by whole words instead rotates the operand into a
+  malformed coordinate, and those divergences are attributed to the value as
+  well: a rotation found this class before it had a case of its own, through a
+  witness-generator subtraction that underflows for some coordinates and not
+  others.
+
+  Both classes are programs that execute but cannot be traced, hence cannot be
+  proved; neither is a soundness question. Misaligned pointers, addresses above
+  the range and a nonzero second argument where the ABI requires zero stop
+  both executors alike.
+- **V1 and V2.** Nine fixtures, 288 typed mutations and 576 single-bit
+  mutations of the serialized proof, seed `0x5eed0304`, 413 seconds. Of the
+  typed mutations, 271 were rejected, 3 found no such field in their fixture
+  and 14 were accepted; of the bit flips, 197 did not deserialize, 375 were
+  rejected and 4 were accepted. The verifier never panicked. Every acceptance
+  was a mutation of `p_eval0_chunks`, and that is the one thing this layer
+  found: the field is a copy of `prev_evals.public_evals.zeta` that the host
+  conversion derives from it, and no part of the verifier, the guest, the
+  attestation or the statement digest reads it. The proof's public-input
+  evaluation is still bound, through the copy that is used; this one is dead
+  weight in the guest's input. The harness expects those acceptances now,
+  counts them apart, requires the expectation to be exercised, and fails if any
+  other field turns out to be ignored. Across the run the typed layer drew 67
+  distinct targets.
+- **A1.** The canonical Pasta residues against arkworks on every ordered pair
+  of nine boundary classes plus 512 random pairs and 516 triples per field:
+  `add_assign`, both `pow7` schedules and all three three-term inner products
+  agreed everywhere, and `from_limbs` rejected `p`, `p + 1` and `2^256 - 1`.
+
+What the third run does not show: the byte tables bind by message membership,
+which the harness checks, but a prover free to rewrite the chips on the other
+side of an argument is still outside the model; that is the full-proof variant
+of F4. Evidence: [pasta-fuzz expansion
+summary](../benchmarks/pasta-fuzz-expansion-sp1-6.10.json) and [verifier
+mutation summary](../benchmarks/verifier-mutation-fuzz.json).
 
 ## Phases
 
 | Phase | Deliverable | Exit criterion | Effort |
 | --- | --- | --- | --- |
 | 0 | `pasta-fuzz` F1–F3 and Poseidon P1–P4; survivor sets recorded | Clean run on three distinct seeds | Done locally (second run); CI wiring open |
+| 0b | F4, FP1–FP4, C1–C2, D1–D2 in the harness; V1–V2 and A1 natively | Clean run on three distinct seeds, every survivor and divergence classified | Done locally (third run); CI wiring open |
 | 1 | Rust extractor and fingerprints for the four instances | Stable fingerprint across two builds; any constraint edit changes it | 1 week |
 | 2 | Lean limb-identity, field-op and range lemmas | No `sorry`; axioms listed | 2–3 weeks |
 | 3 | Lean add and double models; fingerprint match; randomized check in CI | Both checks pass in CI | 2 weeks |
 | 4 | Soundness and completeness for add; double with its `2y ≠ 0` decision | Theorems proved, or a constraint added and re-proved | 2–3 weeks |
-| 5 | F4 and F6; user-mode page-protection columns | Lookup-aware survivors explained | 1–2 weeks |
+| 5 | F6 and the user-mode page-protection columns; the full-proof variant of F4 for the byte table | Cross-curve and user-mode survivors explained | 1–2 weeks |
 
 Effort assumes one engineer familiar with Lean and Mathlib; it is an estimate,
 not a commitment.

@@ -98,3 +98,7 @@ The follow-up's Poseidon permutation chips, one syscall per kimchi permutation
 with a 55-row round chain, are recorded in
 [Poseidon](04-poseidon.md#mizu-pasta-poseidon-precompile-the-kimchi-permutation-as-one-syscall)
 (−6.62% cycles, −5.22% main cells against the Pasta Fp precompile; opt-in).
+The fuzzing was then extended to five further surfaces and given an argument
+channel, which turns "no constraint rejects this cell" into "nothing in the
+proof system rejects it":
+[mizu-fuzz-expansion](07-measurement-and-tooling.md#mizu-fuzz-expansion-five-more-fuzz-surfaces-and-the-argument-channel).

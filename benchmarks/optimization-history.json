@@ -21360,6 +21360,50 @@
         },
         "recursion_vk_map": false
       }
+    },
+    {
+      "id": "mizu-fuzz-expansion",
+      "owner": "o1js-to-zkvm",
+      "status": "validation-tooling-retained",
+      "document": "docs/optimizations/07-measurement-and-tooling.md",
+      "retained_default": false,
+      "proof_generated": false,
+      "source_revision": "local, on the same fork pins as mizu-pasta-poseidon-precompile",
+      "dependency_pins": {
+        "algebra": "6f81d7e1",
+        "proof-systems": "ddb617200",
+        "sp1": "a418319a0"
+      },
+      "evidence": "benchmarks/pasta-fuzz-expansion-sp1-6.10.json",
+      "evidence_sha256": "d8b11ed2a1653d8d5c1a15de2bdba98a58076f00b79eef93c5df8857405b3852",
+      "secondary_evidence": "benchmarks/verifier-mutation-fuzz.json",
+      "secondary_evidence_sha256": "d7dbbb94aac307e1351f535fd42dba3eb1254a2a01a2752d90ca256d297923ae",
+      "supersedes_limits": [
+        "mizu-pasta-fuzz: a column surviving the sweep is not thereby unconstrained",
+        "mizu-pasta-poseidon-precompile: P4's memory and syscall arguments are not evaluated"
+      ],
+      "validation": {
+        "seeds": 4,
+        "iterations": [
+          32,
+          32,
+          32,
+          16
+        ],
+        "fixed_table_messages": 459007,
+        "surviving_cells_bound_by_nothing": 0,
+        "unexplained_mutations": 0,
+        "unexplained_executor_divergences": 0,
+        "executor_divergences_from_the_address_floor": 8,
+        "verifier_mutations": 864,
+        "verifier_mutations_accepted": 0,
+        "verifier_fixtures": 9,
+        "verifier_mutations_accepted_in_an_ignored_field": 18,
+        "verifier_ignored_fields": [
+          "p_eval0_chunks"
+        ],
+        "finding": "p_eval0_chunks is a copy of prev_evals.public_evals.zeta that no part of the verifier, the guest, the attestation or the statement digest reads; the public-input evaluation is bound through the copy that is used, so this one is dead weight in the guest's input"
+      }
     }
   ],
   "mizu_workflows": [

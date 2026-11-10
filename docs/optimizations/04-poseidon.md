@@ -192,7 +192,11 @@ not by preserving the original experimental commit history.
   or inside the memory-only field; re-labelled rounds and swapped outputs
   rejected. Details in the
   [verification plan](../pasta-air-verification-plan.md) and its
-  [summary](../../benchmarks/pasta-poseidon-fuzz-sp1-6.10.json).
+  [summary](../../benchmarks/pasta-poseidon-fuzz-sp1-6.10.json). The
+  memory-only class was deferred in those runs and is checked in the later
+  ones: P4 now requires such a mutation to change the chip's own contribution
+  to the memory argument, which the rest of an honest shard cannot absorb. See
+  [measurement and tooling](07-measurement-and-tooling.md#mizu-fuzz-expansion-five-more-fuzz-surfaces-and-the-argument-channel).
 - **Validation scope:** compilation, CPU execution, row and AIR tests, lookup
   balance, one CPU core proof with complete verification. No fresh GPU proof,
   no recursion, no Linux/CUDA.

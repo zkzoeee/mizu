@@ -139,10 +139,176 @@ matrices and completed cryptographic verification. No dependency code was ported
 - **Limits:** algebraic constraints only; interactions are not evaluated, and a
   single-column sweep cannot find coordinated multi-column forgeries. The plan
   for lookup-aware mutation and Lean proofs is in
-  [the verification plan](../pasta-air-verification-plan.md).
+  [the verification plan](../pasta-air-verification-plan.md). The first of
+  those limits was lifted the same day: the layers below evaluate the memory,
+  page-protection and syscall arguments and the fixed tables' message sets, so
+  a surviving column is no longer read as an unconstrained one. The multi-row
+  and multi-column limits stand.
 
 The same mode also extends `r5-cycles --time-witness`: it now times Pasta
 dependency and trace generation separately, and with `PASTA_WITNESS_DIGEST=1`
 it digests every Pasta chip trace and its sorted byte lookups over the whole
 workload. Equal digests across two builds mean the witness is bit-identical
 for every real addition, not just for the one-event `witness-digest` fixtures.
+
+## mizu-fuzz-expansion: five more fuzz surfaces and the argument channel
+
+- **Status:** validation tooling, retained. No performance claim, no change to
+  any retained setting.
+- **Area and owner:** `tools/pasta-proof/src/main.rs` (mode `pasta-fuzz`: new
+  layers FP1–FP4, C1–C2, D1–D2, and the argument channel used by FP3, FP4, C1
+  and Poseidon P4), `crates/cycle-runner/src/bin/verifier-fuzz.rs` (new
+  binary), `crates/pickles-verifier/tests/canonical_words_fuzz.rs` (new test).
+  No fork change, so the pins are unmoved.
+- **Implementation identity:** root commits `568c696` (harness) and `1c124a8`
+  (native harnesses) on `codex/zakura-ragu`, over the fork pins of
+  `mizu-pasta-poseidon-precompile` (SP1 `a418319a0`, proof-systems
+  `ddb617200`), which this work does not touch. The measurements come from
+  those commits' source.
+- **Predecessors/corrections:** extends
+  [`mizu-pasta-fuzz`](#mizu-pasta-fuzz-differential-fuzzing-of-the-pasta-precompiles)
+  (curve layers F1–F3) and the Poseidon layers P1–P4 recorded under
+  [Poseidon](04-poseidon.md#mizu-pasta-poseidon-precompile-the-kimchi-permutation-as-one-syscall).
+  It supersedes two stated limits: P4's "memory and syscall arguments are not
+  evaluated", and F3's reading of a surviving column as unconstrained.
+- **Mechanism:** the channel and five surfaces, in the order they were built.
+  1. *The argument channel.* `debug_constraints` evaluates one chip's row
+     algebra and nothing else, so a column bound by a lookup argument looks
+     unconstrained to a column sweep. The harness now compares the chip's own
+     contribution to the memory, page-protection and syscall arguments before
+     and after a mutation. Those balance over every chip of a shard, so a
+     changed contribution cannot be absorbed by an otherwise honest shard: it
+     is a rejection, with no proof generated. The honest balance is checked per
+     layer over every participating chip rather than assumed. Byte lookups are
+     treated differently, because the byte and range tables' multiplicity
+     columns are prover-supplied: what binds there is membership of the
+     message set, which comes from the tables' preprocessed traces. The
+     harness enumerates that set once per run and asks whether a mutated row
+     requests a message no table holds.
+  2. *The fixed-modulus field chip* (FP1–FP4): the executor against a BigUint
+     reference on random canonical, edge and noncanonical operands; every real
+     row's result limbs; the column sweep across four rows instead of the
+     first; and random single-cell mutations.
+  3. *The curve chips beyond the first row* (C1–C2): the sweep across four
+     rows of a six-call trace, and randomized forgeries of the two degenerate
+     cases the fixed suite pins at one point each.
+  4. *The two executors* (D1–D2): every Pasta syscall is served twice in the
+     fork, by the minimal executor which computes and the tracing executor
+     which records, and `generate_records` runs both in sequence. A
+     disagreement therefore never shows up as a wrong result, only as one side
+     accepting a program the other refuses. Malformed register arguments and
+     random pointer offsets are put to both, with controls that attribute a
+     divergence to the address or to the operand value rather than to the
+     syscall.
+  5. *The native Pickles verifier* (V1–V2): one randomly chosen typed field of
+     a `VerifiableProof`, or one random bit of its serialization, mutated and
+     required to be rejected, over all nine fixtures.
+  6. *The canonical Pasta residues* (A1): against arkworks on boundary classes
+     and random operands.
+- **Selection:** `--mode pasta-fuzz --output DIR` with `PASTA_FUZZ_SEED` and
+  `PASTA_FUZZ_ITERS` as before; `verifier-fuzz --seed --typed --bytes
+  --fixtures --output`; `cargo test -p pickles-verifier --test
+  canonical_words_fuzz`. Nothing here runs in any proving path.
+- **Result:** four `pasta-fuzz` runs — `0x5eed0301`, `0x5eed0302` and
+  `0x5eed0303` at 32 iterations, and `0x5eed0202` at 16, the seed whose
+  low-byte cell prompted the fixed-table check and the only one of the four
+  that exercises it — at 217 to 236 seconds a run; and one verifier-fuzz run
+  (seed `0x5eed0304`, 32 typed and 64 single-bit mutations per fixture, 413
+  seconds). No cell was left that neither a constraint, an argument nor a
+  fixed table rejects, no mutated proof was accepted outside the one field the
+  verifier does not read, and no executor divergence went unattributed. The
+  fixed tables hold 459,007 distinct byte-lookup messages, enumerated once per
+  run from their preprocessed traces.
+
+| Layer | Volume, all runs | Outcome |
+| --- | --- | --- |
+| FP1/FP1b | 474 Pallas and 492 Vesta field operations, 66 and 84 of them noncanonical | the executor matched the reference on every one; of the noncanonical rows, 44 and 56 had a satisfying witness and every one of those carried the reduced result |
+| FP2 | 66 or 114 real rows per field and run | row results matched the executor and the reference; honest rows satisfied the AIR; no padding row was real |
+| FP3 | 1,224 cells per field and run | 112 survived the row algebra each time, all of them on the padding row |
+| FP4 | 448 mutations | 447 rejected by the row algebra, 1 by a fixed table, 0 unexplained |
+| C1 | 6,396 (add) and 6,364 (double) cells per run | 210 (add) and 140 (double) survived the row algebra, all on the padding row |
+| C2 | 8 forgeries per operation and run | every forgery rejected by the row algebra except the double chip's `(0, 0)` row, which the memory argument rejected |
+| D1/D2 | 68 table cases, 32 random offsets and 4 plain-store controls per run | 8 divergences from the address floor and 2 to 4 from a malformed operand value, each attributed by a control; 0 unexplained |
+| P4 | 448 mutations | 377 rejected by the row algebra, 61 by the round chain, 10 by the memory argument, 0 unexplained |
+| V1/V2 | 9 fixtures, 288 typed and 576 single-bit mutations | 271 typed and 375 single-bit mutations rejected, 197 flips did not deserialize, 18 accepted in the one ignored field, 0 accepted anywhere else, no verifier panic |
+| A1 | 593 operand pairs and 516 triples per field | all agreed with arkworks |
+
+- **Correctness evidence and what the layers found:**
+  - *The address floor.* Pointing any Pasta syscall below SP1's 2^16 data
+    floor makes the minimal executor complete and the tracing replay panic in
+    `p3_field`'s inverse. The plain store-and-load control reproduces it with
+    no syscall at all, so it is a property of the address, not of these
+    precompiles, and the harness attributes it there. Programs that execute
+    but cannot be traced cannot be proved; nothing about soundness changes.
+  - *Malformed operand values.* On the two double chips the executors also
+    part company over the all-zero encoding: the minimal executor's fixed-limb
+    path returns zero for the inverse of zero and completes, while record
+    generation panics in the witness generator's division. The add chips do
+    not, because their batched-inversion path populates the same columns
+    without asserting, so the record is built and the row is simply
+    unsatisfiable. Random pointer offsets found this class twice before it had
+    cases of its own, once through untouched memory and once through a rotated
+    coordinate that underflows a witness-generator subtraction. The operand
+    pages are now filled with repeated valid words, so an offset of whole
+    operands reads a well-formed value and tests the address alone, while an
+    offset of whole words rotates the operand and is attributed to the value.
+  - *Noncanonical field operands.* The executor reduces its operands and
+    `FpOpChip` does not, so the two disagree about what a noncanonical operand
+    means. The executor's result is always the reduced reference. Whether the
+    honest row for such an operand satisfies the AIR depends on the operands
+    and the operation, because the carry the witness generator computes can
+    outgrow its limbs: in the recorded runs most subtractions had no satisfying
+    witness and most additions and multiplications had one. Every row that does
+    satisfy the AIR is required to carry the reduced result, so the class is a
+    liveness boundary and not a second meaning for the same memory words. It is
+    the same boundary as the curve chips' noncanonical inputs.
+  - *The low-byte columns.* `U16toU8Operation` keeps only the low byte of each
+    16-bit memory limb as a column and derives the high byte as
+    `(limb - low) / 256`, so a single-cell mutation of a low byte moves both
+    bytes and leaves the limb, and the memory argument, intact. Nothing but
+    the byte range check rejects it, and it always does: one of the two bytes
+    must leave `[0, 256)`. The first run of FP4 reported such a cell as
+    unexplained, which is what prompted the fixed-table membership check; it
+    is now a counted class.
+  - *The double chip's free slope.* Written over an honest trace, the `(0, 0)`
+    forgery the row algebra accepts changes the claimed input in memory, so
+    the memory argument rejects it. The chip's algebraic gap is unchanged, and
+    so is the conclusion that the guest ABI must discharge `2y != 0`; what is
+    new is that this particular way of exploiting it does not reach a proof.
+  - *A field the verifier does not read.* Every mutation the native verifier
+    accepted was a mutation of `p_eval0_chunks`, on eight of the nine
+    fixtures. It is a copy of `prev_evals.public_evals.zeta` that the host
+    conversion derives from it, and nothing in the verifier, the guest, the
+    attestation or the statement digest reads it: the proof's public-input
+    evaluation is bound through the copy that is used, and this one is dead
+    weight in the guest's input, which the guest still pays to deserialize.
+    The harness now expects those acceptances, counts them apart, requires the
+    expectation to be exercised and fails if any other field turns out to be
+    ignored. Removing the field would be an ABI change and is left as a
+    separate question.
+  - *A gap in the harness itself.* The field operations file their events
+    under the add syscall code, so the differential's first version compared
+    the minimal executor's words against an empty list and passed vacuously.
+    The baseline assertion added for that reason now requires the well-formed
+    call to produce one event and the same words on both sides. The typed
+    verifier mutators are likewise drawn once each before the random draws
+    begin, so a mutator that is never drawn cannot pass by not running.
+- **Validation scope:** host execution, row and AIR evaluation, argument
+  multisets, fixed-table membership, native Pickles verification, native field
+  arithmetic. No proof is generated anywhere in this record, no GPU, no
+  recursion.
+- **Decision and limits:** retained as tooling. The argument channel shows
+  that an otherwise honest shard cannot absorb the mutation; a prover that
+  also rewrites the chips on the other side of an argument is outside what it
+  measures, and the full-proof variant of F4 stays open. The native verifier
+  layers say nothing about the in-circuit verifier or about SP1. On the host,
+  `CanonicalPasta`'s products are arkworks, so A1 covers the schedules,
+  accumulation and reduction around them, not the multiplication. Single-cell
+  sweeps still cannot find coordinated multi-column forgeries, which is what
+  the Lean work in [the verification plan](../pasta-air-verification-plan.md)
+  is for.
+- **Source provenance:** [pasta-fuzz expansion
+  summary](../../benchmarks/pasta-fuzz-expansion-sp1-6.10.json) and [verifier
+  mutation summary](../../benchmarks/verifier-mutation-fuzz.json), both with
+  the raw report hashes.
+- **Upstream sync:** none. No fork file changed, so there is nothing to replay.
