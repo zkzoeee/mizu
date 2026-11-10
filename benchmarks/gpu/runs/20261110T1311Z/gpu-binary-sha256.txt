@@ -1,0 +1,1 @@
+8af0b21962e17a721f6addf920d11f1c3330472e646a5397b8d71cb8dcaf3779  /workspace/bin/pasta-precompile-proof-6-10

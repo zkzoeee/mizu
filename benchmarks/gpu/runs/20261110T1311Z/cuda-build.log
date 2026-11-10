@@ -1,0 +1,62 @@
+   Compiling sp1-core-executor v6.10.0 (/workspace/mizu4/vendor/sp1/crates/core/executor)
+   Compiling sp1-curves v6.10.0 (/workspace/mizu4/vendor/sp1/crates/curves)
+   Compiling sp1-core-executor-runner v6.10.0 (/workspace/mizu4/vendor/sp1/crates/core/runner)
+   Compiling sp1-core-machine v6.10.0 (/workspace/mizu4/vendor/sp1/crates/core/machine)
+   Compiling sp1-gpu-sys v6.10.0
+   Compiling sp1-gpu-air v6.10.0
+   Compiling sp1-gpu-cudart v6.10.0
+   Compiling sp1-gpu-utils v6.10.0
+   Compiling sp1-gpu-tracegen v6.10.0
+   Compiling sp1-gpu-challenger v6.10.0
+   Compiling sp1-gpu-tracing v6.10.0
+   Compiling sp1-gpu-jagged-sumcheck v6.10.0
+   Compiling sp1-gpu-jagged-assist v6.10.0
+   Compiling sp1-gpu-merkle-tree v6.10.0
+   Compiling sp1-gpu-zerocheck v6.10.0
+   Compiling sp1-gpu-basefold v6.10.0
+   Compiling sp1-gpu-jagged-tracegen v6.10.0
+   Compiling sp1-gpu-commit v6.10.0
+   Compiling sp1-gpu-logup-gkr v6.10.0
+   Compiling sp1-gpu-shard-prover v6.10.0
+   Compiling pasta-precompile-proof v0.1.0 (/workspace/mizu4/tools/pasta-proof)
+warning: unused variable: `drop_ldes`
+   --> src/gpu.rs:267:9
+    |
+267 |     let drop_ldes = opts.drop_ldes;
+    |         ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_drop_ldes`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `peak_rss_bytes` is never used
+    --> src/main.rs:2501:4
+     |
+2501 | fn peak_rss_bytes() -> u64 {
+     |    ^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `pasta-precompile-proof` (bin "pasta-precompile-proof-6-10") generated 2 warnings (run `cargo fix --bin "pasta-precompile-proof-6-10" -p pasta-precompile-proof` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 7m 21s
+	Command being timed: "cargo build --release --locked --features cuda --bin pasta-precompile-proof-6-10"
+	User time (seconds): 674.17
+	System time (seconds): 45.23
+	Percent of CPU this job got: 162%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 7:21.52
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2560528
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 338
+	Minor (reclaiming a frame) page faults: 20198236
+	Voluntary context switches: 14620
+	Involuntary context switches: 8402
+	Swaps: 0
+	File system inputs: 58944
+	File system outputs: 2608552
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

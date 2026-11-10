@@ -51,13 +51,33 @@ use crate::{
     MAX_LOG_ROW_COUNT, OPS,
 };
 
-/// The CUDA core prover specialized to our machine.
+/// The CUDA core prover's component set, specialized to the Pasta machine.
 ///
-/// This mirrors `sp1_gpu_prover::CudaProverCoreComponents` exactly. It is
-/// specialized to the Pasta machine. SP1 6.10 compiles and uploads machine
-/// zerocheck bytecode inside `CudaShardProver::new`; the old caller-side cache
-/// argument has been removed. This source still requires a Linux/CUDA build
-/// and fresh real-proof validation; neither was performed on the Mac.
+/// This mirrors `sp1_gpu_prover::CudaProverCoreComponents` exactly.
+///
+/// The port carried this doc comment and the `-> Gpu` return type but not
+/// these three declarations, so the never-compiled CUDA source referred to an
+/// undeclared type and the comment was left orphaned on the builder below.
+/// The first Linux build of this repository found it (2026-11-10), exactly as
+/// wazabi's r123 found the same hole in its own tree. Recovered from that
+/// proved 6.10 harness, which uses these same four associated types; nothing
+/// here is invented.
+pub struct PastaCudaCoreComponents;
+
+impl CudaShardProverComponents<SP1GlobalContext> for PastaCudaCoreComponents {
+    type P = Poseidon2SP1Field16CudaProver;
+    type Air = Air;
+    type C = SP1InnerPcs;
+    type DeviceChallenger = DuplexChallenger<SP1Field, TaskScope>;
+}
+
+type Gpu = CudaShardProver<SP1GlobalContext, PastaCudaCoreComponents>;
+
+/// Build a CUDA shard prover for our machine.
+///
+/// SP1 6.10 compiles and uploads machine zerocheck bytecode inside
+/// `CudaShardProver::new`; the old caller-side cache argument has been
+/// removed.
 async fn new_pasta_cuda_prover(
     verifier: MachineVerifier<SP1GlobalContext, InnerSC<Air>>,
     max_trace_size: usize,
@@ -177,7 +197,11 @@ pub async fn run_guest_gpu(elf_path: &Path, output: &Path, reference: Option<&Pa
 
     let trace_start = Instant::now();
     let (records, cycles) =
-        generate_records::<SP1Field>(program.clone(), stdin.clone(), opts, [0; 4])?;
+        // `opts.clone()`: the guards below read `recompute_gkr_trace`,
+        // `drop_ldes` and `full_size_shards` after this call, and `SP1CoreOpts`
+        // is not `Copy`. wazabi's r123 fixed the same line in its own tree;
+        // the first Linux build of this one found it again on 2026-11-10.
+        generate_records::<SP1Field>(program.clone(), stdin.clone(), opts.clone(), [0; 4])?;
     let trace_seconds = trace_start.elapsed().as_secs_f64();
 
     let mut per_op = BTreeMap::new();
@@ -552,7 +576,18 @@ async fn prove_core_gpu(
     // Shard proofs in flight at once. Each acquires one of the CUDA prover's
     // buffers before generating traces, so VRAM stays bounded by the worker
     // count; extra depth only overlaps host-side trace generation.
-    let prove_depth = env_usize("PASTA_PROVE_INFLIGHT", 2);
+    //
+    // **Default 1, which is serial.** The first real GPU run of this tree
+    // (2026-11-10, an RTX A40) proved that depth 2 does not work: four worker
+    // threads panic in `sp1-gpu-logup-gkr`'s `generate_first_layer` at
+    // `main_poly_height(name).unwrap()`, so a chip is in the shard's chip set
+    // with no main polynomial in the data handed to the device, and the shard
+    // prover's join then unwraps that panic. The same arm at depth 1 proved in
+    // 168.63 s and was accepted by the complete verifier twice. The
+    // pipelining is r120's ranked idea 3 and had never met a GPU; keep the
+    // knob for the work that fixes it, but nothing may default to it until a
+    // run shows it sound.
+    let prove_depth = env_usize("PASTA_PROVE_INFLIGHT", 1);
 
     // Bounded, so a fast executor cannot accumulate records faster than the GPU
     // retires them. This is the whole point of streaming.

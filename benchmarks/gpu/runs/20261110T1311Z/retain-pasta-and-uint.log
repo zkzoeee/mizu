@@ -1,0 +1,119 @@
+
+thread '<unnamed>' (22218) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+thread '<unnamed>' (22220) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22221) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22223) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22224) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22224) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22218) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22224) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22224) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22223) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22218) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22222) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22224) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22224) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22219) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22222) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22223) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22221) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22220) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22223) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22221) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22222) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22220) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22224) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22221) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22223) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22219) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22224) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22221) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread '<unnamed>' (22218) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-logup-gkr-6.10.0/src/tracegen.rs:50:73:
+called `Option::unwrap()` on a `None` value
+
+thread 'main' (22103) panicked at /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/sp1-gpu-shard-prover-6.10.0/src/prover.rs:367:10:
+called `Result::unwrap()` on an `Err` value: JoinError::Panic(Id(823), "called `Option::unwrap()` on a `None` value", ...)
+Error: the CUDA proving task failed: JoinError(JoinError::Panic(Id(2), "called `Result::unwrap()` on an `Err` value: JoinError::Panic(Id(823), \"called `Option::unwrap()` on a `None` value\", ...)", ...))
+Command exited with non-zero status 1
+	Command being timed: "/workspace/bin/pasta-precompile-proof-6-10 --mode manifest-core-gpu --manifest /workspace/mizu4/gpu/run-manifest.json --arm retain-pasta-and-uint --elf /workspace/mizu4/gpu/elf/guest-program --input /workspace/mizu4/gpu/input --output /workspace/results/retain-pasta-and-uint"
+	User time (seconds): 400.65
+	System time (seconds): 47.85
+	Percent of CPU this job got: 433%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:43.35
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 15946596
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 20861895
+	Voluntary context switches: 23054
+	Involuntary context switches: 3909
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1

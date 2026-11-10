@@ -5,6 +5,16 @@ edition = "2021"
 autobins = false
 
 [workspace]
+# Resolver 1, deliberately. Resolver 2 does not apply a feature enabled on a
+# normal dependency to the same crate in the host/build graph, and
+# `sp1-gpu-sys` build-depends on `sp1-core-executor`, so the runner's build
+# script loses the `profiling` feature it asserts on and the CUDA build dies
+# with "Vesta proof spike requires the portable runner". That assert only
+# fires on x86_64 Linux, which is why a Mac build never sees it; wazabi's r123
+# hit it on a rented pod, and this repository hit it again on 2026-11-10.
+# Do not satisfy the assert with CARGO_FEATURE_PROFILING instead: that
+# silences the guard while leaving the unpatched native executor linked.
+resolver = "1"
 
 [dependencies]
 anyhow = "1"

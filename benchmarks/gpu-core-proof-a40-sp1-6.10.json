@@ -1,0 +1,297 @@
+{
+  "schema": "mizu-gpu-core-proof/1",
+  "id": "mizu-gpu-core-proof-a40",
+  "captured": "2026-11-10T13:55:00Z",
+  "statement": {
+    "manifest": "benchmarks/gpu/next-core-proof-manifest.json",
+    "manifest_sha256": "92c23e6e185d6a9ed6d13a98aa69280056cdc0b7d466b5099d789102cc0b1fc2",
+    "run": "next-core-proof-retained-boolean-guest",
+    "elf_sha256": "0cfb3eafeea0d450e3ae8efd9a472a363495d49a5ff055b31b7cb50541c5a871",
+    "proof_input_sha256": "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+    "receipt_input_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+    "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+    "public_values_bytes": 1,
+    "proof_type": "core (no recursion, no wrap, no Groth16)"
+  },
+  "host": {
+    "provider": "RunPod",
+    "pod_id": "2sdy2pearcbmai",
+    "cloud": "SECURE",
+    "data_center": "EU-SE-1",
+    "gpu": "NVIDIA A40",
+    "gpu_memory_total": "46068 MiB",
+    "compute_cap": "8.6",
+    "driver": "595.91.07",
+    "host_cuda": "13.2",
+    "image": "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404",
+    "cpu_model": "Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz",
+    "vcpu_allocated": 9,
+    "vcpu_visible_to_nproc": 96,
+    "ram_allocated_gb": 50,
+    "container_disk_gb": 80,
+    "network_volume": null
+  },
+  "build": {
+    "cuda_archs": "86",
+    "nvcc": "release 12.8",
+    "rustc": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+    "cargo_build_jobs": 8,
+    "bundle_sha256": "2863dc0ce565cbe2e0eac3379a8a3846b8b3b6a96437d2730d36cae469d8dea8",
+    "harness_sha256": "8af0b21962e17a721f6addf920d11f1c3330472e646a5397b8d71cb8dcaf3779",
+    "cache": "none (no network volume); CARGO_TARGET_DIR on container disk, reused across four attempts",
+    "successful_build_wall": "about 7 minutes, most of it codegen of the single harness binary"
+  },
+  "arms": {
+    "retain-pasta-and-uint": {
+      "status": "passed",
+      "shards": 82,
+      "expected_shards_from_cpu_phase": 82,
+      "guest_cycles": 142638298,
+      "cycles_match_expected": true,
+      "proof_bytes": 132029932,
+      "proof_sha256": "39552cfffa1bb58c7ae76a3bb18cefa954725b13522a07e62a519e1acc26e0fd",
+      "proof_bytes_per_shard": 1610121.1,
+      "verification_key_sha256": "eed89d80326950303c787b1fbf0e08034cd8b986425de27c9e4e7475da295113",
+      "committed_digest_hex": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+      "seconds": {
+        "total": 168.631096527,
+        "gpu_prove_loop": 141.968045817,
+        "gpu_setup": 7.427582485,
+        "executor": 159.800142121,
+        "gpu_task_total": 159.799914533,
+        "cpu_verify_in_process": 7.040558456
+      },
+      "prove_depth": 1,
+      "records_in_flight": 2,
+      "gpu_workers": 2,
+      "retained_events_presets": [
+        "Bls12381Field",
+        "Bn254Field",
+        "PallasAdd",
+        "Poseidon2",
+        "Sha256",
+        "U256Ops",
+        "Uint256MulMod",
+        "VestaAdd"
+      ],
+      "pasta_chips_present": [
+        "VestaAddAssign",
+        "VestaDoubleAssign",
+        "PallasAddAssign",
+        "PallasDoubleAssign"
+      ],
+      "reload_verification": {
+        "on_pod": {
+          "accepted": true,
+          "reloaded_shards": 82,
+          "key_derived_from_pinned_elf": true,
+          "saved_key_matches_derived": true,
+          "committed_digest_matches": true,
+          "cpu_verify_seconds": 6.171344359
+        },
+        "off_pod_on_the_mac": {
+          "accepted": true,
+          "reloaded_shards": 82,
+          "key_derived_from_pinned_elf": true,
+          "saved_key_matches_derived": true,
+          "committed_digest_matches": true,
+          "cpu_verify_seconds": 4.029381,
+          "proof_sha256_matched_pod": true
+        }
+      }
+    },
+    "default": {
+      "status": "passed",
+      "shards": 148,
+      "expected_shards_from_cpu_phase": 148,
+      "guest_cycles": 142638298,
+      "cycles_match_expected": true,
+      "proof_bytes": 227918740,
+      "proof_sha256": "6c5cd9c5a2ea2340e3ba7b0b8a927792ae8b6e9baf12339b7a79344b36d60869",
+      "proof_bytes_per_shard": 1539991.5,
+      "verification_key_sha256": "eed89d80326950303c787b1fbf0e08034cd8b986425de27c9e4e7475da295113",
+      "committed_digest_hex": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+      "seconds": {
+        "total": 223.144365112,
+        "gpu_prove_loop": 193.870873593,
+        "gpu_setup": 7.461177828,
+        "executor": 211.331232375,
+        "gpu_task_total": 211.331049493,
+        "cpu_verify_in_process": 9.726192937
+      },
+      "prove_depth": 1,
+      "records_in_flight": 2,
+      "gpu_workers": 2,
+      "retained_events_presets": [
+        "Bls12381Field",
+        "Bn254Field",
+        "Poseidon2",
+        "Sha256",
+        "U256Ops"
+      ],
+      "pasta_chips_present": [
+        "VestaAddAssign",
+        "VestaDoubleAssign",
+        "PallasAddAssign",
+        "PallasDoubleAssign"
+      ],
+      "reload_verification": {
+        "on_pod": {
+          "accepted": true,
+          "reloaded_shards": 148,
+          "key_derived_from_pinned_elf": true,
+          "saved_key_matches_derived": true,
+          "committed_digest_matches": true,
+          "cpu_verify_seconds": 9.508665586
+        },
+        "off_pod_on_the_mac": {
+          "accepted": true,
+          "reloaded_shards": 148,
+          "key_derived_from_pinned_elf": true,
+          "saved_key_matches_derived": true,
+          "committed_digest_matches": true,
+          "cpu_verify_seconds": 6.201420042,
+          "proof_sha256_matched_pod": true
+        }
+      }
+    }
+  },
+  "retention_effect": {
+    "control": "default",
+    "candidate": "retain-pasta-and-uint",
+    "wall_seconds": [
+      223.144365112,
+      168.631096527
+    ],
+    "wall_delta_pct": -24.43,
+    "shards": [
+      148,
+      82
+    ],
+    "shards_delta_pct": -44.59,
+    "proof_bytes": [
+      227918740,
+      132029932
+    ],
+    "proof_bytes_delta_pct": -42.07,
+    "note": "Both arms ran on this one host, back to back, same binary, same statement. r120 measured the same comparison as -11.2% of wall on a faster host; this host converts the same trace-volume cut into -24.4%, so the saving is host-dependent and must be quoted with its host."
+  },
+  "cross_run_comparison": {
+    "note": "Same statement and same retained arm. GPU-busy time was essentially identical across the 5090 runs while wall differed 2.3x, which r124 attributed to host per-core speed. This A40 run is the cheap-side confirmation.",
+    "runs": [
+      {
+        "run": "r120 (wazabi)",
+        "gpu": "RTX 5090",
+        "host": "32 vCPU, model unrecorded",
+        "sp1": "6.1",
+        "retained_arm_seconds": 128.62
+      },
+      {
+        "run": "r123 (wazabi)",
+        "gpu": "RTX 5090",
+        "host": "15 vCPU, model unrecorded",
+        "sp1": "6.10",
+        "retained_arm_seconds": 301.84
+      },
+      {
+        "run": "r124 (wazabi)",
+        "gpu": "RTX 5090",
+        "host": "20 vCPU EPYC 7543",
+        "sp1": "6.1 and 6.10",
+        "retained_arm_seconds": 308.35
+      },
+      {
+        "run": "this run",
+        "gpu": "A40 at $0.59/hr",
+        "host": "9 vCPU Xeon Gold 6342 @ 2.80GHz",
+        "sp1": "6.10",
+        "retained_arm_seconds": 168.631096527
+      }
+    ],
+    "proof_bytes_retained_arm": {
+      "wazabi_r120_r123_r124": 132027076,
+      "this_run": 132029932,
+      "delta_bytes": 2856,
+      "note": "same 82 shards; FRI draws randomness, so the size is not bit-identical"
+    }
+  },
+  "executor_bound_signature": {
+    "arm": "retain-pasta-and-uint",
+    "executor_seconds": 159.800142121,
+    "gpu_task_total_seconds": 159.799914533,
+    "note": "Equal to four decimals, the fifth consecutive run with this signature (r11, r114, r120, r123, r124). gpu_prove_seconds is pipeline time, not GPU compute."
+  },
+  "defects_found": [
+    {
+      "where": "tools/pasta-proof/Cargo.toml",
+      "defect": "resolver 2 starved sp1-core-executor-runner's build script of the profiling feature; the CUDA build died with \"Vesta proof spike requires the portable runner\". x86_64-Linux only, so no Mac build sees it.",
+      "fix": "resolver = \"1\"",
+      "same_as": "wazabi r123 defect 1"
+    },
+    {
+      "where": "tools/pasta-proof/src/gpu.rs",
+      "defect": "PastaCudaCoreComponents, its CudaShardProverComponents impl and type Gpu were missing while the doc comment and the -> Gpu return type were present",
+      "fix": "restored from wazabi's proved 6.10 harness",
+      "same_as": "wazabi r123 defect 2"
+    },
+    {
+      "where": "tools/pasta-proof/src/gpu.rs",
+      "defect": "SP1CoreOpts moved into generate_records before the recompute_gkr_trace/drop_ldes/full_size_shards guards read it",
+      "fix": "opts.clone()",
+      "same_as": "wazabi r123 defect 3"
+    },
+    {
+      "where": "tools/pasta-proof/src/gpu.rs",
+      "defect": "PASTA_PROVE_INFLIGHT defaulted to 2; two shards in flight panic in sp1-gpu-logup-gkr generate_first_layer at main_poly_height(name).unwrap() across four worker threads, then the shard prover's join unwraps the panic",
+      "fix": "default 1 (serial); the pipelining stays an unproved experiment",
+      "same_as": "none - this defect is this repository's own, and only a GPU could find it"
+    },
+    {
+      "where": "scripts/gpu/push-and-launch.sh",
+      "defect": "tmux new-session immediately after kill-server raced the dying server and answered \"server exited unexpectedly\" without starting anything",
+      "fix": "sleep between them"
+    },
+    {
+      "where": "scripts/gpu/collect-results.sh",
+      "defect": "a relative DEST resolved against PROOFDEST inside the per-proof check, reporting corruption on intact proofs",
+      "fix": "absolutise both destinations"
+    },
+    {
+      "where": "scripts/gpu/pod-run.sh",
+      "defect": "a stale FAILED marker from a previous attempt made a healthy relaunch read as a failure",
+      "fix": "rotate the marker at start"
+    }
+  ],
+  "limits": [
+    "The two successful arms were launched by hand rather than through pod-run.sh, so neither has a utilization series: GPU idle fraction is unmeasured for them. Spot samples read 83% and 100%.",
+    "Peak VRAM for the retained arm comes from spot sampling (18,991 MiB observed), not from an integrated series.",
+    "Core proofs only: no recursion, no wrap, no Groth16, and no recursion verification-key map.",
+    "RunPod's list-pod-billing returned recordCount 0, as it did for r120 and r123, so the cost is a timestamp estimate."
+  ],
+  "cost": {
+    "authorized_usd_cap": 2.0,
+    "rate_usd_per_hour": 0.59,
+    "pod_life_minutes": 40.5,
+    "estimated_usd": 0.4,
+    "billing_read": "list-pod-billing returned recordCount 0; estimated from pod timestamps",
+    "pods_remaining": 0,
+    "watchdog_fired": false
+  },
+  "evidence": {
+    "receipts_directory": "benchmarks/gpu/runs/20261110T1311Z",
+    "proof_bytes_kept_outside_git": "/Users/user/000/_Z/mizu-gpu-proofs-20261110",
+    "receipt_hashes": {
+      "build-identity.json": "7fed51d75dea65bb23cf997c8d48483292344ee1a32fb88393fb88a99c29cdfd",
+      "cache-status.json": "258a7b176b2c2afda20cdf56d7f381ba8ea96f2b188d31ca9bca42ed3bd9df16",
+      "preflight.json": "f475ec49064b316440bf921720a131180efcd784c80b3ffce07cd1e4368f631d",
+      "registration.json": "1aca467638169d23af5f98bd7ab8f916685dd7d850f5d85dcfd207da35cb013b",
+      "retain-pasta-and-uint/result.json": "d0cf5c6d5e723e56ec15abda80ee6fa553cee44ebeea0556d891b3fa10e1a647",
+      "default/result.json": "b9afd6b7890d4347a69d8e33d2639c602fd6f3111cea26126664f7fdd5943377",
+      "verification/verification.json": "95e00f3d02242b8a2d9251ff623e586b009202b75ac1f27c66b7766aa81d1b46",
+      "cuda-build.log": "b893c2420a1155adeb216af177413d37ba55c732b905fdd6bbf8b78efa9e6b4c",
+      "run.log": "bb734c902e654346c28c93e30a10122b0510738dfb4a5734a59175cc0facce43",
+      "retain-pasta-and-uint.proof.bin (outside git)": "39552cfffa1bb58c7ae76a3bb18cefa954725b13522a07e62a519e1acc26e0fd",
+      "default.proof.bin (outside git)": "6c5cd9c5a2ea2340e3ba7b0b8a927792ae8b6e9baf12339b7a79344b36d60869"
+    }
+  }
+}

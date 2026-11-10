@@ -160,6 +160,61 @@ and generates nothing, so this is free and is the only acceptance that counts.
 charge; a network volume bills from creation until it is deleted, whatever the
 pod does.
 
+## What the first run of these drivers measured (2026-11-10)
+
+An A40 at $0.59/hr in EU-SE-1, both arms proved and verified, **~$0.40 of a
+$2.00 cap**. The full record is
+[mizu-gpu-core-proof-a40](optimizations/06-sp1-runtime-and-proving.md#mizu-gpu-core-proof-a40-the-first-real-gpu-proof-from-this-repository);
+the phase timings are what matter for planning the next one:
+
+| Phase | Wall | Note |
+| --- | ---: | --- |
+| Pod create to `ssh.direct` | ~90 s | the field is null until runtime is non-null |
+| Bundle upload (72 MB) + hash check | ~30 s | direct SSH, not the PTY |
+| apt, cmake ≥ 3.30, rustup | ~30 s | all from the image plus pip |
+| Cold CUDA build, `CUDA_ARCHS=86`, 8 jobs | **~7 min** | most of it codegen of the one harness binary |
+| Pre-flight (every pinned hash) | seconds | no proving |
+| Arm `retain-pasta-and-uint` | **168.63 s** | 82 shards, 132 MB |
+| Arm `default` | **223.14 s** | 148 shards, 228 MB |
+| Both proofs verified from disk, on the pod | ~16 s | fresh process, key from the ELF |
+| Downloading 343 MB of proof bytes | ~75 s | skip with `WITH_PROOFS=0` |
+
+Pod life was 40.5 minutes, but roughly 17 of those were three failed build
+attempts on real defects, now fixed. **A clean repeat is about 18–19 minutes,
+or $0.19.** Within a single pod's life the retries were cheap, because
+`CARGO_TARGET_DIR` is on container disk: after the first attempt only the
+harness crate recompiled.
+
+### Making the whole thing quicker, in order of effect
+
+1. **Bake the binary into an image** (−7 min). The build is the single largest
+   phase and it is the same build every time. Push an image carrying
+   `pasta-precompile-proof-6-10` and the pod goes straight to pre-flight:
+   about 8 minutes end to end. Needs a registry credential and an image
+   rebuild whenever the harness or the fork changes.
+2. **Mount a volume and reuse the cached build** (−7 min, no registry). This is
+   what [the cache](#reusing-a-build) is for, and it is the case where a volume
+   finally pays: `key.json` plus `bin/` plus the cargo and rustup homes fit in
+   10 GB. The binary still has to answer `--mode registration` on the new host
+   before it is trusted.
+3. **Prove only the arm you need** (−3.7 min). `ARMS="retain-pasta-and-uint"`.
+   The `default` arm exists for the routing comparison, not for a proof you
+   want to keep.
+4. **Leave the proof bytes on the pod** (−1.3 min). `WITH_PROOFS=0`. The
+   on-pod reload verification has already run; download only when
+   re-verification off the machine is the gate you need.
+5. **Gate the host's clock, not the card** (the 168 s itself). The same arm
+   took 301.84 s and 308.35 s on RTX 5090 pods whose cores were about half as
+   fast. Measuring single-core speed in the first 20 seconds and discarding a
+   slow host costs about a cent per discard against a 1.8x swing in run time.
+   Not implemented yet; it is the obvious next addition to `pod-run.sh`.
+6. **Parallelize record generation** (the only lever left on the proof itself).
+   159.80 s of the 168.63 s is the executor, and
+   `executor_seconds == gpu_task_total_seconds` to four decimals for the fifth
+   run in a row. Checkpoint-and-replay is r120's ranked item 2 and a project,
+   not a flag. Note that the *other* pipelining idea, proving shards
+   concurrently, is implemented and **does not work**: see the record.
+
 ## Three things any GPU run must get right
 
 All three were discovered the hard way in wazabi and are pinned by the manifest

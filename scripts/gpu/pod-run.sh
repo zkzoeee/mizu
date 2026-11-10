@@ -57,6 +57,12 @@ BIN_NAME=pasta-precompile-proof-6-10
 
 ulimit -n 65535 || true
 mkdir -p "$RESULTS" "$BINDIR"
+# A relaunch after a fixed gate keeps the same results directory, so a marker
+# and a log from the previous attempt are still here. Rotate the marker: on
+# 2026-11-10 a stale FAILED file made a healthy relaunch read as a failure.
+if [ -f "$RESULTS/FAILED" ]; then
+  mv "$RESULTS/FAILED" "$RESULTS/FAILED.before-$(date -u +%Y%m%dT%H%M%SZ)"
+fi
 exec > >(tee -a "$RESULTS/run.log") 2>&1
 stamp() { echo "=== $* $(date -u +%FT%TZ) ==="; }
 fail() { stamp "FAILED: $*"; echo "$*" > "$RESULTS/FAILED"; exit 1; }
@@ -307,6 +313,7 @@ for ARM in $ARMS; do
   RUST_LOG="${RUST_LOG:-sp1_core_machine=info}" \
   PASTA_FRI_CONFIG=core PASTA_LOG_STACKING_HEIGHT=21 PASTA_MAX_LOG_ROW_COUNT=22 \
   PASTA_GPU_MAX_TRACE_SIZE=404750336 PASTA_GPU_WORKERS=2 PASTA_R5_INFLIGHT=2 \
+  PASTA_PROVE_INFLIGHT="${PASTA_PROVE_INFLIGHT:-1}" \
   /usr/bin/time -v "$GPU_BIN" --mode manifest-core-gpu \
     --manifest "$MANIFEST" --arm "$ARM" --elf "$ELF" \
     --input "$INPUTS" --output "$OUT" 2>&1 | tee "$RESULTS/$ARM.log"

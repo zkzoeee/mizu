@@ -26,6 +26,12 @@ PORT="${2:?missing port}"
 DEST="${3:?missing dest dir}"
 WITH_PROOFS="${WITH_PROOFS:-1}"
 
+# Absolute, because the proof check runs inside `cd "$PROOFDEST"` and a
+# relative DEST resolves against that directory instead: on 2026-11-10 the
+# per-proof check reported corruption on files whose hashes were in fact
+# identical to the pod's.
+case "$DEST" in /*) ;; *) DEST="$PWD/$DEST" ;; esac
+
 SSHOPTS=(-p "$PORT" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20)
 SCPOPTS=(-P "$PORT" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20)
 
@@ -54,6 +60,7 @@ echo "evidence intact: $EVID_GOT"
 if [ "$WITH_PROOFS" = 1 ]; then
   echo "=== 2/2 pulling the proofs themselves ==="
   PROOFDEST="${PROOF_DEST:-$DEST/proofs}"
+  case "$PROOFDEST" in /*) ;; *) PROOFDEST="$PWD/$PROOFDEST" ;; esac
   mkdir -p "$PROOFDEST"
   ssh -n "${SSHOPTS[@]}" "root@$HOST" \
     'cd /workspace/results && rm -f /workspace/mizu-proofs.tar && find . -name "*.proof.bin" -print0 | tar cf /workspace/mizu-proofs.tar --null -T - && sha256sum /workspace/mizu-proofs.tar && ls -l /workspace/mizu-proofs.tar'

@@ -1,0 +1,2 @@
+39552cfffa1bb58c7ae76a3bb18cefa954725b13522a07e62a519e1acc26e0fd  ./retain-pasta-and-uint/retain-pasta-and-uint.proof.bin
+6c5cd9c5a2ea2340e3ba7b0b8a927792ae8b6e9baf12339b7a79344b36d60869  ./default/default.proof.bin

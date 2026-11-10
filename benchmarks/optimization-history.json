@@ -21404,6 +21404,69 @@
         ],
         "finding": "p_eval0_chunks is a copy of prev_evals.public_evals.zeta that no part of the verifier, the guest, the attestation or the statement digest reads; the public-input evaluation is bound through the copy that is used, so this one is dead weight in the guest's input"
       }
+    },
+    {
+      "id": "mizu-gpu-core-proof-a40",
+      "owner": "o1js-to-zkvm",
+      "status": "validation-only-retained",
+      "document": "docs/optimizations/06-sp1-runtime-and-proving.md",
+      "retained_default": false,
+      "proof_generated": true,
+      "proof_type": "core (no recursion, no wrap, no Groth16)",
+      "source_revision": "local, over the mizu-pasta-poseidon-precompile fork pins",
+      "dependency_pins": {
+        "algebra": "6f81d7e1",
+        "proof-systems": "ddb617200",
+        "sp1": "a418319a0"
+      },
+      "evidence": "benchmarks/gpu-core-proof-a40-sp1-6.10.json",
+      "evidence_sha256": "b90ecd15af29b9f7d77dc80d087881f0bf89fda26e2a8d8ee04764fdb6070028",
+      "receipts_directory": "benchmarks/gpu/runs/20261110T1311Z",
+      "proof_bytes_outside_git": "/Users/user/000/_Z/mizu-gpu-proofs-20261110",
+      "hardware": "RunPod SECURE EU-SE-1, NVIDIA A40 46068 MiB cc 8.6, Intel Xeon Gold 6342 @ 2.80GHz, 9 vCPU allocated, 50 GB RAM",
+      "measurements": {
+        "retain_pasta_and_uint": {
+          "shards": 82,
+          "wall_seconds": 168.631096527,
+          "proof_bytes": 132029932,
+          "proof_sha256": "39552cfffa1bb58c7ae76a3bb18cefa954725b13522a07e62a519e1acc26e0fd"
+        },
+        "default": {
+          "shards": 148,
+          "wall_seconds": 223.144365112,
+          "proof_bytes": 227918740,
+          "proof_sha256": "6c5cd9c5a2ea2340e3ba7b0b8a927792ae8b6e9baf12339b7a79344b36d60869"
+        },
+        "retention_wall_delta_pct": -24.43,
+        "verification_key_sha256": "eed89d80326950303c787b1fbf0e08034cd8b986425de27c9e4e7475da295113",
+        "committed_digest": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a"
+      },
+      "validation": {
+        "reload_verified_on_pod": true,
+        "reload_verified_off_pod": true,
+        "keys_derived_from_pinned_elf": true,
+        "downloaded_proof_hashes_match_pod": true,
+        "utilization_series": null
+      },
+      "supersedes_limits": [
+        "mizu-retention-promotion: no GPU proof with the new chips, for these two arms",
+        "r120: retention's -11.2% wall saving is host-specific, not universal"
+      ],
+      "defects_found": [
+        "resolver 2 starved sp1-core-executor-runner's build script of the profiling feature (x86_64 Linux only)",
+        "gpu.rs was missing PastaCudaCoreComponents, its impl and type Gpu",
+        "gpu.rs moved SP1CoreOpts before its own guards read it",
+        "PASTA_PROVE_INFLIGHT=2 panics in sp1-gpu-logup-gkr generate_first_layer; default is now 1",
+        "three defects in the pod drivers themselves (tmux race, relative path in the proof check, stale FAILED marker)"
+      ],
+      "cost": {
+        "authorized_usd_cap": 2.0,
+        "rate_usd_per_hour": 0.59,
+        "pod_life_minutes": 40.5,
+        "estimated_usd": 0.4,
+        "billing_read": "recordCount 0; estimated from pod timestamps",
+        "pods_remaining": 0
+      }
     }
   ],
   "mizu_workflows": [

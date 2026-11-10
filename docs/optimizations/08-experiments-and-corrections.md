@@ -59,6 +59,23 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   a column surviving the sweep is not thereby unconstrained, and Poseidon P4's
   memory-only class is now checked rather than deferred. The earlier survivor
   sets stand as measured; what changed is what they mean.
+- The GPU prove-loop pipelining (`PASTA_PROVE_INFLIGHT`, r120's ranked idea 3)
+  was written and defaulted to 2 before any GPU had run it. The first real GPU
+  proof from this repository (2026-11-10) found that two shards in flight panic
+  in `sp1-gpu-logup-gkr`'s `generate_first_layer`; the default is now 1, which
+  is serial, and the idea is open rather than retained. Source presence of the
+  pipeline does not imply selection.
+- "Retention saves about 12% of proving wall clock" is r120's figure on r120's
+  host. The same comparison on an A40 pod with a Xeon Gold 6342 gives −24.4%
+  from the same −44.6% cut in shard count, so the saving converts to wall at a
+  rate the host sets. Quote either figure with its host; see
+  [mizu-gpu-core-proof-a40](06-sp1-runtime-and-proving.md#mizu-gpu-core-proof-a40-the-first-real-gpu-proof-from-this-repository).
+- A `--features cuda` path that has never been compiled on Linux is a draft,
+  not code. That build found three defects in sequence in this repository, each
+  the same kind wazabi's r123 found in its own tree: a resolver-2 feature gap
+  that starved a build script, a missing `type Gpu` whose doc comment had been
+  ported without its declarations, and `SP1CoreOpts` moved before its own
+  guards read it. None of the three can fire on macOS.
 - The first version of the executor differential compared the minimal
   executor's result words against an empty list for the field operations,
   because their events are filed under the add syscall code, and so passed

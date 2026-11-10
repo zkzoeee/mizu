@@ -69,7 +69,12 @@ ssh "${SSHOPTS[@]}" "root@$HOST" "set -e
   command -v tmux >/dev/null || apt-get install -y -qq tmux >/dev/null 2>&1
   chmod +x /workspace/pod-run.sh /workspace/watchdog.sh /workspace/cache-key.py
   tmux kill-server 2>/dev/null || true
+  # A new-session immediately after kill-server races the dying server and
+  # answers \"server exited unexpectedly\" without starting anything, which
+  # cost this repository one launch on 2026-11-10.
+  sleep 1
   tmux new-session -d -s watchdog \"DEADLINE_MINUTES=$DEADLINE_MINUTES RATE_PER_HOUR=$RATE_PER_HOUR CAP_USD=$CAP_USD bash /workspace/watchdog.sh\"
+  sleep 1
   tmux new-session -d -s mizu \"BUNDLE_SHA=$WANT CARGO_BUILD_JOBS=$JOBS ROOT=$POD_ROOT CACHE='$CACHE' ARMS='$ARMS' TOOLCHAIN=$TOOLCHAIN ${CUDA_ARCHS:+CUDA_ARCHS=$CUDA_ARCHS} bash /workspace/pod-run.sh\"
   sleep 2
   tmux ls"

@@ -233,3 +233,86 @@ not by preserving the original experimental commit history.
   recursion VK map covering the retained CPU clusters. That map is not built;
   building it needs SP1's recursion toolchain and GPU-class compute.
   Evidence: [summary](../../benchmarks/retention-sp1-6.10.json).
+
+## mizu-gpu-core-proof-a40: the first real GPU proof from this repository
+
+- **Status:** validation-only, retained as evidence. One behavioural fix landed
+  with it (`PASTA_PROVE_INFLIGHT` defaults to 1); no retained setting changed.
+- **Area and owner:** `tools/pasta-proof/Cargo.toml` (`resolver = "1"`),
+  `tools/pasta-proof/src/gpu.rs` (three defects), `scripts/gpu/*` (three driver
+  defects), `benchmarks/gpu/next-core-proof-manifest.json` (cap set to $2.00).
+- **Implementation identity:** root `d985a1a`/`403b064` plus the four fixes
+  below, over the fork pins of `mizu-pasta-poseidon-precompile` (SP1
+  `a418319a0`, proof-systems `ddb617200`), unchanged by this work. The proved
+  bundle is `2863dc0c…`; the harness binary's own hash is in the receipts.
+- **Predecessors/corrections:** executes
+  [`mizu-retention-promotion`](#mizu-retention-promotion-pasta-and-uint256-retention-on-the-core-proof-path)'s
+  prepared manifest, whose "no GPU proof with the new chips" limit this closes
+  for the two routing arms. It also qualifies the wall-clock saving that
+  wazabi's r120 measured for the same comparison.
+- **Mechanism:** nothing optimized. Both manifest arms were proved as SP1 core
+  proofs on a rented NVIDIA A40, streamed records, production PCS, and each
+  proof was then reloaded from disk in a fresh process under a key derived from
+  the pinned ELF — once on the pod and once on the Mac after download.
+- **Selection:** `--mode manifest-core-gpu --arm <name>` with
+  `PASTA_FRI_CONFIG=core`, stacking 21, row count 22,
+  `PASTA_GPU_MAX_TRACE_SIZE=404750336`, `PASTA_GPU_WORKERS=2`,
+  `PASTA_R5_INFLIGHT=2`, `PASTA_PROVE_INFLIGHT=1`. Every `SP1CoreOpts` field
+  comes from the manifest arm, including `global_dependencies_opt: true`.
+- **Control/candidate:** one pod, back to back, same binary, same statement:
+  ELF `0cfb3eaf…`, proof input `649da7f4…`, receipt input `6e340b9c…`,
+  expected public values `4bf5122f…` (one byte `01`). Host: RunPod
+  `2sdy2pearcbmai`, SECURE, EU-SE-1, A40 46,068 MiB, compute capability 8.6,
+  driver 595.91.07, host CUDA 13.2, image
+  `runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404`, **Intel Xeon Gold 6342 @
+  2.80 GHz**, 9 vCPU allocated (96 visible to `nproc`), 50 GB RAM, 80 GB
+  container disk, no network volume. Built with `CUDA_ARCHS=86`, nvcc 12.8,
+  rustc 1.92.0, 8 jobs.
+
+| Arm | Shards | Wall | GPU prove loop | Executor | Proof bytes |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `default` | 148 | 223.14 s | 193.87 s | 211.33 s | 227,918,740 |
+| `retain-pasta-and-uint` | 82 | **168.63 s** | 141.97 s | 159.80 s | 132,029,932 |
+| Δ | −44.6% | **−24.4%** | −26.8% | −24.4% | −42.1% |
+
+- **Result:** both arms passed. Shard counts are exactly the CPU phase's
+  predictions, 148 and 82. Guest cycles 142,638,298 on both, as pinned. One
+  verification key, `eed89d80…`, derived from the ELF and byte-identical to the
+  saved one on both arms; one committed digest, `4bf5122f…`. Peak VRAM for the
+  retained arm read 18,991 MiB of 46,068 by spot sampling. **Retention's wall
+  saving is host-dependent:** r120 measured −11.2% for this same comparison on
+  a faster host, this host gives −24.4% from the same −44.6% cut in shards, so
+  neither figure may be quoted without its host. Proof bytes per shard are
+  1.61 MB (retained) and 1.54 MB (default), so proof size still tracks shard
+  count rather than cycles.
+- **Correctness evidence:** every proof reloaded and accepted twice by
+  `verify_complete_execution` in a fresh process — on the pod (7.04 s and
+  9.73 s) and again on the Mac after download (4.03 s and 6.20 s), with
+  `saved_key_matches_derived` and `committed_digest_matches` true in all four
+  checks and the non-vacuity gate requiring an empty proof to be rejected.
+  Both downloaded proofs hash exactly to what the pod reported before
+  transfer. All four Pasta chips appear in both proofs.
+- **Validation scope:** Linux/CUDA compilation, real CUDA core proving,
+  complete-execution verification on the pod and off it, key derivation from
+  the pinned ELF. No recursion, no wrap, no Groth16, no recursion VK map.
+- **Decision and limits:** kept as the evidence that this tree can prove on a
+  GPU at all. **The pipelined consumer is not sound:** at
+  `PASTA_PROVE_INFLIGHT=2` four worker threads panic in `sp1-gpu-logup-gkr`'s
+  `generate_first_layer` at `main_poly_height(name).unwrap()`, so a chip sits
+  in the shard's chip set with no main polynomial on the device. The default is
+  now 1, which is serial; r120's ranked idea 3 remains open and unproved. The
+  two successful arms were launched by hand rather than through `pod-run.sh`,
+  so they carry **no utilization series** and the GPU idle fraction is
+  unmeasured for them; the equality of `executor_seconds` (159.800142) and
+  `gpu_task_total_seconds` (159.799915) is the fifth consecutive run with that
+  signature and is the reason `gpu_prove_seconds` must never be read as GPU
+  compute. Cost ≈ **$0.40** of the authorized $2.00, estimated from pod
+  timestamps because `list-pod-billing` again returned `recordCount: 0`. The
+  pod is terminated and the account has no pods.
+- **Source provenance:** receipts in `benchmarks/gpu/runs/20261110T1311Z`
+  (including the crashed `PASTA_PROVE_INFLIGHT=2` attempt), summary with every
+  hash in
+  [gpu-core-proof-a40-sp1-6.10.json](../../benchmarks/gpu-core-proof-a40-sp1-6.10.json),
+  proof bytes kept outside Git at `/Users/user/000/_Z/mizu-gpu-proofs-20261110`
+  (343 MB). Procedure and costs: [the runbook](../gpu-run-on-runpod.md).
+- **Upstream sync:** none. No fork file changed.
