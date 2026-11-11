@@ -75,7 +75,7 @@ within minutes, so treat availability as a snapshot and the prices as current.
 | RTX 3090 | 24 GB | sm_86 | $0.50 | $0.22 | LOW/NONE | cheapest *gaming* card; wazabi proved Groth16 on one |
 | A40 / RTX A6000 | 48 GB | sm_86 | $0.59 | $0.33–0.35 | A40 **MEDIUM** | pay this only for two streams later |
 | L4 | 24 GB | sm_89 | $0.59 | $0.44 | LOW | avoid: ~300 GB/s would push device time past the executor |
-| RTX 4090 | 24 GB | sm_89 | $0.89 | $0.34 | **MEDIUM**, 6 DCs | best placement odds; community needs a baked image |
+| RTX 4090 | 24 GB | sm_89 | $0.89 | $0.34 | LOW, **EU-RO-1 only** | unreachable with the cache: the volume is EU-SE-1 and volumes are DC-local |
 | RTX 6000 Ada | 48 GB | sm_89 | $0.99 | $0.74 | LOW | no measured advantage |
 | RTX 5090 | 32 GB | sm_120 | $1.19 | $0.69 | LOW | twice the price for ≤2%: the executor is the pole |
 | A100 80 GB | 80 GB | sm_80 | $1.79 | $1.19–1.39 | LOW | nothing here needs 80 GB |
@@ -255,6 +255,14 @@ or five times, then run the deep probe, which is what distinguishes a window
 worth waiting for from an empty pool. The same probe showed A40, A6000 and
 3090 as `Low` on 13.2 only and `Out` on 12.8 and 13.0, which is why a pod asks
 for `minCudaVersion: "12.8"` and lands on a 13.2 host.
+
+**The volume decides the card, not the catalog.** A network volume is
+data-centre local, so a cache in EU-SE-1 means the choice is whatever EU-SE-1
+has. On 2026-11-11 that was the A40 and A6000 at $0.59 (`Low` on 13.2 only);
+the A5000 and 3090 share the `AMPERE_24` pool and were `NONE` all afternoon
+across twenty-one refused creates, and the 4090's Secure stock was entirely in
+EU-RO-1. So **$0.59/hr is the practical floor for a cache-warm run**, and the
+A5000's $0.27 is a best case that needs its pool to be free.
 
 **The build cache holds exactly one build.** Its key covers the OS, nvcc,
 rustc, `CUDA_ARCHS` and a fingerprint of the harness sources, so *any* source

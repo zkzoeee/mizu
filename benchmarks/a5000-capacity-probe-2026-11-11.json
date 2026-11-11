@@ -4,7 +4,7 @@
   "captured": "2026-11-11T11:20:00Z",
   "question": "Why did the timed run land on an A40 rather than the recommended A5000?",
   "answer": "The A5000 was gone and stayed gone. Seventeen create refusals across the afternoon and three deep capacity probes ten minutes apart, all reporting Out on every probed CUDA version in Secure EU-SE-1. The pool is ten units and none came free.",
-  "create_attempts_refused": 19,
+  "create_attempts_refused": 21,
   "per_gpu_read": {
     "tool": "get-gpu-type include=AVAILABILITY product=POD cloud=SECURE minCudaVersion=12.8",
     "availability": "LOW",
@@ -70,6 +70,11 @@
       "at": "11:40Z",
       "creates_refused": 2,
       "note": "asked for a 3090 instead: refused, and get-gpu-type reported the 3090 availability NONE in Secure with no data centres. The 3090 and the A5000 share the AMPERE_24 pool, so when one is empty the other usually is."
+    },
+    {
+      "at": "11:47Z",
+      "creates_refused": 2,
+      "note": "asked for a 4090 instead: refused in EU-SE-1, and get-gpu-type shows its only Secure stock is EU-RO-1 (pool ADA_24, LOW). A network volume is data-centre local, so a 4090 there cannot mount the build cache; proving on it would mean a fresh fat build from a bundle, which is a ~12.5-minute job on a toolkit image at $0.89/hr."
     }
   ],
   "the_two_catalog_reads_disagree": {
@@ -78,5 +83,16 @@
     "create_in_EU_SE_1": "refused",
     "get_gpu_type_secure": "NVIDIA RTX A5000: availability NONE, no dataCenters, 13.2 available:false",
     "reading": "the fleet-wide grade is not data-centre scoped and can be stale or optimistic, and the per-GPU field includes Community; neither is authoritative. The create is the only test. A grade of Low elsewhere is useless when a network volume pins the pod to one data centre."
+  },
+  "the_binding_constraint": {
+    "statement": "the build-cache volume is in EU-SE-1 and a network volume is data-centre local, so the card choice is whatever EU-SE-1 has -- not whatever the catalog has.",
+    "EU-SE-1 on 2026-11-11": {
+      "A40": "Low on 13.2 at $0.59 -- the one that answered, twice",
+      "RTX A6000": "Low on 13.2 at $0.59",
+      "RTX A5000": "NONE all afternoon (pool AMPERE_24)",
+      "RTX 3090": "NONE (same AMPERE_24 pool)",
+      "RTX 4090": "not present; its Secure stock is EU-RO-1 (pool ADA_24)"
+    },
+    "consequence": "$0.59/hr is the real floor for a cache-warm run today, so the measured 4 min 40 s / $0.046 A40 run is the honest headline and the A5000's $0.021 is a best case that needs the pool to be free."
   }
 }
