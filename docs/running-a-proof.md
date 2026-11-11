@@ -262,11 +262,13 @@ has. On 2026-11-11 that was the A40 and A6000 at $0.59 (`Low` on 13.2 only);
 the A5000 and 3090 share the `AMPERE_24` pool and were `NONE` for a
 continuously watched **6.9 hours** across thirty-three refused creates and nine
 probes, on Community as well as Secure, while the 4090's Secure stock was
-entirely in EU-RO-1. The split is by pool, not by data centre: **`AMPERE_48`
-comes and goes on a scale of hours** -- the A40 was `LOW`, then `NONE` by
-14:10Z, then `LOW` again by 17:47Z -- while **`AMPERE_24` never returned once**.
-So a schedule that must produce a proof at a given hour cannot rest on 24 GB
-hourly capacity at all; the 48 GB cards at $0.59 are the ones that answer. So **$0.59/hr is the practical floor for a cache-warm run**, and the
+entirely in EU-RO-1. The A40 went `NONE` too, by 14:10Z. Both 48 GB
+cards read `LOW` again by 17:47Z, but that read bought nothing: **the A6000
+refused five creates in the two minutes after a data-centre-scoped `LOW`**, one
+of them with no CUDA constraint at all. So a schedule that must produce a proof
+at a given hour cannot rest on hourly GPU capacity here, and **no read on this
+API predicts a create** -- grades are advisory on 48 GB cards exactly as they
+are on 24 GB ones. So **$0.59/hr is the practical floor for a cache-warm run**, and the
 A5000's $0.27 is a best case that needs its pool to be free.
 
 **The build cache holds exactly one build.** Its key covers the OS, nvcc,

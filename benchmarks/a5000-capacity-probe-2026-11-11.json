@@ -4,7 +4,7 @@
   "captured": "2026-11-11T11:20:00Z",
   "question": "Why did the timed run land on an A40 rather than the recommended A5000?",
   "answer": "The A5000 was gone and stayed gone. Seventeen create refusals across the afternoon and three deep capacity probes ten minutes apart, all reporting Out on every probed CUDA version in Secure EU-SE-1. The pool is ten units and none came free.",
-  "create_attempts_refused": 33,
+  "create_attempts_refused": 38,
   "per_gpu_read": {
     "tool": "get-gpu-type include=AVAILABILITY product=POD cloud=SECURE minCudaVersion=12.8",
     "availability": "LOW",
@@ -99,6 +99,15 @@
       "probe": "A5000 NONE again; but A40 LOW in EU-SE-1 and CA-MTL-1, A6000 LOW in EU-SE-1 -- the AMPERE_48 pool recovered",
       "creates_refused": 1,
       "note": "asked again nine minutes later. The 24 GB pool is still empty while 48 GB is obtainable, which is the clearest statement of the split yet: it is not the data centre that is full, it is AMPERE_24."
+    },
+    {
+      "from": "17:49Z",
+      "to": "17:51Z",
+      "gpu": "NVIDIA RTX A6000",
+      "creates_refused": 5,
+      "probe_said": "get-gpu-type Secure include=AVAILABILITY: availability LOW, dataCenters [EU-SE-1 LOW], 13.2 available:true -- a DATA-CENTRE-SCOPED read, two minutes before the first create",
+      "note": "the strongest instance of the catalog lying so far. Five refusals in two minutes: three with minCudaVersion 12.8, one with allowedCudaVersions [13.2] matching exactly what the read said was available, and one with no CUDA constraint at all. So LOW on the per-GPU read's own dataCenters array does not mean a machine exists, and this is a 48 GB card, not the contended 24 GB pool.",
+      "correction": "it retracts the AMPERE_48 'comes and goes, so the 48 GB cards are the ones that answer' reading committed in 2aa954f ninety seconds earlier. That rested on catalog reads; the create contradicts it for the A6000. What is actually established is weaker and duller: the A40 answered twice this morning, and nothing else has been obtained in EU-SE-1 since."
     }
   ],
   "the_two_catalog_reads_disagree": {
@@ -106,7 +115,13 @@
     "get_capacity_fleet_wide_secure_13_2": "NVIDIA RTX A5000: Low @ $0.27 (A40 and 3090 absent, i.e. Out)",
     "create_in_EU_SE_1": "refused",
     "get_gpu_type_secure": "NVIDIA RTX A5000: availability NONE, no dataCenters, 13.2 available:false",
-    "reading": "the fleet-wide grade is not data-centre scoped and can be stale or optimistic, and the per-GPU field includes Community; neither is authoritative. The create is the only test. A grade of Low elsewhere is useless when a network volume pins the pod to one data centre."
+    "reading": "the fleet-wide grade is not data-centre scoped and can be stale or optimistic, and the per-GPU field includes Community; neither is authoritative. The create is the only test. A grade of Low elsewhere is useless when a network volume pins the pod to one data centre.",
+    "sharpest_instance": {
+      "observed": "17:47-17:51Z",
+      "read": "get-gpu-type A6000 Secure: availability LOW with dataCenters [{EU-SE-1, LOW}] -- scoped to the data centre, so not excusable as fleet-wide staleness",
+      "creates": "five refused in two minutes, including one with no CUDA constraint",
+      "reading": "a data-centre-scoped LOW is still not a promise. There is no read on this API that predicts a create. Budget for the create to fail and retry it; never schedule work on a grade."
+    }
   },
   "the_binding_constraint": {
     "statement": "the build-cache volume is in EU-SE-1 and a network volume is data-centre local, so the card choice is whatever EU-SE-1 has -- not whatever the catalog has.",
@@ -121,9 +136,9 @@
   },
   "unobtainable_window": {
     "from": "11:00Z",
-    "to": "17:47Z",
+    "to": "17:51Z",
     "hours": 6.9,
-    "checks": "thirty-three refused creates and nine probes, spaced from seconds to an hour apart",
+    "checks": "thirty-eight refused creates (thirty-three A5000, five A6000) and nine probes",
     "reading": "not contention but absence, for the better part of a working day, on Secure and Community alike. Ten units in the pool and never one free. The A40 answered twice inside the first hour, was NONE by 14:10Z and was LOW again by 17:47Z, so the 48 GB fallback comes and goes on a scale of hours while AMPERE_24 simply never returned; the only card obtainable in EU-SE-1 late in the window was the A6000, also $0.59.",
     "what_it_means_for_planning": "price the work at the A40/A6000 tier of $0.59/hr and treat $0.27 as a windfall that may not arrive for a day. A schedule that must produce a proof at a particular hour cannot rest on spot-style 24 GB capacity at all -- that is the argument for a committed box rather than a cheaper hourly rate."
   }

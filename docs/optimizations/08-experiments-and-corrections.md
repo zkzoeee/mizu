@@ -62,7 +62,11 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   centres. The fleet-wide grade is not data-centre scoped; the per-GPU field spans
   Community. A network volume pins the pod to one data centre, so stock elsewhere buys
   nothing. Use the probe to decide whether to keep waiting, and the create to decide
-  anything else.
+  anything else. Sharper instance the same evening: `get-gpu-type` graded the A6000
+  `LOW` with `dataCenters: [{EU-SE-1, LOW}]` -- scoped to the data centre, so not
+  excusable as fleet-wide staleness -- and five creates were refused in the next two
+  minutes, one of them carrying no CUDA constraint at all. A grade is not a promise on
+  any card class; budget for the create to fail.
 - "Retry the create, never re-read availability" was half a rule. It is right for a
   `LOW` pool, and useless against an empty one: the A5000 refused fourteen creates on
   2026-11-11 while its per-GPU read said `LOW`, because that figure spans Community
