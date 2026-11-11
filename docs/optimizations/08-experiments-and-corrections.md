@@ -56,6 +56,13 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   same day in [mizu-slim-pod-image](../../benchmarks/gpu-slim-base-image.json): ready
   22 s after create against ~112 s, nothing unresolved in `ldd`, and the same accepted
   proof. Still open: that 2 s pull was a warm machine cache.
+- Neither catalog read is authoritative, and they contradict each other. Within minutes
+  on 2026-11-11 the fleet-wide `get-capacity` graded the A5000 `Low @ $0.27` on 13.2
+  while a create in EU-SE-1 was refused and `get-gpu-type` reported `NONE` with no data
+  centres. The fleet-wide grade is not data-centre scoped; the per-GPU field spans
+  Community. A network volume pins the pod to one data centre, so stock elsewhere buys
+  nothing. Use the probe to decide whether to keep waiting, and the create to decide
+  anything else.
 - "Retry the create, never re-read availability" was half a rule. It is right for a
   `LOW` pool, and useless against an empty one: the A5000 refused fourteen creates on
   2026-11-11 while its per-GPU read said `LOW`, because that figure spans Community

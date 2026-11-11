@@ -4,7 +4,7 @@
   "captured": "2026-11-11T11:20:00Z",
   "question": "Why did the timed run land on an A40 rather than the recommended A5000?",
   "answer": "The A5000 was gone and stayed gone. Seventeen create refusals across the afternoon and three deep capacity probes ten minutes apart, all reporting Out on every probed CUDA version in Secure EU-SE-1. The pool is ten units and none came free.",
-  "create_attempts_refused": 17,
+  "create_attempts_refused": 19,
   "per_gpu_read": {
     "tool": "get-gpu-type include=AVAILABILITY product=POD cloud=SECURE minCudaVersion=12.8",
     "availability": "LOW",
@@ -46,7 +46,7 @@
       "13.2": "Out"
     }
   },
-  "operational_lesson": "retry the create four or five times, then run the deep probe: it is what separates a window worth waiting for from an empty pool, and the per-GPU availability field cannot do that because it includes Community",
+  "operational_lesson": "retry the create four or five times; use the deep probe to decide whether to keep waiting, but treat it as advisory -- it disagreed with the per-GPU read within minutes, in both directions. A volume pins the pod to its data centre, so fleet-wide stock can be irrelevant.",
   "consequence": "the A5000 pod-life and cost figures in the README are arithmetic from the A40 run's duration, not a measured A5000 run",
   "retries": [
     {
@@ -65,6 +65,18 @@
       "probe": "Out on 12.8/13.0/13.2",
       "creates_refused": 1,
       "note": "after a nine-minute wait; the pool had not turned over"
+    },
+    {
+      "at": "11:40Z",
+      "creates_refused": 2,
+      "note": "asked for a 3090 instead: refused, and get-gpu-type reported the 3090 availability NONE in Secure with no data centres. The 3090 and the A5000 share the AMPERE_24 pool, so when one is empty the other usually is."
     }
-  ]
+  ],
+  "the_two_catalog_reads_disagree": {
+    "observed": "11:40-11:42Z, minutes apart and in both directions",
+    "get_capacity_fleet_wide_secure_13_2": "NVIDIA RTX A5000: Low @ $0.27 (A40 and 3090 absent, i.e. Out)",
+    "create_in_EU_SE_1": "refused",
+    "get_gpu_type_secure": "NVIDIA RTX A5000: availability NONE, no dataCenters, 13.2 available:false",
+    "reading": "the fleet-wide grade is not data-centre scoped and can be stale or optimistic, and the per-GPU field includes Community; neither is authoritative. The create is the only test. A grade of Low elsewhere is useless when a network volume pins the pod to one data centre."
+  }
 }
