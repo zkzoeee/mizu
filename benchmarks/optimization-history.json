@@ -21831,8 +21831,9 @@
         "usd_on_a5000_same_duration": 0.021
       },
       "limits": [
-        "one run, on an A40 because the A5000 refused five creates",
-        "37 s of the 4.67 min was operator latency between ready and launch"
+        "one run, on an A40: the A5000 refused fourteen creates and a deep capacity probe reported it Out on 12.8, 13.0 and 13.2 in Secure EU-SE-1 (benchmarks/a5000-capacity-probe-2026-11-11.json)",
+        "37 s of the 4.67 min was operator latency between ready and launch",
+        "the A5000 cost figure is arithmetic from this run's duration, not a measured A5000 run"
       ]
     }
   ],

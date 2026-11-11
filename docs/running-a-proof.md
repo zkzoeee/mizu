@@ -245,10 +245,16 @@ with no compiler. The gate is now `python3 -c 'import json'` and the package is
 
 ## Two operational facts that cost money when forgotten
 
-**Creating a pod is a race, not a query.** `LOW` means one machine, and the
-create is the only real test. Across this work, nine creates were refused in
-one sitting before one landed, and the A5000 took three attempts. Retry the
-*create*; re-reading availability first only wastes the window.
+**Creating a pod is a race — until it is not.** `LOW` means one machine and the
+create is the only real test, so retry the *create* rather than re-reading
+availability first. But a race can be lost outright: on 2026-11-11 the A5000
+refused fourteen creates, and `get-capacity` with explicit `cudaVersions`
+reported it **`Out` on 12.8, 13.0 and 13.2** in Secure EU-SE-1 while the
+per-GPU read still said `LOW` — that read spans Community too. So: retry four
+or five times, then run the deep probe, which is what distinguishes a window
+worth waiting for from an empty pool. The same probe showed A40, A6000 and
+3090 as `Low` on 13.2 only and `Out` on 12.8 and 13.0, which is why a pod asks
+for `minCudaVersion: "12.8"` and lands on a 13.2 host.
 
 **The build cache holds exactly one build.** Its key covers the OS, nvcc,
 rustc, `CUDA_ARCHS` and a fingerprint of the harness sources, so *any* source

@@ -1,0 +1,51 @@
+{
+  "schema": "mizu-capacity-probe/1",
+  "id": "mizu-a5000-capacity-2026-11-11",
+  "captured": "2026-11-11T11:20:00Z",
+  "question": "Why did the timed run land on an A40 rather than the recommended A5000?",
+  "answer": "The A5000 was gone. Fourteen create refusals across the afternoon, and a deep capacity probe reporting Out on every probed CUDA version in Secure EU-SE-1.",
+  "create_attempts_refused": 14,
+  "per_gpu_read": {
+    "tool": "get-gpu-type include=AVAILABILITY product=POD cloud=SECURE minCudaVersion=12.8",
+    "availability": "LOW",
+    "data_centers": [
+      {
+        "id": "EU-SE-1",
+        "availability": "LOW"
+      }
+    ],
+    "pool": "AMPERE_24",
+    "max_count_secure": 10,
+    "caveat": "this figure spans Community as well, so LOW here did not mean a Secure machine existed"
+  },
+  "deep_probe": {
+    "tool": "get-capacity cudaVersions=[12.8,13.0,13.2] secureCloudOnly=true",
+    "NVIDIA RTX A5000": {
+      "12.8": "Out",
+      "13.0": "Out",
+      "13.2": "Out"
+    },
+    "NVIDIA A40": {
+      "12.8": "Out",
+      "13.0": "Out",
+      "13.2": "Low @ $0.59"
+    },
+    "NVIDIA RTX A6000": {
+      "12.8": "Out",
+      "13.0": "Out",
+      "13.2": "Low @ $0.59"
+    },
+    "NVIDIA GeForce RTX 3090": {
+      "12.8": "Out",
+      "13.0": "Out",
+      "13.2": "Low @ $0.50"
+    },
+    "NVIDIA RTX A4000": {
+      "12.8": "Out",
+      "13.0": "Out",
+      "13.2": "Out"
+    }
+  },
+  "operational_lesson": "retry the create four or five times, then run the deep probe: it is what separates a window worth waiting for from an empty pool, and the per-GPU availability field cannot do that because it includes Community",
+  "consequence": "the A5000 pod-life and cost figures in the README are arithmetic from the A40 run's duration, not a measured A5000 run"
+}

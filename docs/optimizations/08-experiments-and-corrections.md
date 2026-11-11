@@ -56,6 +56,11 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   same day in [mizu-slim-pod-image](../../benchmarks/gpu-slim-base-image.json): ready
   22 s after create against ~112 s, nothing unresolved in `ldd`, and the same accepted
   proof. Still open: that 2 s pull was a warm machine cache.
+- "Retry the create, never re-read availability" was half a rule. It is right for a
+  `LOW` pool, and useless against an empty one: the A5000 refused fourteen creates on
+  2026-11-11 while its per-GPU read said `LOW`, because that figure spans Community
+  too, and `get-capacity` with explicit `cudaVersions` reported `Out` on 12.8, 13.0
+  and 13.2 in Secure EU-SE-1. Retry a few times, then probe.
 - `python3-minimal` has no `json` module. The prove path installed it from the day it
   was written and had never met an image without python3, so the gap was invisible
   until a 101 MB image met it: the cache probe raised `ModuleNotFoundError`, the

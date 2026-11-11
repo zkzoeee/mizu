@@ -80,10 +80,14 @@ by the complete verifier and reloaded from disk in a fresh process.
 
 The proof itself reported **138.56 s** — executor 128.93 s, GPU prove loop
 110.07 s hidden inside it — and is **50% of the pod life**. At the A40's
-$0.59/hr this run cost **$0.046**; the same 4 min 40 s on an RTX A5000 at
-$0.27/hr is **$0.021**, which is the machine to prefer (it proved the same arm
-in 128.43 s) when one is free — this run went to an A40 after five consecutive
-A5000 create refusals.
+$0.59/hr this run cost **$0.046**.
+
+The cheaper RTX A5000 at $0.27/hr is the machine to prefer — it proved this same
+arm in **128.43 s**, faster than any A40 run — and the same 4 min 40 s there
+would be **$0.021**. That figure is arithmetic, not a measurement: this run went
+to an A40 because the A5000 refused **fourteen creates** across the afternoon,
+and a deep capacity probe then reported it `Out` on every CUDA version in Secure
+EU-SE-1. **Plan for the A40's price and treat the A5000 as a windfall.**
 
 ¹ mine, not the system's: one API read and a log check between ready and
 launch. Scripting create-to-launch removes it, putting a clean run near
