@@ -9203,12 +9203,35 @@ async fn run_elf_volume(elf_path: &Path, output: &Path) -> Result<()> {
 }
 
 fn main() -> Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "warn".into()),
-        )
-        .with_writer(std::io::stderr)
-        .init();
+    // `PASTA_SPAN_TIMING=1` turns on span-close events, which is how the
+    // prover's host-side stages become visible at all.
+    //
+    // The 2026-11-11 receipts leave a 40 s hole: `consumer_proving` is 108 s
+    // while the integrated `nvidia-smi` series puts device-busy at 68.6 s, and
+    // nothing in this repository has ever timed what the prover does on the
+    // host in between. The GPU crates already carry `#[instrument(level =
+    // "debug")]` on their stages — `generate_first_layer`,
+    // `generate_gkr_circuit` and the rest — so the timings exist; they are
+    // simply never asked for. With span-close events each span prints its own
+    // `time.busy` and `time.idle`, and `scripts/gpu/summarize-spans.py` adds
+    // them up per stage.
+    //
+    // Off by default: at `debug` these crates are talkative, and the writer is
+    // stderr, which a proof run tees to a log.
+    let filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| "warn".into());
+    if std::env::var("PASTA_SPAN_TIMING").as_deref() == Ok("1") {
+        tracing_subscriber::fmt()
+            .with_env_filter(filter)
+            .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE)
+            .with_writer(std::io::stderr)
+            .init();
+    } else {
+        tracing_subscriber::fmt()
+            .with_env_filter(filter)
+            .with_writer(std::io::stderr)
+            .init();
+    }
     let args: Vec<String> = std::env::args().skip(1).collect();
     let mut mode = "registration".to_string();
     let mut output: Option<PathBuf> = None;
@@ -9478,6 +9501,38 @@ fn main() -> Result<()> {
                     "manifest-core-gpu needs the `cuda` feature; rebuild with --features cuda. \
                      The manifest, ELF, inputs and arm name all validated."
                 )
+            }
+        }
+        // Does a CUDA context actually initialise here? The slim prover image
+        // carries no torch, so the gate that caught a broken community host in
+        // seconds (and saved a wasted rental after one cost $0.199) needs an
+        // owner inside the harness. This initialises the device, reads its
+        // memory and exits; it proves nothing.
+        "cuda-probe" => {
+            #[cfg(feature = "cuda")]
+            {
+                let (free, total) = sp1_gpu_cudart::cuda_memory_info()
+                    .map_err(|e| anyhow::anyhow!("{e:?}"))?;
+                ensure!(
+                    total > 0,
+                    "no CUDA device memory reported; this host cannot prove"
+                );
+                let report = json!({
+                    "mode": "cuda-probe",
+                    "cuda_context": "created",
+                    "device_memory_total_bytes": total,
+                    "device_memory_free_bytes": free,
+                });
+                if let Some(path) = output {
+                    write_json(path, &report)?;
+                }
+                println!("{}", serde_json::to_string_pretty(&report)?);
+                Ok(())
+            }
+            #[cfg(not(feature = "cuda"))]
+            {
+                let _ = &output;
+                bail!("cuda-probe needs the `cuda` feature; rebuild with --features cuda")
             }
         }
         "guest-gpu" => {
