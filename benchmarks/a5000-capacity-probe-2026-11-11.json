@@ -4,7 +4,7 @@
   "captured": "2026-11-11T11:20:00Z",
   "question": "Why did the timed run land on an A40 rather than the recommended A5000?",
   "answer": "The A5000 was gone and stayed gone. Seventeen create refusals across the afternoon and three deep capacity probes ten minutes apart, all reporting Out on every probed CUDA version in Secure EU-SE-1. The pool is ten units and none came free.",
-  "create_attempts_refused": 44,
+  "create_attempts_refused": 46,
   "per_gpu_read": {
     "tool": "get-gpu-type include=AVAILABILITY product=POD cloud=SECURE minCudaVersion=12.8",
     "availability": "LOW",
@@ -124,6 +124,14 @@
         "cloud COMMUNITY, bare -- the catalog lists 3 community units at $0.33"
       ],
       "conclusion": "every axis refused. It is not the volume, not the data centre filter, not the CUDA constraint and not the Secure/Community split: there is no A6000 to rent, anywhere, while get-gpu-type reports availability LOW with dataCenters [{EU-SE-1, LOW}] and list-gpu-types agrees."
+    },
+    {
+      "from": "18:11Z",
+      "to": "18:12Z",
+      "gpu": "NVIDIA RTX A5000",
+      "cloud": "COMMUNITY",
+      "creates_refused": 2,
+      "note": "asked whether a Community A5000 at $0.16/hr could take a build-in-pod run instead, since no Community pod can mount a Secure network volume anyway. Refused with an 80 GB container disk and refused again with the disk left default, so it is the card and not the disk."
     }
   ],
   "the_two_catalog_reads_disagree": {
@@ -283,5 +291,26 @@
     "remaining_usd": 0.434,
     "source": "list-pod-billing, pods from 2026-11-10 and 2026-11-11 summed: 1.047 + 0.520",
     "note": "all forty-four refusals cost nothing; a refused create creates no pod"
+  },
+  "community_is_emptier_than_secure": {
+    "at": "18:12Z",
+    "tool": "list-gpu-types include=AVAILABILITY product=POD cloud=COMMUNITY",
+    "reads_LOW": {
+      "NVIDIA RTX 5000 Ada Generation": {
+        "usd_hr": 0.49,
+        "vram_gb": 32,
+        "sm": 89,
+        "cuda": "13.1"
+      },
+      "NVIDIA RTX A2000": {
+        "usd_hr": 0.12,
+        "vram_gb": 6,
+        "sm": 86,
+        "cuda": "12.4",
+        "verdict": "6 GB is too small for this proof; the measured runs used 24 and 48 GB cards"
+      }
+    },
+    "everything_else": "NONE, all forty-odd types, A5000 and 3090 included",
+    "reading": "Community is not a cheaper way to the same cards tonight -- it is a thinner catalog. The A5000's $0.16 is irrelevant when there is no A5000. The one card that could run this is the RTX 5000 Ada at $0.49, which is sm_89 and so inside the fat binary's 86,89,120, but it is Community and so cannot mount the cache volume: it would need a full build in the pod."
   }
 }
