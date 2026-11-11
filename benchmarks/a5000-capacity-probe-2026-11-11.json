@@ -4,7 +4,7 @@
   "captured": "2026-11-11T11:20:00Z",
   "question": "Why did the timed run land on an A40 rather than the recommended A5000?",
   "answer": "The A5000 was gone and stayed gone. Seventeen create refusals across the afternoon and three deep capacity probes ten minutes apart, all reporting Out on every probed CUDA version in Secure EU-SE-1. The pool is ten units and none came free.",
-  "create_attempts_refused": 32,
+  "create_attempts_refused": 33,
   "per_gpu_read": {
     "tool": "get-gpu-type include=AVAILABILITY product=POD cloud=SECURE minCudaVersion=12.8",
     "availability": "LOW",
@@ -93,6 +93,12 @@
       "probe": "get-gpu-type Secure minCudaVersion=12.8: availability NONE, no dataCenters, 13.2 available:false",
       "creates_refused": 1,
       "note": "first hourly cycle after the half-hour cadence was abandoned; probe and create agreed for once, both empty"
+    },
+    {
+      "at": "17:47Z",
+      "probe": "A5000 NONE again; but A40 LOW in EU-SE-1 and CA-MTL-1, A6000 LOW in EU-SE-1 -- the AMPERE_48 pool recovered",
+      "creates_refused": 1,
+      "note": "asked again nine minutes later. The 24 GB pool is still empty while 48 GB is obtainable, which is the clearest statement of the split yet: it is not the data centre that is full, it is AMPERE_24."
     }
   ],
   "the_two_catalog_reads_disagree": {
@@ -105,7 +111,7 @@
   "the_binding_constraint": {
     "statement": "the build-cache volume is in EU-SE-1 and a network volume is data-centre local, so the card choice is whatever EU-SE-1 has -- not whatever the catalog has.",
     "EU-SE-1 on 2026-11-11": {
-      "A40": "Low on 13.2 at $0.59 -- the one that answered, twice",
+      "A40": "Low at $0.59 at 11:00Z, NONE by 14:10Z, Low again by 17:47Z -- it comes back; the 24 GB pool did not",
       "RTX A6000": "Low on 13.2 at $0.59",
       "RTX A5000": "NONE all afternoon (pool AMPERE_24)",
       "RTX 3090": "NONE (same AMPERE_24 pool)",
@@ -115,10 +121,10 @@
   },
   "unobtainable_window": {
     "from": "11:00Z",
-    "to": "17:43Z",
-    "hours": 6.7,
-    "checks": "thirty-two refused creates and seven probes, spaced from seconds to an hour apart",
-    "reading": "not contention but absence, for the better part of a working day, on Secure and Community alike. Ten units in the pool and never one free. The A40 answered twice inside the first hour of this window and was itself NONE by 14:10Z, so even the fallback is not dependable; the only card obtainable in EU-SE-1 late in the window was the A6000, also $0.59.",
+    "to": "17:47Z",
+    "hours": 6.9,
+    "checks": "thirty-three refused creates and nine probes, spaced from seconds to an hour apart",
+    "reading": "not contention but absence, for the better part of a working day, on Secure and Community alike. Ten units in the pool and never one free. The A40 answered twice inside the first hour, was NONE by 14:10Z and was LOW again by 17:47Z, so the 48 GB fallback comes and goes on a scale of hours while AMPERE_24 simply never returned; the only card obtainable in EU-SE-1 late in the window was the A6000, also $0.59.",
     "what_it_means_for_planning": "price the work at the A40/A6000 tier of $0.59/hr and treat $0.27 as a windfall that may not arrive for a day. A schedule that must produce a proof at a particular hour cannot rest on spot-style 24 GB capacity at all -- that is the argument for a committed box rather than a cheaper hourly rate."
   }
 }
