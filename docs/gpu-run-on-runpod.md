@@ -52,9 +52,36 @@ comparable one.
   volumes attach only to Secure Cloud pods, so a cached build and community
   pricing are mutually exclusive.
 
-## Is a volume worth it?
+## The volume
 
-Mostly no, and the drivers work either way.
+**There is one: `zvx1pq06vk`, "mizu-build-cache", 10 GB, STANDARD, EU-SE-1**,
+created 2026-11-10. Mount it at `/workspace`, which is where `pod-run.sh`
+already looks for `/workspace/mizu-cache`, and leave `CACHE` unset so it finds
+it:
+
+```json
+"mounts": {"network": [{"volumeId": "zvx1pq06vk", "path": "/workspace"}]}
+```
+
+The pod must be in **EU-SE-1** and on **Secure Cloud** — a volume is
+data-centre-local and community pods cannot mount one. Both A40 and RTX A6000
+live in EU-SE-1 at $0.59/hr, so that is no sacrifice.
+
+The first run there builds and populates `bin/`, `key.json`, `cargo-home` and
+`rustup-home`, about 3.5 GB of the 10. Every later run with unchanged sources
+reuses the binary after checking its recorded sha256 and making it answer
+`--mode registration`, which takes the run from ~11 minutes to **~5**. Leave
+`CACHE_TARGET` off: a full `target/` tree is 10–15 GB and would not fit.
+
+Tiers are per data centre, and the two we have used differ: EU-SE-1 offers
+`STANDARD`, **CA-MTL-1 offers only `HIGH_PERFORMANCE`** (CA-MTL-4 has both).
+A volume created in one cannot be mounted from the other.
+
+## Was a volume worth it?
+
+The arithmetic below said mostly no, and four runs in one day settled it the
+other way — the build is 7 of every 11 minutes, and it is the same build every
+time. The original reasoning, kept because the trade-off is still real:
 
 A cold CUDA build of this harness is **3:34** with `CUDA_ARCHS` pinned to one
 architecture and 8 jobs (r123's measurement; its CPU-only build took 5:47, and
@@ -72,6 +99,12 @@ volume, which is off by default because it is several GB of billed storage.
 Use a volume when the pod will be re-created repeatedly against unchanged
 sources — a measurement sweep, a host comparison like r124, a retry after a
 stock-out. Skip it for a one-off proof.
+
+Building on a cheap CPU pod instead of the GPU pod is a separate idea and a
+small one: `cpu3c` is $0.03/vCPU/hr against the A40's $0.59/hr, so a ten-minute
+build saves about six cents, once per source change. It also cannot be done in
+EU-SE-1 or CA-MTL-1, which offer no CPU pods, so it would mean giving up the
+48 GB cards. Not worth it; let the first GPU run populate the cache.
 
 ## Reusing a build
 
