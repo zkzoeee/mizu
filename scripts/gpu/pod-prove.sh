@@ -50,6 +50,17 @@ stamp() { echo "=== $* $(date -u +%FT%TZ) ==="; }
 fail() { stamp "FAILED: $*"; echo "$*" > "$RESULTS/FAILED"; exit 1; }
 stamp "prove-from-cache started"
 
+# This path installs nothing by design, but it does need python3 for the cache
+# key and the JSON checks, and a slim CUDA image carries none. Thirty megabytes
+# of python3-minimal against the ~110 s of image pull a PyTorch image costs is
+# the trade this path exists to make.
+if ! command -v python3 >/dev/null; then
+  echo "python3 absent; installing python3-minimal (the only install on this path)"
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update -qq && apt-get install -y --no-install-recommends python3-minimal \
+    || fail "no python3 and apt could not provide one"
+fi
+
 # This path installs nothing, so /usr/bin/time may not exist: pod-run.sh gets it
 # from apt, and the stock image does not carry it. Use it when present and drop
 # it otherwise rather than failing the proof over a stopwatch.
@@ -66,12 +77,18 @@ nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=cs
 if grep -qi 'Insufficient Permissions' "$RESULTS/telemetry-probe.csv"; then
   fail "nvidia-smi will not report memory/utilization; this is a MIG slice, not a whole card"
 fi
+# The context gate, which is why a 20 GB PyTorch image was ever used: it was
+# the only thing on the pod that could create a CUDA context before the real
+# work. `--mode cuda-probe` does the same with the harness itself, so a slim
+# image needs no torch — but the binary has to be in place first, so the probe
+# runs in section 1 below. When torch happens to be present, use it here too:
+# two independent gates cost nothing and disagreement is informative.
 if python3 -c 'import torch' 2>/dev/null; then
   python3 -c "import torch; assert torch.cuda.is_available(), 'no CUDA context'; \
-print('cuda context ok:', torch.cuda.get_device_name(0))" \
+print('torch gate: cuda context ok:', torch.cuda.get_device_name(0))" \
     || fail "the GPU is visible but no process can create a CUDA context; discard this host"
 else
-  echo "WARNING: torch is absent, so the CUDA-context gate did not run."
+  echo "torch absent; the context gate is --mode cuda-probe, after the binary is in place"
 fi
 
 # ------------------------------------------------- 1. the cache, and nothing else
@@ -121,6 +138,12 @@ chmod +x "$GPU_BIN"
   || fail "the cached binary does not match its recorded sha256"
 "$GPU_BIN" --mode registration --output "$RESULTS/registration.json" > /dev/null \
   || fail "the cached binary does not run on this host"
+# The CUDA-context gate proper: initialise the device and read its memory. This
+# is what replaces torch, and it is the harness's own code path rather than a
+# proxy for it.
+"$GPU_BIN" --mode cuda-probe --output "$RESULTS/cuda-probe.json" \
+  || fail "the GPU is visible but no process can create a CUDA context; discard this host"
+cat "$RESULTS/cuda-probe.json"
 echo "{\"cache_hit\": 1, \"key\": \"$KEY\", \"built_nothing\": true}" > "$RESULTS/cache-status.json"
 stamp "reusing the cached CUDA build; nothing installed, nothing compiled"
 

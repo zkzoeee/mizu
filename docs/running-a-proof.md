@@ -125,6 +125,42 @@ Add the volume: 10 GB `zvx1pq06vk`, billed from creation until deletion,
 roughly $0.70/month at RunPod's published per-GB rate — a figure their tools do
 not expose.
 
+## The PyTorch image, and what it is actually for
+
+The drivers run on `runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404` because
+wazabi's r123 proved on it. Of what it provides, the prove path needs almost
+none:
+
+| Provided | Needed by | Slim alternative |
+| --- | --- | --- |
+| `libcudart` | the binary, always | any CUDA **runtime** image |
+| nvcc, headers, toolkit | a **build** only | `nvidia/cuda:…-devel` |
+| cmake, build-essential, git, curl | a build only, and the driver apt-installs them anyway | — |
+| `python3` | the drivers' key check and JSON | `python3-minimal`, ~30 MB |
+| **torch** | **the CUDA-context gate, and nothing else** | **`--mode cuda-probe`** |
+
+So a whole PyTorch stack is pulled to evaluate one boolean, and that pull is
+now the largest phase of a run — about 110 s of the measured 5.6 minutes, with
+the bundle, apt and compiler already gone. `pod-prove.sh` therefore installs
+`python3-minimal` if the image lacks it, keeps the torch gate when torch
+happens to be present, and otherwise gates on `--mode cuda-probe`, which
+initialises the device through the harness itself.
+
+**But a slim image cannot simply be swapped in, and this is the catch.** Direct
+SSH needs `openssh-server` *in the image*; RunPod's own images carry it and a
+stock `nvidia/cuda` image does not. Without sshd there is no scp, so
+`push-and-launch.sh` cannot deliver scripts or start tmux, and the PTY-only
+proxy is the trap that cost wazabi's r114 a pod. A slim image therefore needs
+either `openssh-server` baked in — which means a registry — or the
+entrypoint-driven design, where the container starts the job itself and
+progress is read with `stream-pod-logs`. The entrypoint exists
+(`scripts/gpu/entrypoint.sh`) and has never run.
+
+The practical split until then: **build runs stay on the PyTorch image**, which
+is rare and needs nvcc anyway and keeps the torch gate; **prove runs** are
+where the slim image pays, and they are blocked on the entrypoint rather than
+on the image.
+
 ## Two operational facts that cost money when forgotten
 
 **Creating a pod is a race, not a query.** `LOW` means one machine, and the

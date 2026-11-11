@@ -21718,6 +21718,33 @@
         "one run",
         "the ~110 s image pull is untouched and is now the largest phase"
       ]
+    },
+    {
+      "id": "mizu-cuda-probe-gate",
+      "owner": "o1js-to-zkvm",
+      "status": "validation-only-retained",
+      "document": "docs/running-a-proof.md",
+      "retained_default": true,
+      "proof_generated": true,
+      "evidence": "benchmarks/cuda-probe-gate-validation.json",
+      "evidence_sha256": "0828088740b63759998695c9ceb2f056a2697a6a2b794ea3ce998426e8068288",
+      "receipts_directory": "benchmarks/gpu/runs/20261111T0910Z-cudaprobe-validation",
+      "measurements": {
+        "both_gates_passed": true,
+        "cuda_probe_context": "created",
+        "device_memory_total_bytes": 47699722240,
+        "wall_seconds": 134.437136481,
+        "shards": 82,
+        "proof_bytes": 132029932,
+        "pod_life_minutes": 6.5,
+        "usd": 0.064
+      },
+      "unblocks": [
+        "dropping the 20 GB PyTorch image from the prove path"
+      ],
+      "still_blocked_by": [
+        "sshd: a stock nvidia/cuda image has no openssh-server, so the SSH-driven launcher cannot start work; the entrypoint design or a baked image is the prerequisite"
+      ]
     }
   ],
   "mizu_workflows": [

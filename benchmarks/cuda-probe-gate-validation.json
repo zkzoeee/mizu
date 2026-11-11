@@ -1,0 +1,48 @@
+{
+  "schema": "mizu-gate-validation/1",
+  "id": "mizu-cuda-probe-gate",
+  "captured": "2026-11-11T09:14:00Z",
+  "question": "Can the harness replace torch as the CUDA-context gate, so a 20 GB PyTorch image is not needed to evaluate one boolean?",
+  "answer": "Yes. Run beside the torch gate on the same device, --mode cuda-probe created a context and read the device memory; both gates passed and agreed. torch is no longer load-bearing on the prove path.",
+  "gates": {
+    "torch": "cuda context ok: NVIDIA A40",
+    "cuda_probe": {
+      "cuda_context": "created",
+      "device_memory_free_bytes": 47416410112,
+      "device_memory_total_bytes": 47699722240,
+      "mode": "cuda-probe"
+    }
+  },
+  "device_memory_cross_check": {
+    "cuda_probe_total_bytes": 47699722240,
+    "nvidia_smi_total_mib": 46068,
+    "note": "47,699,722,240 B is 45,488 MiB of addressable device memory against nvidia-smi's 46,068 MiB board total; the difference is reserved, not missing"
+  },
+  "run": {
+    "pod_id": "u3w0n319nhb4qa",
+    "gpu": "NVIDIA A40",
+    "usd_per_hour": 0.59,
+    "driver": "pod-prove.sh",
+    "cache_hit": true,
+    "wall_seconds": 134.437136481,
+    "shards": 82,
+    "proof_bytes": 132029932,
+    "accepted": true,
+    "pod_life_minutes": 6.5,
+    "estimated_usd": 0.064
+  },
+  "what_this_unblocks": "the gate was the only reason the drivers needed a PyTorch image. A slim CUDA runtime image can now gate properly.",
+  "what_still_blocks_a_slim_image": "sshd. Direct SSH needs openssh-server in the image; RunPod's own images carry it and a stock nvidia/cuda image does not, so push-and-launch.sh cannot deliver scripts or start tmux and the PTY-only proxy is the trap that cost wazabi's r114 a pod. A slim image therefore needs openssh-server baked in (hence a registry) or the entrypoint-driven design, which exists and has never run.",
+  "limits": [
+    "one device, one card; the probe has not been run against a host that fails it, so its negative path is untested",
+    "the A5000 refused twice, so this ran on an A40; the gate is card-independent"
+  ],
+  "evidence": {
+    "receipts_directory": "benchmarks/gpu/runs/20261111T0910Z-cudaprobe-validation",
+    "receipt_hashes": {
+      "cuda-probe.json": "05bb6714dd20a3f2c0224343eea1cb07b11e3aa3bd529f07485d5ea66157f45e",
+      "run.log": "485fc184f61e823e03f35175828807b04eaa1252f3b8f87e0118704366c5ce2a",
+      "retain-pasta-and-uint/result.json": "8a3e01da50e53425a58503af0ccc0760b07c3c44889661d644373f655f6697d5"
+    }
+  }
+}
