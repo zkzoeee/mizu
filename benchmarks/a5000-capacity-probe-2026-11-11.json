@@ -177,7 +177,33 @@
         "billing": "stored data plus requests: $0.005/1,000 writes, creates and lists; $0.0005/1,000 reads and metadata lookups",
         "the_catch_for_us": "object-backed, with 'no file locking, atomic rename or hard links', and the Serverless announcement is explicit that 'Applications that install onto the volume ... depend on file permissions the volume doesn't support and will fail or run slowly'. Our cache is not model weights -- it is an ELF that pod-prove.sh executes in place from $CACHE/bin. An exec bit that does not survive would break that path.",
         "status": "UNVERIFIED whether a global volume preserves the exec bit, and whether Community pods can mount one. Both are testable for cents.",
-        "the_fix_if_it_does_not": "copy the binary to container disk and chmod +x before running it -- a few seconds for a few hundred MB, and a small change to pod-prove.sh rather than a config flip"
+        "the_fix_if_it_does_not": "copy the binary to container disk and chmod +x before running it -- a few seconds for a few hundred MB, and a small change to pod-prove.sh rather than a config flip",
+        "pricing": {
+          "checked": "2026-11-11T18:20Z, docs plus the public pricing page",
+          "requests_published": {
+            "class_A_writes_creates_lists": "$0.005 per 1,000 requests",
+            "class_B_reads_metadata": "$0.0005 per 1,000 requests",
+            "source": "docs.runpod.io/storage/globalvolume/overview, 'Request costs'",
+            "note": "one filesystem command can issue several requests; directory listings are cached for a minute; readahead and write-back buffering reduce the count"
+          },
+          "stored_data_NOT_published": "no per-GB figure anywhere I can find. The docs say only 'Storage grows automatically as you add data. There is no capacity to provision upfront', and runpod.io/pricing does not list global volumes at all -- it carries network storage at $0.07/GB/mo under 1 TB, $0.05 over, $0.14 high-performance, and nothing for global. So the storage half of the bill cannot be quoted up front; it has to be read off the billing dashboard after a small test.",
+          "network_volume_for_comparison": "our 10 GB volume bills $0.07/GB/mo = $0.70/month flat, attached or not",
+          "low_balance_risk": "at a $0 account balance a global volume is flagged and permanently deleted after 15 days (documented), where a network volume merely accrues charges"
+        },
+        "exec_bit_question_is_now_answered": {
+          "answer": "documented, and the answer is no: 'Global volumes cannot set file permission bits' (docs, Limitations), and the concept rule global-volume.object-backed lists 'no file locking, atomic rename, hard links or permission bits'",
+          "so": "pod-prove.sh cannot execute the ELF in place from a global volume; it must copy to container disk and chmod +x first"
+        },
+        "the_real_blocker_is_bigger_than_the_exec_bit": {
+          "what_the_cache_actually_holds": "pod-run.sh puts CARGO_HOME at $CACHE/cargo-home, RUSTUP_HOME at $CACHE/rustup-home and the cargo target directory at $CACHE/target (lines 150-151, 257-262, 278-287) -- not a handful of artifacts but a cargo registry and a target tree, hundreds of thousands of small files",
+          "why_that_breaks": [
+            "cost: Class A is $0.005 per 1,000 writes and creates, so a few hundred thousand files is a dollar or more per cache population, against $0.70/month for the whole 10 GB network volume",
+            "correctness: cargo depends on file locking and atomic rename, and the docs say a global volume has neither -- so it would likely fail or corrupt rather than merely run slowly"
+          ],
+          "what_does_fit": "the PROVE path needs only $CACHE/key.json, $CACHE/bin/<binary> and its .sha256, and $CACHE/artifacts/{elf,input,run-manifest.json} -- a dozen files, read-only, a few hundred MB. On a global volume that is a few thousand Class B reads, fractions of a cent, and no cargo anywhere near it.",
+          "design_that_follows": "split the cache in two: keep the build cache (cargo-home, rustup-home, target) on a network volume where it works, and publish a small read-only 'prove kit' to a global volume so a cache-warm PROVE run can go to whatever data centre has a card. That is exactly tonight's failure mode, and the prove path is the one that matters -- a build is the rare case.",
+          "unmeasured": "the prove kit's real size and file count; the binary was built on the pod and is not on this machine"
+        }
       },
       "the_seeding_problem": "to copy the existing cache onto a global volume we need a pod that mounts both, i.e. a pod in EU-SE-1 -- the very thing we cannot get tonight. The alternative is to rebuild the cache onto a global volume from whatever card is available, passing CUDA_ARCHS=86,89,120 so the result stays fat, which costs one build (~12.5 min) and then never pins us to a data centre again."
     }

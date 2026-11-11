@@ -284,21 +284,38 @@ offers" -- which is exactly the trap above. But Runpod also has **global volumes
 so one pod can hold both and copy between them. `create-global-volume` exists
 and `create-pod` takes `mounts.global`.
 
-Two things to settle before trusting it with this cache. Global volumes are
-object-backed, with "no file locking, atomic rename or hard links", and the
-Serverless announcement warns that applications installed onto one "depend on
-file permissions the volume doesn't support". Our cache is not model weights --
-`pod-prove.sh` executes an ELF in place from `$CACHE/bin` -- so **whether the
-exec bit survives is untested**, as is whether a Community pod can mount one. If
-it does not survive, copying the binary to container disk and `chmod +x` before
-running costs seconds. Billing is per-request: $0.005/1,000 writes and lists,
-$0.0005/1,000 reads.
+**The whole cache cannot go there, but the part that matters can.** Two
+documented limits decide it. First, "global volumes cannot set file permission
+bits", so `pod-prove.sh` cannot execute the ELF in place from `$CACHE/bin`; it
+would have to copy to container disk and `chmod +x`, which costs seconds.
+Second and larger: `pod-run.sh` keeps `CARGO_HOME`, `RUSTUP_HOME` and the cargo
+`target` tree on the cache, which is hundreds of thousands of small files, and a
+global volume has neither file locking nor atomic rename -- the two things cargo
+relies on. It would likely corrupt rather than merely run slowly, and at
+**$0.005 per 1,000 writes and creates** a few hundred thousand files costs more
+per population than the whole 10 GB network volume costs per month.
 
-The awkward part is seeding it. Copying the existing cache across needs a pod
-that mounts both volumes, which means a pod in EU-SE-1 -- the thing capacity
-would not give us. The alternative is to rebuild onto a global volume from
-whatever card is free, with `CUDA_ARCHS=86,89,120` so the result stays fat: one
-~12.5-minute build, and the cache stops choosing our data centre.
+The prove path needs none of that: `key.json`, the binary and its `.sha256`, and
+`artifacts/{elf,input,run-manifest.json}` -- a dozen read-only files. On a global
+volume that is a few thousand **Class B** reads at $0.0005/1,000, fractions of a
+cent. So the shape that works is **two caches**: the build cache stays on a
+network volume where cargo is happy, and a small read-only *prove kit* goes to a
+global volume so a cache-warm proof can run in whatever data centre has a card.
+
+| | Network volume | Global volume |
+| --- | --- | --- |
+| Stored data | $0.07/GB/mo (<1 TB), $0.05 above, $0.14 high-performance | **not published** -- not in the docs, not on the pricing page |
+| Requests | none | $0.005/1,000 writes, creates, lists; $0.0005/1,000 reads |
+| Our 10 GB | $0.70/month, attached or not | would bill only what is stored, at an unquotable rate |
+| At $0 balance | accrues charges | flagged, then **permanently deleted after 15 days** |
+
+The storage half of a global volume's bill therefore cannot be quoted in
+advance; it has to be read off the billing dashboard after a small test.
+
+Seeding is the other open end. Copying across needs a pod that mounts both
+volumes, so a pod in EU-SE-1 -- the thing capacity would not give us. Writing the
+prove kit from a fresh build elsewhere avoids that, with
+`CUDA_ARCHS=86,89,120` so it stays fat.
 
 **The build cache holds exactly one build.** Its key covers the OS, nvcc,
 rustc, `CUDA_ARCHS` and a fingerprint of the harness sources, so *any* source
