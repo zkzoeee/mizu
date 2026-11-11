@@ -3,8 +3,8 @@
   "id": "mizu-a5000-capacity-2026-11-11",
   "captured": "2026-11-11T11:20:00Z",
   "question": "Why did the timed run land on an A40 rather than the recommended A5000?",
-  "answer": "The A5000 was gone. Fourteen create refusals across the afternoon, and a deep capacity probe reporting Out on every probed CUDA version in Secure EU-SE-1.",
-  "create_attempts_refused": 14,
+  "answer": "The A5000 was gone and stayed gone. Seventeen create refusals across the afternoon and three deep capacity probes ten minutes apart, all reporting Out on every probed CUDA version in Secure EU-SE-1. The pool is ten units and none came free.",
+  "create_attempts_refused": 17,
   "per_gpu_read": {
     "tool": "get-gpu-type include=AVAILABILITY product=POD cloud=SECURE minCudaVersion=12.8",
     "availability": "LOW",
@@ -47,5 +47,24 @@
     }
   },
   "operational_lesson": "retry the create four or five times, then run the deep probe: it is what separates a window worth waiting for from an empty pool, and the per-GPU availability field cannot do that because it includes Community",
-  "consequence": "the A5000 pod-life and cost figures in the README are arithmetic from the A40 run's duration, not a measured A5000 run"
+  "consequence": "the A5000 pod-life and cost figures in the README are arithmetic from the A40 run's duration, not a measured A5000 run",
+  "retries": [
+    {
+      "at": "11:20Z",
+      "probe": "Out on 12.8/13.0/13.2",
+      "creates_refused": 14
+    },
+    {
+      "at": "11:22Z",
+      "probe": "Out on 12.8/13.0/13.2",
+      "creates_refused": 2,
+      "note": "probed first, then tried anyway because a probe can lag the scheduler"
+    },
+    {
+      "at": "11:32Z",
+      "probe": "Out on 12.8/13.0/13.2",
+      "creates_refused": 1,
+      "note": "after a nine-minute wait; the pool had not turned over"
+    }
+  ]
 }
