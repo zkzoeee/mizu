@@ -112,8 +112,14 @@ once per source change.
 | Shape | Pod life | A5000 | A40 |
 | --- | ---: | ---: | ---: |
 | Cold fat build + one arm | ~18 min | $0.081 | $0.18 |
-| Cache hit, one arm, no download | ~5 min | **$0.022** | $0.045 |
+| Cache hit, one arm, no download | **5.6 min, measured** | **$0.025** | $0.045 |
 | With a baked image and an entrypoint (not yet built) | ~3.5–4 min | ~$0.017 | ~$0.035 |
+
+**Measured on the prove-only path** (2026-11-11, A5000, cache hit): 2 min 39 s
+of in-pod work, of which **7 seconds** came before proving began — cache check
+4 s, reuse 2 s, pre-flight 1 s — then 131.92 s of proof and 19 s of from-disk
+verification. No bundle was uploaded, nothing was installed and nothing was
+compiled. Pod life 5.6 minutes, **$0.025**.
 
 Add the volume: 10 GB `zvx1pq06vk`, billed from creation until deletion,
 roughly $0.70/month at RunPod's published per-GB rate — a figure their tools do

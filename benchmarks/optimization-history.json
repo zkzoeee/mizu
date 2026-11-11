@@ -21686,6 +21686,38 @@
         "usd": 0.0,
         "note": "local only, no rental"
       }
+    },
+    {
+      "id": "mizu-prove-only-path",
+      "owner": "o1js-to-zkvm",
+      "status": "validation-only-retained",
+      "document": "docs/running-a-proof.md",
+      "predecessor": "mizu-build-cache-volume",
+      "retained_default": true,
+      "proof_generated": true,
+      "evidence": "benchmarks/gpu-prove-only-path.json",
+      "evidence_sha256": "c1853bf01193f7c0b18da5e3f51e02d8c8ae0c26df01bf0be4e77e6fb7e83bb1",
+      "receipts_directory": "benchmarks/gpu/runs/20261111T0856Z-a5000-proveonly",
+      "measurements": {
+        "in_pod_work_seconds": 159,
+        "overhead_before_proving_seconds": 7,
+        "wall_seconds": 131.922802262,
+        "shards": 82,
+        "proof_bytes": 132029932,
+        "bundle_uploaded": false,
+        "apt_run": false,
+        "compiled": false,
+        "pod_life_minutes": 5.6,
+        "usd": 0.025,
+        "usd_per_hour": 0.27
+      },
+      "defects_found": [
+        "pod-prove.sh wrapped the proof in /usr/bin/time -v, which this path never installs; fixed before launch"
+      ],
+      "limits": [
+        "one run",
+        "the ~110 s image pull is untouched and is now the largest phase"
+      ]
     }
   ],
   "mizu_workflows": [

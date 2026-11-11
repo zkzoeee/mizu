@@ -50,6 +50,16 @@ stamp() { echo "=== $* $(date -u +%FT%TZ) ==="; }
 fail() { stamp "FAILED: $*"; echo "$*" > "$RESULTS/FAILED"; exit 1; }
 stamp "prove-from-cache started"
 
+# This path installs nothing, so /usr/bin/time may not exist: pod-run.sh gets it
+# from apt, and the stock image does not carry it. Use it when present and drop
+# it otherwise rather than failing the proof over a stopwatch.
+TIMER=""
+if [ -x /usr/bin/time ]; then
+  TIMER="/usr/bin/time -v"
+else
+  echo "note: /usr/bin/time is absent; timing comes from the harness's own report"
+fi
+
 # ---------------------------------------------------------------- 0. gates
 nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=csv \
   | tee "$RESULTS/telemetry-probe.csv"
@@ -156,7 +166,7 @@ for ARM in $ARMS; do
   PASTA_GPU_MAX_TRACE_SIZE=404750336 PASTA_GPU_WORKERS=2 \
   PASTA_R5_INFLIGHT="${PASTA_R5_INFLIGHT:-8}" \
   PASTA_PROVE_INFLIGHT="${PASTA_PROVE_INFLIGHT:-1}" \
-  /usr/bin/time -v "$GPU_BIN" --mode manifest-core-gpu \
+  $TIMER "$GPU_BIN" --mode manifest-core-gpu \
     --manifest "$MANIFEST" --arm "$ARM" --elf "$ELF" \
     --input "$INPUTS" --output "$OUT" 2>&1 | tee "$RESULTS/$ARM.log"
   RC=${PIPESTATUS[0]}

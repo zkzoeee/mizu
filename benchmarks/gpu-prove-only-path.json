@@ -1,0 +1,95 @@
+{
+  "schema": "mizu-gpu-core-proof/1",
+  "id": "mizu-prove-only-path",
+  "captured": "2026-11-11T09:00:00Z",
+  "question": "Does the bundle-free prove-only path work, and what does it save?",
+  "answer": "Yes. The launcher computed the source fingerprint at home, the pod agreed, and the run shipped no bundle, installed nothing and compiled nothing: 2 min 39 s of in-pod work against the A40 cache-hit run's 3 min 3 s, with only 7 s of it before proving began.",
+  "host": {
+    "pod_id": "ygu0g4uj1vclat",
+    "cloud": "SECURE",
+    "data_center": "EU-SE-1",
+    "gpu": "NVIDIA RTX A5000",
+    "usd_per_hour": 0.27,
+    "volume": "zvx1pq06vk at /workspace",
+    "driver": "pod-prove.sh"
+  },
+  "timeline": {
+    "prove_from_cache_started": "08:56:15Z",
+    "cache_checked": "08:56:19Z",
+    "reusing_cached_build": "08:56:21Z",
+    "preflight": "08:56:21Z",
+    "proving": "08:56:22Z",
+    "verification": "08:58:35Z",
+    "finished": "08:58:54Z",
+    "in_pod_work_seconds": 159,
+    "overhead_before_proving_seconds": 7
+  },
+  "cache": {
+    "hit": true,
+    "key": "1879dc67609f15c7729196ce2aefc472affc96ae85565d85a8f37732a658a23d",
+    "source_fingerprint": "d9952d5553a9eea8a1da27683198cfe85cb9ee993e82b89d096a7e386bd6354d",
+    "built_nothing": true,
+    "bundle_uploaded": false,
+    "apt_run": false,
+    "toolchain_installed": false,
+    "artifacts_from_volume": [
+      "elf/guest-program",
+      "run-manifest.json",
+      "input/*"
+    ]
+  },
+  "arm": {
+    "name": "retain-pasta-and-uint",
+    "status": "passed",
+    "shards": 82,
+    "proof_bytes": 132029932,
+    "proof_sha256": "b50908e25368fefc9f24f2646929c52cc8610deb9828a9cfd722795e2bf6402a",
+    "verification_key_sha256": "eed89d80326950303c787b1fbf0e08034cd8b986425de27c9e4e7475da295113",
+    "seconds": {
+      "total": 131.922802262,
+      "executor": 123.554967535,
+      "gpu_prove_loop": 106.878500218,
+      "cpu_verify_in_process": 6.657904228
+    },
+    "reload_verification_on_pod": {
+      "accepted": true,
+      "reloaded_shards": 82,
+      "saved_key_matches_derived": true,
+      "key_derived_from_pinned_elf": true
+    }
+  },
+  "against_the_same_card_building": {
+    "fat_build_run_wall": 128.426550064,
+    "prove_only_run_wall": 131.922802262,
+    "delta_pct": 2.72,
+    "reading": "+2.7%, within the 0.8-0.9% within-side spread doubled; the cached binary proves the same statement at the same speed"
+  },
+  "defect_found_and_fixed_before_launch": {
+    "where": "scripts/gpu/pod-prove.sh",
+    "defect": "the proof was wrapped in /usr/bin/time -v, which pod-run.sh installs from apt and this path deliberately skips; the stock image does not carry it, so the proof would have died on a stopwatch",
+    "fix": "use the timer when present, say so when absent",
+    "confirmed_by": "the run logged 'note: /usr/bin/time is absent; timing comes from the harness's own report'"
+  },
+  "cost": {
+    "usd_per_hour": 0.27,
+    "pod_life_minutes": 5.6,
+    "estimated_usd": 0.025,
+    "creates_refused_before_one_landed": 0,
+    "pods_remaining": 0
+  },
+  "limits": [
+    "one run of this path",
+    "no off-pod verification: proof bytes stayed on the pod",
+    "the saving over pod-run.sh on a hit is 24 s of in-pod work plus the 29 s upload the launcher no longer makes; the ~110 s image pull is untouched and remains the largest phase"
+  ],
+  "evidence": {
+    "receipts_directory": "benchmarks/gpu/runs/20261111T0856Z-a5000-proveonly",
+    "receipt_hashes": {
+      "retain-pasta-and-uint/result.json": "46f731b06c10645d8632ab15345abd5ba97c7af31fbb7e949aace4b18a4089db",
+      "build-identity.json": "52d1a0f1020965130eda381b1c171514f4fffa58fad96618fc197e212ca9aa83",
+      "cache-status.json": "a4a3c3ed767d7348581e256c2856858f67bb65c6393bade51a868ef511743b09",
+      "verification-retain-pasta-and-uint/retain-pasta-and-uint.json": "8c938fcff9977147c49f0bcd0c4f70ce828e0f8c4d234d288b7d1675190a951f",
+      "run.log": "9f869b0054505e7a17ee799234d2758d8739959dd3769b4959c94e8aea16b792"
+    }
+  }
+}
