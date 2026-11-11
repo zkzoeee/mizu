@@ -26,7 +26,11 @@ WITH_PROOFS=0 scripts/gpu/collect-results.sh <host> <port> benchmarks/gpu/runs/$
 
 Create the pod in **EU-SE-1**, Secure, with the build-cache volume
 `zvx1pq06vk` mounted at `/workspace`, `22/tcp` and `startSsh`, and a CUDA floor
-of `12.8`. Then terminate it: a stopped pod still bills its disk.
+of `12.8`. Use `nvidia/cuda:12.8.1-base-ubuntu24.04` with the start command in
+[`scripts/gpu/slim-pod-start-command.sh`](../scripts/gpu/slim-pod-start-command.sh):
+it was **ready 22 seconds after create**, against ~112 s on the PyTorch image,
+and it proved the arm unchanged. Then terminate it: a stopped pod still bills
+its disk.
 
 ## What we actually measured
 
@@ -98,6 +102,7 @@ Measured on the cache-hit A40 run, which is the shape to expect:
 | Phase | Seconds |
 | --- | ---: |
 | Create → `ssh.direct` (20 GB image pull) | ~112 |
+| Create → ready on the 101 MB base image, apt and gates included | **22, measured** |
 | Launcher latency, incl. 29 s upload | ~70 |
 | apt + cmake + rustup (skipped on the prove path) | 22 |
 | Cache check and reuse | 4 |
@@ -113,8 +118,11 @@ once per source change.
 | --- | ---: | ---: | ---: |
 | Cold fat build + one arm | ~18 min | $0.081 | $0.18 |
 | Cache hit, one arm, no download | **5.6 min, measured** | **$0.025** | $0.045 |
-| Slim base image + start command (unmeasured) | ~4 min | ~$0.018 | ~$0.039 |
-| Baked image, binary inside, no volume (unmeasured) | ~3.5 min | ~$0.016 | ~$0.034 |
+| Slim base image + start command | **3.5 min projected, 7.0 measured¹** | **~$0.016** | ~$0.034 |
+| Baked image, binary inside, no volume (unmeasured) | ~3 min | ~$0.014 | ~$0.030 |
+
+¹ the measured 7.0 minutes includes ~2.5 minutes lost to the `python3-minimal`
+defect below; the startup itself was 22 seconds.
 
 **Measured on the prove-only path** (2026-11-11, A5000, cache hit): 2 min 39 s
 of in-pod work, of which **7 seconds** came before proving began — cache check
@@ -191,23 +199,47 @@ A baked image is still the fastest option — the binary is already inside it, s
 there is no volume and no cache check — but it is now an *optimisation*, not a
 prerequisite. `scripts/gpu/build-image.sh` builds one.
 
-### What is still unmeasured, and the two ways it could fail
+### What it did, measured
 
-None of this has been run. One ~$0.05 pod settles it, and the start command
-prints both answers before anything expensive:
+Run on 2026-11-11 on an A5000 in EU-SE-1 (pod `28694z52e90qvd`), with the
+volume mounted and no image of our own:
 
-1. **`ldd` on the cached binary** — any `not found` names a library the base
-   image lacks. The reasoning above says there should be none; the reasoning is
-   not a run.
-2. **Driver injection into a `base` image** — `nvidia-smi -L` must answer. It
-   does in every CUDA container; it has not been checked here.
+| | |
+| --- | --- |
+| Image pull | **2 s** — all five layers reported `Already exists` |
+| Create → ready (apt, sshd, both gates) | **22 s**, against **~112 s** to `ssh.direct` on the PyTorch image |
+| `nvidia-smi -L` | answered: `GPU 0: NVIDIA RTX A5000 (UUID: GPU-0d82daa9-…)` |
+| `ldd` on the cached binary | **nothing unresolved**: `libcudart.so.12` from the image, then `libstdc++`, `libgcc_s`, `libm`, `libc`, `libdl`, `libpthread`, `librt` |
+| `--mode cuda-probe` | context created, 25,285,623,808 bytes of device memory |
+| Proof | 135.54 s, 82 shards, 132,029,932 bytes, **accepted and reloaded** |
+| Key and digest | `eed89d80…` and `4bf5122f…`, both unchanged |
+| Pod life | 7.0 min, **$0.032** — of which ~2.5 min was the defect below |
 
-And one thing that could make the win smaller than the sizes suggest: RunPod
-caches images per machine, and their docs put a first pull at *"20 seconds to 5
-minutes"* while an image "used often" starts very fast. `runpod/pytorch` is
-about the most-used image on the platform, so our measured ~110 s is not a
-guaranteed worst case, and a cold 101 MB image beats a cold 10 GB one by far
-more than it beats a warm one.
+`libcuda.so.1` never appears in the binary's `DT_NEEDED`: cudart dlopens the
+driver, so the image needs no driver stub at all. And the proof is the same
+proof — 135.54 s against the PyTorch image's 131.92 s on the same card is
++2.7%, inside the 2.6-4.2% run-to-run spread, on one run each. **The image
+costs nothing in proving time; the whole saving is startup.**
+
+A clean run of this shape is about **3.5 minutes, ~$0.016**.
+
+### Two things this did not settle
+
+- **The 2-second pull is a warm machine cache.** Every layer was already on
+  that host. A cold pull of 101 MB is not measured — it is simply small.
+- **A base image cannot build.** There is no nvcc, so the cache is still
+  populated from a toolkit image; `push-and-launch.sh` now says so and exits
+  before the upload instead of after it.
+
+### The defect it found: `python3-minimal` has no `json`
+
+The prove path had installed `python3-minimal` since it was written, and had
+never run on an image without python3, so nobody had noticed that the minimal
+package omits the `json` module. The cache probe died with
+`ModuleNotFoundError: No module named 'json'`, the launcher read that as a
+cache miss, and the new nvcc guard then correctly refused to build on a pod
+with no compiler. The gate is now `python3 -c 'import json'` and the package is
+`python3`. It cost about 2.5 minutes of pod life.
 
 ## Two operational facts that cost money when forgotten
 

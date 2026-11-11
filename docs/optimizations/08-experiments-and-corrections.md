@@ -52,8 +52,15 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   boot, `create-pod` takes `entrypoint`/`cmd`, and `startSsh: true` supplies the keys.
   A slim image needs no registry. The image sizes were then read from the registry
   rather than assumed: `nvidia/cuda:12.8.1-base-ubuntu24.04` is 101 MB compressed and
-  carries `cuda-cudart-12-8`, against the PyTorch image's 10,564 MB. Still unmeasured:
-  no pod has run it.
+  carries `cuda-cudart-12-8`, against the PyTorch image's 10,564 MB. Measured the
+  same day in [mizu-slim-pod-image](../../benchmarks/gpu-slim-base-image.json): ready
+  22 s after create against ~112 s, nothing unresolved in `ldd`, and the same accepted
+  proof. Still open: that 2 s pull was a warm machine cache.
+- `python3-minimal` has no `json` module. The prove path installed it from the day it
+  was written and had never met an image without python3, so the gap was invisible
+  until a 101 MB image met it: the cache probe raised `ModuleNotFoundError`, the
+  launcher read it as a cache miss, and the nvcc guard refused to build on a pod with
+  no compiler. A dependency that is only exercised on one image is not tested.
 - r125 corrects r126 despite the numerical round order. Round numbers alone are
   not a chronology or a dependency graph.
 - The first `pasta-fuzz` run (2026-11-10) reported three seeds but ran one: the

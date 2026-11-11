@@ -28,7 +28,10 @@ set -euo pipefail
 
 HOST="${1:?usage: push-and-launch.sh <host> <port> <bundle-path>}"
 PORT="${2:?missing port}"
-BUNDLE="${3:?missing bundle path}"
+# Optional since 2026-11-11: a prove-only run on a warm cache ships no bundle,
+# so requiring a 72 MB tarball on disk to start one was a leftover. Still
+# required for a build, and checked once the probe has decided which it is.
+BUNDLE="${3:-}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 DEADLINE_MINUTES="${DEADLINE_MINUTES:?DEADLINE_MINUTES is required; it is the cost ceiling}"
@@ -84,13 +87,39 @@ if [ -n "$CACHE" ]; then
   if ssh "${SSHOPTS[@]}" "root@$HOST" "$PROBE" > /dev/null 2>&1; then
     MODE=prove
     echo "=== cache hit: skipping the bundle, the toolchain and apt ==="
+  # A slim image has no nvcc, so the full key cannot match there however right
+  # the binary is. Ask the narrower question the prove path actually needs: the
+  # same OS, CUDA_ARCHS and sources. A hit means this pod can prove but could
+  # not rebuild, which is exactly the trade a 101 MB image makes.
+  elif ssh "${SSHOPTS[@]}" "root@$HOST" "$PROBE --runtime" > /dev/null 2>&1; then
+    MODE=prove
+    echo "=== cache hit in runtime scope: the build toolchain is absent or differs here,"
+    echo "    and the binary still matches the OS, architectures and sources it was built for ==="
   else
     echo "=== cache miss or empty volume: shipping the bundle and building ==="
   fi
 fi
 
-WANT=$(shasum -a 256 "$BUNDLE" | cut -d' ' -f1)
+# Fail before the upload, not after it: a build needs nvcc, and the image that
+# makes the prove path cheap does not have one.
 if [ "$MODE" = build ]; then
+  if ! ssh "${SSHOPTS[@]}" "root@$HOST" \
+    'command -v nvcc >/dev/null || ls /usr/local/cuda*/bin/nvcc >/dev/null 2>&1' 2>/dev/null; then
+    echo "this pod has no nvcc, so it cannot build, and the cache does not hold this" >&2
+    echo "build. Either relaunch on an image with the CUDA toolkit (the PyTorch image" >&2
+    echo "or nvidia/cuda:...-devel) or populate the cache from one first." >&2
+    exit 1
+  fi
+fi
+
+WANT=none
+[ -n "$BUNDLE" ] && WANT=$(shasum -a 256 "$BUNDLE" | cut -d' ' -f1)
+if [ "$MODE" = build ]; then
+  [ -n "$BUNDLE" ] || {
+    echo "this pod cannot prove from the cache and no bundle was given." >&2
+    echo "Build one with make-bundle.sh and pass it as the third argument." >&2
+    exit 1
+  }
   echo "=== uploading ($(wc -c < "$BUNDLE" | tr -d ' ') bytes) ==="
   time scp "${SCPOPTS[@]}" "$BUNDLE" "root@$HOST:/workspace/mizu-bundle.tar.gz"
   echo "=== verifying the uploaded bundle hash on the pod ==="
@@ -122,4 +151,4 @@ ssh "${SSHOPTS[@]}" "root@$HOST" "set -e
   sleep 2
   tmux ls"
 echo "=== launched; watchdog deadline ${DEADLINE_MINUTES}m at \$${RATE_PER_HOUR}/hr against a \$${CAP_USD} cap ==="
-echo "follow it with:  ssh ${SSHOPTS[*]} root@$HOST 'tail -f /workspace/results/run.log'"
+echo "follow it with:  ssh ${SSHOPTS[*]} root@$HOST 'tail -f $POD_RESULTS/run.log'"

@@ -33,6 +33,15 @@ SOURCES = [
 ]
 SKIP_DIRS = {"target", ".git", "book", "node_modules", "__pycache__"}
 
+# What decides whether an ALREADY-BUILT binary is the right one and will run
+# here. `nvcc`, `rustc` and `toolchain` are build identity: they determined what
+# the binary is, and they are recorded in the stored key for that reason, but a
+# path that compiles nothing does not need them installed to use the result. A
+# slim CUDA image has no nvcc at all, so keying a prove-only run on it would
+# force a 10 GB toolchain image to re-derive a fact already written down.
+# `os` stays: it is the glibc the binary is linked against.
+RUNTIME_COMPONENTS = ("os", "cuda_archs", "source_fingerprint")
+
 
 def file_sha(path):
     h = hashlib.sha256()
@@ -116,6 +125,13 @@ def main():
         "72 MB bundle the pod may not need.",
     )
     p.add_argument(
+        "--runtime",
+        action="store_true",
+        help="compare only the components that matter to a prebuilt binary "
+        f"({', '.join(RUNTIME_COMPONENTS)}), ignoring the build toolchain. For "
+        "a prove-only run on an image that has no compiler.",
+    )
+    p.add_argument(
         "--source-fingerprint",
         help="use this instead of hashing --root, so the key can be computed on "
         "a pod that never received the sources",
@@ -148,6 +164,9 @@ def main():
         json.dumps(components, sort_keys=True).encode()
     ).hexdigest()
     record = {"key": key, "files_hashed": counted, "components": components}
+    if args.runtime:
+        record["scope"] = "runtime"
+        record["compared_components"] = list(RUNTIME_COMPONENTS)
 
     if args.write:
         os.makedirs(os.path.dirname(os.path.abspath(args.write)), exist_ok=True)
@@ -164,11 +183,37 @@ def main():
         except (OSError, ValueError) as error:
             print(f"cache miss: no usable key at {args.compare} ({error})", file=sys.stderr)
             return 1
+        old = stored.get("components", {})
+        if args.runtime:
+            ignored = [n for n in sorted(components) if n not in RUNTIME_COMPONENTS]
+            print(
+                "runtime scope: requiring "
+                + ", ".join(RUNTIME_COMPONENTS)
+                + "; ignoring "
+                + ", ".join(ignored)
+                + " because this path compiles nothing",
+                file=sys.stderr,
+            )
+            moved = [
+                n for n in RUNTIME_COMPONENTS
+                if old.get(n, "<absent>") != components[n]
+            ]
+            for name in RUNTIME_COMPONENTS:
+                was, now = old.get(name, "<absent>"), components[name]
+                mark = "   same" if was == now else "CHANGED"
+                print(f"  {mark} {name}: {was} -> {now}", file=sys.stderr)
+            if moved:
+                print("cache miss in runtime scope", file=sys.stderr)
+                return 1
+            print(
+                f"cache hit (runtime scope); the build's own key is {stored.get('key')}",
+                file=sys.stderr,
+            )
+            return 0
         if stored.get("key") == key:
             print(f"cache hit: {key}", file=sys.stderr)
             return 0
         print("cache miss, by component:", file=sys.stderr)
-        old = stored.get("components", {})
         for name in sorted(components):
             was, now = old.get(name, "<absent>"), components[name]
             mark = "   same" if was == now else "CHANGED"

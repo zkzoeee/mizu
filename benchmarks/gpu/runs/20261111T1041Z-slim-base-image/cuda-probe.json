@@ -1,0 +1,6 @@
+{
+  "cuda_context": "created",
+  "device_memory_free_bytes": 25062342656,
+  "device_memory_total_bytes": 25285623808,
+  "mode": "cuda-probe"
+}

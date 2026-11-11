@@ -21749,11 +21749,11 @@
     {
       "id": "mizu-slim-pod-image-path",
       "owner": "o1js-to-zkvm",
-      "status": "planned-unmeasured",
+      "status": "measured-retained",
       "document": "docs/running-a-proof.md",
       "retained_default": false,
-      "proof_generated": false,
-      "evidence": "benchmarks/cuda-probe-gate-validation.json",
+      "proof_generated": true,
+      "evidence": "benchmarks/gpu-slim-base-image.json",
       "question": "With torch no longer the gate, what is the smallest image that can prove, and what does getting there cost?",
       "findings": {
         "image_compressed_mb": {
@@ -21785,10 +21785,27 @@
       },
       "artifact": "scripts/gpu/slim-pod-start-command.sh",
       "open": [
-        "ldd on the cached binary must show no 'not found' on a base image",
-        "nvidia-smi -L must answer inside a base image",
-        "Runpod caches images per machine, so the PyTorch image's ~110 s pull may be a warm-cache figure"
-      ]
+        "a cold pull of the 101 MB image is unmeasured: every layer was already on this machine",
+        "the build path cannot run on this image (no nvcc); the cache is still populated from a toolkit image"
+      ],
+      "evidence_sha256": "08efb73d8a85f54aacf0a635961367a6fe4e1eed9ea6b32cff81808433f4722f",
+      "receipts_directory": "benchmarks/gpu/runs/20261111T1041Z-slim-base-image",
+      "measured": {
+        "image": "nvidia/cuda:12.8.1-base-ubuntu24.04",
+        "pull_seconds": 2,
+        "create_to_ready_seconds": 22,
+        "pytorch_create_to_ssh_seconds": 112,
+        "ldd_unresolved": 0,
+        "nvidia_smi_injected": true,
+        "cuda_context": "created",
+        "wall_seconds": 135.539383159,
+        "shards": 82,
+        "proof_bytes": 132029932,
+        "accepted": true,
+        "pod_life_minutes": 7.0,
+        "usd": 0.032
+      },
+      "defect_found": "python3-minimal has no json module, which read as a cache miss and cost ~2.5 min"
     }
   ],
   "mizu_workflows": [

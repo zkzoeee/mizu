@@ -1,0 +1,141 @@
+{
+  "schema": "mizu-gpu-core-proof/1",
+  "id": "mizu-slim-pod-image",
+  "captured": "2026-11-11T10:50:00Z",
+  "question": "Can the pinned statement be proved on a 101 MB stock CUDA image, with sshd installed at boot instead of baked into an image?",
+  "answer": "Yes, and the startup is the win. Every layer of nvidia/cuda:12.8.1-base-ubuntu24.04 was already on the machine, so the pull took 2 s; the container installed sshd and was ready 22 s after create, against ~112 s to ssh.direct on the PyTorch image. The proof is the same proof: 82 shards, 132,029,932 bytes, the same verification key and committed digest, accepted and reloaded.",
+  "host": {
+    "pod_id": "28694z52e90qvd",
+    "cloud": "SECURE",
+    "data_center": "EU-SE-1",
+    "gpu": "NVIDIA RTX A5000",
+    "usd_per_hour": 0.27,
+    "image": "nvidia/cuda:12.8.1-base-ubuntu24.04",
+    "image_compressed_mb": 101,
+    "host_cuda_version": "13.2",
+    "driver": "595.91.07",
+    "volume": "zvx1pq06vk at /workspace",
+    "pod_driver": "pod-prove.sh",
+    "registry_credential_used": false,
+    "image_built_by_us": false
+  },
+  "startup": {
+    "created": "10:41:15Z",
+    "layers_already_on_machine": 5,
+    "pull_started": "10:41:17Z",
+    "pull_finished": "10:41:19Z",
+    "pull_seconds": 2,
+    "container_start": "10:41:19Z",
+    "sshd_started": "10:41:37Z",
+    "ready": "10:41:37Z",
+    "create_to_ready_seconds": 22,
+    "pytorch_image_create_to_ssh_seconds": 112,
+    "apt_installed": [
+      "openssh-server",
+      "libgomp1",
+      "libstdc++6",
+      "python3",
+      "tmux",
+      "ca-certificates"
+    ]
+  },
+  "gates_on_a_base_image": {
+    "nvidia_smi_injected": true,
+    "nvidia_smi_line": "GPU 0: NVIDIA RTX A5000 (UUID: GPU-0d82daa9-c7a8-2c05-03e9-fb8ac78a34ca)",
+    "ldd_unresolved": 0,
+    "ldd_needed": [
+      "linux-vdso.so.1",
+      "libcudart.so.12 (from the image, /usr/local/cuda/lib64)",
+      "libstdc++.so.6",
+      "libgcc_s.so.1",
+      "libm.so.6",
+      "libc.so.6",
+      "libdl.so.2",
+      "libpthread.so.0",
+      "librt.so.1"
+    ],
+    "libcuda_not_in_dt_needed": "libcuda.so.1 never appears: cudart dlopens the driver, so the image needs no driver stub at link time",
+    "cuda_probe": {
+      "cuda_context": "created",
+      "device_memory_free_bytes": 25062342656,
+      "device_memory_total_bytes": 25285623808,
+      "mode": "cuda-probe"
+    },
+    "torch_present": false
+  },
+  "cache": {
+    "scope": "runtime",
+    "compared": [
+      "os",
+      "cuda_archs",
+      "source_fingerprint"
+    ],
+    "ignored": [
+      "nvcc",
+      "rustc",
+      "toolchain"
+    ],
+    "why": "a base image has no nvcc, so the full build key cannot match however right the binary is",
+    "build_key": "23fdda27cf9a4a8624e47068765e75abec0ba941fdd76dac0683216d97de3ca4",
+    "built_nothing": true,
+    "bundle_uploaded": false
+  },
+  "timeline": {
+    "prove_started": "10:44:05Z",
+    "cache_checked": "10:44:05Z",
+    "preflight": "10:44:08Z",
+    "proving": "10:44:08Z",
+    "verification": "10:46:25Z",
+    "finished": "10:46:45Z",
+    "in_pod_work_seconds": 160,
+    "overhead_before_proving_seconds": 3
+  },
+  "arm": {
+    "name": "retain-pasta-and-uint",
+    "status": "passed",
+    "shards": 82,
+    "proof_bytes": 132029932,
+    "proof_sha256": "cefe6062404b7b9577ca93aa1b8cdaf2edfb950911ad596cfff14f99c71f09ef",
+    "verification_key_sha256": "eed89d80326950303c787b1fbf0e08034cd8b986425de27c9e4e7475da295113",
+    "committed_digest_hex": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+    "committed_digest_matches": true,
+    "complete_verifier_accepted": true,
+    "reloaded_shards": 82,
+    "seconds": {
+      "total": 135.539383159,
+      "executor": 126.229871198,
+      "gpu_prove_loop": 108.230155208,
+      "gpu_setup": 7.667045106,
+      "cpu_verify": 7.59410494
+    },
+    "peak_vram_mib": 19103,
+    "total_vram_mib": 24564
+  },
+  "cost": {
+    "pod_life_minutes": 7.0,
+    "usd": 0.032,
+    "note": "includes ~2.5 min lost to the python3-minimal failure below; a clean run of this shape is ~3.5 min, ~$0.016"
+  },
+  "comparison_with_the_pytorch_image": {
+    "same_card_prove_only_total_seconds": 131.922802262,
+    "this_run_total_seconds": 135.539383159,
+    "delta_percent": 2.7,
+    "reading": "the image does not touch proving time; 2.7% is inside the 2.6-4.2% run-to-run spread, on one run each",
+    "where_the_saving_is": "startup: 22 s to ready against ~112 s"
+  },
+  "defect_found": {
+    "what": "python3-minimal has no `json` module",
+    "symptom": "the cache probe died with ModuleNotFoundError: No module named 'json', the launcher read that as a cache miss, and the new nvcc guard then refused to build on a toolchain-less pod",
+    "why_it_matters": "pod-prove.sh had installed python3-minimal since the prove path was written; it had never run on an image that lacked python3, so the gap was invisible",
+    "fix": "install python3 and gate on `python3 -c 'import json'` rather than on the binary's presence",
+    "cost": "about 2.5 minutes of pod life"
+  },
+  "limits": [
+    "one run on one card; proving time here is not a card or image comparison",
+    "the 2 s pull is a WARM machine cache: the base image's layers were already present, and a cold pull of 101 MB is not measured",
+    "the build path was not exercised on this image and cannot be: there is no nvcc. Populating the cache still needs a toolkit image"
+  ],
+  "evidence": {
+    "receipts_directory": "benchmarks/gpu/runs/20261111T1041Z-slim-base-image"
+  }
+}

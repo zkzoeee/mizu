@@ -11,12 +11,17 @@
 # is compiled: install build-essential, pkg-config, libssl-dev, git, curl or
 # cmake; install a Rust toolchain; unpack a 72 MB source bundle. Those cost
 # 22 s of apt plus 29 s of upload per run and produce nothing a prebuilt
-# binary uses. `rustc` still has to exist for the cache key, and it does —
-# the volume's own `cargo-home`/`rustup-home` provide it at no cost.
+# binary uses. Nor does it need a compiler of any kind: the cache is compared
+# in RUNTIME SCOPE (`cache-key.py --runtime`), which requires the OS,
+# CUDA_ARCHS and source fingerprint to match and ignores nvcc, rustc and the
+# toolchain — they are build identity, already recorded in the stored key, and
+# demanding them installed is what would force a 10 GB toolchain image to
+# re-derive a fact that is written down. That is what lets this path run on
+# `nvidia/cuda:…-base`, 101 MB, which has no nvcc at all.
 #
-# The cache key is checked, not assumed. A hit requires the same OS, nvcc,
-# rustc, CUDA_ARCHS and source fingerprint that built the binary, the recorded
-# sha256 to match, and the binary to answer `--mode registration` on this host.
+# The cache key is checked, not assumed. A hit requires the runtime components
+# above, the recorded sha256 to match, and the binary to answer
+# `--mode registration` and `--mode cuda-probe` on this host.
 # Anything else is a hard failure here rather than a silent fallback to a
 # build: this script exists to be fast, and a surprise build would hide that
 # the cache stopped working.
@@ -51,14 +56,16 @@ fail() { stamp "FAILED: $*"; echo "$*" > "$RESULTS/FAILED"; exit 1; }
 stamp "prove-from-cache started"
 
 # This path installs nothing by design, but it does need python3 for the cache
-# key and the JSON checks, and a slim CUDA image carries none. Thirty megabytes
-# of python3-minimal against the ~110 s of image pull a PyTorch image costs is
-# the trade this path exists to make.
-if ! command -v python3 >/dev/null; then
-  echo "python3 absent; installing python3-minimal (the only install on this path)"
+# key and the JSON checks, and a slim CUDA image carries none. `python3`, not
+# `python3-minimal`: the minimal package has no `json` module, which on
+# 2026-11-11 made the cache probe fail with ModuleNotFoundError and cost a
+# launch. A few tens of megabytes against the ~110 s of image pull a PyTorch
+# image costs is the trade this path exists to make.
+if ! python3 -c 'import json' 2>/dev/null; then
+  echo "python3 with a stdlib is absent; installing it (the only install on this path)"
   export DEBIAN_FRONTEND=noninteractive
-  apt-get update -qq && apt-get install -y --no-install-recommends python3-minimal \
-    || fail "no python3 and apt could not provide one"
+  apt-get update -qq && apt-get install -y --no-install-recommends python3 \
+    || fail "no usable python3 and apt could not provide one"
 fi
 
 # This path installs nothing, so /usr/bin/time may not exist: pod-run.sh gets it
@@ -115,7 +122,10 @@ export CARGO_HOME="$CACHE/cargo-home"
 export RUSTUP_HOME="$CACHE/rustup-home"
 export PATH="$CARGO_HOME/bin:$PATH"
 export RUSTUP_TOOLCHAIN="$TOOLCHAIN"
-command -v rustc >/dev/null || fail "no rustc from the cache; the key cannot be computed"
+# Not required any more, and not a failure when absent: the runtime-scoped key
+# does not read it. Reported when the volume happens to provide it, because a
+# record of which toolchain was on the pod costs nothing.
+command -v rustc >/dev/null || echo "note: no rustc here; the runtime-scoped key does not need one"
 
 if [ -z "${CUDA_ARCHS:-}" ]; then
   CC=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader | head -1 | tr -d ' .')
@@ -126,11 +136,13 @@ fi
 export CUDA_ARCHS
 
 stamp "checking the cached build against this host and these sources"
-python3 -I /workspace/cache-key.py --source-fingerprint "$SOURCE_FP" \
+python3 -I /workspace/cache-key.py --runtime --source-fingerprint "$SOURCE_FP" \
   --archs "$CUDA_ARCHS" --toolchain "$TOOLCHAIN" \
   --write "$RESULTS/cache-key.json" --compare "$CACHE/key.json" > /dev/null \
   || fail "cache miss; this path does not build. Relaunch with pod-run.sh and the bundle"
-KEY=$(python3 -I -c "import json;print(json.load(open('$RESULTS/cache-key.json'))['key'])")
+# The identity that matters is the BUILD's, recorded when the binary was made —
+# not what this toolchain-less host would compute for itself.
+KEY=$(python3 -I -c "import json;print(json.load(open('$CACHE/key.json'))['key'])")
 
 cp "$CACHE/bin/$BIN_NAME" "$GPU_BIN"
 chmod +x "$GPU_BIN"
@@ -153,8 +165,10 @@ stamp "reusing the cached CUDA build; nothing installed, nothing compiled"
   echo "  \"cuda_archs\": \"$CUDA_ARCHS\","
   echo "  \"source_fingerprint\": \"$SOURCE_FP\","
   echo "  \"key\": \"$KEY\","
-  echo "  \"rustc\": \"$(rustc --version)\","
-  echo "  \"nvcc\": \"$(nvcc --version 2>/dev/null | grep -oE 'release [0-9.]+' | head -1)\","
+  echo "  \"rustc\": \"$(rustc --version 2>/dev/null || echo absent)\","
+  echo "  \"nvcc\": \"$(nvcc --version 2>/dev/null | grep -oE 'release [0-9.]+' | head -1 || true)\","
+  echo "  \"image\": \"$(. /etc/os-release 2>/dev/null; echo "${PRETTY_NAME:-unknown}")\","
+  echo "  \"ldd_unresolved\": $(ldd "$GPU_BIN" 2>/dev/null | grep -c 'not found' || true),"
   echo "  \"gpu_name\": \"$(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)\","
   echo "  \"gpu_uuid\": \"$(nvidia-smi --query-gpu=uuid --format=csv,noheader | head -1)\","
   echo "  \"compute_cap\": \"$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader | head -1)\","
