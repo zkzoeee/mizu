@@ -1,10 +1,12 @@
 # Proving the core guest on a rented GPU
 
-Status: 2026-11-10. Drivers in [`scripts/gpu`](../scripts/gpu), run pinned by
-[`benchmarks/gpu/next-core-proof-manifest.json`](../benchmarks/gpu/next-core-proof-manifest.json).
-No rental has been made from this repository; the manifest's
-`authorization.total_usd_cap` is the gate and it grants nothing until a cap is
-set in it.
+Status: 2026-11-11. Drivers in [`scripts/gpu`](../scripts/gpu), run pinned by
+[`benchmarks/gpu/next-core-proof-manifest.json`](../benchmarks/gpu/next-core-proof-manifest.json),
+whose `authorization.total_usd_cap` is the gate on any rental.
+
+**For which card to rent, what it costs and how long it takes, read
+[running a proof](running-a-proof.md).** This page is the procedure: the
+drivers, the gates and the traps.
 
 The drivers are a port of the ones in the sibling `wazabi` tree, which proved
 **this same harness binary** on rented GPUs four times (r114, r120, r123,
