@@ -4,7 +4,7 @@
   "captured": "2026-11-11T11:20:00Z",
   "question": "Why did the timed run land on an A40 rather than the recommended A5000?",
   "answer": "The A5000 was gone and stayed gone. Seventeen create refusals across the afternoon and three deep capacity probes ten minutes apart, all reporting Out on every probed CUDA version in Secure EU-SE-1. The pool is ten units and none came free.",
-  "create_attempts_refused": 46,
+  "create_attempts_refused": 47,
   "per_gpu_read": {
     "tool": "get-gpu-type include=AVAILABILITY product=POD cloud=SECURE minCudaVersion=12.8",
     "availability": "LOW",
@@ -132,6 +132,13 @@
       "cloud": "COMMUNITY",
       "creates_refused": 2,
       "note": "asked whether a Community A5000 at $0.16/hr could take a build-in-pod run instead, since no Community pod can mount a Secure network volume anyway. Refused with an 80 GB container disk and refused again with the disk left default, so it is the card and not the disk."
+    },
+    {
+      "at": "19:10Z",
+      "gpu": "NVIDIA RTX A5000",
+      "creates_refused": 1,
+      "probe": "NONE, 13.2 available:false",
+      "note": "two-hour watch cycle; eighth hour of the window and the AMPERE_24 pool has still never turned over"
     }
   ],
   "the_two_catalog_reads_disagree": {
@@ -210,9 +217,9 @@
   },
   "unobtainable_window": {
     "from": "11:00Z",
-    "to": "18:08Z",
-    "hours": 7.1,
-    "checks": "forty-four refused creates (thirty-three A5000, eleven A6000) and ten probes",
+    "to": "19:10Z",
+    "hours": 8.2,
+    "checks": "forty-seven refused creates (thirty-four A5000, eleven A6000, two Community A5000) and eleven probes",
     "reading": "not contention but absence, for the better part of a working day, on Secure and Community alike. Ten units in the pool and never one free. The A40 answered twice inside the first hour, was NONE by 14:10Z and was LOW again by 17:47Z, so the 48 GB fallback comes and goes on a scale of hours while AMPERE_24 simply never returned; the only card obtainable in EU-SE-1 late in the window was the A6000, also $0.59.",
     "what_it_means_for_planning": "price the work at the A40/A6000 tier of $0.59/hr and treat $0.27 as a windfall that may not arrive for a day. A schedule that must produce a proof at a particular hour cannot rest on spot-style 24 GB capacity at all -- that is the argument for a committed box rather than a cheaper hourly rate."
   },
