@@ -260,7 +260,7 @@ for `minCudaVersion: "12.8"` and lands on a 13.2 host.
 data-centre local, so a cache in EU-SE-1 means the choice is whatever EU-SE-1
 has. On 2026-11-11 that was the A40 and A6000 at $0.59 (`Low` on 13.2 only);
 the A5000 and 3090 share the `AMPERE_24` pool and were `NONE` for a
-continuously watched **8.2 hours** across forty-seven refused creates and eleven
+continuously watched **11.7 hours** across forty-eight refused creates and twelve
 probes, on Community as well as Secure, while the 4090's Secure stock was
 entirely in EU-RO-1. The A40 went `NONE` too, by 14:10Z. Both 48 GB
 cards read `LOW` again by 17:47Z, but that read bought nothing. **The A6000
