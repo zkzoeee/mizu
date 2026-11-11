@@ -423,3 +423,45 @@ receipts in `benchmarks/gpu/runs/20261110T1436Z-a40-montreal`.
   the authorized $2.00; pod terminated, no pods remain.
 - **Upstream sync:** none.
 
+### The cheapest viable card is also the fastest (2026-11-11, A5000)
+
+One arm on an **RTX A5000 at $0.27/hr** in EU-SE-1, same volume, same
+`sm_86` fat binary, 18.0 minutes of pod life for ~$0.081 (two creates refused
+first).
+
+| | A40, $0.59/hr | **A5000, $0.27/hr** | Δ |
+| --- | ---: | ---: | ---: |
+| Wall | 136.14 s | **128.43 s** | −5.7% |
+| Executor | 127.01 s | 120.71 s | −5.0% |
+| Prove loop | 108.89 s | 104.09 s | −4.4% |
+| **Device busy** | 68.6 s | **63.0 s** | **−8.2%** |
+| Device idle | 49.9% | 51.2% | |
+| Peak VRAM | 18,991 MiB of 46,068 | 18,893 MiB of 24,564 | |
+
+82 shards, 142,638,298 cycles, 132,029,932 proof bytes, key `eed89d80…`,
+digest `4bf5122f…`, accepted and reloaded from disk under a key derived from
+the pinned ELF — identical to every A40 run but the proof's own hash.
+
+Both pods report the **same CPU model** (Xeon Gold 6342 @ 2.80 GHz), so the
+device-busy difference is the card: the A5000 has more memory bandwidth
+(768 GB/s against 696) with fewer SMs. The executor being 5% faster is not
+something the card can explain, so part of the 5.7% is host variation, and
+there is one observation per side.
+
+**This reverses the standing recommendation.** On a cache hit the A5000 costs
+about **$0.0225 a proof against the A40's $0.045** — half the money for
+slightly less time. The only reason left to pay 48 GB prices is r128's
+two-stream mode, which needs 42,962 MiB and cannot run on 24 GB; the A5000's
+headroom over the peak is 5,671 MiB.
+
+**Why the cache missed, which is worth recording.** The key is a fingerprint
+over the harness sources, and today's own commits moved it from `7af59f6f…` to
+`d9952d55…`, so the pod rebuilt — correctly, and necessarily, because the new
+binary has to contain `--mode cuda-probe` for the slim image and the prove-only
+path to use it. The wider lesson is that the cache holds exactly **one** build:
+any source edit evicts it, so moving between source states thrashes. Keying the
+cache by directory (`$CACHE/builds/<key>/`) would let several builds coexist;
+that is unbuilt. Evidence:
+[gpu-core-proof-a5000-sp1-6.10.json](../../benchmarks/gpu-core-proof-a5000-sp1-6.10.json),
+receipts in `benchmarks/gpu/runs/20261111T0751Z-a5000`.
+

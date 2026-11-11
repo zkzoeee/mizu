@@ -1,0 +1,123 @@
+{
+  "schema": "mizu-gpu-core-proof/1",
+  "id": "mizu-gpu-core-proof-a5000",
+  "captured": "2026-11-11T08:06:00Z",
+  "question": "Is the cheapest viable card also slower? RTX A5000 at $0.27/hr against the A40 at $0.59/hr, same architecture, same data centre, same volume.",
+  "answer": "No: it is cheaper and slightly faster. 128.43 s against the A40's 136.14 s on the same statement, with device-busy 63.0 s against 68.6 s \u2014 and that part is the card, since the two pods report the same CPU model.",
+  "host": {
+    "pod_id": "15q8r3im2yy0ph",
+    "cloud": "SECURE",
+    "data_center": "EU-SE-1",
+    "gpu": "NVIDIA RTX A5000",
+    "gpu_memory_total": "24564 MiB",
+    "gpu_uuid": "GPU-b2d5ccd2-ae8f-5c53-41e8-95ca7d9161b5",
+    "compute_cap": "8.6",
+    "driver": "595.91.07",
+    "cpu_model": "Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz",
+    "vcpu_allocated": 9,
+    "ram_allocated_gb": 50,
+    "usd_per_hour": 0.27,
+    "volume": "zvx1pq06vk mounted at /workspace"
+  },
+  "build": {
+    "cuda_archs": "86,89,120",
+    "cache_hit": false,
+    "why_miss": "today's edits to tools/pasta-proof/src/main.rs moved the source fingerprint from 7af59f6f to d9952d55, so the key correctly missed and the fat binary was rebuilt",
+    "wall": "about 12 minutes",
+    "new_key": "1879dc67609f15c7729196ce2aefc472affc96ae85565d85a8f37732a658a23d",
+    "artifacts_populated": true
+  },
+  "arm": {
+    "name": "retain-pasta-and-uint",
+    "status": "passed",
+    "shards": 82,
+    "guest_cycles": 142638298,
+    "proof_bytes": 132029932,
+    "proof_sha256": "508b64d23bc9a0741eb558fa87450dab026772751f2b10972357dd92fe9e6d38",
+    "verification_key_sha256": "eed89d80326950303c787b1fbf0e08034cd8b986425de27c9e4e7475da295113",
+    "committed_digest_hex": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+    "seconds": {
+      "total": 128.426550064,
+      "executor": 120.714178215,
+      "gpu_prove_loop": 104.087892568,
+      "gpu_setup": 8.008117406,
+      "cpu_verify_in_process": 5.852517013
+    },
+    "consumer": {
+      "prove_depth": 1,
+      "max_in_flight": 1,
+      "starved_seconds": 1.8592825689999999,
+      "proving_seconds": 102.22853723799997
+    },
+    "reload_verification_on_pod": {
+      "accepted": true,
+      "reloaded_shards": 82,
+      "saved_key_matches_derived": true,
+      "key_derived_from_pinned_elf": true,
+      "committed_digest_matches": true
+    }
+  },
+  "telemetry_integrated_series": {
+    "samples": 643,
+    "span_s": 129.1,
+    "gpu_busy_s": 63.0,
+    "gpu_idle_s": 66.1,
+    "util_mean_pct": 48.7,
+    "util_median_pct": 57,
+    "zero_samples_pct": 33.3,
+    "peak_vram_mib": 18893,
+    "gpu_idle_pct": 51.2,
+    "vram_headroom_mib": 5671
+  },
+  "against_the_a40": {
+    "a40_run": "benchmarks/gpu/runs/20261111T0628Z-fatbuild-populate",
+    "wall_seconds": [
+      136.144875412,
+      128.426550064
+    ],
+    "wall_delta_pct": -5.67,
+    "executor_seconds": [
+      127.009869002,
+      120.714178215
+    ],
+    "gpu_prove_seconds": [
+      108.89383264,
+      104.087892568
+    ],
+    "device_busy_seconds": [
+      68.6,
+      63.0
+    ],
+    "device_busy_delta_pct": -8.2,
+    "usd_per_hour": [
+      0.59,
+      0.27
+    ],
+    "same_cpu_model": true,
+    "reading": "The device-busy difference, -7.5%, is attributable to the card: the A5000 has more memory bandwidth (768 GB/s against 696) with fewer SMs. The executor is 5% faster too, which the card cannot explain, so part of the 5.7% wall difference is host variation within one run each. Both figures are one observation per side."
+  },
+  "cost": {
+    "usd_per_hour": 0.27,
+    "pod_life_minutes": 18.0,
+    "estimated_usd": 0.081,
+    "creates_refused_before_one_landed": 2,
+    "pods_remaining": 0,
+    "per_proof_on_a_cache_hit": "about $0.0225 at a ~5 minute pod life, against $0.045 on the A40"
+  },
+  "limits": [
+    "One run on each card, so the 5.7% wall difference carries no spread; only the device-busy figure is cleanly card-attributable.",
+    "24 GB leaves 5,671 MiB of headroom over the 18,893 MiB peak, and cannot host r128's two streams (42,962 MiB).",
+    "No off-pod verification: proof bytes stayed on the pod."
+  ],
+  "evidence": {
+    "receipts_directory": "benchmarks/gpu/runs/20261111T0751Z-a5000",
+    "receipt_hashes": {
+      "retain-pasta-and-uint/result.json": "d4cceb04f9ff77c9b71b760f36932607c7842297ddd6ca477660cfecbc8f476a",
+      "build-identity.json": "bcdc8e954307d7ac4a02654b61e3702369b839e5ebac1ec37e1c8a4d912bcb49",
+      "cache-status.json": "4f797aea693049b1e1e1c4437e9536c36894a19ac37f3698b1e0d8da553f22be",
+      "telemetry-summary.txt": "3072397e21f5d309ff31fa3c23778eeb150c1eda748aeb1354d9980c29be9236",
+      "verification-retain-pasta-and-uint/retain-pasta-and-uint.json": "965bf512fe94ecf58060a53117796886c0bb770c701147c97dfee73166842cc6",
+      "run.log": "ade1b86b1a90320732f466f9a9f35658969f680d4bd68fa779c1662751dfeaa4"
+    }
+  }
+}

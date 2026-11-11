@@ -21609,6 +21609,48 @@
         "estimated_usd_both_runs": 0.27,
         "pods_remaining": 0
       }
+    },
+    {
+      "id": "mizu-gpu-core-proof-a5000",
+      "owner": "o1js-to-zkvm",
+      "status": "validation-only-retained",
+      "document": "docs/optimizations/06-sp1-runtime-and-proving.md",
+      "predecessor": "mizu-gpu-core-proof-a40",
+      "retained_default": false,
+      "proof_generated": true,
+      "evidence": "benchmarks/gpu-core-proof-a5000-sp1-6.10.json",
+      "evidence_sha256": "230d95e72394580f916438fcb3191a42f6a1ebde2f21f271d6c223e2f4f66bfe",
+      "receipts_directory": "benchmarks/gpu/runs/20261111T0751Z-a5000",
+      "hardware": "RunPod SECURE EU-SE-1, NVIDIA RTX A5000 24564 MiB cc 8.6 at $0.27/hr, Intel Xeon Gold 6342 @ 2.80GHz",
+      "measurements": {
+        "wall_seconds": 128.426550064,
+        "executor_seconds": 120.714178215,
+        "gpu_prove_seconds": 104.087892568,
+        "device_busy_seconds": 63.0,
+        "device_idle_pct": 51.2,
+        "peak_vram_mib": 18893,
+        "vram_total_mib": 24564,
+        "shards": 82,
+        "proof_bytes": 132029932,
+        "vs_a40_wall_delta_pct": -5.67,
+        "vs_a40_device_busy_delta_pct": -8.2,
+        "usd_per_hour": 0.27,
+        "usd_per_proof_on_cache_hit": 0.0225
+      },
+      "supersedes": [
+        "the standing recommendation of the A40/A6000 at $0.59 as the default card: the A5000 is half the price and slightly faster for a single stream"
+      ],
+      "limits": [
+        "one run per card, so only the device-busy delta is cleanly card-attributable",
+        "24 GB cannot host r128's two streams (42,962 MiB)",
+        "the cache missed because this session's own commits moved the source fingerprint; the cache holds only one build, so any source edit evicts it"
+      ],
+      "cost": {
+        "usd_per_hour": 0.27,
+        "pod_life_minutes": 18.0,
+        "estimated_usd": 0.081,
+        "pods_remaining": 0
+      }
     }
   ],
   "mizu_workflows": [

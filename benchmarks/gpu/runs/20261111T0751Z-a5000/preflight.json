@@ -1,0 +1,75 @@
+{
+  "arms": [
+    {
+      "expected_calls_on_cpu": {
+        "PALLAS_ADD": 697988,
+        "UINT256_MUL": 533878,
+        "VESTA_ADD": 1310683
+      },
+      "expected_records": 82,
+      "main_cells_vs_default_pct": 0.0,
+      "measured_main_cells": 27839873136,
+      "name": "retain-pasta-and-uint",
+      "retained_events_presets": [
+        "Bls12381Field",
+        "Bn254Field",
+        "PallasAdd",
+        "Poseidon2",
+        "Sha256",
+        "U256Ops",
+        "Uint256MulMod",
+        "VestaAdd"
+      ]
+    },
+    {
+      "expected_calls_on_cpu": {},
+      "expected_records": 148,
+      "main_cells_vs_default_pct": 57.769,
+      "measured_main_cells": 43922703280,
+      "name": "default",
+      "retained_events_presets": [
+        "Bls12381Field",
+        "Bn254Field",
+        "Poseidon2",
+        "Sha256",
+        "U256Ops"
+      ]
+    }
+  ],
+  "authorized_usd_cap": 2.0,
+  "cycles": 142638298,
+  "elf": {
+    "path": "/root/mizu/gpu/elf/guest-program",
+    "sha256": "0cfb3eafeea0d450e3ae8efd9a472a363495d49a5ff055b31b7cb50541c5a871"
+  },
+  "expected_output": {
+    "len": 1,
+    "path": "/root/mizu/gpu/input/public-values.bin",
+    "sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a"
+  },
+  "manifest": "/root/mizu/gpu/run-manifest.json",
+  "manifest_sha256": "92c23e6e185d6a9ed6d13a98aa69280056cdc0b7d466b5099d789102cc0b1fc2",
+  "mode": "manifest-check",
+  "precompile_calls": {
+    "PALLAS_ADD": 697988,
+    "PALLAS_DOUBLE": 369,
+    "UINT256_MUL": 533878,
+    "VESTA_ADD": 1310683,
+    "VESTA_DOUBLE": 112
+  },
+  "production_pcs": {
+    "fri": "sp1_primitives::fri_params::core_fri_config()",
+    "log_stacking_height": 21,
+    "max_log_row_count": 22
+  },
+  "proof_generated": false,
+  "proof_input": {
+    "path": "/root/mizu/gpu/input/proof-input.bin",
+    "sha256": "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+  },
+  "receipt_input": {
+    "path": "/root/mizu/gpu/input/receipt-input.bin",
+    "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+  },
+  "run": "next-core-proof-retained-boolean-guest"
+}
