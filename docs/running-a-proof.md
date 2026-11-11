@@ -118,11 +118,13 @@ once per source change.
 | --- | ---: | ---: | ---: |
 | Cold fat build + one arm | ~18 min | $0.081 | $0.18 |
 | Cache hit, one arm, no download | **5.6 min, measured** | **$0.025** | $0.045 |
-| Slim base image + start command | **3.5 min projected, 7.0 measured¹** | **~$0.016** | ~$0.034 |
+| Slim base image + start command | **4.67 min measured¹** | **~$0.021** | $0.046 |
 | Baked image, binary inside, no volume (unmeasured) | ~3 min | ~$0.014 | ~$0.030 |
 
-¹ the measured 7.0 minutes includes ~2.5 minutes lost to the `python3-minimal`
-defect below; the startup itself was 22 seconds.
+¹ measured end to end on 2026-11-11 and broken down in
+[the README](../README.md#one-real-proof-on-a-rented-gpu-4-minutes-40-seconds):
+18 s to ready, 139 s of proof, 20 s of verification, and 37 s of operator
+latency a script would remove. The A5000 column is that duration at $0.27/hr.
 
 **Measured on the prove-only path** (2026-11-11, A5000, cache hit): 2 min 39 s
 of in-pod work, of which **7 seconds** came before proving began — cache check

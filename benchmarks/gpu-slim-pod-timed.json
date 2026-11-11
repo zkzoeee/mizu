@@ -1,0 +1,89 @@
+{
+  "schema": "mizu-gpu-core-proof/1",
+  "id": "mizu-slim-pod-timed",
+  "captured": "2026-11-11T11:10:00Z",
+  "question": "What does one clean proof actually cost in pod time, end to end, on the slim image?",
+  "answer": "4 minutes 40 seconds of pod life for a 138.56 s proof. The pod was ready 18 s after create; the proof and its from-disk verification were 162 s of in-pod work; everything else was the launcher, collection, and 37 s of operator latency between ready and launch. At the A40's $0.59/hr that is $0.046; the same 4.67 minutes on an A5000 at $0.27 is $0.021.",
+  "host": {
+    "pod_id": "4c8i6zyte7uuo3",
+    "cloud": "SECURE",
+    "data_center": "EU-SE-1",
+    "gpu": "NVIDIA A40",
+    "usd_per_hour": 0.59,
+    "why_not_the_a5000": "five consecutive create refusals; pod life is startup-bound, not card-bound",
+    "image": "nvidia/cuda:12.8.1-base-ubuntu24.04",
+    "image_compressed_mb": 101,
+    "host_cuda_version": "13.2",
+    "volume": "zvx1pq06vk at /workspace",
+    "pod_driver": "pod-prove.sh",
+    "registry_credential_used": false
+  },
+  "timeline_utc": {
+    "pod_created": "11:04:35",
+    "ready_sshd_and_both_gates": "11:04:53",
+    "launcher_started": "11:05:30",
+    "launcher_finished_work_detached": "11:05:56",
+    "prove_from_cache_started": "11:05:54",
+    "preflight": "11:05:57",
+    "proving": "11:05:57",
+    "reload_verification": "11:08:16",
+    "in_pod_finished": "11:08:36",
+    "collection_finished": "11:08:59",
+    "terminated": "11:09:15 (approximate: the delete call returned 204 just after)"
+  },
+  "segments_seconds": {
+    "create_to_ready": 18,
+    "operator_latency_ready_to_launch": 37,
+    "launcher": 26,
+    "overhead_before_proving": 3,
+    "proof": 139,
+    "from_disk_verification": 20,
+    "in_pod_work_total": 162,
+    "collection": 23,
+    "terminate_latency": 16
+  },
+  "pod_life": {
+    "minutes": 4.67,
+    "seconds": 280,
+    "usd_at_0_59": 0.046,
+    "usd_at_0_27_same_duration": 0.021,
+    "proof_share_of_pod_life_percent": 49.6,
+    "without_operator_latency_minutes": 4.0
+  },
+  "arm": {
+    "name": "retain-pasta-and-uint",
+    "status": "passed",
+    "shards": 82,
+    "proof_bytes": 132029932,
+    "proof_sha256": "1fdac0f68e2e8319f06f8ef5f1bdb84a5aaf540fc2188447b256438ea4a2ca1c",
+    "verification_key_sha256": "eed89d80326950303c787b1fbf0e08034cd8b986425de27c9e4e7475da295113",
+    "committed_digest_hex": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+    "committed_digest_matches": true,
+    "complete_verifier_accepted": true,
+    "reloaded_shards": 82,
+    "seconds": {
+      "total": 138.556514813,
+      "executor": 128.933319448,
+      "gpu_prove_loop": 110.068867134,
+      "gpu_setup": 7.783720827,
+      "cpu_verify": 7.646065373
+    },
+    "peak_vram_mib": 18991,
+    "total_vram_mib": 46068
+  },
+  "against_the_other_a40_runs": {
+    "this_run": 138.556514813,
+    "cuda_probe_validation": 134.437136481,
+    "cache_hit_pytorch": 137.98,
+    "first_depth8_pytorch": 136.14,
+    "reading": "inside the known 2.6-4.2% spread; the image is not visible in proving time"
+  },
+  "limits": [
+    "one run; the 37 s of operator latency is mine, not the system's, and a scripted create-to-launch removes it",
+    "the A40 at $0.59 was what capacity allowed, so the dollar figure is the expensive version of this run",
+    "the image's layers were again already on the host, so the pull is warm"
+  ],
+  "evidence": {
+    "receipts_directory": "benchmarks/gpu/runs/20261111T1104Z-slim-timed"
+  }
+}

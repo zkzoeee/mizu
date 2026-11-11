@@ -21806,6 +21806,34 @@
         "usd": 0.032
       },
       "defect_found": "python3-minimal has no json module, which read as a cache miss and cost ~2.5 min"
+    },
+    {
+      "id": "mizu-slim-pod-timed",
+      "owner": "o1js-to-zkvm",
+      "status": "measured",
+      "document": "README.md",
+      "retained_default": true,
+      "proof_generated": true,
+      "evidence": "benchmarks/gpu-slim-pod-timed.json",
+      "evidence_sha256": "acd20aeb38b5ebfe652fd559d858276dc0ee7759d2e6bb29ee29ef8d98d816d5",
+      "receipts_directory": "benchmarks/gpu/runs/20261111T1104Z-slim-timed",
+      "measurements": {
+        "pod_life_minutes": 4.67,
+        "create_to_ready_seconds": 18,
+        "proof_seconds": 138.556514813,
+        "in_pod_work_seconds": 162,
+        "proof_share_of_pod_life_percent": 49.6,
+        "shards": 82,
+        "proof_bytes": 132029932,
+        "accepted": true,
+        "gpu": "NVIDIA A40",
+        "usd": 0.046,
+        "usd_on_a5000_same_duration": 0.021
+      },
+      "limits": [
+        "one run, on an A40 because the A5000 refused five creates",
+        "37 s of the 4.67 min was operator latency between ready and launch"
+      ]
     }
   ],
   "mizu_workflows": [
