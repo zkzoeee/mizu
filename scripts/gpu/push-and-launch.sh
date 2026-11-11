@@ -35,7 +35,13 @@ DEADLINE_MINUTES="${DEADLINE_MINUTES:?DEADLINE_MINUTES is required; it is the co
 RATE_PER_HOUR="${RATE_PER_HOUR:?RATE_PER_HOUR is required; use the rate the created pod reported}"
 CAP_USD="${CAP_USD:-unset}"
 JOBS="${CARGO_BUILD_JOBS:-8}"
-POD_ROOT="${POD_ROOT:-/workspace/mizu}"
+# Container disk by default, not the volume: when a network volume is mounted
+# at /workspace, an unpacked tree and a results directory there survive the pod
+# and block the next run ("$ROOT already exists", "use a fresh output
+# directory"), besides eating the volume's quota. Only the cache belongs on the
+# volume.
+POD_ROOT="${POD_ROOT:-/root/mizu}"
+POD_RESULTS="${POD_RESULTS:-/root/results}"
 CACHE="${CACHE-/workspace/mizu-cache}"
 ARMS="${ARMS:-retain-pasta-and-uint default}"
 TOOLCHAIN="${TOOLCHAIN:-1.92.0}"
@@ -73,9 +79,9 @@ ssh "${SSHOPTS[@]}" "root@$HOST" "set -e
   # answers \"server exited unexpectedly\" without starting anything, which
   # cost this repository one launch on 2026-11-10.
   sleep 1
-  tmux new-session -d -s watchdog \"DEADLINE_MINUTES=$DEADLINE_MINUTES RATE_PER_HOUR=$RATE_PER_HOUR CAP_USD=$CAP_USD bash /workspace/watchdog.sh\"
+  tmux new-session -d -s watchdog \"DEADLINE_MINUTES=$DEADLINE_MINUTES RATE_PER_HOUR=$RATE_PER_HOUR CAP_USD=$CAP_USD LOG_DIR=$POD_RESULTS bash /workspace/watchdog.sh\"
   sleep 1
-  tmux new-session -d -s mizu \"BUNDLE_SHA=$WANT CARGO_BUILD_JOBS=$JOBS ROOT=$POD_ROOT CACHE='$CACHE' ARMS='$ARMS' TOOLCHAIN=$TOOLCHAIN ${CUDA_ARCHS:+CUDA_ARCHS=$CUDA_ARCHS} bash /workspace/pod-run.sh\"
+  tmux new-session -d -s mizu \"BUNDLE_SHA=$WANT CARGO_BUILD_JOBS=$JOBS ROOT=$POD_ROOT RESULTS=$POD_RESULTS CACHE='$CACHE' ARMS='$ARMS' TOOLCHAIN=$TOOLCHAIN ${CUDA_ARCHS:+CUDA_ARCHS=$CUDA_ARCHS} bash /workspace/pod-run.sh\"
   sleep 2
   tmux ls"
 echo "=== launched; watchdog deadline ${DEADLINE_MINUTES}m at \$${RATE_PER_HOUR}/hr against a \$${CAP_USD} cap ==="

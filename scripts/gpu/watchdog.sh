@@ -18,8 +18,9 @@ set -euo pipefail
 DEADLINE_MINUTES="${DEADLINE_MINUTES:?DEADLINE_MINUTES is required}"
 RATE_PER_HOUR="${RATE_PER_HOUR:?RATE_PER_HOUR is required}"
 CAP_USD="${CAP_USD:-unset}"
-LOG=/workspace/results/watchdog.log
-mkdir -p /workspace/results
+LOG_DIR="${LOG_DIR:-/root/results}"
+LOG="$LOG_DIR/watchdog.log"
+mkdir -p "$LOG_DIR"
 
 COST=$(awk -v m="$DEADLINE_MINUTES" -v r="$RATE_PER_HOUR" 'BEGIN{printf "%.2f", m*r/60}')
 {
@@ -32,7 +33,7 @@ sleep $(( DEADLINE_MINUTES * 60 ))
 {
   echo "watchdog firing $(date -u +%FT%TZ): deadline reached"
   echo "results present at fire time:"
-  ls -la /workspace/results 2>/dev/null || true
+  ls -la "$LOG_DIR" 2>/dev/null || true
 } | tee -a "$LOG"
 
 sync

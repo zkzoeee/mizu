@@ -68,10 +68,35 @@ data-centre-local and community pods cannot mount one. Both A40 and RTX A6000
 live in EU-SE-1 at $0.59/hr, so that is no sacrifice.
 
 The first run there builds and populates `bin/`, `key.json`, `cargo-home` and
-`rustup-home`, about 3.5 GB of the 10. Every later run with unchanged sources
-reuses the binary after checking its recorded sha256 and making it answer
-`--mode registration`, which takes the run from ~11 minutes to **~5**. Leave
+`rustup-home` — **measured at 5.5 GB of the 10**, `cargo-home` being 4.8 GB of
+it. Every later run with unchanged sources reuses the binary after checking its
+recorded sha256 and making it answer `--mode registration`. Leave
 `CACHE_TARGET` off: a full `target/` tree is 10–15 GB and would not fit.
+
+**Measured, 2026-11-11** ([record](optimizations/07-measurement-and-tooling.md#mizu-build-cache-volume-the-volume-carries-the-build-and-a-fat-binary-is-free-at-runtime)):
+the populating run spent **12 min 31 s** on a `CUDA_ARCHS=86,89,120` build and
+20.5 minutes of pod life (~$0.20); a second, separate pod on the same volume
+hit the same key and did everything — prerequisites, cache check, pre-flight,
+proof, from-disk verification — in **3 minutes 3 seconds** with no
+compilation, for ~$0.07. Both proofs were accepted and reloaded from disk with
+identical shard counts, byte counts, key and digest.
+
+Two things to know. `ROOT` and `RESULTS` default to **container disk**
+(`/root/mizu`, `/root/results`) precisely because a tree or a results
+directory left on the volume survives the pod and blocks the next run; only
+the cache belongs there. And the key is **exact, not subsumptive**: a run that
+lets the driver auto-detect `CUDA_ARCHS` from the card computes `86` and will
+miss an `86,89,120` cache, so pass the same value every time.
+
+### Build fat, once
+
+`CUDA_ARCHS=86,89,120` (comma-separated — the fork's CMake splits on commas)
+covers `sm_86` (A40, A6000, 3090), `sm_89` (4090, L40S) and `sm_120` (5090,
+PRO 4500/6000) from one binary, which is the answer to the stock lottery that
+refused nine creates in one sitting. It costs **2.07x the binary size**
+(120,555,456 against 58,552,272 bytes) and ~5.5 minutes of one-time build.
+Proof wall moved +1.4%, inside this host class's 0.8–0.9% spread, so at
+runtime it is free.
 
 Tiers are per data centre, and the two we have used differ: EU-SE-1 offers
 `STANDARD`, **CA-MTL-1 offers only `HIGH_PERFORMANCE`** (CA-MTL-4 has both).

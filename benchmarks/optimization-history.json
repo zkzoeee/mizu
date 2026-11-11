@@ -21566,6 +21566,49 @@
         "estimated_usd": 0.41,
         "pods_remaining": 0
       }
+    },
+    {
+      "id": "mizu-build-cache-volume",
+      "owner": "o1js-to-zkvm",
+      "status": "validation-only-retained",
+      "document": "docs/optimizations/07-measurement-and-tooling.md",
+      "retained_default": true,
+      "setting": "network volume zvx1pq06vk mounted at /workspace; CUDA_ARCHS=86,89,120; ROOT and RESULTS on container disk",
+      "proof_generated": true,
+      "evidence": "benchmarks/gpu-build-cache-validation.json",
+      "evidence_sha256": "0db87095cb18bc3a2e3c30b2bf9025a643eb5a9ea979f2f4ec77e62b33ac89f3",
+      "receipts_directories": [
+        "benchmarks/gpu/runs/20261111T0628Z-fatbuild-populate",
+        "benchmarks/gpu/runs/20261111T0649Z-cachehit"
+      ],
+      "measurements": {
+        "cache_key_matched_across_pods": true,
+        "run1_build_wall": "12 min 31 s (fat, 86/89/120)",
+        "run2_in_pod_work_seconds": 183,
+        "run2_compilation": "none",
+        "cache_size_gb": 5.5,
+        "volume_size_gb": 10,
+        "fat_binary_bytes": 120555456,
+        "single_arch_binary_bytes": 58552272,
+        "proof_wall_seconds": [
+          136.14,
+          137.98
+        ],
+        "proof_wall_delta_pct": 1.35,
+        "shards": 82,
+        "proof_bytes": 132029932,
+        "both_accepted_and_reload_verified": true
+      },
+      "limits": [
+        "the cache key is exact: auto-detected CUDA_ARCHS=86 misses an 86,89,120 cache",
+        "df on the MooseFS mount shows the pool, not the 10 GB quota",
+        "one hit and one miss; a key moved by a source edit is unmeasured"
+      ],
+      "cost": {
+        "rate_usd_per_hour": 0.59,
+        "estimated_usd_both_runs": 0.27,
+        "pods_remaining": 0
+      }
     }
   ],
   "mizu_workflows": [

@@ -1,0 +1,2 @@
+2f5e855f4c66dba896f96fc6329872b20e78d7d55c319de898bc7eebd7cdb795  /root/results/retain-pasta-and-uint/retain-pasta-and-uint.proof.bin
+-rw-r--r-- 1 root root 132029932 Nov 11 06:51 /root/results/retain-pasta-and-uint/retain-pasta-and-uint.proof.bin

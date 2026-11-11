@@ -1,0 +1,12 @@
+{
+  "components": {
+    "cuda_archs": "86,89,120",
+    "nvcc": "12.8",
+    "os": "ubuntu-24.04",
+    "rustc": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+    "source_fingerprint": "7af59f6f51ca51594daecdc25acc7e8a705fd3833feb077f12f056d983c29ef1",
+    "toolchain": "1.92.0"
+  },
+  "files_hashed": 993,
+  "key": "3865a02cda439bd3fcb8f60034dd7f128a794b7823aa28257ca099e1c5f3dfa7"
+}

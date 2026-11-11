@@ -1,0 +1,124 @@
+{
+  "schema": "mizu-build-cache-validation/1",
+  "id": "mizu-build-cache-volume",
+  "captured": "2026-11-11T06:55:00Z",
+  "question": "Does a network volume carry a CUDA build between pods, and what does a multi-architecture (fat) binary cost?",
+  "answer": "Yes. The same key hit on a second, separate pod and the whole run took 3 min 3 s with no compilation, against a 12 min 31 s fat build on the first. The fat binary costs 2.07x the size and nothing measurable at runtime.",
+  "volume": {
+    "id": "zvx1pq06vk",
+    "name": "mizu-build-cache",
+    "size_gb": 10,
+    "type": "STANDARD",
+    "data_center": "EU-SE-1",
+    "mount": "/workspace",
+    "cache_dir": "/workspace/mizu-cache",
+    "cache_size_after_populate": "5.5 GB",
+    "filesystem": "mfs#eu-se-1.runpod.net:9421 (MooseFS)",
+    "note": "df on the mount reports the whole MooseFS pool (700 T), not the 10 GB quota, so du on the cache directory is the only honest way to watch it."
+  },
+  "fat_build": {
+    "cuda_archs": "86,89,120",
+    "covers": "sm_86 (A40, A6000, 3090), sm_89 (4090, L40S), sm_120 (5090, PRO 4500/6000)",
+    "separator_note": "the fork's CMake does string(REPLACE \",\" \";\" ...), so the value is comma-separated",
+    "build_wall": "12 min 31 s (06:29:42 -> 06:42:13)",
+    "single_arch_reference": "about 7 min for sm_86 alone",
+    "binary_bytes": 120555456,
+    "single_arch_binary_bytes": 58552272,
+    "size_ratio": 2.06
+  },
+  "runs": {
+    "run1_populate": {
+      "pod_id": "7mvcnoafazzpet",
+      "cache_hit": false,
+      "key": "3865a02cda439bd3fcb8f60034dd7f128a794b7823aa28257ca099e1c5f3dfa7",
+      "in_pod_work": "about 15 min (build 12:31 + proof + verify)",
+      "pod_life_minutes": 20.5,
+      "estimated_usd": 0.2,
+      "cpu_model": "Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz",
+      "gpu": "NVIDIA A40"
+    },
+    "run2_hit": {
+      "pod_id": "lxvxl82gr73er4",
+      "cache_hit": true,
+      "key": "3865a02cda439bd3fcb8f60034dd7f128a794b7823aa28257ca099e1c5f3dfa7",
+      "timeline": {
+        "run_started": "06:49:08Z",
+        "cache_checked": "06:49:30Z",
+        "reusing_cached_build": "06:49:32Z",
+        "preflight": "06:49:32Z",
+        "proving": "06:49:33Z",
+        "verification": "06:51:52Z",
+        "finished": "06:52:11Z"
+      },
+      "in_pod_work_seconds": 183,
+      "pod_life_minutes": 7.0,
+      "estimated_usd": 0.07,
+      "compilation": "none",
+      "cpu_model": "Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz",
+      "gpu": "NVIDIA A40"
+    }
+  },
+  "key_matched_across_pods": true,
+  "proof_equivalence": {
+    "wall_seconds": [
+      136.144875412,
+      137.984235
+    ],
+    "wall_delta_pct": 1.35,
+    "shards": [
+      82,
+      82
+    ],
+    "proof_bytes": [
+      132029932,
+      132029932
+    ],
+    "guest_cycles": [
+      142638298,
+      142638298
+    ],
+    "verification_key_identical": true,
+    "committed_digest_identical": true,
+    "both_accepted": true,
+    "both_reload_verified_on_pod": true,
+    "proof_hashes": [
+      "8be6f8c4dc65db601f3332b9a5943bb92e32cf6683b032c92d760a53f16e1dc1",
+      "2f5e855f4c66dba896f96fc6329872b20e78d7d55c319de898bc7eebd7cdb795"
+    ],
+    "reading": "+1.4% of wall, inside the 0.8-0.9% within-side spread measured for this host class, so the cached fat binary proves the same statement at the same speed. The proof hashes differ because FRI draws randomness."
+  },
+  "driver_fixes_this_exposed": [
+    "ROOT and RESULTS defaulted into /workspace, i.e. onto the mounted volume, so an unpacked tree and a results directory survived the pod and would block the next run; both now default to container disk and only the cache lives on the volume",
+    "push-and-launch.sh did not forward RESULTS, and the watchdog hardcoded its log directory; both parameterised",
+    "collect-results.sh hardcoded /workspace/results in five places and staged its archives on the volume; it now takes POD_RESULTS and stages on container disk"
+  ],
+  "limits": [
+    "CUDA_ARCHS is part of the cache key, so a run that lets the driver auto-detect from the card computes 86 and misses a 86,89,120 cache. A superset ought to count as a hit; it does not yet.",
+    "One hit, one miss. No measurement of what happens when the key moves for a source edit.",
+    "Run 1's leftovers from the old defaults (an unpacked tree, a results directory, an evidence tarball, the two scp'd scripts) are still on the volume, about 100 MB; harmless but not cleaned.",
+    "No off-pod verification in either run: proof bytes stayed on the pod by request."
+  ],
+  "cost": {
+    "authorized_usd_cap": 2.0,
+    "rate_usd_per_hour": 0.59,
+    "estimated_usd_both_runs": 0.27,
+    "pods_remaining": 0,
+    "volume_standing_cost": "10 GB from creation until deletion; rate not exposed by the tools"
+  },
+  "evidence": {
+    "receipt_directories": [
+      "benchmarks/gpu/runs/20261111T0628Z-fatbuild-populate",
+      "benchmarks/gpu/runs/20261111T0649Z-cachehit"
+    ],
+    "receipt_hashes": {
+      "benchmarks/gpu/runs/20261111T0628Z-fatbuild-populate/cache-status.json": "bf7df955750567c88dd5f69ccde0c7bd73d9f2981d86d5522eeee7b86d6e2856",
+      "benchmarks/gpu/runs/20261111T0628Z-fatbuild-populate/build-identity.json": "5979b20f8985c0cc96424b1c4b09144cc4ac6281eeeff6beee4a53814a2ec129",
+      "benchmarks/gpu/runs/20261111T0628Z-fatbuild-populate/retain-pasta-and-uint/result.json": "1ebbe438b2444cd135ceeecac1b52e8d3738999841482b8484fd1d92e9fa068a",
+      "benchmarks/gpu/runs/20261111T0628Z-fatbuild-populate/run.log": "75ed0f094fb5b20116a5ea604b8c30174fe7636c5db54a126a04826b52a63f52",
+      "benchmarks/gpu/runs/20261111T0649Z-cachehit/cache-status.json": "48f45a5d2eb6b910dd031383772d2cf7b7ff1b50a70e1a888373c678a8946998",
+      "benchmarks/gpu/runs/20261111T0649Z-cachehit/build-identity.json": "f654a33e8f3c901b0178b31235afa36c78ccd599d7dc02c4e434cb142c7a19c0",
+      "benchmarks/gpu/runs/20261111T0649Z-cachehit/retain-pasta-and-uint/result.json": "24071ed978833eae9a16f4bd932670c613a38aed6d979c000f137d24a4f0aa12",
+      "benchmarks/gpu/runs/20261111T0649Z-cachehit/run.log": "2d45ff645a9e76a774eed3206fe7bc81952dd63e76e5a86c4d58e419c6ad4bc5"
+    }
+  }
+}

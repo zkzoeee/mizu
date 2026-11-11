@@ -313,3 +313,73 @@ for every real addition, not just for the one-event `witness-digest` fixtures.
   the raw report hashes. [The fuzzing reference](../fuzzing.md) collects what
   every layer covers, how to run it and what it does not cover.
 - **Upstream sync:** none. No fork file changed, so there is nothing to replay.
+
+## mizu-build-cache-volume: the volume carries the build, and a fat binary is free at runtime
+
+- **Status:** validation-only, retained. The volume and the multi-architecture
+  build are now the recommended routine; three driver defaults changed.
+- **Area and owner:** `scripts/gpu/{push-and-launch,pod-run,watchdog,collect-results}.sh`,
+  network volume `zvx1pq06vk` ("mizu-build-cache", 10 GB STANDARD, EU-SE-1).
+- **Implementation identity:** root `7c10243` plus the driver fixes below.
+- **Predecessors:** the cache machinery landed unexercised with
+  [the drivers](#mizu-fuzz-expansion-five-more-fuzz-surfaces-and-the-argument-channel)'
+  sibling work; this is its first real test, on the manifest arm of
+  [mizu-gpu-core-proof-a40](06-sp1-runtime-and-proving.md#mizu-gpu-core-proof-a40-the-first-real-gpu-proof-from-this-repository).
+- **Mechanism:** two pods, one after the other, same volume mounted at
+  `/workspace`. The first built `CUDA_ARCHS=86,89,120` and populated
+  `/workspace/mizu-cache`; the second, a separate pod, found the same key and
+  compiled nothing.
+
+| | run 1, populate | run 2, hit |
+| --- | --- | --- |
+| Pod | `7mvcnoafazzpet` | `lxvxl82gr73er4` |
+| `cache_hit` | 0 | **1** |
+| Key | `3865a02c…` | **`3865a02c…` (same)** |
+| Build | **12 min 31 s** | **none** |
+| In-pod work | ~15 min | **3 min 3 s** |
+| Pod life / cost | 20.5 min / ~$0.20 | 7.0 min / ~$0.07 |
+| Proof wall | 136.14 s | 137.98 s |
+| Shards, bytes | 82, 132,029,932 | 82, 132,029,932 |
+| Key, digest | `eed89d80…`, `4bf5122f…` | identical |
+| Accepted, reloaded from disk | yes | yes |
+
+- **Result:** the key matched across two separate pods and the second run did
+  everything — prerequisites, cache check, pre-flight, proof, from-disk
+  verification — in **3 minutes 3 seconds** with no compilation. The cache is
+  5.5 GB of the 10 GB volume, `cargo-home` being 4.8 GB of that.
+- **The fat binary costs nothing at runtime.** `86,89,120` covers `sm_86`
+  (A40, A6000, 3090), `sm_89` (4090, L40S) and `sm_120` (5090, PRO 4500/6000)
+  from one artefact, which is the answer to the stock lottery that cost nine
+  refused creates in one sitting. It costs **2.07x the binary size**
+  (120,555,456 against 58,552,272 bytes) and a one-time build of 12.5 minutes
+  against ~7 for a single architecture. Proof wall moved +1.4%, inside the
+  0.8–0.9% spread measured for this host class.
+- **Correctness evidence:** both runs accepted by the complete verifier and
+  both reloaded from disk in a fresh process under a key derived from the
+  pinned ELF, with identical shard counts, proof byte counts, verification key
+  and committed digest. Only the proof hashes differ, because FRI draws
+  randomness.
+- **Validation scope:** Linux/CUDA build, real CUDA core proofs, on-pod
+  reload verification. No off-pod verification: proof bytes stayed on the pod.
+- **Decision and limits:** retained as the routine. **The cache key is exact,
+  not subsumptive** — a run that lets the driver auto-detect `CUDA_ARCHS` from
+  the card computes `86` and misses an `86,89,120` cache, so a fat cache must
+  be used with the same value. A superset ought to count as a hit and does
+  not. `df` on the mount reports the whole MooseFS pool rather than the quota,
+  so only `du` on the cache is informative. One hit and one miss here; nothing
+  measured about a key that moves for a source edit. Run 1's leftovers from
+  the old defaults (~100 MB) are still on the volume.
+- **Driver defaults this exposed and changed:** `ROOT` and `RESULTS` pointed
+  into `/workspace`, i.e. onto the volume, so an unpacked tree and a results
+  directory survived the pod and would have blocked the next run — both now
+  default to container disk, leaving only the cache on the volume;
+  `push-and-launch.sh` now forwards `RESULTS`; the watchdog takes `LOG_DIR`;
+  and `collect-results.sh`, which hardcoded `/workspace/results` in five
+  places and staged its archives on the volume, now takes `POD_RESULTS` and
+  stages on container disk.
+- **Source provenance:**
+  [gpu-build-cache-validation.json](../../benchmarks/gpu-build-cache-validation.json),
+  receipts in `benchmarks/gpu/runs/20261111T0628Z-fatbuild-populate` and
+  `…/20261111T0649Z-cachehit`. ~$0.27 for both runs; pods terminated.
+- **Upstream sync:** none.
+

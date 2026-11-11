@@ -1,0 +1,388 @@
+=== run started 2026-11-11T06:49:08Z ===
+Wed Nov 11 06:49:08 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 595.91.07              Driver Version: 595.91.07      CUDA Version: 13.2     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A40                     On  |   00000000:D6:00.0 Off |                    0 |
+|  0%   34C    P8             33W /  300W |       0MiB /  46068MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+GPU 0: NVIDIA A40 (UUID: GPU-37cd5cd6-fb59-876c-0813-2bdd8034e7b0)
+name, memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+NVIDIA A40, 0 MiB, 46068 MiB, 0 %
+cuda context ok: NVIDIA A40
+building for CUDA_ARCHS=86,89,120
+/workspace/mizu-bundle.tar.gz: OK
+W: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/InRelease: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
+Reading package lists...
+Building dependency tree...
+Reading state information...
+build-essential is already the newest version (12.10ubuntu1).
+The following additional packages will be installed:
+  git-man libcurl3t64-gnutls libcurl4-openssl-dev libcurl4t64 libpkgconf3
+  libproc2-0 libpython3-stdlib libssl3t64 openssl pkgconf pkgconf-bin
+  python3-minimal python3-setuptools python3-wheel
+Suggested packages:
+  gettext-base git-daemon-run | git-daemon-sysvinit git-doc git-email git-gui
+  gitk gitweb git-cvs git-mediawiki git-svn libcurl4-doc libidn-dev
+  libkrb5-dev libldap2-dev librtmp-dev libssh2-1-dev libssl-doc python3-doc
+  python3-tk python3-venv python-setuptools-doc
+Recommended packages:
+  less psmisc python3-dev
+The following NEW packages will be installed:
+  libpkgconf3 pkg-config pkgconf pkgconf-bin python3-pip python3-setuptools
+  python3-wheel time
+The following packages will be upgraded:
+  ca-certificates curl git git-man libcurl3t64-gnutls libcurl4-openssl-dev
+  libcurl4t64 libproc2-0 libpython3-stdlib libssl-dev libssl3t64 openssl
+  procps python3 python3-minimal tmux
+16 upgraded, 8 newly installed, 0 to remove and 265 not upgraded.
+Need to get 14.8 MB of archives.
+After this operation, 9948 kB of additional disk space will be used.
+Get:1 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 python3-minimal amd64 3.12.3-0ubuntu2.1 [27.4 kB]
+Get:2 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 python3 amd64 3.12.3-0ubuntu2.1 [23.0 kB]
+Get:3 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libpython3-stdlib amd64 3.12.3-0ubuntu2.1 [10.1 kB]
+Get:4 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libssl-dev amd64 3.0.13-0ubuntu3.16 [2409 kB]
+Get:5 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libssl3t64 amd64 3.0.13-0ubuntu3.16 [1945 kB]
+Get:6 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libproc2-0 amd64 2:4.0.4-4ubuntu3.3 [58.9 kB]
+Get:7 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 procps amd64 2:4.0.4-4ubuntu3.3 [707 kB]
+Get:8 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 openssl amd64 3.0.13-0ubuntu3.16 [1004 kB]
+Get:9 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 ca-certificates all 20260816ubuntu0.24.04.2 [140 kB]
+Get:10 http://archive.ubuntu.com/ubuntu noble/main amd64 time amd64 1.9-0.2build1 [45.2 kB]
+Get:11 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcurl4-openssl-dev amd64 8.5.0-2ubuntu10.16 [447 kB]
+Get:12 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 curl amd64 8.5.0-2ubuntu10.16 [226 kB]
+Get:13 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcurl4t64 amd64 8.5.0-2ubuntu10.16 [344 kB]
+Get:14 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 libcurl3t64-gnutls amd64 8.5.0-2ubuntu10.16 [337 kB]
+Get:15 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 git-man all 1:2.43.0-1ubuntu7.4 [1101 kB]
+Get:16 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 git amd64 1:2.43.0-1ubuntu7.4 [3681 kB]
+Get:17 http://archive.ubuntu.com/ubuntu noble/main amd64 libpkgconf3 amd64 1.8.1-2build1 [30.7 kB]
+Get:18 http://archive.ubuntu.com/ubuntu noble/main amd64 pkgconf-bin amd64 1.8.1-2build1 [20.7 kB]
+Get:19 http://archive.ubuntu.com/ubuntu noble/main amd64 pkgconf amd64 1.8.1-2build1 [16.8 kB]
+Get:20 http://archive.ubuntu.com/ubuntu noble/main amd64 pkg-config amd64 1.8.1-2build1 [7264 B]
+Get:21 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 python3-setuptools all 68.1.2-2ubuntu1.2 [397 kB]
+Get:22 http://archive.ubuntu.com/ubuntu noble/universe amd64 python3-wheel all 0.42.0-2 [53.1 kB]
+Get:23 http://archive.ubuntu.com/ubuntu noble-updates/universe amd64 python3-pip all 24.0+dfsg-1ubuntu1.3 [1320 kB]
+Get:24 http://archive.ubuntu.com/ubuntu noble-updates/main amd64 tmux amd64 3.4-1ubuntu0.2 [480 kB]
+debconf: delaying package configuration, since apt-utils is not installed
+Fetched 14.8 MB in 2s (8465 kB/s)
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 49062 files and directories currently installed.)
+Preparing to unpack .../python3-minimal_3.12.3-0ubuntu2.1_amd64.deb ...
+Unpacking python3-minimal (3.12.3-0ubuntu2.1) over (3.12.3-0ubuntu2) ...
+Setting up python3-minimal (3.12.3-0ubuntu2.1) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 49062 files and directories currently installed.)
+Preparing to unpack .../python3_3.12.3-0ubuntu2.1_amd64.deb ...
+Unpacking python3 (3.12.3-0ubuntu2.1) over (3.12.3-0ubuntu2) ...
+Preparing to unpack .../libpython3-stdlib_3.12.3-0ubuntu2.1_amd64.deb ...
+Unpacking libpython3-stdlib:amd64 (3.12.3-0ubuntu2.1) over (3.12.3-0ubuntu2) ...
+Preparing to unpack .../libssl-dev_3.0.13-0ubuntu3.16_amd64.deb ...
+Unpacking libssl-dev:amd64 (3.0.13-0ubuntu3.16) over (3.0.13-0ubuntu3.6) ...
+Preparing to unpack .../libssl3t64_3.0.13-0ubuntu3.16_amd64.deb ...
+Unpacking libssl3t64:amd64 (3.0.13-0ubuntu3.16) over (3.0.13-0ubuntu3.6) ...
+Setting up libssl3t64:amd64 (3.0.13-0ubuntu3.16) ...
+(Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 49062 files and directories currently installed.)
+Preparing to unpack .../00-libproc2-0_2%3a4.0.4-4ubuntu3.3_amd64.deb ...
+Unpacking libproc2-0:amd64 (2:4.0.4-4ubuntu3.3) over (2:4.0.4-4ubuntu3.2) ...
+Preparing to unpack .../01-procps_2%3a4.0.4-4ubuntu3.3_amd64.deb ...
+Unpacking procps (2:4.0.4-4ubuntu3.3) over (2:4.0.4-4ubuntu3.2) ...
+Preparing to unpack .../02-openssl_3.0.13-0ubuntu3.16_amd64.deb ...
+Unpacking openssl (3.0.13-0ubuntu3.16) over (3.0.13-0ubuntu3.6) ...
+Preparing to unpack .../03-ca-certificates_20260816ubuntu0.24.04.2_all.deb ...
+Unpacking ca-certificates (20260816ubuntu0.24.04.2) over (20240203) ...
+Selecting previously unselected package time.
+Preparing to unpack .../04-time_1.9-0.2build1_amd64.deb ...
+Unpacking time (1.9-0.2build1) ...
+Preparing to unpack .../05-libcurl4-openssl-dev_8.5.0-2ubuntu10.16_amd64.deb ...
+Unpacking libcurl4-openssl-dev:amd64 (8.5.0-2ubuntu10.16) over (8.5.0-2ubuntu10.6) ...
+Preparing to unpack .../06-curl_8.5.0-2ubuntu10.16_amd64.deb ...
+Unpacking curl (8.5.0-2ubuntu10.16) over (8.5.0-2ubuntu10.6) ...
+Preparing to unpack .../07-libcurl4t64_8.5.0-2ubuntu10.16_amd64.deb ...
+Unpacking libcurl4t64:amd64 (8.5.0-2ubuntu10.16) over (8.5.0-2ubuntu10.6) ...
+Preparing to unpack .../08-libcurl3t64-gnutls_8.5.0-2ubuntu10.16_amd64.deb ...
+Unpacking libcurl3t64-gnutls:amd64 (8.5.0-2ubuntu10.16) over (8.5.0-2ubuntu10.6) ...
+Preparing to unpack .../09-git-man_1%3a2.43.0-1ubuntu7.4_all.deb ...
+Unpacking git-man (1:2.43.0-1ubuntu7.4) over (1:2.43.0-1ubuntu7.3) ...
+Preparing to unpack .../10-git_1%3a2.43.0-1ubuntu7.4_amd64.deb ...
+Unpacking git (1:2.43.0-1ubuntu7.4) over (1:2.43.0-1ubuntu7.3) ...
+Selecting previously unselected package libpkgconf3:amd64.
+Preparing to unpack .../11-libpkgconf3_1.8.1-2build1_amd64.deb ...
+Unpacking libpkgconf3:amd64 (1.8.1-2build1) ...
+Selecting previously unselected package pkgconf-bin.
+Preparing to unpack .../12-pkgconf-bin_1.8.1-2build1_amd64.deb ...
+Unpacking pkgconf-bin (1.8.1-2build1) ...
+Selecting previously unselected package pkgconf:amd64.
+Preparing to unpack .../13-pkgconf_1.8.1-2build1_amd64.deb ...
+Unpacking pkgconf:amd64 (1.8.1-2build1) ...
+Selecting previously unselected package pkg-config:amd64.
+Preparing to unpack .../14-pkg-config_1.8.1-2build1_amd64.deb ...
+Unpacking pkg-config:amd64 (1.8.1-2build1) ...
+Selecting previously unselected package python3-setuptools.
+Preparing to unpack .../15-python3-setuptools_68.1.2-2ubuntu1.2_all.deb ...
+Unpacking python3-setuptools (68.1.2-2ubuntu1.2) ...
+Selecting previously unselected package python3-wheel.
+Preparing to unpack .../16-python3-wheel_0.42.0-2_all.deb ...
+Unpacking python3-wheel (0.42.0-2) ...
+Selecting previously unselected package python3-pip.
+Preparing to unpack .../17-python3-pip_24.0+dfsg-1ubuntu1.3_all.deb ...
+Unpacking python3-pip (24.0+dfsg-1ubuntu1.3) ...
+Preparing to unpack .../18-tmux_3.4-1ubuntu0.2_amd64.deb ...
+Unpacking tmux (3.4-1ubuntu0.2) over (3.4-1ubuntu0.1) ...
+Setting up time (1.9-0.2build1) ...
+Setting up libcurl4t64:amd64 (8.5.0-2ubuntu10.16) ...
+Setting up libcurl3t64-gnutls:amd64 (8.5.0-2ubuntu10.16) ...
+Setting up libpkgconf3:amd64 (1.8.1-2build1) ...
+Setting up libcurl4-openssl-dev:amd64 (8.5.0-2ubuntu10.16) ...
+Setting up libproc2-0:amd64 (2:4.0.4-4ubuntu3.3) ...
+Setting up libssl-dev:amd64 (3.0.13-0ubuntu3.16) ...
+Setting up pkgconf-bin (1.8.1-2build1) ...
+Setting up procps (2:4.0.4-4ubuntu3.3) ...
+Setting up git-man (1:2.43.0-1ubuntu7.4) ...
+Setting up curl (8.5.0-2ubuntu10.16) ...
+Setting up openssl (3.0.13-0ubuntu3.16) ...
+Setting up tmux (3.4-1ubuntu0.2) ...
+Setting up libpython3-stdlib:amd64 (3.12.3-0ubuntu2.1) ...
+Setting up python3 (3.12.3-0ubuntu2.1) ...
+Setting up python3-wheel (0.42.0-2) ...
+Setting up pkgconf:amd64 (1.8.1-2build1) ...
+Setting up ca-certificates (20260816ubuntu0.24.04.2) ...
+Updating certificates in /etc/ssl/certs...
+rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+17 added, 43 removed; done.
+Running hooks in /etc/ca-certificates/update.d...
+done.
+Setting up pkg-config:amd64 (1.8.1-2build1) ...
+Setting up git (1:2.43.0-1ubuntu7.4) ...
+Setting up python3-setuptools (68.1.2-2ubuntu1.2) ...
+Setting up python3-pip (24.0+dfsg-1ubuntu1.3) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.6) ...
+Processing triggers for debianutils (5.17build1) ...
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+cmake version 4.4.4
+Cuda compilation tools, release 12.8, V12.8.93
+Build cuda_12.8.r12.8/compiler.35583870_0
+build cache at /workspace/mizu-cache (281T free on mfs#eu-se-1.runpod.net:9421)
+
+  1.92.0-x86_64-unknown-linux-gnu unchanged - rustc 1.92.0 (ded5c06cf 2025-12-08)
+
+cargo 1.92.0 (344c4567c 2025-10-21)
+rustc 1.92.0 (ded5c06cf 2025-12-08)
+{
+  "run": "next-core-proof-retained-boolean-guest",
+  "authorized_usd_cap": 2.0,
+  "rustc": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+  "cargo": "cargo 1.92.0 (344c4567c 2025-10-21)",
+  "cmake": "cmake version 4.4.4",
+  "nvcc": "release 12.8",
+  "cuda_archs": "86,89,120",
+  "nvidia_smi_driver": "595.91.07",
+  "gpu_name": "NVIDIA A40",
+  "gpu_uuid": "GPU-37cd5cd6-fb59-876c-0813-2bdd8034e7b0",
+  "gpu_memory_total": "46068 MiB",
+  "compute_cap": "8.6",
+  "host_vcpu_visible": 96,
+  "host_mem_kb": 527972736,
+  "cpu_model": "Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz",
+  "disk_avail_kb": 300711883584,
+  "cargo_build_jobs": 8,
+  "bundle_sha256": "25ed40af1c15c4e14eac19e6ef1ab5106e1b29e98c19d46c3779035d403dc62e",
+  "elf_sha256": "0cfb3eafeea0d450e3ae8efd9a472a363495d49a5ff055b31b7cb50541c5a871",
+  "manifest_sha256": "92c23e6e185d6a9ed6d13a98aa69280056cdc0b7d466b5099d789102cc0b1fc2",
+  "cargo_lock_sha256": "bd77fb2b12be138e977dfd8c9628fd954c25b681f43c9824af8e2cdbb7f7cf87"
+}
+build identity key: 3865a02cda439bd3fcb8f60034dd7f128a794b7823aa28257ca099e1c5f3dfa7
+=== checking the cached build against this host and these sources 2026-11-11T06:49:30Z ===
+cache hit: 3865a02cda439bd3fcb8f60034dd7f128a794b7823aa28257ca099e1c5f3dfa7
+pasta-precompile-proof-6-10: OK
+=== reusing the cached CUDA build; no compilation this run 2026-11-11T06:49:32Z ===
+-rwxrwxrwx 1 root root 120555456 Nov 11  2026 /workspace/bin/pasta-precompile-proof-6-10
+b8ca096997c3d42c96c5ecd727e2d0840015fd7e37c27f06472e1eece7823a50  /workspace/bin/pasta-precompile-proof-6-10
+=== pre-flight: every pinned identity, before any proving 2026-11-11T06:49:32Z ===
+arms: ['retain-pasta-and-uint', 'default']
+=== proving arm retain-pasta-and-uint as a CUDA core proof 2026-11-11T06:49:33Z ===
+{
+  "arm": "retain-pasta-and-uint",
+  "authorized_usd_cap": 2.0,
+  "candidate": "retain-pasta-and-uint",
+  "chip_shard_counts": {
+    "Add": 67,
+    "Addi": 67,
+    "Addw": 67,
+    "AluX0": 67,
+    "Bitwise": 67,
+    "Branch": 67,
+    "Byte": 82,
+    "DivRem": 67,
+    "Global": 82,
+    "Jal": 67,
+    "Jalr": 67,
+    "LoadByte": 67,
+    "LoadDouble": 67,
+    "LoadHalf": 67,
+    "LoadWord": 67,
+    "LoadX0": 67,
+    "Lt": 67,
+    "MemoryBump": 67,
+    "MemoryGlobalFinalize": 7,
+    "MemoryGlobalInit": 7,
+    "MemoryLocal": 75,
+    "Mul": 67,
+    "PallasAddAssign": 18,
+    "PallasDoubleAssign": 4,
+    "Program": 82,
+    "Range": 82,
+    "ShiftLeft": 67,
+    "ShiftRight": 67,
+    "StateBump": 67,
+    "StoreByte": 67,
+    "StoreDouble": 67,
+    "StoreHalf": 67,
+    "StoreWord": 67,
+    "Sub": 67,
+    "Subw": 67,
+    "SyscallCore": 67,
+    "SyscallInstrs": 67,
+    "SyscallPrecompile": 8,
+    "UType": 67,
+    "Uint256MulMod": 7,
+    "VestaAddAssign": 33,
+    "VestaDoubleAssign": 4
+  },
+  "committed_digest_matches_retained_expected_output": true,
+  "committed_public_value_digest_hex": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+  "complete_verifier_accepted": true,
+  "consumer": {
+    "max_in_flight": 1,
+    "note": "starved: no shard proof in flight while waiting for the producer; proving: at least one in flight",
+    "prove_depth": 1,
+    "proving_seconds": 108.69134725499998,
+    "records": 82,
+    "starved_seconds": 2.6661649969999983,
+    "total_seconds": 111.357573832
+  },
+  "cpu_verify_seconds": 6.98920517,
+  "cycles_match_expected": true,
+  "elf_bytes": 26393216,
+  "elf_sha256": "0cfb3eafeea0d450e3ae8efd9a472a363495d49a5ff055b31b7cb50541c5a871",
+  "executor_seconds": 129.232451815,
+  "expected_calls_on_cpu": {
+    "PALLAS_ADD": 697988,
+    "UINT256_MUL": 533878,
+    "VESTA_ADD": 1310683
+  },
+  "expected_cycles": 142638298,
+  "expected_precompile_calls": {
+    "PALLAS_ADD": 697988,
+    "PALLAS_DOUBLE": 369,
+    "UINT256_MUL": 533878,
+    "VESTA_ADD": 1310683,
+    "VESTA_DOUBLE": 112
+  },
+  "expected_public_values_bytes": 1,
+  "expected_public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+  "expected_records_from_cpu_phase": 82,
+  "fri_config": "core",
+  "generated_shards": 82,
+  "global_dependencies_opt": true,
+  "gpu_free_vram_bytes_at_start": 47416410112,
+  "gpu_prove_seconds": 111.357684868,
+  "gpu_setup_seconds": 7.399835555,
+  "gpu_task_total_seconds": 129.232230487,
+  "gpu_total_vram_bytes": 47699722240,
+  "gpu_workers": 2,
+  "guest_cycles": 142638298,
+  "log_stacking_height": 21,
+  "main_cells_are_prover_inputs_not_proving_time": true,
+  "max_log_row_count": 22,
+  "measured_main_cells_from_cpu_phase": 27839873136,
+  "mode": "manifest-core-gpu",
+  "pasta_chips_present": [
+    "VestaAddAssign",
+    "VestaDoubleAssign",
+    "PallasAddAssign",
+    "PallasDoubleAssign"
+  ],
+  "producer_profile": {
+    "chunks": 8,
+    "defer_split_seconds": 4.216121229999999,
+    "dependencies_seconds": 55.81311349400001,
+    "execute_seconds": 24.561994383,
+    "executor_blocked_seconds": 48.978817219999996,
+    "globals_seconds": 1.007252661,
+    "note": "with replay_threads > 1, execute and executor_blocked run on the executor thread and overlap the other columns; on_record is time inside the consumer callback, i.e. blocked on a full channel when streaming to a prover",
+    "on_record_seconds": 26.767800155000003,
+    "records": 82,
+    "replay_threads": 7,
+    "splice_seconds": 8.643639945,
+    "spliced": 67,
+    "total_seconds": 117.318668261,
+    "trace_chunk_seconds": 16.735351443000003,
+    "waiting_for_chunk_seconds": 1.8252905890000002
+  },
+  "proof_bytes": 132029932,
+  "proof_sha256": "2f5e855f4c66dba896f96fc6329872b20e78d7d55c319de898bc7eebd7cdb795",
+  "proof_type": "core (no recursion, no wrap, no Groth16)",
+  "prove_depth": 1,
+  "proved_on": "cuda",
+  "records_in_flight": 8,
+  "rejection_check": null,
+  "retained_events_presets": [
+    "Bls12381Field",
+    "Bn254Field",
+    "PallasAdd",
+    "Poseidon2",
+    "Sha256",
+    "U256Ops",
+    "Uint256MulMod",
+    "VestaAdd"
+  ],
+  "run": "next-core-proof-retained-boolean-guest",
+  "status": "passed",
+  "total_seconds": 137.984235,
+  "verification_key_sha256": "eed89d80326950303c787b1fbf0e08034cd8b986425de27c9e4e7475da295113",
+  "verified_on": "cpu",
+  "verifier_error": null
+}
+CORE_PROOF_PASSED
+	Command being timed: "/workspace/bin/pasta-precompile-proof-6-10 --mode manifest-core-gpu --manifest /root/mizu/gpu/run-manifest.json --arm retain-pasta-and-uint --elf /root/mizu/gpu/elf/guest-program --input /root/mizu/gpu/input --output /root/results/retain-pasta-and-uint"
+	User time (seconds): 547.47
+	System time (seconds): 63.02
+	Percent of CPU this job got: 439%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 2:18.81
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 21703628
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 26823660
+	Voluntary context switches: 56243
+	Involuntary context switches: 9976
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 257896
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+retain-pasta-and-uint samples=692 span_s=138.8 gpu_busy_s=67.6 gpu_idle_s=71.2 util_mean_pct=48.7 util_median_pct=54 zero_samples_pct=34.2 peak_vram_mib=18991
+126M	/root/results/retain-pasta-and-uint
+=== fresh-process reload verification of every arm proved here 2026-11-11T06:51:52Z ===
+{"arm":"retain-pasta-and-uint","chip_shard_counts":{"Add":67,"Addi":67,"Addw":67,"AluX0":67,"Bitwise":67,"Branch":67,"Byte":82,"DivRem":67,"Global":82,"Jal":67,"Jalr":67,"LoadByte":67,"LoadDouble":67,"LoadHalf":67,"LoadWord":67,"LoadX0":67,"Lt":67,"MemoryBump":67,"MemoryGlobalFinalize":7,"MemoryGlobalInit":7,"MemoryLocal":75,"Mul":67,"PallasAddAssign":18,"PallasDoubleAssign":4,"Program":82,"Range":82,"ShiftLeft":67,"ShiftRight":67,"StateBump":67,"StoreByte":67,"StoreDouble":67,"StoreHalf":67,"StoreWord":67,"Sub":67,"Subw":67,"SyscallCore":67,"SyscallInstrs":67,"SyscallPrecompile":8,"UType":67,"Uint256MulMod":7,"VestaAddAssign":33,"VestaDoubleAssign":4},"committed_digest_hex":"4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a","committed_digest_matches":true,"complete_verifier_accepted":true,"cpu_verify_seconds":7.077692734,"decode_seconds":0.152759253,"expected_shards":82,"proof_bytes":132029932,"proof_path":"/root/results/retain-pasta-and-uint/retain-pasta-and-uint.proof.bin","proof_sha256":"2f5e855f4c66dba896f96fc6329872b20e78d7d55c319de898bc7eebd7cdb795","rejection_check":null,"reloaded_shards":82,"saved_key_matches_derived":true,"status":"passed","verification_key_derived_from_pinned_elf":true,"verification_key_sha256":"eed89d80326950303c787b1fbf0e08034cd8b986425de27c9e4e7475da295113","verified_on":"local-cpu","verifier_error":null}
+LOCAL_CORE_VERIFICATION_PASSED
+2f5e855f4c66dba896f96fc6329872b20e78d7d55c319de898bc7eebd7cdb795  /root/results/retain-pasta-and-uint/retain-pasta-and-uint.proof.bin
+-rw-r--r-- 1 root root 132029932 Nov 11 06:51 /root/results/retain-pasta-and-uint/retain-pasta-and-uint.proof.bin
+retain-pasta-and-uint samples=692 span_s=138.8 gpu_busy_s=67.6 gpu_idle_s=71.2 util_mean_pct=48.7 util_median_pct=54 zero_samples_pct=34.2 peak_vram_mib=18991
+=== finished: every arm proved and verified from disk 2026-11-11T06:52:11Z ===
