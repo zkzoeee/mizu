@@ -21651,6 +21651,41 @@
         "estimated_usd": 0.081,
         "pods_remaining": 0
       }
+    },
+    {
+      "id": "mizu-dependency-phase-scaling",
+      "owner": "o1js-to-zkvm",
+      "status": "measurement-only",
+      "document": "docs/optimizations/08-experiments-and-corrections.md",
+      "retained_default": false,
+      "proof_generated": false,
+      "evidence": "benchmarks/producer-dependency-scaling.json",
+      "evidence_sha256": "01092b72945969ea30096f7d86f95ceea772ab65bae5d5b90d99f4bdc5d5daa7",
+      "host": "Apple M2 Pro 10-core, 16 GB; CPU record generation only",
+      "measurements": {
+        "deps_seconds_global_opt_off": {
+          "1_thread": 225.0,
+          "8_threads": 182.3
+        },
+        "deps_speedup_global_opt_off": 1.23,
+        "amdahl_serial_pct_off": 78,
+        "deps_seconds_global_opt_on": {
+          "1_thread": 50.6,
+          "4_threads": 34.8,
+          "8_threads": 27.8
+        },
+        "deps_speedup_global_opt_on": 1.82,
+        "amdahl_serial_pct_on": 43,
+        "global_deps_opt_worth_seconds": 174.4,
+        "record_stream_equivalence_mismatches": 0
+      },
+      "supersedes_limits": [
+        "the plan to port wazabi r125's PASTA_DEPS_BATCH: the mechanism is already in this fork"
+      ],
+      "cost": {
+        "usd": 0.0,
+        "note": "local only, no rental"
+      }
     }
   ],
   "mizu_workflows": [

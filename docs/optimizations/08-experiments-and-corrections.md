@@ -67,6 +67,15 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   channel depth 2 and is weaker at depth 8: device busy time is unchanged at
   68-69 s but is now 51% of the wall rather than 42%, and the card's idle
   fraction falls from 57% to 49%. The claim must be quoted with the depth.
+- Porting wazabi r125's `PASTA_DEPS_BATCH` was listed as the best next lever
+  and turned out to be **already implemented**: the fork's pipelined producer
+  generates dependencies concurrently across a chunk's records, one thread per
+  record, and emits in execution order. Measured locally on 2026-11-11, the
+  phase scales **1.82x on 8 threads** with `global_dependencies_opt` on (43%
+  serial by Amdahl) and **1.23x** with it off (78% serial). The far bigger
+  lever is that setting itself: dependencies are 225.0 s at one thread with it
+  off against 50.6 s with it on, and it is already true in both manifest arms.
+  Evidence: [producer-dependency-scaling.json](../../benchmarks/producer-dependency-scaling.json).
 - The GPU prove-loop pipelining (`PASTA_PROVE_INFLIGHT`, r120's ranked idea 3)
   was written and defaulted to 2 before any GPU had run it. The first real GPU
   proof from this repository (2026-11-10) found that two shards in flight panic
