@@ -259,9 +259,10 @@ for `minCudaVersion: "12.8"` and lands on a 13.2 host.
 **The volume decides the card, not the catalog.** A network volume is
 data-centre local, so a cache in EU-SE-1 means the choice is whatever EU-SE-1
 has. On 2026-11-11 that was the A40 and A6000 at $0.59 (`Low` on 13.2 only);
-the A5000 and 3090 share the `AMPERE_24` pool and were `NONE` all afternoon
-across twenty-one refused creates, and the 4090's Secure stock was entirely in
-EU-RO-1. So **$0.59/hr is the practical floor for a cache-warm run**, and the
+the A5000 and 3090 share the `AMPERE_24` pool and were `NONE` for a
+continuously watched **92 minutes** across twenty-three refused creates and
+five probes, on Community as well as Secure, while the 4090's Secure stock was
+entirely in EU-RO-1. So **$0.59/hr is the practical floor for a cache-warm run**, and the
 A5000's $0.27 is a best case that needs its pool to be free.
 
 **The build cache holds exactly one build.** Its key covers the OS, nvcc,
