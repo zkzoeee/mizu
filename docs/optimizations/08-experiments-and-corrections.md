@@ -65,8 +65,13 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   anything else. Sharper instance the same evening: `get-gpu-type` graded the A6000
   `LOW` with `dataCenters: [{EU-SE-1, LOW}]` -- scoped to the data centre, so not
   excusable as fleet-wide staleness -- and five creates were refused in the next two
-  minutes, one of them carrying no CUDA constraint at all. A grade is not a promise on
-  any card class; budget for the create to fail.
+  minutes, one of them carrying no CUDA constraint at all. Pushed further the same
+  evening, the request was stripped one axis at a time -- no volume, no data-centre
+  filter, no CUDA constraint, Community instead of Secure, and finally a bare pod with
+  none of them -- and all eleven creates were refused while both reads still said
+  `LOW`. So an availability grade can be unconditionally false, not merely stale or
+  mis-scoped. A grade is not a promise on any card class; budget for the create to
+  fail, and never wait on a catalog field.
 - "Retry the create, never re-read availability" was half a rule. It is right for a
   `LOW` pool, and useless against an empty one: the A5000 refused fourteen creates on
   2026-11-11 while its per-GPU read said `LOW`, because that figure spans Community

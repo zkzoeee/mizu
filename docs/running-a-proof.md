@@ -263,9 +263,13 @@ the A5000 and 3090 share the `AMPERE_24` pool and were `NONE` for a
 continuously watched **6.9 hours** across thirty-three refused creates and nine
 probes, on Community as well as Secure, while the 4090's Secure stock was
 entirely in EU-RO-1. The A40 went `NONE` too, by 14:10Z. Both 48 GB
-cards read `LOW` again by 17:47Z, but that read bought nothing: **the A6000
-refused five creates in the two minutes after a data-centre-scoped `LOW`**, one
-of them with no CUDA constraint at all. So a schedule that must produce a proof
+cards read `LOW` again by 17:47Z, but that read bought nothing. **The A6000
+refused eleven creates**, and the request was stripped one axis at a time to
+find out what was being refused: with and without the volume, with and without
+the data-centre filter, with and without a CUDA constraint, on Community as well
+as Secure. A bare pod with none of them was refused too. So it is not the
+volume, the filter or the cloud tier -- there was no A6000 to rent anywhere,
+while both catalog reads said `LOW`. So a schedule that must produce a proof
 at a given hour cannot rest on hourly GPU capacity here, and **no read on this
 API predicts a create** -- grades are advisory on 48 GB cards exactly as they
 are on 24 GB ones. So **$0.59/hr is the practical floor for a cache-warm run**, and the
