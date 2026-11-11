@@ -207,8 +207,16 @@ GPU_BIN="$BINDIR/$BIN_NAME"
 KEY_TMP="$RESULTS/cache-key.json"
 CACHE_HIT=0
 
-python3 -I /workspace/cache-key.py --root "$ROOT" --archs "$CUDA_ARCHS" \
-  --toolchain "$TOOLCHAIN" --write "$KEY_TMP" > /dev/null
+# SOURCE_FP lets the launcher pass the fingerprint it computed at home; the
+# hash is identical either way, and it is what makes a bundle-free prove run
+# possible on the next pod.
+if [ -n "${SOURCE_FP:-}" ]; then
+  python3 -I /workspace/cache-key.py --source-fingerprint "$SOURCE_FP" \
+    --archs "$CUDA_ARCHS" --toolchain "$TOOLCHAIN" --write "$KEY_TMP" > /dev/null
+else
+  python3 -I /workspace/cache-key.py --root "$ROOT" --archs "$CUDA_ARCHS" \
+    --toolchain "$TOOLCHAIN" --write "$KEY_TMP" > /dev/null
+fi
 KEY=$(python3 -I -c "import json;print(json.load(open('$KEY_TMP'))['key'])")
 echo "build identity key: $KEY"
 
@@ -223,6 +231,16 @@ if [ "$CACHE_USABLE" = 1 ] && [ -f "$CACHE/key.json" ] && [ -f "$CACHE/bin/$BIN_
     if "$GPU_BIN" --mode registration --output "$RESULTS/registration.json" > /dev/null; then
       CACHE_HIT=1
       stamp "reusing the cached CUDA build; no compilation this run"
+      # A cache populated before artefacts existed gets them now, so the next
+      # run can take the bundle-free prove path.
+      if [ ! -f "$CACHE/artifacts/elf/guest-program" ]; then
+        mkdir -p "$CACHE/artifacts/elf" "$CACHE/artifacts/input"
+        cp "$ELF" "$CACHE/artifacts/elf/guest-program"
+        cp "$MANIFEST" "$CACHE/artifacts/run-manifest.json"
+        cp "$INPUTS"/proof-input.bin "$INPUTS"/receipt-input.bin \
+           "$INPUTS"/public-values.bin "$CACHE/artifacts/input/"
+        echo "artefacts added to the cache for the prove-only path"
+      fi
       cp "$CACHE/key.json" "$RESULTS/cache-key-reused.json"
     else
       echo "the cached binary does not run on this host; rebuilding"
@@ -259,10 +277,17 @@ if [ "$CACHE_HIT" = 0 ]; then
 
   if [ "$CACHE_USABLE" = 1 ]; then
     stamp "populating the cache for later runs"
-    mkdir -p "$CACHE/bin"
+    mkdir -p "$CACHE/bin" "$CACHE/artifacts/elf" "$CACHE/artifacts/input"
     cp "$GPU_BIN" "$CACHE/bin/$BIN_NAME"
     ( cd "$CACHE/bin" && sha256sum "$BIN_NAME" > "$BIN_NAME.sha256" )
     cp "$KEY_TMP" "$CACHE/key.json"
+    # The artefacts too, so a later run needs no bundle at all: pod-prove.sh
+    # reads the ELF, the inputs and the manifest straight from here. They are
+    # pinned by hash in the manifest, so a stale copy cannot pass pre-flight.
+    cp "$ELF" "$CACHE/artifacts/elf/guest-program"
+    cp "$MANIFEST" "$CACHE/artifacts/run-manifest.json"
+    cp "$INPUTS"/proof-input.bin "$INPUTS"/receipt-input.bin "$INPUTS"/public-values.bin \
+       "$CACHE/artifacts/input/"
     if [ "${CACHE_TARGET:-0}" = 1 ]; then
       # Off by default: target/ is several GB and the volume bills per GB.
       rm -rf "$CACHE/target.new"

@@ -53,27 +53,64 @@ echo "=== probing direct ssh to $HOST:$PORT ==="
 ssh "${SSHOPTS[@]}" "root@$HOST" \
   'echo ok; nvidia-smi --query-gpu=name,compute_cap,memory.total,driver_version --format=csv,noheader; nproc; free -g | head -2; df -h /workspace | tail -1; ls -la /workspace/mizu-cache 2>/dev/null || echo "no cache on this pod"'
 
-echo "=== uploading ($(wc -c < "$BUNDLE" | tr -d ' ') bytes) ==="
-time scp "${SCPOPTS[@]}" "$BUNDLE" "root@$HOST:/workspace/mizu-bundle.tar.gz"
-scp "${SCPOPTS[@]}" "$HERE/pod-run.sh" "$HERE/watchdog.sh" "$HERE/cache-key.py" \
-  "root@$HOST:/workspace/"
+# The scripts go first and cost nothing (about 30 KB). The 72 MB bundle goes
+# only if the pod cannot already prove this exact build. The source
+# fingerprint is the one part of the cache key that needs the sources, so it is
+# computed here, where they are, and the pod answers with its own OS, nvcc,
+# rustc and CUDA_ARCHS. On a hit, the pod needs no bundle, no toolchain and no
+# apt: 2026-11-11 measured those at 29 s of upload and 22 s of prerequisites
+# per run, both producing nothing a prebuilt binary uses.
+scp "${SCPOPTS[@]}" "$HERE/pod-run.sh" "$HERE/pod-prove.sh" "$HERE/watchdog.sh" \
+  "$HERE/cache-key.py" "root@$HOST:/workspace/"
 
-echo "=== verifying the uploaded bundle hash on the pod ==="
-WANT=$(shasum -a 256 "$BUNDLE" | cut -d' ' -f1)
-GOT=$(ssh "${SSHOPTS[@]}" "root@$HOST" 'sha256sum /workspace/mizu-bundle.tar.gz' | cut -d' ' -f1)
-if [ "$WANT" != "$GOT" ]; then
-  echo "upload corrupted: local $WANT, pod $GOT" >&2
-  exit 1
+REPO="$(cd "$HERE/../.." && pwd)"
+SOURCE_FP="$(python3 -I "$HERE/cache-key.py" --root "$REPO" --fingerprint-only)"
+echo "=== source fingerprint: ${SOURCE_FP:0:16} ==="
+
+PROBE_ARCHS="${CUDA_ARCHS:-86}"
+MODE=build
+if [ -n "$CACHE" ]; then
+  echo "=== asking the pod whether it already holds this build ==="
+  # The artefacts must be there too, or the prove path would fail on a pod it
+  # has already paid to boot. A cache populated before artefacts existed
+  # therefore takes the build path once more, which populates them.
+  PROBE="test -f $CACHE/key.json && test -f $CACHE/artifacts/elf/guest-program"
+  PROBE="$PROBE && test -f $CACHE/bin/pasta-precompile-proof-6-10"
+  PROBE="$PROBE && CARGO_HOME=$CACHE/cargo-home RUSTUP_HOME=$CACHE/rustup-home"
+  PROBE="$PROBE PATH=$CACHE/cargo-home/bin:/usr/local/cuda/bin:\$PATH"
+  PROBE="$PROBE RUSTUP_TOOLCHAIN=$TOOLCHAIN"
+  PROBE="$PROBE python3 -I /workspace/cache-key.py --source-fingerprint $SOURCE_FP"
+  PROBE="$PROBE --archs $PROBE_ARCHS --toolchain $TOOLCHAIN --compare $CACHE/key.json"
+  if ssh "${SSHOPTS[@]}" "root@$HOST" "$PROBE" > /dev/null 2>&1; then
+    MODE=prove
+    echo "=== cache hit: skipping the bundle, the toolchain and apt ==="
+  else
+    echo "=== cache miss or empty volume: shipping the bundle and building ==="
+  fi
 fi
-echo "bundle intact on the pod: $GOT"
 
-echo "=== arming the watchdog and launching, both detached under tmux ==="
+WANT=$(shasum -a 256 "$BUNDLE" | cut -d' ' -f1)
+if [ "$MODE" = build ]; then
+  echo "=== uploading ($(wc -c < "$BUNDLE" | tr -d ' ') bytes) ==="
+  time scp "${SCPOPTS[@]}" "$BUNDLE" "root@$HOST:/workspace/mizu-bundle.tar.gz"
+  echo "=== verifying the uploaded bundle hash on the pod ==="
+  GOT=$(ssh "${SSHOPTS[@]}" "root@$HOST" 'sha256sum /workspace/mizu-bundle.tar.gz' | cut -d' ' -f1)
+  if [ "$WANT" != "$GOT" ]; then
+    echo "upload corrupted: local $WANT, pod $GOT" >&2
+    exit 1
+  fi
+  echo "bundle intact on the pod: $GOT"
+fi
+
+DRIVER=pod-run.sh
+[ "$MODE" = prove ] && DRIVER=pod-prove.sh
+echo "=== arming the watchdog and launching $DRIVER, both detached under tmux ==="
 # tmux, not `setsid nohup ... &`: in r114 the latter did not survive the
 # single SSH command that started it, and the run never began.
 ssh "${SSHOPTS[@]}" "root@$HOST" "set -e
   apt-get update -qq >/dev/null 2>&1 || true
   command -v tmux >/dev/null || apt-get install -y -qq tmux >/dev/null 2>&1
-  chmod +x /workspace/pod-run.sh /workspace/watchdog.sh /workspace/cache-key.py
+  chmod +x /workspace/pod-run.sh /workspace/pod-prove.sh /workspace/watchdog.sh /workspace/cache-key.py
   tmux kill-server 2>/dev/null || true
   # A new-session immediately after kill-server races the dying server and
   # answers \"server exited unexpectedly\" without starting anything, which
@@ -81,7 +118,7 @@ ssh "${SSHOPTS[@]}" "root@$HOST" "set -e
   sleep 1
   tmux new-session -d -s watchdog \"DEADLINE_MINUTES=$DEADLINE_MINUTES RATE_PER_HOUR=$RATE_PER_HOUR CAP_USD=$CAP_USD LOG_DIR=$POD_RESULTS bash /workspace/watchdog.sh\"
   sleep 1
-  tmux new-session -d -s mizu \"BUNDLE_SHA=$WANT CARGO_BUILD_JOBS=$JOBS ROOT=$POD_ROOT RESULTS=$POD_RESULTS CACHE='$CACHE' ARMS='$ARMS' TOOLCHAIN=$TOOLCHAIN ${CUDA_ARCHS:+CUDA_ARCHS=$CUDA_ARCHS} bash /workspace/pod-run.sh\"
+  tmux new-session -d -s mizu \"BUNDLE_SHA=$WANT SOURCE_FP=$SOURCE_FP CARGO_BUILD_JOBS=$JOBS ROOT=$POD_ROOT RESULTS=$POD_RESULTS CACHE='$CACHE' ARMS='$ARMS' TOOLCHAIN=$TOOLCHAIN ${CUDA_ARCHS:+CUDA_ARCHS=$CUDA_ARCHS} bash /workspace/$DRIVER\"
   sleep 2
   tmux ls"
 echo "=== launched; watchdog deadline ${DEADLINE_MINUTES}m at \$${RATE_PER_HOUR}/hr against a \$${CAP_USD} cap ==="

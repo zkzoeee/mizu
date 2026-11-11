@@ -102,14 +102,40 @@ def nvcc_release():
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--root", required=True, help="unpacked bundle root")
-    p.add_argument("--archs", required=True, help="CUDA_ARCHS this build targets")
+    p.add_argument("--root", help="unpacked bundle root; omit with --source-fingerprint")
+    p.add_argument("--archs", help="CUDA_ARCHS this build targets")
     p.add_argument("--toolchain", default=os.environ.get("RUSTUP_TOOLCHAIN", "unknown"))
     p.add_argument("--write")
     p.add_argument("--compare")
+    p.add_argument(
+        "--fingerprint-only",
+        action="store_true",
+        help="print just the source fingerprint and exit. It is the only "
+        "component that needs the sources, so a launcher can compute it at home "
+        "and ask the pod whether it already holds that build before shipping a "
+        "72 MB bundle the pod may not need.",
+    )
+    p.add_argument(
+        "--source-fingerprint",
+        help="use this instead of hashing --root, so the key can be computed on "
+        "a pod that never received the sources",
+    )
     args = p.parse_args()
 
-    fingerprint, counted = source_fingerprint(args.root)
+    if args.fingerprint_only:
+        if not args.root:
+            raise SystemExit("--fingerprint-only needs --root")
+        print(source_fingerprint(args.root)[0])
+        return 0
+
+    if not args.archs:
+        raise SystemExit("--archs is required")
+    if args.source_fingerprint:
+        fingerprint, counted = args.source_fingerprint, -1
+    elif args.root:
+        fingerprint, counted = source_fingerprint(args.root)
+    else:
+        raise SystemExit("either --root or --source-fingerprint is required")
     components = {
         "os": os_release(),
         "nvcc": nvcc_release(),
