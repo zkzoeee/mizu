@@ -161,7 +161,26 @@
       "RTX 3090": "NONE (same AMPERE_24 pool)",
       "RTX 4090": "not present; its Secure stock is EU-RO-1 (pool ADA_24)"
     },
-    "consequence": "$0.59/hr is the real floor for a cache-warm run today, so the measured 4 min 40 s / $0.046 A40 run is the honest headline and the A5000's $0.021 is a best case that needs the pool to be free."
+    "consequence": "$0.59/hr is the real floor for a cache-warm run today, so the measured 4 min 40 s / $0.046 A40 run is the honest headline and the A5000's $0.021 is a best case that needs the pool to be free.",
+    "confirmed_in_docs": {
+      "checked": "2026-11-11T18:15Z, via the Runpod docs search",
+      "network_volume": [
+        "'Only compute in the volume's own data center can mount it, which limits GPU choice to what that data center offers. Volumes in different data centers do not sync.' -- docs.runpod.io/storage/network-volumes",
+        "'dataCenter and type are fixed at creation. To move data to another data center, create a new volume there and copy the data.' -- api-reference-v2/overview",
+        "so the constraint I inferred from refusals is the documented design, not a quirk of tonight"
+      ],
+      "but_there_is_a_second_volume_kind": {
+        "name": "global volume (beta)",
+        "claim": "'elastic, region-independent storage you can mount into a Pod in any Runpod data center' -- runpod.io/blog/global-volumes-beta; docs.runpod.io/storage/globalvolume/globalvolume-pods",
+        "mounts": "/workspace on a Pod, or /workspace-global when a network volume is attached alongside -- so BOTH can be attached to one pod, which is how data moves from one to the other",
+        "api": "create-global-volume exists, and the create-pod body takes mounts.global = [{volumeId, path}], documented as 'At most one global volume, on GPU and CPU pods, with no data center constraint'",
+        "billing": "stored data plus requests: $0.005/1,000 writes, creates and lists; $0.0005/1,000 reads and metadata lookups",
+        "the_catch_for_us": "object-backed, with 'no file locking, atomic rename or hard links', and the Serverless announcement is explicit that 'Applications that install onto the volume ... depend on file permissions the volume doesn't support and will fail or run slowly'. Our cache is not model weights -- it is an ELF that pod-prove.sh executes in place from $CACHE/bin. An exec bit that does not survive would break that path.",
+        "status": "UNVERIFIED whether a global volume preserves the exec bit, and whether Community pods can mount one. Both are testable for cents.",
+        "the_fix_if_it_does_not": "copy the binary to container disk and chmod +x before running it -- a few seconds for a few hundred MB, and a small change to pod-prove.sh rather than a config flip"
+      },
+      "the_seeding_problem": "to copy the existing cache onto a global volume we need a pod that mounts both, i.e. a pod in EU-SE-1 -- the very thing we cannot get tonight. The alternative is to rebuild the cache onto a global volume from whatever card is available, passing CUDA_ARCHS=86,89,120 so the result stays fat, which costs one build (~12.5 min) and then never pins us to a data centre again."
+    }
   },
   "unobtainable_window": {
     "from": "11:00Z",

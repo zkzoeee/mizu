@@ -275,6 +275,31 @@ API predicts a create** -- grades are advisory on 48 GB cards exactly as they
 are on 24 GB ones. So **$0.59/hr is the practical floor for a cache-warm run**, and the
 A5000's $0.27 is a best case that needs its pool to be free.
 
+**The data-centre pin is documented, and so is the way out of it.** A network
+volume's `dataCenter` is fixed at creation, and "only compute in the volume's
+own data center can mount it, which limits GPU choice to what that data center
+offers" -- which is exactly the trap above. But Runpod also has **global volumes**
+(beta): region-independent storage that mounts into a Pod in any data centre, at
+`/workspace`, or at `/workspace-global` when a network volume is attached too,
+so one pod can hold both and copy between them. `create-global-volume` exists
+and `create-pod` takes `mounts.global`.
+
+Two things to settle before trusting it with this cache. Global volumes are
+object-backed, with "no file locking, atomic rename or hard links", and the
+Serverless announcement warns that applications installed onto one "depend on
+file permissions the volume doesn't support". Our cache is not model weights --
+`pod-prove.sh` executes an ELF in place from `$CACHE/bin` -- so **whether the
+exec bit survives is untested**, as is whether a Community pod can mount one. If
+it does not survive, copying the binary to container disk and `chmod +x` before
+running costs seconds. Billing is per-request: $0.005/1,000 writes and lists,
+$0.0005/1,000 reads.
+
+The awkward part is seeding it. Copying the existing cache across needs a pod
+that mounts both volumes, which means a pod in EU-SE-1 -- the thing capacity
+would not give us. The alternative is to rebuild onto a global volume from
+whatever card is free, with `CUDA_ARCHS=86,89,120` so the result stays fat: one
+~12.5-minute build, and the cache stops choosing our data centre.
+
 **The build cache holds exactly one build.** Its key covers the OS, nvcc,
 rustc, `CUDA_ARCHS` and a fingerprint of the harness sources, so *any* source
 edit evicts it — which is correct, and is why three small edits cost three fat
