@@ -366,7 +366,10 @@ for every real addition, not just for the one-event `witness-digest` fixtures.
   the card computes `86` and misses an `86,89,120` cache, so a fat cache must
   be used with the same value. A superset ought to count as a hit and does
   not. `df` on the mount reports the whole MooseFS pool rather than the quota,
-  so only `du` on the cache is informative. One hit and one miss here; nothing
+  so only `du` on the cache is informative. **The two pods landed on the same
+  physical GPU** (`GPU-37cd5cd6-…`), so what is demonstrated is the cache
+  surviving a pod, not the cache crossing machines; a volume is
+  data-centre-level and should do the latter, untested here. One hit and one miss here; nothing
   measured about a key that moves for a source edit. Run 1's leftovers from
   the old defaults (~100 MB) are still on the volume.
 - **Driver defaults this exposed and changed:** `ROOT` and `RESULTS` pointed

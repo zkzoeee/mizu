@@ -35,7 +35,8 @@
       "pod_life_minutes": 20.5,
       "estimated_usd": 0.2,
       "cpu_model": "Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz",
-      "gpu": "NVIDIA A40"
+      "gpu": "NVIDIA A40",
+      "gpu_uuid": "GPU-37cd5cd6-fb59-876c-0813-2bdd8034e7b0"
     },
     "run2_hit": {
       "pod_id": "lxvxl82gr73er4",
@@ -55,7 +56,8 @@
       "estimated_usd": 0.07,
       "compilation": "none",
       "cpu_model": "Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz",
-      "gpu": "NVIDIA A40"
+      "gpu": "NVIDIA A40",
+      "gpu_uuid": "GPU-37cd5cd6-fb59-876c-0813-2bdd8034e7b0"
     }
   },
   "key_matched_across_pods": true,
@@ -94,6 +96,7 @@
   ],
   "limits": [
     "CUDA_ARCHS is part of the cache key, so a run that lets the driver auto-detect from the card computes 86 and misses a 86,89,120 cache. A superset ought to count as a hit; it does not yet.",
+    "The two pods landed on the SAME physical GPU (uuid GPU-37cd5cd6-...), so this shows the cache surviving a pod, not the cache crossing machines. A network volume is data-centre-level and should cross machines; that is untested here.",
     "One hit, one miss. No measurement of what happens when the key moves for a source edit.",
     "Run 1's leftovers from the old defaults (an unpacked tree, a results directory, an evidence tarball, the two scp'd scripts) are still on the volume, about 100 MB; harmless but not cleaned.",
     "No off-pod verification in either run: proof bytes stayed on the pod by request."
