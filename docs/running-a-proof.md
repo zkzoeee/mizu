@@ -113,7 +113,8 @@ once per source change.
 | --- | ---: | ---: | ---: |
 | Cold fat build + one arm | ~18 min | $0.081 | $0.18 |
 | Cache hit, one arm, no download | **5.6 min, measured** | **$0.025** | $0.045 |
-| With a baked image and an entrypoint (not yet built) | ~3.5–4 min | ~$0.017 | ~$0.035 |
+| Slim base image + start command (unmeasured) | ~4 min | ~$0.018 | ~$0.039 |
+| Baked image, binary inside, no volume (unmeasured) | ~3.5 min | ~$0.016 | ~$0.034 |
 
 **Measured on the prove-only path** (2026-11-11, A5000, cache hit): 2 min 39 s
 of in-pod work, of which **7 seconds** came before proving began — cache check
@@ -125,7 +126,7 @@ Add the volume: 10 GB `zvx1pq06vk`, billed from creation until deletion,
 roughly $0.70/month at RunPod's published per-GB rate — a figure their tools do
 not expose.
 
-## The PyTorch image, and what it is actually for
+## The PyTorch image, and how to stop paying for it
 
 The drivers run on `runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404` because
 wazabi's r123 proved on it. Of what it provides, the prove path needs almost
@@ -133,33 +134,80 @@ none:
 
 | Provided | Needed by | Slim alternative |
 | --- | --- | --- |
-| `libcudart` | the binary, always | any CUDA **runtime** image |
+| `libcudart` | the binary, always | **any CUDA image, including `base`** |
 | nvcc, headers, toolkit | a **build** only | `nvidia/cuda:…-devel` |
 | cmake, build-essential, git, curl | a build only, and the driver apt-installs them anyway | — |
 | `python3` | the drivers' key check and JSON | `python3-minimal`, ~30 MB |
-| **torch** | **the CUDA-context gate, and nothing else** | **`--mode cuda-probe`** |
+| `libgomp1`, `libstdc++6` | the binary links `-lgomp`, `-lstdc++` | one apt, a few MB |
+| **torch** | **nothing, since 2026-11-11** | **`--mode cuda-probe`** |
 
-So a whole PyTorch stack is pulled to evaluate one boolean, and that pull is
-now the largest phase of a run — about 110 s of the measured 5.6 minutes, with
-the bundle, apt and compiler already gone. `pod-prove.sh` therefore installs
-`python3-minimal` if the image lacks it, keeps the torch gate when torch
-happens to be present, and otherwise gates on `--mode cuda-probe`, which
-initialises the device through the harness itself.
+### What the binary actually links
 
-**But a slim image cannot simply be swapped in, and this is the catch.** Direct
-SSH needs `openssh-server` *in the image*; RunPod's own images carry it and a
-stock `nvidia/cuda` image does not. Without sshd there is no scp, so
-`push-and-launch.sh` cannot deliver scripts or start tmux, and the PTY-only
-proxy is the trap that cost wazabi's r114 a pod. A slim image therefore needs
-either `openssh-server` baked in — which means a registry — or the
-entrypoint-driven design, where the container starts the job itself and
-progress is read with `stream-pod-logs`. The entrypoint exists
-(`scripts/gpu/entrypoint.sh`) and has never run.
+From `sp1-gpu-sys` 6.10's `build.rs:246-272`, which is the whole link line:
+`static=sys-cuda`, then dynamically **`cudart`**, `cudadevrt` (a static device
+archive), `stdc++`, `gomp`, `dl`. `CUDA::nvToolsExt` appears in that crate's
+`CMakeLists.txt:150` but never on rustc's line, and CUDA 12's NVTX3 is
+header-only, so it should contribute no symbol.
 
-The practical split until then: **build runs stay on the PyTorch image**, which
-is rare and needs nvcc anyway and keeps the torch gate; **prove runs** are
-where the slim image pays, and they are blocked on the entrypoint rather than
-on the image.
+`libcuda.so.1` and `nvidia-smi` are **not** in any of these images: the NVIDIA
+container runtime injects them from the host driver. That is why a CUDA image
+with no driver in it works at all, and it is what makes the smallest tier
+viable.
+
+### The sizes, from the registry
+
+Compressed amd64 sizes, read from Docker Hub's manifests on 2026-11-11:
+
+| Image | Compressed | What it carries for us |
+| --- | ---: | --- |
+| `runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404` | **10,564 MB** | everything, including the torch we no longer use |
+| `nvidia/cuda:12.8.1-devel-ubuntu24.04` | 5,162 MB | nvcc — for a **build** pod only |
+| `nvidia/cuda:12.8.1-runtime-ubuntu24.04` | 2,159 MB | cudart, plus cublas/nccl/npp/cusparse we never link |
+| **`nvidia/cuda:12.8.1-base-ubuntu24.04`** | **101 MB** | `cuda-cudart-12-8` and nothing else — which is all we link |
+
+The base image's own build history confirms the one line that matters:
+`apt-get install -y --no-install-recommends cuda-cudart-12-8=... cuda-compat-12-8`.
+So the smallest image that can prove is **104x smaller** than the one we use.
+
+### sshd is not a reason to build an image
+
+This corrects what this page said earlier. Direct SSH does need `openssh-server`
+*in the container*, and a stock `nvidia/cuda` image has none — but it does not
+have to come from the image. RunPod's own documentation gives a container start
+command for exactly this case, `create-pod` takes `entrypoint` and `cmd`, and
+`startSsh: true` injects the account's registered keys as `$PUBLIC_KEY`; Secure
+Cloud pods are TCP-enabled, so `22/tcp` is all that is needed in `ports`.
+
+So sshd gets **installed at boot instead of baked in**: one apt of roughly
+10-20 s in place of ~110 s of image pull, with no registry credential ever
+landing on a rented host. The start command is kept in the repo as
+[`scripts/gpu/slim-pod-start-command.sh`](../scripts/gpu/slim-pod-start-command.sh);
+it installs `openssh-server libgomp1 libstdc++6 python3-minimal`, loads
+`$PUBLIC_KEY`, runs `ssh-keygen -A` and `sshd`, then holds the container open so
+`push-and-launch.sh` drives the run exactly as it does today. Nothing else in
+the flow changes.
+
+A baked image is still the fastest option — the binary is already inside it, so
+there is no volume and no cache check — but it is now an *optimisation*, not a
+prerequisite. `scripts/gpu/build-image.sh` builds one.
+
+### What is still unmeasured, and the two ways it could fail
+
+None of this has been run. One ~$0.05 pod settles it, and the start command
+prints both answers before anything expensive:
+
+1. **`ldd` on the cached binary** — any `not found` names a library the base
+   image lacks. The reasoning above says there should be none; the reasoning is
+   not a run.
+2. **Driver injection into a `base` image** — `nvidia-smi -L` must answer. It
+   does in every CUDA container; it has not been checked here.
+
+And one thing that could make the win smaller than the sizes suggest: RunPod
+caches images per machine, and their docs put a first pull at *"20 seconds to 5
+minutes"* while an image "used often" starts very fast. `runpod/pytorch` is
+about the most-used image on the platform, so our measured ~110 s is not a
+guaranteed worst case, and a cold 101 MB image beats a cold 10 GB one by far
+more than it beats a warm one.
 
 ## Two operational facts that cost money when forgotten
 

@@ -21745,6 +21745,50 @@
       "still_blocked_by": [
         "sshd: a stock nvidia/cuda image has no openssh-server, so the SSH-driven launcher cannot start work; the entrypoint design or a baked image is the prerequisite"
       ]
+    },
+    {
+      "id": "mizu-slim-pod-image-path",
+      "owner": "o1js-to-zkvm",
+      "status": "planned-unmeasured",
+      "document": "docs/running-a-proof.md",
+      "retained_default": false,
+      "proof_generated": false,
+      "evidence": "benchmarks/cuda-probe-gate-validation.json",
+      "question": "With torch no longer the gate, what is the smallest image that can prove, and what does getting there cost?",
+      "findings": {
+        "image_compressed_mb": {
+          "runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404": 10564,
+          "nvidia/cuda:12.8.1-devel-ubuntu24.04": 5162,
+          "nvidia/cuda:12.8.1-runtime-ubuntu24.04": 2159,
+          "nvidia/cuda:12.8.1-base-ubuntu24.04": 101
+        },
+        "dynamic_link_set": [
+          "cudart",
+          "stdc++",
+          "gomp",
+          "dl"
+        ],
+        "static_link_set": [
+          "sys-cuda",
+          "cudadevrt"
+        ],
+        "link_source": "sp1-gpu-sys 6.10 build.rs:246-272",
+        "base_image_carries_cudart": true,
+        "base_image_evidence": "the image's own build history: apt-get install cuda-cudart-12-8 cuda-compat-12-8",
+        "driver_libs_from_host": [
+          "libcuda.so.1",
+          "nvidia-smi"
+        ],
+        "sshd_needs_no_registry": true,
+        "sshd_source": "docs.runpod.io/pods/configuration/use-ssh; create-pod takes entrypoint/cmd; startSsh injects PUBLIC_KEY",
+        "apt_cost_seconds_estimate": "10-20, against ~110 s of image pull"
+      },
+      "artifact": "scripts/gpu/slim-pod-start-command.sh",
+      "open": [
+        "ldd on the cached binary must show no 'not found' on a base image",
+        "nvidia-smi -L must answer inside a base image",
+        "Runpod caches images per machine, so the PyTorch image's ~110 s pull may be a warm-cache figure"
+      ]
     }
   ],
   "mizu_workflows": [

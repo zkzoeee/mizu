@@ -46,6 +46,14 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   the final MSM; this is distinct from a cryptographic verifier rejection.
 - r97's hypothesis was not established by its smaller cycle number.
 - r124 replaces cross-host SP1 timing attribution with a matched-host comparison.
+- The 2026-11-11 gate record said sshd blocked a slim pod image and that only a baked
+  image or the untested entrypoint could unblock it. Both halves were wrong about the
+  remedy: Runpod documents a container start command that installs `openssh-server` at
+  boot, `create-pod` takes `entrypoint`/`cmd`, and `startSsh: true` supplies the keys.
+  A slim image needs no registry. The image sizes were then read from the registry
+  rather than assumed: `nvidia/cuda:12.8.1-base-ubuntu24.04` is 101 MB compressed and
+  carries `cuda-cudart-12-8`, against the PyTorch image's 10,564 MB. Still unmeasured:
+  no pod has run it.
 - r125 corrects r126 despite the numerical round order. Round numbers alone are
   not a chronology or a dependency graph.
 - The first `pasta-fuzz` run (2026-11-10) reported three seeds but ran one: the

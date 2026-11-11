@@ -44,5 +44,11 @@
       "run.log": "485fc184f61e823e03f35175828807b04eaa1252f3b8f87e0118704366c5ce2a",
       "retain-pasta-and-uint/result.json": "8a3e01da50e53425a58503af0ccc0760b07c3c44889661d644373f655f6697d5"
     }
+  },
+  "correction": {
+    "date": "2026-11-11",
+    "corrects": "what_still_blocks_a_slim_image",
+    "note": "Overstated. sshd is still required, but not from the image: Runpod's documented container start command installs openssh-server at boot, create-pod takes entrypoint/cmd, and startSsh:true injects the account keys as $PUBLIC_KEY. So a slim image needs neither a registry nor the entrypoint design -- one apt (~10-20 s) against ~110 s of image pull. nvidia/cuda:12.8.1-base-ubuntu24.04 is 101 MB compressed against the PyTorch image's 10,564 MB and installs cuda-cudart-12-8, the only CUDA library the binary links dynamically. Start command: scripts/gpu/slim-pod-start-command.sh. Unmeasured.",
+    "source": "docs.runpod.io/pods/configuration/use-ssh; Docker Hub manifests; sp1-gpu-sys 6.10 build.rs:246-272"
   }
 }

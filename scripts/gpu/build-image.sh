@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # Assemble the prover image from an already-built binary.
 #
+# This is the FASTER of two slim paths, not the only one. A stock
+# nvidia/cuda:12.8.1-base-ubuntu24.04 (101 MB compressed) plus the start command in
+# slim-pod-start-command.sh installs sshd at boot and needs no registry at all; a
+# baked image wins only by carrying the binary, so there is no volume and no cache
+# check. Build one when runs are frequent enough to earn the push.
+#
 # This script does not compile anything: the CUDA binary must already exist,
 # built on x86_64 Linux for the architectures the pods will use. Three ways to
 # get one, cheapest first — all established on 2026-11-11:
