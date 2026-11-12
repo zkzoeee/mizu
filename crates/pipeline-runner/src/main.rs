@@ -40,6 +40,19 @@ enum Mode {
     Compressed,
     /// Compressed, shrunk, then wrapped for an EVM verifier.
     Plonk,
+    /// As Plonk, but the Groth16 wrap. Needs the same `native-gnark` build and
+    /// `SP1_CIRCUIT_MODE=dev`.
+    ///
+    /// The dev setup is gnark's own local one, which for Groth16 is *unsafe*:
+    /// whoever ran it could forge proofs for that circuit. Acceptable here
+    /// because these are already development artifacts with vk verification
+    /// off, and neither proof size nor verifier gas depends on how the setup
+    /// was produced -- so a ceremony can wait until the circuit is frozen.
+    ///
+    /// Unlike PLONK, whose SRS is universal (the non-dev path downloads Aztec
+    /// Ignition), a Groth16 setup is circuit-specific and must be re-run
+    /// whenever the wrap circuit changes.
+    Groth16,
 }
 
 impl Mode {
@@ -48,6 +61,7 @@ impl Mode {
             Mode::Core => ProofMode::Core,
             Mode::Compressed => ProofMode::Compressed,
             Mode::Plonk => ProofMode::Plonk,
+            Mode::Groth16 => ProofMode::Groth16,
         }
     }
 }
