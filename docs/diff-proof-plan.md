@@ -173,15 +173,42 @@ becomes real work. That circuit is not in this workspace —
 `miza-o1js-to-zkvm` is Miza's fork of the *verifier*, not the chain. Confirm
 before scheduling.
 
-## Open: the base these percentages compare against
+## Settled: the production share is 9.58%, not 6.07%
 
-The measured cells above are **default routing**, because `mirror-records` uses
-the trace accounting's `record_options()` with no retention preset. The
-production arm is `retain-pasta-and-uint`, which the retention record measures
-at **27,839,873,136 cells and 82 records against default routing's
-43,922,703,280 and 148 — −36.6% cells, −46.9% interaction events, identical
-cycles**. Rerun `mirror-records` under the retained presets before quoting any
-percentage-of-base as a production figure. Cycle shares are unaffected.
+Measured both ways. `mirror-records` now takes `PASTA_RETAIN`, mapped exactly as
+the GPU harness maps it (`tools/pasta-proof/src/main.rs:2407`).
+
+**The numerator is routing-invariant.** With both precompiles on, the diff proof
+is **identical in every field** — records, cycles, main cells, interaction
+events — under default and `pasta-uint` routing, at N=1 and N=16. The reason is
+structural: `pasta-uint` retains `UINT256_MUL`, `PALLAS_ADD` and `VESTA_ADD`,
+and this guest emits none of them. Its chips are `PallasPoseidonPermute`,
+`PallasFpOpAssign` and `KeccakPermute`, and `uint256_mul_count` is zero.
+
+**The denominator is not.** The Pickles verifier emits 2,542,549 retainable
+calls, so production is the retained base: 27,839,873,136 cells and 82 records,
+against default routing's 43,922,703,280 and 148.
+
+| accounts | diff cells | % retained base | % default base | % cycles |
+| ---: | ---: | ---: | ---: | ---: |
+| 10 | 266,717,880 | **0.96%** | 0.61% | 0.78% |
+| 100 | 2,667,178,800 | **9.58%** | 6.07% | 7.82% |
+| 1000 | 26,671,788,000 | 95.80% | 60.72% | 78.23% |
+
+So **9.58% per hundred accounts** is the production figure, and the mirror alone
+is 3.77%. Cycle shares are unaffected, as expected.
+
+### And a correction to the cost of dropping the Poseidon precompile
+
+Retention is worth far more to the software-Poseidon build than to the verifier,
+because that build is almost entirely `UINT256_MUL` work: **−81.6% of cells**
+(1,117,574,019 → 205,668,094 marginal cells/account), records 50 → 13 at N=16.
+
+Earlier I put the cost of turning `MIZU_POSEIDON_PRECOMPILE` off at 41.9x on
+cells. That compared default routing on both sides, which is not the fair
+comparison since retention is free. With retention on, **the honest figure is
+7.7x** — 205,668,094 against 26,671,788. Still a bad trade, but an order of
+magnitude less bad than stated.
 
 ## Validation
 

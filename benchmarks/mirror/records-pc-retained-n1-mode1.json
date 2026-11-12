@@ -1,0 +1,301 @@
+{
+  "accounts": 1,
+  "chips": [
+    {
+      "chip": "LoadDouble",
+      "main_cells": 38227488,
+      "main_width": 39,
+      "preprocessed_width": 0,
+      "rows": 980192,
+      "shards_included": 1
+    },
+    {
+      "chip": "Uint256MulMod",
+      "main_cells": 37123744,
+      "main_width": 371,
+      "preprocessed_width": 0,
+      "rows": 100064,
+      "shards_included": 1
+    },
+    {
+      "chip": "StoreDouble",
+      "main_cells": 34533408,
+      "main_width": 39,
+      "preprocessed_width": 0,
+      "rows": 885472,
+      "shards_included": 1
+    },
+    {
+      "chip": "Addi",
+      "main_cells": 18064320,
+      "main_width": 30,
+      "preprocessed_width": 0,
+      "rows": 602144,
+      "shards_included": 1
+    },
+    {
+      "chip": "Add",
+      "main_cells": 15803040,
+      "main_width": 33,
+      "preprocessed_width": 0,
+      "rows": 478880,
+      "shards_included": 1
+    },
+    {
+      "chip": "Lt",
+      "main_cells": 13140864,
+      "main_width": 44,
+      "preprocessed_width": 0,
+      "rows": 298656,
+      "shards_included": 1
+    },
+    {
+      "chip": "Bitwise",
+      "main_cells": 7579008,
+      "main_width": 51,
+      "preprocessed_width": 0,
+      "rows": 148608,
+      "shards_included": 1
+    },
+    {
+      "chip": "Global",
+      "main_cells": 7472928,
+      "main_width": 241,
+      "preprocessed_width": 0,
+      "rows": 31008,
+      "shards_included": 3
+    },
+    {
+      "chip": "Jalr",
+      "main_cells": 7398720,
+      "main_width": 35,
+      "preprocessed_width": 0,
+      "rows": 211392,
+      "shards_included": 1
+    },
+    {
+      "chip": "UType",
+      "main_cells": 7018400,
+      "main_width": 31,
+      "preprocessed_width": 0,
+      "rows": 226400,
+      "shards_included": 1
+    },
+    {
+      "chip": "Branch",
+      "main_cells": 6651360,
+      "main_width": 45,
+      "preprocessed_width": 0,
+      "rows": 147808,
+      "shards_included": 1
+    },
+    {
+      "chip": "SyscallInstrs",
+      "main_cells": 6510400,
+      "main_width": 65,
+      "preprocessed_width": 0,
+      "rows": 100160,
+      "shards_included": 1
+    },
+    {
+      "chip": "KeccakPermute",
+      "main_cells": 5068800,
+      "main_width": 2640,
+      "preprocessed_width": 0,
+      "rows": 1920,
+      "shards_included": 1
+    },
+    {
+      "chip": "ShiftRight",
+      "main_cells": 2930016,
+      "main_width": 69,
+      "preprocessed_width": 0,
+      "rows": 42464,
+      "shards_included": 1
+    },
+    {
+      "chip": "Sub",
+      "main_cells": 2145792,
+      "main_width": 33,
+      "preprocessed_width": 0,
+      "rows": 65024,
+      "shards_included": 1
+    },
+    {
+      "chip": "Byte",
+      "main_cells": 1179648,
+      "main_width": 6,
+      "preprocessed_width": 7,
+      "rows": 196608,
+      "shards_included": 3
+    },
+    {
+      "chip": "Jal",
+      "main_cells": 698368,
+      "main_width": 31,
+      "preprocessed_width": 0,
+      "rows": 22528,
+      "shards_included": 1
+    },
+    {
+      "chip": "LoadByte",
+      "main_cells": 551968,
+      "main_width": 47,
+      "preprocessed_width": 0,
+      "rows": 11744,
+      "shards_included": 1
+    },
+    {
+      "chip": "MemoryGlobalFinalize",
+      "main_cells": 447360,
+      "main_width": 30,
+      "preprocessed_width": 0,
+      "rows": 14912,
+      "shards_included": 1
+    },
+    {
+      "chip": "Range",
+      "main_cells": 393216,
+      "main_width": 1,
+      "preprocessed_width": 2,
+      "rows": 393216,
+      "shards_included": 3
+    },
+    {
+      "chip": "StoreByte",
+      "main_cells": 288000,
+      "main_width": 50,
+      "preprocessed_width": 0,
+      "rows": 5760,
+      "shards_included": 1
+    },
+    {
+      "chip": "ShiftLeft",
+      "main_cells": 164320,
+      "main_width": 65,
+      "preprocessed_width": 0,
+      "rows": 2528,
+      "shards_included": 1
+    },
+    {
+      "chip": "MemoryLocal",
+      "main_cells": 142720,
+      "main_width": 20,
+      "preprocessed_width": 0,
+      "rows": 7136,
+      "shards_included": 2
+    },
+    {
+      "chip": "KeccakPermuteControl",
+      "main_cells": 60864,
+      "main_width": 634,
+      "preprocessed_width": 0,
+      "rows": 96,
+      "shards_included": 1
+    },
+    {
+      "chip": "MemoryGlobalInit",
+      "main_cells": 51840,
+      "main_width": 30,
+      "preprocessed_width": 0,
+      "rows": 1728,
+      "shards_included": 1
+    },
+    {
+      "chip": "Program",
+      "main_cells": 38304,
+      "main_width": 1,
+      "preprocessed_width": 16,
+      "rows": 38304,
+      "shards_included": 3
+    },
+    {
+      "chip": "Mul",
+      "main_cells": 7872,
+      "main_width": 82,
+      "preprocessed_width": 0,
+      "rows": 96,
+      "shards_included": 1
+    },
+    {
+      "chip": "StoreHalf",
+      "main_cells": 4320,
+      "main_width": 45,
+      "preprocessed_width": 0,
+      "rows": 96,
+      "shards_included": 1
+    },
+    {
+      "chip": "Addw",
+      "main_cells": 3456,
+      "main_width": 36,
+      "preprocessed_width": 0,
+      "rows": 96,
+      "shards_included": 1
+    },
+    {
+      "chip": "MemoryBump",
+      "main_cells": 1440,
+      "main_width": 15,
+      "preprocessed_width": 0,
+      "rows": 96,
+      "shards_included": 1
+    },
+    {
+      "chip": "LoadWord",
+      "main_cells": 1408,
+      "main_width": 44,
+      "preprocessed_width": 0,
+      "rows": 32,
+      "shards_included": 1
+    },
+    {
+      "chip": "StoreWord",
+      "main_cells": 1408,
+      "main_width": 44,
+      "preprocessed_width": 0,
+      "rows": 32,
+      "shards_included": 1
+    },
+    {
+      "chip": "SyscallCore",
+      "main_cells": 960,
+      "main_width": 10,
+      "preprocessed_width": 0,
+      "rows": 96,
+      "shards_included": 1
+    },
+    {
+      "chip": "SyscallPrecompile",
+      "main_cells": 960,
+      "main_width": 10,
+      "preprocessed_width": 0,
+      "rows": 96,
+      "shards_included": 1
+    },
+    {
+      "chip": "StateBump",
+      "main_cells": 448,
+      "main_width": 14,
+      "preprocessed_width": 0,
+      "rows": 32,
+      "shards_included": 1
+    }
+  ],
+  "cpu_instruction_events": 4229756,
+  "cycles": 4229756,
+  "depth": 35,
+  "elapsed_seconds": 2.788650459,
+  "elf_sha256": "0cb8ff933cd606151c924cc4a51533507355e00184da023d7a716d8469049157",
+  "global_interaction_events": 30958,
+  "global_memory_finalize_events": 14881,
+  "global_memory_initialize_events": 1705,
+  "main_stored_cells": 213707168,
+  "mirror_mode": 1,
+  "mode": "cpu-mirror-records",
+  "note": "stored cells only: no shape_from_record cross-check, so no stacking-height rounding or padding columns. Main cells are prover inputs, not proving time.",
+  "pasta_retain": "pasta-uint",
+  "preprocessed_stored_cells": 2775552,
+  "proof_generated": false,
+  "records": 3
+}

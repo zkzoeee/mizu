@@ -17,7 +17,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
 use sha2::{Digest, Sha256};
-use sp1_core_executor::{Program, SP1CoreOpts, ShardingThreshold};
+use sp1_core_executor::{Program, RetainedEventsPreset, SP1CoreOpts, ShardingThreshold};
 use sp1_core_machine::{
     io::SP1Stdin,
     riscv::RiscvAir,
@@ -43,8 +43,26 @@ struct Args {
 
 /// The same pinned preset the project's trace accounting uses, so shard areas
 /// are comparable with its records and not with ambient SP1 defaults.
+/// `PASTA_RETAIN`, mapped exactly as the GPU harness maps it
+/// (`tools/pasta-proof/src/main.rs:2407`): `uint` retains `UINT256_MUL`,
+/// `pasta-uint` adds both Pasta additions. Unset keeps default routing.
+fn apply_retention_env(opts: &mut SP1CoreOpts) {
+    match std::env::var("PASTA_RETAIN").as_deref() {
+        Ok("uint") => {
+            opts.retained_events_presets.insert(RetainedEventsPreset::Uint256MulMod);
+        }
+        Ok("pasta-uint") => {
+            opts.retained_events_presets.insert(RetainedEventsPreset::Uint256MulMod);
+            opts.retained_events_presets.insert(RetainedEventsPreset::VestaAdd);
+            opts.retained_events_presets.insert(RetainedEventsPreset::PallasAdd);
+        }
+        Ok(other) => panic!("unknown PASTA_RETAIN routing {other:?}"),
+        Err(_) => {}
+    }
+}
+
 fn record_options() -> SP1CoreOpts {
-    SP1CoreOpts {
+    let mut opts = SP1CoreOpts {
         minimal_trace_chunk_threshold: 1 << 24,
         trace_chunk_slots: 1,
         memory_limit: 2 * 1024 * 1024 * 1024,
@@ -55,7 +73,9 @@ fn record_options() -> SP1CoreOpts {
         },
         global_dependencies_opt: true,
         ..SP1CoreOpts::default()
-    }
+    };
+    apply_retention_env(&mut opts);
+    opts
 }
 
 #[derive(Default)]
@@ -137,6 +157,7 @@ fn main() -> Result<()> {
 
     let report = serde_json::json!({
         "mode": "cpu-mirror-records",
+        "pasta_retain": std::env::var("PASTA_RETAIN").unwrap_or_else(|_| "default".into()),
         "proof_generated": false,
         "mirror_mode": args.mode,
         "accounts": args.accounts,
