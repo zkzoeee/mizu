@@ -17,9 +17,9 @@ The precompiles add no constraints to the wrap circuit: it is built over
 `CompressAir`, and the VK-map root is a witnessed public value. They reach the
 wrap verifying key through exactly one channel, the padded VK-map count's
 power-of-two bucket, which sets a Merkle depth that *is* in the circuit. Our 54
-chip clusters put that at depth 19 (313,644 keys) against upstream's 18; trimming
-the 14 `pasta_retained_clusters` to 3 lands on 43 clusters, 249,756 keys, depth
-18, with 12,388 keys of headroom. The lean set is now the compile-time default.
+chip clusters put that at depth 19 (313,638 keys) against upstream's 18; trimming
+the 14 `pasta_retained_clusters` to 3 lands on 43 clusters, 249,750 keys, depth
+18, with 12,394 keys of headroom. The lean set is now the compile-time default.
 
 Two measurements closed the other candidates. The compress-shape `Select` bump
 is invisible to the shrink program -- identical `dummy_input`, `total_memory` and
@@ -35,7 +35,7 @@ cheaper per verification, a 256 B proof instead of 864 B, and Succinct's release
 artifacts instead of a local setup that needed 107.4 GiB.
 
 **One caveat carried forward:** the ceiling is 262,144 keys and the default sits
-at 249,756, so roughly two more chip clusters would tip back to depth 19 and
+at 249,750, so roughly two more chip clusters would tip back to depth 19 and
 reopen the ceremony question. `cargo run --bin vk-map-guard` fails when that
 happens. And matching upstream's wrap vk is a *correctness*
 requirement that nothing checks: `try_install_circuit_artifacts` keys its
@@ -63,16 +63,16 @@ This phase gates everything else.
    which collapses all 140 chips into one cluster and undercounts by 54x; my
    first run made that mistake.
 
-   Counts from `vk-map-guard`, which calls the real `create_all_input_shapes`
-   and dedups shapes shared between clusters. (Figures given here before
-   2026-11-12 came from `recursion-shapes`, which does not dedup and so
-   overstated by ~3%.)
+   Counts from `vk-map-guard`, which calls the real `create_all_input_shapes`.
+   (Figures given here before 2026-11-13 came from `recursion-shapes`, which
+   iterated `0..=max_preprocessed_multiple` where the real loop starts at 1, so
+   it overstated by ~3%. Now fixed.)
 
    | | clusters | recursion programs | vk_map |
    | --- | ---: | ---: | ---: |
    | stock SP1 (implied, see below) | ~31 | ~186,037 | 7.4 MB |
-   | fork with `pasta-full-clusters` | 54 | 313,644 | ~12.6 MB |
-   | **this fork, current default (lean)** | **43** | **249,756** | **~10.0 MB** |
+   | fork with `pasta-full-clusters` | 54 | 313,638 | ~12.6 MB |
+   | **this fork, current default (lean)** | **43** | **249,750** | **~10.0 MB** |
 
    `create_all_input_shapes` emits one `Normalize` program per
    `cluster x 6,001` shapes from the multiple space (max preprocessed multiple
@@ -96,7 +96,7 @@ This phase gates everything else.
    routings' clusters are already compiled into `RiscvAir::machine()` — the
    per-precompile `precompile_clusters` (7-8 chips each, clusters 20-38) *and*
    the 14 `pasta_retained_clusters` (35-39 chips each, clusters 40-53). The VK
-   map built from this machine therefore covers both, and the 249,756 figure
+   map built from this machine therefore covers both, and the 249,750 figure
    already includes them. You cannot halve the build by picking a routing at
    run time.
 
@@ -138,7 +138,7 @@ it must be labelled that way wherever its outputs are quoted.
 
 **Milestone 2 — the real map, sharded.** `build_vk_map` takes
 `indices: Option<Vec<usize>>` and an explicit `merkle_tree_height`, so the
-249,756-program build splits across workers and runs incrementally rather than
+249,750-program build splits across workers and runs incrementally rather than
 as one long job. That is what `shapes.sh`'s S3 upload is for. It also means the
 build is resumable, which matters at this size.
 

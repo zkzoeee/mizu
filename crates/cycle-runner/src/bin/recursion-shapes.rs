@@ -46,7 +46,11 @@ fn normalize_program_parameter_space() -> (usize, usize, usize) {
         + (1 << 16) * NUM_BYTE_PREPROCESSED_COLS)
         .div_ceil(1 << CORE_LOG_STACKING_HEIGHT);
     let max_main_multiple = padded_element_threshold().div_ceil(1 << CORE_LOG_STACKING_HEIGHT) as usize;
-    let num_shapes = (0..=max_preprocessed_multiple)
+    // 1..=, not 0..=: the real loop (shapes.rs:711) starts at 1. Starting at 0
+    // added a phantom preprocessed_multiple=0 band worth ~193 shapes per
+    // cluster, which overstated the map by 8,293 on the 43-cluster default.
+    // Corrected 2026-11-13 against vk-map-guard, which calls the real function.
+    let num_shapes = (1..=max_preprocessed_multiple)
         .map(max_main_multiple_for_preprocessed_multiple)
         .sum::<usize>();
     (max_preprocessed_multiple, max_main_multiple, num_shapes)

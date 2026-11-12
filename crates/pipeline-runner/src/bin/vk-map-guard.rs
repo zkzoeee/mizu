@@ -32,19 +32,20 @@ fn main() {
     let machine = RiscvAir::<SP1Field>::machine();
     let clusters = machine.shape().chip_clusters.len();
 
-    // The map is padded to the number of distinct input shapes, plus one Compose
-    // per arity plus Deferred and Shrink.
-    let normalize = create_all_input_shapes(machine.shape(), DEFAULT_ARITY)
+    // Exactly what from_map does (prover/src/recursion.rs:63-67): the map is
+    // padded to the number of DISTINCT input shapes, with nothing added.
+    // `create_all_input_shapes` already emits the Compose-per-arity, Deferred and
+    // Shrink shapes alongside the Normalize ones, so adding them again
+    // double-counts -- which this tool did until 2026-11-13.
+    let keys = create_all_input_shapes(machine.shape(), DEFAULT_ARITY)
         .into_iter()
         .collect::<BTreeSet<_>>()
         .len();
-    let keys = normalize + DEFAULT_ARITY + 2;
     let padded = keys.next_power_of_two();
     let depth = padded.trailing_zeros();
 
     let ceiling = 1usize << EXPECTED_DEPTH;
     println!("chip clusters            {clusters}");
-    println!("distinct input shapes    {normalize}");
     println!("padded VK map keys       {keys}");
     println!("next power of two        {padded} = 2^{depth}");
     println!("allowed_vk_height        {depth}  (upstream: {EXPECTED_DEPTH})");

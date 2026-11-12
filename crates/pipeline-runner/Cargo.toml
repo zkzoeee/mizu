@@ -23,6 +23,9 @@ serde_json = { workspace = true }
 hex = { workspace = true }
 bincode = { workspace = true }
 sha2 = "0.10"
+# For build_vks' `Either<Vec<usize>, usize>` index selector. Already in the root
+# lock at 1.15.0 via the SP1 tree, so this adds an edge, not a resolution.
+either = "1"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 [features]
@@ -52,3 +55,8 @@ path = "src/bin/shrink-shape-probe.rs"
 [[bin]]
 name = "vk-map-guard"
 path = "src/bin/vk-map-guard.rs"
+
+# Sizes Phase A task 3 before renting for it; see docs/proof-pipeline-plan.md.
+[[bin]]
+name = "vk-map-sample"
+path = "src/bin/vk-map-sample.rs"

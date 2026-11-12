@@ -89,7 +89,7 @@ so **at least 11 clusters have to go**.
 `pasta_retained_clusters` (`core/machine/src/riscv/mod.rs`) has exactly 14
 entries — the 7 non-empty subsets of `{Uint256Mul, VestaAdd, PallasAdd}` times
 with/without the memory-global pair. Trimming it to 3 lands on 43 exactly:
-43 clusters; the real dedup'd count is 249,756, depth 18.
+43 clusters; the real dedup'd count is 249,750, depth 18.
 
 Those 14 exist to route the `PASTA_RETAIN` presets, so this is a real trade and
 not a free win — see stage 4.
@@ -124,18 +124,24 @@ real `create_all_input_shapes` and dedups through a `BTreeSet` exactly as
 
 | arm | clusters | VK map keys | next_pow2 | depth |
 | --- | --- | --- | --- | --- |
-| `pasta-full-clusters` (14) | 54 | 313,644 | 2^19 | 19 |
-| **default, lean (3)** | 43 | **249,756** | 2^18 | **18** |
+| `pasta-full-clusters` (14) | 54 | 313,638 | 2^19 | 19 |
+| **default, lean (3)** | 43 | **249,750** | 2^18 | **18** |
 | upstream, est. from `vk_map.bin` | - | ~155k-186k | 2^18 | **18** |
 
-Headroom on the default is **12,388 keys**, roughly two clusters.
+Headroom on the default is **12,394 keys**, roughly two clusters.
 
-**Correction.** Earlier figures here, and in commits cc81871e2 and f16f511, said
-324,060 and 258,049. Those came from `recursion-shapes`, which computes
-`clusters * shapes_per_cluster` analytically and does **not** dedup shapes shared
-between clusters, so it overstates by about 3%. The depth conclusions are
-unchanged; `vk-map-guard` is the authoritative tool, and it exits non-zero when
-the depth leaves 18 — which matters because nothing else checks it (stage 3).
+**Correction.** Earlier figures here, and in commits cc81871e2, f16f511 and
+912875c, said 324,060 and 258,049, and 912875c blamed the gap on shapes shared
+between clusters not being dedup'd. **That explanation was wrong.**
+`create_all_input_shapes` returns no duplicates at all — its `len()` and its
+dedup'd length are both 249,750. The real cause was an off-by-one in
+`recursion-shapes`, which iterated `0..=max_preprocessed_multiple` where the
+real loop (`shapes.rs:711`) starts at 1, adding a phantom band worth ~193 shapes
+per cluster: 193 x 43 = 8,299 against the observed 8,293 gap. Fixed in the tool.
+
+The depth conclusions are unchanged. `vk-map-guard` is authoritative because it
+calls the real function, and it exits non-zero when the depth leaves 18 — which
+matters because nothing else checks it (stage 3).
 
 ### Stage 2 — REDESIGNED, and the news is worse
 
@@ -207,7 +213,7 @@ proving, no GPU, locally runnable — but it needs `wrap_program_from_input`,
 `sp1-prover`, i.e. three `pub(crate)` -> `pub` changes in the fork.
 
 Note also that full *empirical* confirmation needs `vk_verification = true`,
-which needs the real VK map built (249,756 programs on the lean arm) — Phase A
+which needs the real VK map built (249,750 programs on the lean arm) — Phase A
 task 3. So the derivation above is as far as reasoning alone can go.
 
 ### Stage 2 (superseded) — the original decisive comparison
@@ -299,7 +305,7 @@ pipeline checks it for you.
 The chain above is complete by derivation plus the two measurements, but no
 end-to-end byte comparison of our computed wrap vk against
 `fce924068aa5a610` has been made. That needs `vk_verification = true`, which
-needs the real VK map built — 249,756 programs on the lean arm — i.e. Phase A
+needs the real VK map built — 249,750 programs on the lean arm — i.e. Phase A
 task 3. Until then: strong, link-by-link, but not observed.
 
 ### Stage 3 (superseded) — prove the payoff. ~10 min
@@ -349,7 +355,7 @@ ceremony-free Groth16 is worth the proving overhead.
   neither: the A40 was OOM-killed in `plonk.Setup` at the 46.6 GiB cgroup limit,
   and the 238 GiB CPU run was stopped by choice at 1 h 04 min, 30 h of CPU time,
   107.4 GiB peak, still pre-wrap.
-- It does not build the real VK map (249,756 programs on the default set).
+- It does not build the real VK map (249,750 programs on the default set).
   Production needs that for
   soundness regardless, and `without_vk_verification()` is itself a divergence:
   `vk_verification` is a direct parameter to `wrap_program_from_input`.

@@ -4525,6 +4525,7 @@ dependencies = [
  "anyhow",
  "bincode",
  "clap",
+ "either",
  "hex",
  "serde_json",
  "sha2 0.10.9",
