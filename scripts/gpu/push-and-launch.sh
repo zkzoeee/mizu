@@ -57,7 +57,7 @@ SCPOPTS=(-P "$PORT" -o StrictHostKeyChecking=accept-new -o ConnectTimeout=20)
 
 echo "=== probing direct ssh to $HOST:$PORT ==="
 ssh "${SSHOPTS[@]}" "root@$HOST" \
-  'echo ok; nvidia-smi --query-gpu=name,compute_cap,memory.total,driver_version --format=csv,noheader; nproc; free -g | head -2; df -h /workspace | tail -1; ls -la /workspace/mizu-cache 2>/dev/null || echo "no cache on this pod"'
+  'echo ok; nvidia-smi --query-gpu=name,compute_cap,memory.total,ecc.mode.current,driver_version --format=csv,noheader; nproc; free -g | head -2; df -h /workspace | tail -1; ls -la /workspace/mizu-cache 2>/dev/null || echo "no cache on this pod"'
 
 # The scripts go first and cost nothing (about 30 KB). The 72 MB bundle goes
 # only if the pod cannot already prove this exact build. The source

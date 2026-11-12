@@ -34,6 +34,16 @@ mkdir -p "$RESULTS"
 exec > >(tee -a "$RESULTS/run.log") 2>&1
 stamp() { echo "=== $* $(date -u +%FT%TZ) ==="; }
 fail() { stamp "FAILED: $*"; echo "$*" > "$RESULTS/FAILED"; sleep 2; exit 1; }
+# One nvidia-smi field, trimmed, never fatal. ECC mode is the reason this exists:
+# the A40 pool ships both ECC-on and ECC-off parts and the ECC-off ones proved
+# 11.8% faster, so every run records the card's ECC state as identity, not as a
+# gate -- a card that cannot report it ("[N/A]", "Not Supported", an absent
+# nvidia-smi) is still a card we proved on. See docs/running-a-proof.md.
+smi() {
+  nvidia-smi --query-gpu="$1" --format=csv,noheader 2>/dev/null \
+    | head -1 | sed 's/^ *//; s/ *$//' || echo unknown
+}
+
 stamp "entrypoint started"
 
 # The deadline halts the container even if everything else wedges. It is a
@@ -73,7 +83,10 @@ fi
   echo "  \"cuda_archs\": \"$CUDA_ARCHS\","
   echo "  \"gpu_name\": \"$(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)\","
   echo "  \"gpu_uuid\": \"$(nvidia-smi --query-gpu=uuid --format=csv,noheader | head -1)\","
-  echo "  \"driver\": \"$(nvidia-smi --query-gpu=driver_version --format=csv,noheader | head -1)\","
+  echo "  \"driver\": \"$(smi driver_version)\","
+  echo "  \"gpu_memory_total\": \"$(smi memory.total)\","
+  echo "  \"ecc_mode_current\": \"$(smi ecc.mode.current)\","
+  echo "  \"ecc_mode_pending\": \"$(smi ecc.mode.pending)\","
   echo "  \"cpu_model\": \"$(awk -F': ' '/model name/{print $2;exit}' /proc/cpuinfo)\","
   echo "  \"host_vcpu_visible\": $(nproc),"
   echo "  \"elf_sha256\": \"$(sha256sum "$ELF" | cut -d' ' -f1)\","

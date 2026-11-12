@@ -353,8 +353,29 @@ only two values. Against the nominal 48 GiB that is 1.2% short versus 7.5%
 short, while the three A5000s all report an identical 25,285,623,808 bytes,
 1.9% short of their nominal 24 GiB. The extra ~6.3% is the size of ECC's
 reservation, so the likely (unmeasured) difference is ECC disabled on that
-host. Check it with `nvidia-smi
---query-gpu=ecc.mode.current` when you next hold a pod. Practically: a repeat
+host.
+
+**The gates now record it, so the next rental decides this without being
+asked.** Since 2026-11-12 `pod-prove.sh`, `pod-run.sh` and `entrypoint.sh` each
+write `ecc_mode_current` and `ecc_mode_pending` into `build-identity.json`,
+print one `card: … ECC … ` line into `run.log` beside the timings, and
+`push-and-launch.sh` shows ECC in its pre-flight banner before any money is
+spent; `gpu-info.csv` carries the field too. It is **identity, never a gate**: a
+card that answers `[N/A]`, `Not Supported` or nothing at all is still a card we
+prove on, so the helper swallows the failure and records `unknown`. Exercised
+locally against all four answers -- absent `nvidia-smi`, `[N/A]`, `Enabled`, and
+a driver that rejects the field -- each of which still emits valid JSON and
+still runs. **None of the eleven rentals in the table above has the field**:
+they were all terminated before the gates recorded it, so `ecc_mode_current` is
+`null` in the data file, which means unrecorded, not off.
+
+The reading is deliberately *not* taken through CUDA, where
+`cudaDevAttrEccEnabled` would answer it directly, because the probe lives in
+`tools/pasta-proof/src` -- inside the cache key's `source_fingerprint`. Adding a
+field there would invalidate the EU-SE-1 build cache and charge the next run a
+~12.5-minute fat rebuild (~$0.20) for a diagnostic `nvidia-smi` already gives
+for free. The shell scripts are outside `SOURCES` by design, so recording this
+costs nothing. Practically: a repeat
 measurement on one card is good to about 3%, so never compare arms measured on
 different pods -- not because any card is noisy, but because you may have drawn
 a different part.

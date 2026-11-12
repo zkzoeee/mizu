@@ -92,7 +92,15 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   values. Against the nominal 48 GiB the outlier is 1.2% short and the cluster 7.5%
   short, while all three A5000s report an identical 25,285,623,808 bytes, 1.9% short of
   their nominal 24 GiB -- so the extra ~6.3% on the cluster is the size of the ECC
-  reservation. **Hypothesis, unmeasured**: the fast host
+  reservation. **The gates record `ecc.mode.current` and `ecc.mode.pending` from
+  2026-11-12 on** -- in all three identity blocks, in `gpu-info.csv`, in the launcher's
+  pre-flight banner, and as one line in `run.log` -- as identity and never as a gate,
+  since a card that cannot answer is still a card we prove on; tested against an absent
+  `nvidia-smi`, `[N/A]`, `Enabled` and a rejected field, all four of which still emit
+  valid JSON. Not read through CUDA's `cudaDevAttrEccEnabled`, which would be more
+  direct: that probe lives inside the cache key's `source_fingerprint`, so the field
+  would cost the next run a ~12.5-minute fat rebuild. The shell drivers are outside
+  `SOURCES`, so this costs nothing. **Hypothesis, unmeasured**: the fast host
   had ECC off, which would also explain the bandwidth. `nvidia-smi
   --query-gpu=ecc.mode.current` on the next pod decides it. The operative rule is
   unchanged -- every per-arm comparison in these records is measured on one pod in one

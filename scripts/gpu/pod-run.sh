@@ -66,6 +66,16 @@ fi
 exec > >(tee -a "$RESULTS/run.log") 2>&1
 stamp() { echo "=== $* $(date -u +%FT%TZ) ==="; }
 fail() { stamp "FAILED: $*"; echo "$*" > "$RESULTS/FAILED"; exit 1; }
+# One nvidia-smi field, trimmed, never fatal. ECC mode is the reason this exists:
+# the A40 pool ships both ECC-on and ECC-off parts and the ECC-off ones proved
+# 11.8% faster, so every run records the card's ECC state as identity, not as a
+# gate -- a card that cannot report it ("[N/A]", "Not Supported", an absent
+# nvidia-smi) is still a card we proved on. See docs/running-a-proof.md.
+smi() {
+  nvidia-smi --query-gpu="$1" --format=csv,noheader 2>/dev/null \
+    | head -1 | sed 's/^ *//; s/ *$//' || echo unknown
+}
+
 stamp "run started"
 
 # ---------------------------------------------------------------- 0. gates
@@ -78,6 +88,8 @@ nvidia-smi --query-gpu=name,memory.used,memory.total,utilization.gpu --format=cs
 if grep -qi 'Insufficient Permissions' "$RESULTS/telemetry-probe.csv"; then
   fail "nvidia-smi will not report memory/utilization; this is a MIG slice, not a whole card"
 fi
+# Not a gate: which part we drew. See the note on smi() above.
+echo "card: $(smi name), ECC $(smi ecc.mode.current) (pending $(smi ecc.mode.pending)), $(smi memory.total)"
 
 # The cheap gate that catches a broken community host in seconds rather than
 # after a full build. The PyTorch images carry torch; if a leaner image does
@@ -185,7 +197,9 @@ cd "$CRATE"
   echo "  \"gpu_name\": \"$(nvidia-smi --query-gpu=name --format=csv,noheader | head -1)\","
   echo "  \"gpu_uuid\": \"$(nvidia-smi --query-gpu=uuid --format=csv,noheader | head -1)\","
   echo "  \"gpu_memory_total\": \"$(nvidia-smi --query-gpu=memory.total --format=csv,noheader | head -1)\","
-  echo "  \"compute_cap\": \"$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader | head -1)\","
+  echo "  \"compute_cap\": \"$(smi compute_cap)\","
+  echo "  \"ecc_mode_current\": \"$(smi ecc.mode.current)\","
+  echo "  \"ecc_mode_pending\": \"$(smi ecc.mode.pending)\","
   echo "  \"host_vcpu_visible\": $(nproc),"
   echo "  \"host_mem_kb\": $(awk '/MemTotal/{print $2}' /proc/meminfo),"
   echo "  \"cpu_model\": \"$(awk -F': ' '/model name/{print $2;exit}' /proc/cpuinfo)\","
@@ -403,7 +417,8 @@ for ARM in $ARMS; do
   [ "$RC" -eq 0 ] || fail "on-pod reload verification of $ARM exited $RC"
 done
 
-nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv > "$RESULTS/gpu-info.csv"
+nvidia-smi --query-gpu=name,driver_version,memory.total,ecc.mode.current --format=csv \
+  > "$RESULTS/gpu-info.csv"
 sha256sum "$RESULTS"/*/*.proof.bin 2>/dev/null | tee "$RESULTS/proof-hashes.txt" || true
 ls -l "$RESULTS"/*/*.proof.bin 2>/dev/null | tee -a "$RESULTS/proof-hashes.txt" || true
 cat "$RESULTS/telemetry-summary.txt" 2>/dev/null || true

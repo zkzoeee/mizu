@@ -13,7 +13,8 @@
   "cost_definitions": {
     "prove_cost_usd": "gpu_prove_seconds * rate_usd_per_hour / 3600; the prove loop alone",
     "pod_billed_usd": "what Runpod charged for that rental, GPU + disk, from list-pod-billing with bucketSize=hour",
-    "caveat": "a pod that also compiled the CUDA prover, or proved several times, has no per-proof bill; see pod_billed_is_per_proof"
+    "caveat": "a pod that also compiled the CUDA prover, or proved several times, has no per-proof bill; see pod_billed_is_per_proof",
+    "ecc_mode_current": "not recorded on any of these runs: the gates began recording it on 2026-11-12, after every pod here was terminated. null means unrecorded, not off. The ECC reading below rests on reported VRAM totals alone."
   },
   "measurements": [
     {
@@ -31,7 +32,8 @@
       "pod_billed_is_per_proof": true,
       "pod_also_compiled": false,
       "gpu_total_vram_bytes": 50899386368,
-      "run": "20261112T0502Z-a40-cachewarm"
+      "run": "20261112T0502Z-a40-cachewarm",
+      "ecc_mode_current": null
     },
     {
       "card": "A40",
@@ -48,7 +50,8 @@
       "pod_billed_is_per_proof": false,
       "pod_also_compiled": true,
       "gpu_total_vram_bytes": 47699722240,
-      "run": "20261110T1655Z-inflight-sweep/sweep-inflight8-pass1"
+      "run": "20261110T1655Z-inflight-sweep/sweep-inflight8-pass1",
+      "ecc_mode_current": null
     },
     {
       "card": "A40",
@@ -65,7 +68,8 @@
       "pod_billed_is_per_proof": true,
       "pod_also_compiled": false,
       "gpu_total_vram_bytes": 47699722240,
-      "run": "20261111T0910Z-cudaprobe-validation"
+      "run": "20261111T0910Z-cudaprobe-validation",
+      "ecc_mode_current": null
     },
     {
       "card": "A40",
@@ -82,7 +86,8 @@
       "pod_billed_is_per_proof": false,
       "pod_also_compiled": true,
       "gpu_total_vram_bytes": 47699722240,
-      "run": "20261111T0628Z-fatbuild-populate"
+      "run": "20261111T0628Z-fatbuild-populate",
+      "ecc_mode_current": null
     },
     {
       "card": "A40",
@@ -99,7 +104,8 @@
       "pod_billed_is_per_proof": false,
       "pod_also_compiled": true,
       "gpu_total_vram_bytes": 47699722240,
-      "run": "20261110T1655Z-inflight-sweep/sweep-inflight8-pass3"
+      "run": "20261110T1655Z-inflight-sweep/sweep-inflight8-pass3",
+      "ecc_mode_current": null
     },
     {
       "card": "A40",
@@ -116,7 +122,8 @@
       "pod_billed_is_per_proof": true,
       "pod_also_compiled": false,
       "gpu_total_vram_bytes": 47699722240,
-      "run": "20261111T1104Z-slim-timed"
+      "run": "20261111T1104Z-slim-timed",
+      "ecc_mode_current": null
     },
     {
       "card": "A40",
@@ -133,7 +140,8 @@
       "pod_billed_is_per_proof": true,
       "pod_also_compiled": false,
       "gpu_total_vram_bytes": 47699722240,
-      "run": "20261111T0649Z-cachehit"
+      "run": "20261111T0649Z-cachehit",
+      "ecc_mode_current": null
     },
     {
       "card": "RTX A5000",
@@ -150,7 +158,8 @@
       "pod_billed_is_per_proof": false,
       "pod_also_compiled": true,
       "gpu_total_vram_bytes": 25285623808,
-      "run": "20261111T0751Z-a5000"
+      "run": "20261111T0751Z-a5000",
+      "ecc_mode_current": null
     },
     {
       "card": "RTX A5000",
@@ -167,7 +176,8 @@
       "pod_billed_is_per_proof": true,
       "pod_also_compiled": false,
       "gpu_total_vram_bytes": 25285623808,
-      "run": "20261111T0856Z-a5000-proveonly"
+      "run": "20261111T0856Z-a5000-proveonly",
+      "ecc_mode_current": null
     },
     {
       "card": "RTX A5000",
@@ -184,7 +194,8 @@
       "pod_billed_is_per_proof": true,
       "pod_also_compiled": false,
       "gpu_total_vram_bytes": 25285623808,
-      "run": "20261111T1041Z-slim-base-image"
+      "run": "20261111T1041Z-slim-base-image",
+      "ecc_mode_current": null
     },
     {
       "card": "A40",
@@ -201,7 +212,8 @@
       "pod_billed_is_per_proof": false,
       "pod_also_compiled": true,
       "gpu_total_vram_bytes": 47699722240,
-      "run": "20261110T1436Z-a40-montreal"
+      "run": "20261110T1436Z-a40-montreal",
+      "ecc_mode_current": null
     },
     {
       "card": "A40",
@@ -218,7 +230,8 @@
       "pod_billed_is_per_proof": false,
       "pod_also_compiled": true,
       "gpu_total_vram_bytes": 47699722240,
-      "run": "20261110T1311Z"
+      "run": "20261110T1311Z",
+      "ecc_mode_current": null
     }
   ],
   "analysis_at_inflight_8": {
