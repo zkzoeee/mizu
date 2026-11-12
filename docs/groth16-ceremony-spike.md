@@ -1,5 +1,13 @@
 # Groth16 without a ceremony: a spike
 
+> **Current answer (2026-11-13): no ceremony is needed.** With the default
+> (lean) cluster set, `vk_verification` on and the compress shape now pinned
+> in-tree, this fork's computed wrap verifying key is byte-identical to
+> upstream's baked one (`fce924068aa5a610`), so Succinct's released Groth16
+> artifacts apply. Measured, with a negative control. See "FINAL" below; the
+> stages above it are the path there, including two wrong turns kept for the
+> record.
+
 ## The question
 
 Does this fork's wrap verifying key equal upstream SP1's? If it does,
@@ -288,7 +296,111 @@ and the default 54 exceeds it. The claim that prompted this spike is therefore
 correct in mechanism and correct in conclusion *once the cluster count is
 managed*; it is not automatic.
 
-### REVERSED, 2026-11-13: a ceremony IS required
+### FINAL, 2026-11-13: no ceremony is needed — measured on wrap vk bytes
+
+The "REVERSED" section below stopped one link short. It showed that the fork's
+larger compress shape changes the shrink *program*, and concluded the wrap vk
+must change. But the wrap program sees the shrink proof only through
+`shrink_shape.dummy_input(..)`, and `dummy_input` sees a shape only through
+`ceil(sum(height * width) / 2^log_stacking_height)` — the same insensitivity
+that made `Select` +32 invisible one link earlier. Nobody had measured whether
+the changed shrink tables actually cross a stacking multiple. They do not.
+
+`crates/pipeline-runner/src/bin/compress-shape-audit.rs` does three things with
+SP1's own builders and no proving.
+
+**1. Per-cluster compress needs**, mirroring the `#[cfg(test)]`
+`compute_compress_shape` (`shapes.rs:198`). Self-check: recomputing over the
+clusters with no Pasta chip reproduces upstream's pinned `compress_shape.json`
+exactly, all eight heights. Then, over all 43 clusters:
+
+| clusters | what | over upstream's shape |
+| --- | --- | --- |
+| 41, 42 | retained `[Uint256Mul, VestaAdd, PallasAdd]` (+ memory-global), 37/39 chips, 5,239/5,299 columns | `ExtAlu` +334,157, `PrefixSumChecks` +94,952 |
+| 37, 38 | Pallas / Vesta Poseidon (control + permute), 2,834 columns | `ExtAlu` +3,221 |
+| the other 39, incl. retained `[PallasAdd]` and every Pasta add/double/fp-op cluster | | nothing |
+
+So the whole overflow is two clusters. The fork's real compress shape, after the
+arity-4 compose fixed point:
+
+```
+upstream  BaseAlu=592384 ExtAlu=795264  MemoryConst=492320 MemoryVar=661984 Poseidon2WideDeg3=158368 PrefixSumChecks=224608 Select=1087808
+fork      BaseAlu=592384 ExtAlu=1129440 MemoryConst=492480 MemoryVar=664288 Poseidon2WideDeg3=158880 PrefixSumChecks=319584 Select=1087808
+```
+
+That is now pinned in `vendor/sp1/crates/prover/compress_shape.json`, with
+`Select` at the 1,087,840 real proving asked for.
+
+**2. The unmeasured link.** For each compress shape: build the shrink program,
+take its real preprocessed table heights exactly as `preprocessed_table_heights`
+does (`hypercube/src/prover/shard.rs:363`), build the wrap dummy input.
+
+| compress shape | compress multiples (pre/main, x 2^20) | shrink area (pre/main, x 2^18) | main slack left |
+| --- | --- | --- | --- |
+| upstream pinned | 34 / 52 | 33 / 50 | 101,456 cells |
+| fork, in-tree | 37 / 58 | 33 / 50 | 45,072 cells |
+
+Six more compress multiples add 56,384 cells to the shrink main area and it stays
+inside the same 2^18 multiple. The wrap dummy input is byte-identical
+(`405178201d07b5cb..`).
+
+**3. The wrap vk itself**, computed the way `WrapProver::new` does
+(`worker/prover/recursion.rs:1165-1190`): compile `wrap_program_from_input` (made
+`pub` for this) and run setup on `CpuWrapProverBuilder`'s prover. No proof, no VK
+map — the wrap program depends on the map's *height*, not its contents.
+
+| arm | VK-map depth | computed wrap vk | vs upstream `fce924068aa5a610` |
+| --- | --- | --- | --- |
+| upstream pinned shape | 18 | `fce924068aa5a610` | MATCH |
+| fork shape, recomputed | 18 | `fce924068aa5a610` | MATCH |
+| **in-tree `compress_shape.json`** | 18 | `fce924068aa5a610` | **MATCH** |
+| negative control | 19 | `fad44bcd347d83dc` | MISMATCH, as it must |
+
+The first row also answers the question the handoff brief flagged as the real
+risk — whether the four-input chain is exhaustive. This fork's tree, given
+upstream's shape, reproduces upstream's baked vk byte for byte; a fifth
+fork-specific input would have shown up as a mismatch there. The control row
+shows the tool can fail (unlike `test_wrap_vk`), and that depth 18 — the lean
+cluster default — is necessary, not incidental.
+
+**What ceremony-free Groth16 requires of this fork, all now in place:**
+
+1. the default (lean) cluster set, so the VK map pads to 249,750 keys, depth 18
+   (upstream's map is exactly 185,862 keys, depth 18);
+2. `vk_verification` on — which production needs anyway;
+3. the in-tree compress shape, whose shrink tables stay inside upstream's
+   stacking multiples.
+
+**Corrections to earlier sections.**
+
+- Stage 3 said a wrap-vk mismatch is silent. Not with `vk_verification` on: the
+  wrap prover's lazy init compares its computed vk with `WRAP_VK_BYTES` and
+  returns a fatal "Wrap vk mismatch" (`worker/prover/recursion.rs:659-680`). It
+  is silent only with verification off, which is how every development run so
+  far went through with `4806ebe3d6454da2`.
+- The VK map is not a 249,750-program prerequisite for a first proof. SP1's own
+  `test_build_vk_map` builds a *partial* map — the shapes that appear in one core
+  proof plus the last 12 (compose, deferred, shrink) — and proves against it via
+  `with_vk_map_path`; `from_map` pads the rest. Dozens of programs, not a quarter
+  of a million. The full map is for generality later, since a shape missing from
+  the map cannot be proved until it is added, and adding changes the root.
+- The root is ours and that is fine: `VkRoot` is one of the gnark circuit's five
+  public inputs, and the Solidity template carries `VK_ROOT()` as a substituted
+  constant. We deploy Succinct's Groth16 key material with our own `VK_ROOT`.
+
+**Still not done:** an actual Groth16 proof. Everything above is keygen-level.
+The remaining run is: core proof -> partial VK map from its shapes -> prove
+`--mode groth16` with verification on and `SP1_CIRCUIT_MODE` unset, so the
+released artifacts install and SP1's own wrap-vk check runs for real.
+
+**Margin.** 45,072 cells of shrink main-area slack. Compress growth of roughly
+five more stacking multiples would cross it, so a new wide chip in a retained
+cluster could. Dropping clusters 41 and 42 would restore almost all of the
+101,456, at the cost of retaining only `PallasAdd` in core shards. Re-run
+`compress-shape-audit` after any change to chips, clusters or the compress shape:
+it exits non-zero unless the in-tree arm matches and the control does not.
+
+### (superseded by FINAL above) REVERSED, 2026-11-13: a ceremony IS required
 
 Stage 2 concluded the compress shape was invisible to the wrap vk. **That
 conclusion was wrong**, and the error was generalising from an unrepresentative

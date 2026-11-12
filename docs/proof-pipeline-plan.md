@@ -12,15 +12,19 @@ verification (1.30x) for that privilege. The clinching sentence was that a
 Groth16 ceremony means "a full redo every time the circuit changes -- which, with
 custom precompiles in the core machine, it will."
 
-**SUPERSEDED 2026-11-13: that last clause is TRUE after all, and the reversal
-below is itself reversed.** A 64-program VK-map sample found the fork needs
-`ExtAlu` +320,059 rows and `PrefixSumChecks` +94,952, not just `Select` +32, and
-`shrink-shape-probe` shows those deltas DO change the shrink program and so the
-wrap vk. A Groth16 ceremony is required. The wrap decision should be revisited
-against PLONK's universal SRS; see docs/groth16-ceremony-spike.md, "REVERSED".
-The reasoning below is kept for the record.
+**That last clause is false for this fork, measured on wrap vk bytes
+(2026-11-13).** `compress-shape-audit` computes the wrap verifying key for the
+in-tree compress shape at VK-map depth 18 with `vk_verification` on and gets
+`fce924068aa5a610` — upstream's baked value — with a depth-19 negative control
+that correctly mismatches. Details in docs/groth16-ceremony-spike.md, "FINAL".
 
-The claim was:
+This section went back and forth twice on the way: a first argument that the
+compress shape was invisible (right for `Select` +32, wrongly generalised), then
+a reversal when the real `ExtAlu` +334,157 was found to change the shrink
+program. Both stopped short of the last link. The larger shrink program stays
+inside the same 2^18 stacking multiples, so the wrap input, wrap program and wrap
+vk are unchanged.
+
 The precompiles add no constraints to the wrap circuit: it is built over
 `CompressAir`, and the VK-map root is a witnessed public value. They reach the
 wrap verifying key through exactly one channel, the padded VK-map count's

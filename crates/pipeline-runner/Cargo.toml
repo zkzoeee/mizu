@@ -60,3 +60,8 @@ path = "src/bin/vk-map-guard.rs"
 [[bin]]
 name = "vk-map-sample"
 path = "src/bin/vk-map-sample.rs"
+
+# Per-cluster compress-shape needs, and whether they reach the wrap input.
+[[bin]]
+name = "compress-shape-audit"
+path = "src/bin/compress-shape-audit.rs"
