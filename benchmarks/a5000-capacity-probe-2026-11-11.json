@@ -4,7 +4,7 @@
   "captured": "2026-11-11T11:20:00Z",
   "question": "Why did the timed run land on an A40 rather than the recommended A5000?",
   "answer": "The A5000 was gone and stayed gone. Seventeen create refusals across the afternoon and three deep capacity probes ten minutes apart, all reporting Out on every probed CUDA version in Secure EU-SE-1. The pool is ten units and none came free.",
-  "create_attempts_refused": 48,
+  "create_attempts_refused": 49,
   "per_gpu_read": {
     "tool": "get-gpu-type include=AVAILABILITY product=POD cloud=SECURE minCudaVersion=12.8",
     "availability": "LOW",
@@ -146,6 +146,13 @@
       "creates_refused": 1,
       "probe": "NONE, 13.2 available:false, maxCount secure 10 / community 10",
       "note": "three-hour watch cycle; hour twelve of the window, and the AMPERE_24 pool has still never turned over on Secure in EU-SE-1"
+    },
+    {
+      "at": "02:45Z (2026-11-12)",
+      "gpu": "NVIDIA RTX A5000",
+      "creates_refused": 1,
+      "probe": "LOW on Secure -- the first non-NONE A5000 reading of the whole window -- in CA-MTL-1 and US-IL-1. Not EU-SE-1.",
+      "note": "fifteen hours and forty-five minutes after the window opened, AMPERE_24 came back. The create into EU-SE-1 was still refused, because the stock is in Montreal and Illinois and the cache is in Stockholm."
     }
   ],
   "the_two_catalog_reads_disagree": {
@@ -224,11 +231,12 @@
   },
   "unobtainable_window": {
     "from": "11:00Z",
-    "to": "22:44Z",
-    "hours": 11.7,
-    "checks": "forty-eight refused creates (thirty-five A5000, eleven A6000, two Community A5000) and twelve probes",
+    "to": "02:45Z (2026-11-12)",
+    "hours": 15.7,
+    "checks": "forty-nine refused creates (thirty-six A5000, eleven A6000, two Community A5000) and thirteen probes",
     "reading": "not contention but absence, for the better part of a working day, on Secure and Community alike. Ten units in the pool and never one free. The A40 answered twice inside the first hour, was NONE by 14:10Z and was LOW again by 17:47Z, so the 48 GB fallback comes and goes on a scale of hours while AMPERE_24 simply never returned; the only card obtainable in EU-SE-1 late in the window was the A6000, also $0.59.",
-    "what_it_means_for_planning": "price the work at the A40/A6000 tier of $0.59/hr and treat $0.27 as a windfall that may not arrive for a day. A schedule that must produce a proof at a particular hour cannot rest on spot-style 24 GB capacity at all -- that is the argument for a committed box rather than a cheaper hourly rate."
+    "what_it_means_for_planning": "price the work at the A40/A6000 tier of $0.59/hr and treat $0.27 as a windfall that may not arrive for a day. A schedule that must produce a proof at a particular hour cannot rest on spot-style 24 GB capacity at all -- that is the argument for a committed box rather than a cheaper hourly rate.",
+    "how_it_ended": "it did not end for EU-SE-1. At 02:45Z the A5000 read LOW on Secure for the first time since 11:00Z, but in CA-MTL-1 and US-IL-1; EU-SE-1 was absent from the dataCenters array and the create there was refused a thirty-sixth time. Two reads four minutes apart disagreed about Montreal (present, then gone), so even the DC-scoped list churns on a scale of minutes. So the thing that kept the card out of reach for sixteen hours was never purely scarcity -- it was the intersection of scarcity with one pinned data centre. The card is rentable; the cache is not reachable from it."
   },
   "catalog_snapshot": {
     "at": "17:51Z",
@@ -487,5 +495,19 @@
     "community_lost": "the RTX 5000 Ada that was the only usable Community card at 18:12Z is NONE 56 minutes later",
     "what_it_means": "placement churns on a scale of tens of minutes, in both directions, so a snapshot is only worth acting on immediately. The useful change: a Community RTX 4090 at $0.34 is now the cheapest card anywhere that can run this binary -- 24 GB, sm_89, inside the fat 86,89,120 set. It cannot mount the Secure cache volume, so it means a build in the pod, which is the shape the user proposed for the Community A5000 that never appeared.",
     "correction": "I first wrote this block timestamped 18:33Z from assumption instead of reading the clock; the reads were at 19:08Z and the gap from the first snapshot is 77 minutes, not 42."
+  },
+  "catalog_snapshot_three": {
+    "at": "02:45Z (2026-11-12)",
+    "cloud": "SECURE",
+    "what_changed_in_eu_se_1": "the A40 reads MEDIUM in EU-SE-1 and HIGH fleet-wide -- the strongest EU-SE-1 reading of the entire window, and the only MEDIUM seen on any card we can use. The A6000 is LOW in EU-SE-1 again, the same grade it carried while refusing eleven creates. Nothing in AMPERE_24 is in EU-SE-1 at all.",
+    "a5000": "LOW, US-IL-1 (and CA-MTL-1 in the read four minutes earlier), Secure $0.27/hr; Community NONE everywhere",
+    "a40": "HIGH fleet-wide; CA-MTL-1 MEDIUM, EU-SE-1 MEDIUM; Secure $0.59/hr",
+    "a6000": "LOW, EU-SE-1 only; Secure $0.59/hr",
+    "4090": "LOW on Secure in EU-RO-1, EUR-IS-1, EUR-IS-2, US-IL-1 at $0.89; Community $0.34",
+    "3090": "LOW, EU-CZ-1 only -- the other AMPERE_24 card, also not in EU-SE-1"
+  },
+  "the_timing_does_not_need_the_cache": {
+    "point": "the cached build buys wall-clock and therefore money, not measurement. gpu_prove_seconds is measured after the ELF exists, so a build-in-pod run on an A5000 anywhere produces a README row that is directly comparable with the cached A40 row. The cache is a cost optimisation, not a measurement precondition.",
+    "consequence": "the A5000 row can be had from US-IL-1 without any volume: roughly seventeen minutes of build plus two and a half minutes of proving at $0.27/hr, about nine cents, against $0.434 remaining under the cap."
   }
 }

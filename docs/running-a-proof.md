@@ -260,7 +260,7 @@ for `minCudaVersion: "12.8"` and lands on a 13.2 host.
 data-centre local, so a cache in EU-SE-1 means the choice is whatever EU-SE-1
 has. On 2026-11-11 that was the A40 and A6000 at $0.59 (`Low` on 13.2 only);
 the A5000 and 3090 share the `AMPERE_24` pool and were `NONE` for a
-continuously watched **11.7 hours** across forty-eight refused creates and twelve
+continuously watched **15.7 hours** across forty-nine refused creates and thirteen
 probes, on Community as well as Secure, while the 4090's Secure stock was
 entirely in EU-RO-1. The A40 went `NONE` too, by 14:10Z. Both 48 GB
 cards read `LOW` again by 17:47Z, but that read bought nothing. **The A6000
@@ -274,6 +274,24 @@ at a given hour cannot rest on hourly GPU capacity here, and **no read on this
 API predicts a create** -- grades are advisory on 48 GB cards exactly as they
 are on 24 GB ones. So **$0.59/hr is the practical floor for a cache-warm run**, and the
 A5000's $0.27 is a best case that needs its pool to be free.
+
+**And when the pool came back, it came back somewhere else.** At 02:45Z on
+2026-11-12, after fifteen hours and forty-five minutes of `NONE`, the A5000 read
+`LOW` on Secure -- in CA-MTL-1 and US-IL-1. EU-SE-1 was not in the
+`dataCenters` array, and the create there was refused a thirty-sixth time. Two
+reads four minutes apart disagreed about whether Montreal was in the list, so
+even the data-centre-scoped read churns by the minute. **So the sixteen-hour
+blockage was never scarcity alone -- it was scarcity intersected with one pinned
+data centre.** The card is rentable; the cache is not reachable from it. Note
+also what EU-SE-1 did have at that hour: the A40 at `MEDIUM`, the strongest
+reading any usable card gave all window, and `HIGH` fleet-wide.
+
+**The cache buys money, not measurement.** `gpu_prove_seconds` is measured after
+the ELF exists, so a build-in-pod run on an A5000 in any data centre yields a
+row directly comparable with the cached A40 row -- about seventeen minutes of
+build plus two and a half minutes of proving, roughly nine cents at $0.27/hr.
+The volume is a cost optimisation, not a precondition for a number. That is the
+cheap way to break a data-centre pin that no amount of waiting has broken.
 
 **The data-centre pin is documented, and so is the way out of it.** A network
 volume's `dataCenter` is fixed at creation, and "only compute in the volume's
