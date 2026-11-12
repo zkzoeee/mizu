@@ -63,17 +63,39 @@ fn main() -> Result<()> {
     println!("log_stacking_height {log_stacking_height}, max_log_row_count {max_log_row_count}");
     println!("vk map height held at {FIXED_VK_MAP_HEIGHT} for both arms\n");
 
+    // Arm A is the file as upstream pins it; arm B applies the overrides the
+    // fork actually needs. Pass them as --override Chip=Height.
+    let overrides: Vec<(String, u64)> = std::env::args()
+        .collect::<Vec<_>>()
+        .windows(2)
+        .filter(|w| w[0] == "--override")
+        .map(|w| {
+            let (k, v) = w[1].split_once('=').expect("--override wants Chip=Height");
+            (k.to_string(), v.parse().expect("height must be a number"))
+        })
+        .collect();
+    if overrides.is_empty() {
+        println!("no --override given; pass e.g. --override ExtAlu=1115323");
+    }
+    println!("overrides: {overrides:?}\n");
+
     let mut results = Vec::new();
-    for (label, select) in [("upstream", "1087808"), ("ours", "1087840")] {
-        // The file holds one of the two values; normalise to the arm's.
-        let json = base.replace("1087840", "1087808").replace("1087808", select);
+    for (label, apply) in [("upstream", false), ("fork", true)] {
+        let mut json = base.clone();
+        if apply {
+            for (chip, height) in &overrides {
+                let pat = format!("\"{chip}\": ");
+                let at = json.find(&pat).unwrap_or_else(|| panic!("{chip} not in the shape"));
+                let start = at + pat.len();
+                let end = start
+                    + json[start..]
+                        .find(|c: char| !c.is_ascii_digit())
+                        .expect("height digits");
+                json = format!("{}{}{}", &json[..start], height, &json[end..]);
+            }
+        }
         let shape: SP1RecursionProofShape =
             serde_json::from_str(&json).with_context(|| format!("parse {label} shape"))?;
-        let height = shape
-            .shape
-            .height_of_name("Select")
-            .context("the shape has no Select height")?;
-        assert_eq!(height.to_string(), select, "{label}: shape rewrite did not take");
 
         let input = shape.dummy_input(
             1,
@@ -85,13 +107,14 @@ fn main() -> Result<()> {
         );
         let input_sha = sha(&bincode::serialize(&input).context("serialize input")?);
 
-        // vk_verification = true: upstream's baked wrap vk was generated with it
-        // on, and this probe is about matching upstream.
         let program = shrink_program_from_input(&recursive_verifier(shard_verifier), true, &input);
         let inner = program.into_inner();
         let event_counts = format!("{:?}", inner.event_counts);
 
-        println!("{label:9} Select {height}");
+        println!("{label:9}");
+        for (chip, _) in &overrides {
+            println!("  {chip:18} {}", shape.shape.height_of_name(chip).unwrap());
+        }
         println!("  dummy_input sha256   {input_sha}");
         println!("  shrink total_memory  {}", inner.total_memory);
         println!("  shrink event_counts  {}", sha(event_counts.as_bytes()));

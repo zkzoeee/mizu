@@ -12,7 +12,15 @@ verification (1.30x) for that privilege. The clinching sentence was that a
 Groth16 ceremony means "a full redo every time the circuit changes -- which, with
 custom precompiles in the core machine, it will."
 
-**That last clause is false, and docs/groth16-ceremony-spike.md measures why.**
+**SUPERSEDED 2026-11-13: that last clause is TRUE after all, and the reversal
+below is itself reversed.** A 64-program VK-map sample found the fork needs
+`ExtAlu` +320,059 rows and `PrefixSumChecks` +94,952, not just `Select` +32, and
+`shrink-shape-probe` shows those deltas DO change the shrink program and so the
+wrap vk. A Groth16 ceremony is required. The wrap decision should be revisited
+against PLONK's universal SRS; see docs/groth16-ceremony-spike.md, "REVERSED".
+The reasoning below is kept for the record.
+
+The claim was:
 The precompiles add no constraints to the wrap circuit: it is built over
 `CompressAir`, and the VK-map root is a witnessed public value. They reach the
 wrap verifying key through exactly one channel, the padded VK-map count's

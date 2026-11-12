@@ -288,6 +288,59 @@ and the default 54 exceeds it. The claim that prompted this spike is therefore
 correct in mechanism and correct in conclusion *once the cluster count is
 managed*; it is not automatic.
 
+### REVERSED, 2026-11-13: a ceremony IS required
+
+Stage 2 concluded the compress shape was invisible to the wrap vk. **That
+conclusion was wrong**, and the error was generalising from an unrepresentative
+delta.
+
+Stage 2 tested the `Select` bump alone: +32 rows. But a 64-program VK-map sample
+(stride 3,902, vs the 8-program sample's stride 31,218, which missed every large
+shape) panicked on two *other* chips:
+
+```
+alu_ext.rs:99            fixed height is too small: got 795264  for 1115323 rows
+prefix_sum_checks.rs:95  fixed height is too small: got 224608  for 319560  rows
+```
+
+So this fork needs `ExtAlu` +320,059 rows and `PrefixSumChecks` +94,952, not +32.
+Upstream's *mprotect* shape pins 1,027,424 and 274,144 — both still short, so
+there is no upstream shape to borrow either.
+
+`shrink-shape-probe`, generalised to arbitrary `--override Chip=Height`:
+
+| arm | dummy_input sha256 | shrink total_memory |
+| --- | --- | --- |
+| Select only, +32 | `c8750c918d01f33e..` | 2,016,023 |
+| ExtAlu + PrefixSumChecks + Select | `cc05a71c627cbafb..` | 2,021,271 |
+
+Different input, different program, different `event_counts`. The chain
+`compress_shape -> shrink program -> shrink_shape -> wrap_input -> wrap vk`
+therefore carries this change through, so our wrap vk cannot equal upstream's
+`fce924068aa5a610` while the fork's chips need a larger compress shape — and
+they do, because the compress program must verify core shard proofs for 140
+chips.
+
+**Consequences.**
+
+- Ceremony-free Groth16 is **not** available to this fork. A phase-2 ceremony
+  over the 27.6M-constraint wrap circuit is required, and must be redone on every
+  change to the recursion layer.
+- The lean cluster default (43 clusters, depth 18) was necessary but not
+  sufficient; with the wrap vk diverging anyway, matching upstream's VK-map depth
+  buys nothing. Keeping or reverting it is close to cost-free either way (stage 4:
+  zero wasted rows, at most +2 chips), but its stated justification is gone.
+- The real VK map is still required, for soundness: every proof so far carries
+  `without_vk_verification()`. It simply no longer buys ceremony avoidance, which
+  was most of the case for spending on it.
+- **PLONK's universal SRS now looks like the right call after all** — which is
+  what `docs/proof-pipeline-plan.md` originally decided, on exactly this reasoning,
+  before the reversal in f16f511. The gas table favours Groth16 by ~75,000 gas per
+  verification; a repeated ceremony is the price of that.
+- The compress shape still needs regenerating properly with
+  `test_find_recursion_shape`. Hand-bumping fixed only the first panic each time,
+  twice now.
+
 ### Stage 3 RESULT: production downloads by version, and will not warn you
 
 `try_install_circuit_artifacts` (`build.rs:468`) keys the download by
