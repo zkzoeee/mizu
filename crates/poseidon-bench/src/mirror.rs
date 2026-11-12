@@ -36,7 +36,45 @@ use mina_poseidon::{
     constants::PlonkSpongeConstantsKimchi, pasta::fp_kimchi, permutation::poseidon_block_cipher,
     poseidon::ArithmeticSpongeParams,
 };
-use sha3::{Digest, Keccak256};
+/// One keccak-256, from whichever implementation this build selected. Both
+/// produce identical digests -- the runner's native reference checks that --
+/// so the only thing measured is the cost of the permutation itself. `update`
+/// takes `impl AsRef<[u8]>` so the call sites are byte-identical either way.
+#[cfg(not(feature = "keccak-precompile"))]
+mod kc {
+    use sha3::{Digest, Keccak256};
+    pub struct H(Keccak256);
+    impl H {
+        pub fn new() -> Self {
+            H(Keccak256::new())
+        }
+        pub fn update(&mut self, bytes: impl AsRef<[u8]>) {
+            self.0.update(bytes.as_ref());
+        }
+        pub fn finish(self) -> [u8; 32] {
+            self.0.finalize().into()
+        }
+    }
+}
+/// The sp1-patches build: this permutation is a KECCAK_PERMUTE syscall.
+#[cfg(feature = "keccak-precompile")]
+mod kc {
+    use tiny_keccak::{Hasher, Keccak};
+    pub struct H(Keccak);
+    impl H {
+        pub fn new() -> Self {
+            H(Keccak::v256())
+        }
+        pub fn update(&mut self, bytes: impl AsRef<[u8]>) {
+            self.0.update(bytes.as_ref());
+        }
+        pub fn finish(self) -> [u8; 32] {
+            let mut out = [0u8; 32];
+            self.0.finalize(&mut out);
+            out
+        }
+    }
+}
 
 /// Field elements in one account record, hashed at sponge rate 2.
 const ACCOUNT_FIELDS: u32 = 16;
@@ -90,22 +128,22 @@ fn poseidon_path(
 
 /// One mirror node: 64 bytes in, 32 out. One keccak permutation.
 fn keccak_node(left: &[u8; 32], right: &[u8; 32]) -> [u8; 32] {
-    let mut h = Keccak256::new();
+    let mut h = kc::H::new();
     h.update(left);
     h.update(right);
-    h.finalize().into()
+    h.finish()
 }
 
 /// Account record -> 32 bytes. floor(ACCOUNT_BYTES/136)+1 permutations.
 fn keccak_leaf(seed: u64) -> [u8; 32] {
-    let mut h = Keccak256::new();
+    let mut h = kc::H::new();
     let word = seed.to_le_bytes();
     let mut written = 0;
     while written < ACCOUNT_BYTES {
         h.update(word);
         written += word.len();
     }
-    h.finalize().into()
+    h.finish()
 }
 
 fn keccak_path(mut acc: [u8; 32], idx: u64, depth: u32, sibling: &[u8; 32]) -> [u8; 32] {
@@ -195,26 +233,26 @@ pub fn main() {
         3 => {
             for account in 0..accounts as u64 {
                 let idx = account.wrapping_mul(0x9E37_79B9_7F4A_7C15);
-                let mut h = Keccak256::new();
+                let mut h = kc::H::new();
                 h.update(k);
                 h.update(idx.to_le_bytes());
                 h.update(keccak_leaf(account));
                 h.update(keccak_leaf(account.wrapping_add(1 << 20)));
-                k = h.finalize().into();
+                k = h.finish();
             }
         }
         // 4: one keccak over the whole sorted diff list. Cheapest possible
         //    mirror: the permutation count is the byte length of the diff set,
         //    not a function of depth at all.
         4 => {
-            let mut h = Keccak256::new();
+            let mut h = kc::H::new();
             for account in 0..accounts as u64 {
                 let idx = account.wrapping_mul(0x9E37_79B9_7F4A_7C15);
                 h.update(idx.to_le_bytes());
                 h.update(keccak_leaf(account));
                 h.update(keccak_leaf(account.wrapping_add(1 << 20)));
             }
-            k = h.finalize().into();
+            k = h.finish();
         }
         _ => unreachable!(),
     }

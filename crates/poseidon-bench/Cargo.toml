@@ -11,6 +11,13 @@ mina-poseidon = { workspace = true }
 # Already a pinned workspace dependency (crates/pickles-verifier); no new
 # external crate enters the graph. Keccak-256 here is Ethereum's, not SHA3.
 sha3 = { version = "0.10.9", default-features = false }
+# Optional: with the root's [patch.crates-io] this is the sp1-patches build,
+# whose permutation is the KECCAK_PERMUTE precompile rather than software.
+tiny-keccak = { version = "2.0.2", features = ["keccak"], optional = true }
+
+[features]
+# Same source, same schedule, same digests -- only the permutation changes.
+keccak-precompile = ["tiny-keccak"]
 
 [[bin]]
 name = "poseidon-operation-program"

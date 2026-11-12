@@ -50,3 +50,7 @@ sp1-core-executor-runner = { path = "vendor/sp1/crates/core/runner" }
 sp1-core-machine = { path = "vendor/sp1/crates/core/machine" }
 sp1-curves = { path = "vendor/sp1/crates/curves" }
 crypto-bigint = { git = "https://github.com/sp1-patches/RustCrypto-bigint", tag = "patch-0.5.5-sp1-6.0.0" }
+# Routes tiny-keccak's permutation to SP1's KECCAK_PERMUTE precompile. Only
+# reached by the mirror guest under its `keccak-precompile` feature; vendor/sp1
+# is excluded from this workspace, so nothing else here sees the patch.
+tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", tag = "patch-2.0.2-sp1-6.10.0" }

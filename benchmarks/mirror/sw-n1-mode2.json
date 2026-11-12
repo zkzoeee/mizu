@@ -1,0 +1,34 @@
+{
+  "accepted": true,
+  "account_bytes": 320,
+  "account_fields": 16,
+  "accounts": 1,
+  "cycles": 4403657,
+  "depth": 35,
+  "derived_keccak_permutations": 38,
+  "derived_poseidon_permutations": 86,
+  "elapsed_seconds": 0.127321958,
+  "elf_sha256": "95ec2b56a2ba16692e1cd5b2a7534ae9e2f2dff64d2ed66f1ca6eb8a315ae634",
+  "expected_public_values_sha256": "eb2b90df9a9f041a8a97a6bed7183b7e05032e74c4dfa072100babed5bdcf020",
+  "failure": null,
+  "guest_exit_code": 0,
+  "input_sha256": "df04aeeeda85754ed72cef840646e98f10361839de0c747e6150d4f899c47f35",
+  "keccak_implementation": "sha3 software; SP1's KECCAK_PERMUTE precompile is NOT patched in, so every keccak figure is an upper bound",
+  "mirror_mode": 2,
+  "mirror_name": "bucketed-keccak-mirror",
+  "mode": "cpu-mirror-benchmark",
+  "pasta_syscall_counts": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "proof_generated": false,
+  "public_values_len": 76,
+  "public_values_sha256": "eb2b90df9a9f041a8a97a6bed7183b7e05032e74c4dfa072100babed5bdcf020",
+  "stage_cycles": {
+    "keccak-mirror": 259695,
+    "poseidon-ledger": 4134419
+  },
+  "uint256_mul_count": 100046
+}
