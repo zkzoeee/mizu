@@ -89,7 +89,7 @@ so **at least 11 clusters have to go**.
 `pasta_retained_clusters` (`core/machine/src/riscv/mod.rs`) has exactly 14
 entries — the 7 non-empty subsets of `{Uint256Mul, VestaAdd, PallasAdd}` times
 with/without the memory-global pair. Trimming it to 3 lands on 43 exactly:
-43 x 6001 + 6 = 258,049, depth 18.
+43 clusters; the real dedup'd count is 249,756, depth 18.
 
 Those 14 exist to route the `PASTA_RETAIN` presets, so this is a real trade and
 not a free win — see stage 4.
@@ -112,18 +112,30 @@ Stop.
 
 ### Stage 1 RESULT, 2026-11-12: passed
 
-Gated behind `MIZU_LEAN_PASTA_CLUSTERS` (`core/machine/src/riscv/mod.rs`),
-default unchanged so `PASTA_RETAIN` routing is untouched.
+The lean set is now the **compile-time default**; `pasta-full-clusters` restores
+the original 14. It is a cargo feature, not an env var, because the choice
+changes the machine: prover and verifier must agree, and a runtime switch would
+let them disagree silently. (It was an env var during the spike, promoted once
+the result stood.)
+
+Counts are from `crates/pipeline-runner/src/bin/vk-map-guard.rs`, which calls the
+real `create_all_input_shapes` and dedups through a `BTreeSet` exactly as
+`from_map` does (`prover/src/recursion.rs:63-67`):
 
 | arm | clusters | VK map keys | next_pow2 | depth |
 | --- | --- | --- | --- | --- |
-| default (14 pasta clusters) | 54 | 324,060 | 2^19 | 19 |
-| `MIZU_LEAN_PASTA_CLUSTERS=1` (3) | 43 | 258,049 | 2^18 | **18** |
-| upstream, est. from `vk_map.bin` | - | ~185,862 | 2^18 | **18** |
+| `pasta-full-clusters` (14) | 54 | 313,644 | 2^19 | 19 |
+| **default, lean (3)** | 43 | **249,756** | 2^18 | **18** |
+| upstream, est. from `vk_map.bin` | - | ~155k-186k | 2^18 | **18** |
 
-43 is the exact boundary: 258,049 against a 262,144 ceiling, 4,095 keys of
-margin, well under one cluster. **Zero headroom** — any future chip cluster tips
-back to depth 19. Trim to 42 or fewer if that matters.
+Headroom on the default is **12,388 keys**, roughly two clusters.
+
+**Correction.** Earlier figures here, and in commits cc81871e2 and f16f511, said
+324,060 and 258,049. Those came from `recursion-shapes`, which computes
+`clusters * shapes_per_cluster` analytically and does **not** dedup shapes shared
+between clusters, so it overstates by about 3%. The depth conclusions are
+unchanged; `vk-map-guard` is the authoritative tool, and it exits non-zero when
+the depth leaves 18 — which matters because nothing else checks it (stage 3).
 
 ### Stage 2 — REDESIGNED, and the news is worse
 
@@ -195,7 +207,7 @@ proving, no GPU, locally runnable — but it needs `wrap_program_from_input`,
 `sp1-prover`, i.e. three `pub(crate)` -> `pub` changes in the fork.
 
 Note also that full *empirical* confirmation needs `vk_verification = true`,
-which needs the real VK map built (258,049 programs on the lean arm) — Phase A
+which needs the real VK map built (249,756 programs on the lean arm) — Phase A
 task 3. So the derivation above is as far as reasoning alone can go.
 
 ### Stage 2 (superseded) — the original decisive comparison
@@ -259,7 +271,7 @@ it to upstream's 18. Every input to the wrap program then matches upstream:
 | input to wrap vk | ours vs upstream |
 | --- | --- |
 | shrink shape | identical — measured above |
-| VK-map height | 18 == 18, with `MIZU_LEAN_PASTA_CLUSTERS=1` |
+| VK-map height | 18 == 18, with the default (lean) cluster set |
 | recursion config (chips, fri, stacking) | untouched by this fork |
 | `vk_verification` | must be `true`; production needs it anyway |
 
@@ -287,7 +299,7 @@ pipeline checks it for you.
 The chain above is complete by derivation plus the two measurements, but no
 end-to-end byte comparison of our computed wrap vk against
 `fce924068aa5a610` has been made. That needs `vk_verification = true`, which
-needs the real VK map built — 258,049 programs on the lean arm — i.e. Phase A
+needs the real VK map built — 249,756 programs on the lean arm — i.e. Phase A
 task 3. Until then: strong, link-by-link, but not observed.
 
 ### Stage 3 (superseded) — prove the payoff. ~10 min
@@ -337,7 +349,8 @@ ceremony-free Groth16 is worth the proving overhead.
   neither: the A40 was OOM-killed in `plonk.Setup` at the 46.6 GiB cgroup limit,
   and the 238 GiB CPU run was stopped by choice at 1 h 04 min, 30 h of CPU time,
   107.4 GiB peak, still pre-wrap.
-- It does not build the real VK map (324,060 programs). Production needs that for
+- It does not build the real VK map (249,756 programs on the default set).
+  Production needs that for
   soundness regardless, and `without_vk_verification()` is itself a divergence:
   `vk_verification` is a direct parameter to `wrap_program_from_input`.
 - It says nothing about Groth16 proof size or verifier gas.

@@ -47,3 +47,8 @@ path = "src/main.rs"
 [[bin]]
 name = "shrink-shape-probe"
 path = "src/bin/shrink-shape-probe.rs"
+
+# Guard for the recursion VK map depth; see docs/groth16-ceremony-spike.md.
+[[bin]]
+name = "vk-map-guard"
+path = "src/bin/vk-map-guard.rs"
