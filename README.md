@@ -62,16 +62,17 @@ retired applications are recoverable from the external consolidation archive.
 
 ## One real proof on a rented GPU: under two minutes of proving, two to eight cents of pod
 
-Ten measurements of the same retained arm — 82 shards, 132,029,932 proof bytes,
+Eleven measurements of the same retained arm — 82 shards, 132,029,932 proof bytes,
 142,638,298 cycles, the same ELF and the same verification key, accepted by the
 complete verifier and reloaded from disk in a fresh process — at the production
-`PASTA_R5_INFLIGHT=8`, on eight distinct physical cards in EU-SE-1. *Prove cost*
+`PASTA_R5_INFLIGHT=8`, on nine distinct physical cards in EU-SE-1. *Prove cost*
 is the prove loop at the card's hourly rate; *pod billed* is what Runpod
 actually charged for that rental, GPU plus disk, from the billing API.
 
 | Card | Host | $/hr | Prove (s) | Total (s) | Prove cost | Pod billed | Run |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | A40 | `7d6ed7f9` | 0.59 | **96.32** | 118.24 | $0.0158 | $0.0530 | `20261112T0502Z-a40-cachewarm` |
+| A6000 | `0e836af8` | 0.59 | 100.79 | 123.26 | $0.0165 | ~$0.055ᶜ | `20261112T0810Z-a6000` |
 | A40 | `508a1a8a` | 0.59 | 107.74 | 134.16 | $0.0177 | —ᵃ | `20261110T1655Z-inflight-sweep` |
 | A40 | `9686af90` | 0.59 | 108.36 | 134.44 | $0.0178 | $0.0596 | `20261111T0910Z-cudaprobe-validation` |
 | A40 | `37cd5cd6` | 0.59 | 108.89 | 136.14 | $0.0178 | $0.2014ᵇ | `20261111T0628Z-fatbuild-populate` |
@@ -84,7 +85,8 @@ actually charged for that rental, GPU plus disk, from the billing API.
 
 ᵃ one pod proved six times across the inflight sweep; $0.4238 for the rental as
 a whole is not a per-proof figure. ᵇ this pod also compiled the CUDA prover, so
-its bill is a build, not a proof. The five cache-warm single-proof rentals
+its bill is a build, not a proof. ᶜ arithmetic from 337 s of pod life: Runpod
+had not posted this pod's bill when this was written. The five cache-warm single-proof rentals
 **cost $0.0225 to $0.0759 end to end**, create through terminate; the cheapest
 complete verified proof on record is **2.3 cents**, on the A5000 under the
 101 MB `nvidia/cuda:12.8.1-base-ubuntu24.04` image with the build cache on a
@@ -105,10 +107,19 @@ not a continuum. Against the A40's nominal 48 GiB the fast host is **1.2%
 short** and the other six are **7.5% short**; for comparison, all three A5000s
 report an identical 25,285,623,808 bytes, **1.9% short** of their nominal
 24 GiB. The extra ~6.3% on the six is the size of ECC's reservation (~6.25%),
-and ECC costs memory bandwidth as well as capacity. **Hypothesis, not
-measurement**: the fast host had ECC disabled.
-`nvidia-smi --query-gpu=ecc.mode.current` on the next pod settles it, and if it
-holds, "A40" is two populations and the faster one is worth selecting for.
+and ECC costs memory bandwidth as well as capacity.
+
+**The A6000 run settled half of that.** It is the first card to report its own
+ECC state, and it reports `Enabled` — together with 46,068 MiB and
+47,699,722,240 bytes, byte for byte what the six A40s report, 6.27% below the
+nominal 49,152 MiB. So **the shortfall is the ECC reservation**, and the fast
+A40's 49,140 MiB — 12 MiB below nominal — means that card had ECC off. The
+inference no longer rests on arithmetic alone. What the A6000 does **not**
+explain is the ordering: an ECC-*on* card at 100.79 s is still slower than the
+ECC-*off* A40 at 96.32 s, despite 10.3% more nominal bandwidth. So ECC-off buys
+more than its capacity figure suggests, or that host differs in some further
+way. Settling it needs an ECC-on and an ECC-off pod of the *same* model, and
+every run from now on records the state to make that possible.
 Either way, **a single rented-A40 timing cannot be compared against one from
 another pod** — not because any one card is noisy, but because the pool is not
 uniform. The per-arm deltas in the optimization records are measured on one host
@@ -125,6 +136,22 @@ refused **thirty-six creates** in EU-SE-1 across eighteen hours on
 2026-11-11/12 and, when its pool finally returned, returned in Montreal and
 Illinois instead. **Budget at the A40's price and treat the A5000 as a
 windfall.**
+
+**The A6000 is the fastest card measured that is actually obtainable, and the
+cleanest comparison in the set.** At **100.79 s** it is 7.7% under the A40
+cluster's median and 5.7% under the A5000's, beaten only by the ECC-off A40.
+Against the A40 cluster it is as controlled as a rented comparison gets: the
+same GA102 family and SM count, the same 46,068 MiB with ECC on, the same Xeon
+Gold 6342, the same 96 vCPUs, the same driver 595.91.07 — and nominally 768
+GB/s of bandwidth against the A40's 696, **+10.3% of bandwidth for −7.7% of
+prove time**. Device-busy was 66.1 s (A40 68.6, A5000 63.0) and peak VRAM
+18,991 MiB, so it needs the 48 GB no more than the A40 did. Two caveats: it is
+**n=1**, and it is still a cross-pod comparison — now with the confound I
+identified controlled, but not with every confound controlled. Its executor
+also ran 116.01 s against the A40's 127.01 on an identical CPU model, which the
+card cannot explain, so some of the 7.7% is the same unattributed host
+difference seen before. **At $0.59/hr it buys speed, not economy**: $0.0165 a
+proof against the A5000's $0.0080. It took four creates.
 
 Where the five minutes goes, from the two runs timed end to end:
 

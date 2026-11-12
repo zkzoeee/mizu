@@ -36,6 +36,25 @@
       "ecc_mode_current": null
     },
     {
+      "card": "RTX A6000",
+      "gpu_uuid_prefix": "GPU-0e836af8",
+      "pod_id": "wu6t8vtk350ciw",
+      "data_center": "EU-SE-1",
+      "rate_usd_per_hour": 0.59,
+      "pasta_r5_inflight": 8,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 100.789546919,
+      "total_seconds": 123.257286553,
+      "prove_cost_usd": 0.016518,
+      "pod_billed_usd": null,
+      "pod_billed_is_per_proof": false,
+      "pod_also_compiled": false,
+      "gpu_total_vram_bytes": 47699722240,
+      "run": "20261112T0810Z-a6000",
+      "ecc_mode_current": "Enabled",
+      "notes": "first card to report its ECC mode, and the first non-A40/A5000 part. Pod life 08:10:22Z-08:16:00Z (~337 s, ~$0.055 by arithmetic); Runpod billing had not posted this pod when the record was written, so pod_billed_usd is null here for a different reason than the rest: not unrecorded, just not yet billed. Also the first live exercise of coverage-based arch matching: probed 86, hit the stored 86,89,120 build."
+    },
+    {
       "card": "A40",
       "gpu_uuid_prefix": "GPU-508a1a8a",
       "pod_id": "re9fy8hs6yx5gj",
@@ -263,8 +282,21 @@
       "faster_than_a40_cluster_median_pct": 2.1,
       "cheaper_per_proof_pct": 55
     },
-    "ecc_hypothesis": "the record holds exactly two A40 VRAM totals: 50,899,386,368 B on the fast host (1.2% below nominal 48 GiB) and 47,699,722,240 B on the other six (7.5% below). All three A5000s report an identical 25,285,623,808 B (1.9% below nominal 24 GiB). The extra ~6.3% matches ECC's reservation, so the fast host most likely had ECC disabled. UNMEASURED: confirm with nvidia-smi --query-gpu=ecc.mode.current.",
-    "rule": "compare arms only inside one pod and one session; a repeat on one card is good to ~3%, but the A40 pool is not one part"
+    "ecc_hypothesis": "PARTLY SETTLED by the A6000 run of 2026-11-12. That card reports ecc.mode.current=Enabled and, on a 48 GB GA102, nvidia-smi memory.total=46068 MiB / CUDA total=47,699,722,240 B -- byte for byte what the six slow A40s report, and 6.27% below the nominal 49,152 MiB. So the VRAM shortfall IS the ECC reservation, and the fast A40's 49,140 MiB (12 MiB below nominal) means ECC off. What the run does NOT explain is the ordering: the ECC-off A40 at 96.32 s is still faster than this ECC-on A6000 at 100.79 s despite 10.3% less nominal bandwidth, so ECC-off buys more than the capacity figure alone suggests, or that host differs in some further way. An ECC-on vs ECC-off pair on the same model would close it; no A5000 or 3090 is obtainable to try.",
+    "rule": "compare arms only inside one pod and one session; a repeat on one card is good to ~3%, but the A40 pool is not one part",
+    "a6000": {
+      "n": 1,
+      "gpu_prove_seconds": 100.789546919,
+      "ecc_mode_current": "Enabled",
+      "gpu_total_vram_bytes": 47699722240,
+      "faster_than_a40_cluster_median_pct": 7.7,
+      "faster_than_a5000_median_pct": 5.7,
+      "slower_than_the_ecc_off_a40_pct": 4.6,
+      "device_busy_seconds": 66.1,
+      "executor_seconds": 116.014566475,
+      "peak_vram_mib": 18991,
+      "why_it_matters": "same GA102 family and SM count as the A40, same reported VRAM, same ECC state, same Xeon Gold 6342, same 96 vCPUs, same driver 595.91.07 -- the one difference is memory bandwidth, 768 GB/s nominal against the A40's 696 (+10.3%), and prove time fell 7.7%. It is still a cross-pod comparison, and n=1."
+    }
   },
   "inflight_sweep_one_host": {
     "host": "GPU-508a1a8a",

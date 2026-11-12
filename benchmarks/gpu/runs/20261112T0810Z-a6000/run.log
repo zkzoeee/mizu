@@ -1,0 +1,200 @@
+=== prove-from-cache started 2026-11-12T08:12:10Z ===
+note: /usr/bin/time is absent; timing comes from the harness's own report
+name, memory.used [MiB], memory.total [MiB], utilization.gpu [%]
+NVIDIA RTX A6000, 0 MiB, 46068 MiB, 0 %
+card: NVIDIA RTX A6000, ECC Enabled (pending Enabled), 46068 MiB
+torch absent; the context gate is --mode cuda-probe, after the binary is in place
+CUDA_ARCHS not given, using the card's own 86.
+A cache built for a superset of it still counts as a hit.
+=== checking the cached build against this host and these sources 2026-11-12T08:12:11Z ===
+runtime scope: requiring os, cuda_archs, source_fingerprint; ignoring nvcc, rustc, toolchain because this path compiles nothing
+     same os: ubuntu-24.04 -> ubuntu-24.04
+   covers cuda_archs: 86,89,120 -> 86
+     same source_fingerprint: d9952d5553a9eea8a1da27683198cfe85cb9ee993e82b89d096a7e386bd6354d -> d9952d5553a9eea8a1da27683198cfe85cb9ee993e82b89d096a7e386bd6354d
+cache hit (runtime scope); the build's own key is 1879dc67609f15c7729196ce2aefc472affc96ae85565d85a8f37732a658a23d
+/workspace/bin/pasta-precompile-proof-6-10: OK
+{
+  "cuda_context": "created",
+  "device_memory_free_bytes": 47416410112,
+  "device_memory_total_bytes": 47699722240,
+  "mode": "cuda-probe"
+}
+{
+  "cuda_context": "created",
+  "device_memory_free_bytes": 47416410112,
+  "device_memory_total_bytes": 47699722240,
+  "mode": "cuda-probe"
+}=== reusing the cached CUDA build; nothing installed, nothing compiled 2026-11-12T08:12:13Z ===
+{
+  "mode": "prove-from-cache",
+  "cuda_archs": "86",
+  "source_fingerprint": "d9952d5553a9eea8a1da27683198cfe85cb9ee993e82b89d096a7e386bd6354d",
+  "key": "1879dc67609f15c7729196ce2aefc472affc96ae85565d85a8f37732a658a23d",
+  "rustc": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+  "nvcc": "",
+  "image": "Ubuntu 24.04.1 LTS",
+  "ldd_unresolved": 0,
+  "gpu_name": "NVIDIA RTX A6000",
+  "gpu_uuid": "GPU-0e836af8-2df4-78e5-5c2a-46bd5f253628",
+  "compute_cap": "8.6",
+  "gpu_memory_total": "46068 MiB",
+  "ecc_mode_current": "Enabled",
+  "ecc_mode_pending": "Enabled",
+  "cpu_model": "Intel(R) Xeon(R) Gold 6342 CPU @ 2.80GHz",
+  "host_vcpu_visible": 96,
+  "elf_sha256": "0cfb3eafeea0d450e3ae8efd9a472a363495d49a5ff055b31b7cb50541c5a871",
+  "manifest_sha256": "92c23e6e185d6a9ed6d13a98aa69280056cdc0b7d466b5099d789102cc0b1fc2",
+  "harness_sha256": "b858b926e61c707ed09cb5c4bb68a0b99f654a9895ff26b11fd35cfe5fbcbd4f"
+}
+=== pre-flight: every pinned identity, before any proving 2026-11-12T08:12:13Z ===
+=== proving arm retain-pasta-and-uint as a CUDA core proof 2026-11-12T08:12:13Z ===
+{
+  "arm": "retain-pasta-and-uint",
+  "authorized_usd_cap": 2.0,
+  "candidate": "retain-pasta-and-uint",
+  "chip_shard_counts": {
+    "Add": 67,
+    "Addi": 67,
+    "Addw": 67,
+    "AluX0": 67,
+    "Bitwise": 67,
+    "Branch": 67,
+    "Byte": 82,
+    "DivRem": 67,
+    "Global": 82,
+    "Jal": 67,
+    "Jalr": 67,
+    "LoadByte": 67,
+    "LoadDouble": 67,
+    "LoadHalf": 67,
+    "LoadWord": 67,
+    "LoadX0": 67,
+    "Lt": 67,
+    "MemoryBump": 67,
+    "MemoryGlobalFinalize": 7,
+    "MemoryGlobalInit": 7,
+    "MemoryLocal": 75,
+    "Mul": 67,
+    "PallasAddAssign": 18,
+    "PallasDoubleAssign": 4,
+    "Program": 82,
+    "Range": 82,
+    "ShiftLeft": 67,
+    "ShiftRight": 67,
+    "StateBump": 67,
+    "StoreByte": 67,
+    "StoreDouble": 67,
+    "StoreHalf": 67,
+    "StoreWord": 67,
+    "Sub": 67,
+    "Subw": 67,
+    "SyscallCore": 67,
+    "SyscallInstrs": 67,
+    "SyscallPrecompile": 8,
+    "UType": 67,
+    "Uint256MulMod": 7,
+    "VestaAddAssign": 33,
+    "VestaDoubleAssign": 4
+  },
+  "committed_digest_matches_retained_expected_output": true,
+  "committed_public_value_digest_hex": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+  "complete_verifier_accepted": true,
+  "consumer": {
+    "max_in_flight": 1,
+    "note": "starved: no shard proof in flight while waiting for the producer; proving: at least one in flight",
+    "prove_depth": 1,
+    "proving_seconds": 100.00753130600003,
+    "records": 82,
+    "starved_seconds": 0.7819474189999998,
+    "total_seconds": 100.789526236
+  },
+  "cpu_verify_seconds": 5.785036197,
+  "cycles_match_expected": true,
+  "elf_bytes": 26393216,
+  "elf_sha256": "0cfb3eafeea0d450e3ae8efd9a472a363495d49a5ff055b31b7cb50541c5a871",
+  "executor_seconds": 116.014566475,
+  "expected_calls_on_cpu": {
+    "PALLAS_ADD": 697988,
+    "UINT256_MUL": 533878,
+    "VESTA_ADD": 1310683
+  },
+  "expected_cycles": 142638298,
+  "expected_precompile_calls": {
+    "PALLAS_ADD": 697988,
+    "PALLAS_DOUBLE": 369,
+    "UINT256_MUL": 533878,
+    "VESTA_ADD": 1310683,
+    "VESTA_DOUBLE": 112
+  },
+  "expected_public_values_bytes": 1,
+  "expected_public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+  "expected_records_from_cpu_phase": 82,
+  "fri_config": "core",
+  "generated_shards": 82,
+  "global_dependencies_opt": true,
+  "gpu_free_vram_bytes_at_start": 47416410112,
+  "gpu_prove_seconds": 100.789546919,
+  "gpu_setup_seconds": 6.311744123,
+  "gpu_task_total_seconds": 116.014400331,
+  "gpu_total_vram_bytes": 47699722240,
+  "gpu_workers": 2,
+  "guest_cycles": 142638298,
+  "log_stacking_height": 21,
+  "main_cells_are_prover_inputs_not_proving_time": true,
+  "max_log_row_count": 22,
+  "measured_main_cells_from_cpu_phase": 27839873136,
+  "mode": "manifest-core-gpu",
+  "pasta_chips_present": [
+    "VestaAddAssign",
+    "VestaDoubleAssign",
+    "PallasAddAssign",
+    "PallasDoubleAssign"
+  ],
+  "producer_profile": {
+    "chunks": 8,
+    "defer_split_seconds": 3.4042194279999993,
+    "dependencies_seconds": 46.75884893999999,
+    "execute_seconds": 20.1113689,
+    "executor_blocked_seconds": 45.726470989000006,
+    "globals_seconds": 0.70953834,
+    "note": "with replay_threads > 1, execute and executor_blocked run on the executor thread and overlap the other columns; on_record is time inside the consumer callback, i.e. blocked on a full channel when streaming to a prover",
+    "on_record_seconds": 31.559834812,
+    "records": 82,
+    "replay_threads": 7,
+    "splice_seconds": 6.629058745,
+    "spliced": 67,
+    "total_seconds": 105.312140131,
+    "trace_chunk_seconds": 13.278716576999999,
+    "waiting_for_chunk_seconds": 1.181606176
+  },
+  "proof_bytes": 132029932,
+  "proof_sha256": "8d2f5bb2c2d7b8af6016df46b01202950610300e01d61f86775683f29f1e9809",
+  "proof_type": "core (no recursion, no wrap, no Groth16)",
+  "prove_depth": 1,
+  "proved_on": "cuda",
+  "records_in_flight": 8,
+  "rejection_check": null,
+  "retained_events_presets": [
+    "Bls12381Field",
+    "Bn254Field",
+    "PallasAdd",
+    "Poseidon2",
+    "Sha256",
+    "U256Ops",
+    "Uint256MulMod",
+    "VestaAdd"
+  ],
+  "run": "next-core-proof-retained-boolean-guest",
+  "status": "passed",
+  "total_seconds": 123.257286553,
+  "verification_key_sha256": "eed89d80326950303c787b1fbf0e08034cd8b986425de27c9e4e7475da295113",
+  "verified_on": "cpu",
+  "verifier_error": null
+}
+CORE_PROOF_PASSED
+126M	/root/results/retain-pasta-and-uint
+=== fresh-process reload verification of every arm proved here 2026-11-12T08:14:17Z ===
+{"arm":"retain-pasta-and-uint","chip_shard_counts":{"Add":67,"Addi":67,"Addw":67,"AluX0":67,"Bitwise":67,"Branch":67,"Byte":82,"DivRem":67,"Global":82,"Jal":67,"Jalr":67,"LoadByte":67,"LoadDouble":67,"LoadHalf":67,"LoadWord":67,"LoadX0":67,"Lt":67,"MemoryBump":67,"MemoryGlobalFinalize":7,"MemoryGlobalInit":7,"MemoryLocal":75,"Mul":67,"PallasAddAssign":18,"PallasDoubleAssign":4,"Program":82,"Range":82,"ShiftLeft":67,"ShiftRight":67,"StateBump":67,"StoreByte":67,"StoreDouble":67,"StoreHalf":67,"StoreWord":67,"Sub":67,"Subw":67,"SyscallCore":67,"SyscallInstrs":67,"SyscallPrecompile":8,"UType":67,"Uint256MulMod":7,"VestaAddAssign":33,"VestaDoubleAssign":4},"committed_digest_hex":"4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a","committed_digest_matches":true,"complete_verifier_accepted":true,"cpu_verify_seconds":5.652052577,"decode_seconds":0.139417238,"expected_shards":82,"proof_bytes":132029932,"proof_path":"/root/results/retain-pasta-and-uint/retain-pasta-and-uint.proof.bin","proof_sha256":"8d2f5bb2c2d7b8af6016df46b01202950610300e01d61f86775683f29f1e9809","rejection_check":null,"reloaded_shards":82,"saved_key_matches_derived":true,"status":"passed","verification_key_derived_from_pinned_elf":true,"verification_key_sha256":"eed89d80326950303c787b1fbf0e08034cd8b986425de27c9e4e7475da295113","verified_on":"local-cpu","verifier_error":null}
+LOCAL_CORE_VERIFICATION_PASSED
+8d2f5bb2c2d7b8af6016df46b01202950610300e01d61f86775683f29f1e9809  /root/results/retain-pasta-and-uint/retain-pasta-and-uint.proof.bin
+=== finished: proved and verified from a cached build, with no compilation 2026-11-12T08:14:34Z ===

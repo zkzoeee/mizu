@@ -1,0 +1,18 @@
+{
+  "compared_components": [
+    "os",
+    "cuda_archs",
+    "source_fingerprint"
+  ],
+  "components": {
+    "cuda_archs": "86",
+    "nvcc": "unknown",
+    "os": "ubuntu-24.04",
+    "rustc": "rustc 1.92.0 (ded5c06cf 2025-12-08)",
+    "source_fingerprint": "d9952d5553a9eea8a1da27683198cfe85cb9ee993e82b89d096a7e386bd6354d",
+    "toolchain": "1.92.0"
+  },
+  "files_hashed": -1,
+  "key": "5d9dfb317907b998f6978f73e13aa51af4a0e07c8b77a61e5703cf391f90d18d",
+  "scope": "runtime"
+}

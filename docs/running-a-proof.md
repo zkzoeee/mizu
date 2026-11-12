@@ -14,6 +14,13 @@ than every A40 measured except one likely-ECC-off outlier — and on a warm cach
 a whole run is about five minutes of pod life. Runpod billed **$0.0225** for
 exactly that rental, which is the cheapest complete verified proof on record.
 
+**If you want speed rather than economy, rent an RTX A6000 at $0.59/hr in
+EU-SE-1 instead.** It proved the arm in **123.26 s wall / 100.79 s of prove
+loop**, the fastest of any obtainable card here — 7.7% under the A40 cluster
+and 5.7% under the A5000 — but at $0.0165 a proof against the A5000's $0.0080.
+It is also in the right data centre for the cache volume, and `sm_86`, so the
+fat binary already covers it. One run only, and it took four creates.
+
 ```bash
 scripts/gpu/make-bundle.sh /tmp/mizu-bundle.tar.gz --input /tmp/mizu-gpu-input
 ```
@@ -42,6 +49,7 @@ accepted by the complete verifier and reloaded from disk:
 | Card | Host | $/hr | Prove loop | Wall | Prove cost | Pod billed |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | A40 | `7d6ed7f9` | 0.59 | **96.32 s** | 118.24 s | $0.0158 | $0.0530 |
+| **RTX A6000** | `0e836af8` | 0.59 | **100.79 s** | 123.26 s | $0.0165 | ~$0.055⁵ |
 | A40 | `508a1a8a` | 0.59 | 107.74 s | 134.16 s | $0.0177 | —² |
 | A40 | `9686af90` | 0.59 | 108.36 s | 134.44 s | $0.0178 | $0.0596 |
 | A40 | `37cd5cd6` | 0.59 | 108.89 s | 136.14 s | $0.0178 | $0.2014³ |
@@ -59,12 +67,15 @@ Runpod charged for that rental, GPU plus disk, read back from the billing API;
 terminated pods vanish from `get-pod`, so `list-pod-billing` with
 `bucketSize: hour` is the only retrospective source and attribution to a run is
 by clock and rate. Device busy and peak VRAM, where measured: A5000 **63.0 s**
-and 18,893 / 24,564 MiB, A40 67.6-68.6 s and 18,991 / 46,068 MiB.
+and 18,893 / 24,564 MiB, A40 67.6-68.6 s and 18,991 / 46,068 MiB, A6000 66.1 s
+and 18,991 / 46,068 MiB. Executor time, same CPU model throughout: A6000
+**116.01 s**, A5000 120.71 s, A40 127.01 s.
 
 ¹ before `PASTA_R5_INFLIGHT=8`; the channel depth alone is −16.2%, so those two
 rows are not card comparisons. ² one pod proved six times across the inflight
 sweep ($0.4238 for the rental as a whole), so it has no per-proof bill.
 ³ this pod also compiled the CUDA prover, so its bill is a build, not a proof.
+⁵ arithmetic from 337 s of pod life; Runpod had not posted this pod's bill yet.
 ⁴ these two runs exited non-zero overall -- one on the `default` arm's reload,
 one on an inflight-2 crash before a serial retry -- but in both the retained
 arm's proof was produced and accepted by the complete verifier, which is what
@@ -80,7 +91,7 @@ campaign billing, is
 The `default` arm, for the routing comparison rather than for keeping: **223.14 s**,
 148 shards, 227,918,740 proof bytes.
 
-### Why the A5000 wins
+### Why the A5000 wins on price, and the A6000 on speed
 
 It is the same `sm_86` architecture as the A40, so one fat binary covers both,
 and it has **more memory bandwidth** (768 GB/s against 696) with fewer SMs.
@@ -100,9 +111,10 @@ within minutes, so treat availability as a snapshot and the prices as current.
 
 | Card | VRAM | Arch | Secure | Community | Stock | Verdict for this workload |
 | --- | ---: | --- | ---: | ---: | --- | --- |
-| **RTX A5000** | 24 GB | sm_86 | **$0.27** | $0.16 | LOW | **the pick** |
-| RTX 3090 | 24 GB | sm_86 | $0.50 | $0.22 | LOW/NONE | cheapest *gaming* card; wazabi proved Groth16 on one |
-| A40 / RTX A6000 | 48 GB | sm_86 | $0.59 | $0.33–0.35 | A40 **MEDIUM** | pay this only for two streams later |
+| **RTX A5000** | 24 GB | sm_86 | **$0.27** | $0.16 | LOW/NONE | **the price pick**: $0.0080 a proof |
+| **RTX A6000** | 48 GB | sm_86 | $0.59 | $0.33 | LOW | **the speed pick, measured**: 100.79 s, $0.0165 a proof |
+| RTX 3090 | 24 GB | sm_86 | $0.50 | $0.22 | LOW/NONE | cheapest *gaming* card; wazabi proved Groth16 on one, never tried here |
+| A40 | 48 GB | sm_86 | $0.59 | $0.35 | LOW | the known quantity, seven runs; two populations, see the ECC note |
 | L4 | 24 GB | sm_89 | $0.59 | $0.44 | LOW | avoid: ~300 GB/s would push device time past the executor |
 | RTX 4090 | 24 GB | sm_89 | $0.89 | $0.34 | LOW, **EU-RO-1 only** | unreachable with the cache: the volume is EU-SE-1 and volumes are DC-local |
 | RTX 6000 Ada | 48 GB | sm_89 | $0.99 | $0.74 | LOW | no measured advantage |
@@ -352,8 +364,14 @@ total VRAM against the cluster's 47,699,722,240**, and those are the record's
 only two values. Against the nominal 48 GiB that is 1.2% short versus 7.5%
 short, while the three A5000s all report an identical 25,285,623,808 bytes,
 1.9% short of their nominal 24 GiB. The extra ~6.3% is the size of ECC's
-reservation, so the likely (unmeasured) difference is ECC disabled on that
-host.
+reservation, and **the A6000 run of 2026-11-12 confirmed that reading**: it is
+the first card to report `ecc.mode.current`, it reports `Enabled`, and on the
+same 48 GB GA102 it shows the cluster's exact 46,068 MiB / 47,699,722,240 bytes,
+6.27% below the nominal 49,152 MiB. So the shortfall is the ECC reservation and
+the fast A40, 12 MiB below nominal, had ECC off. The ordering is still open: an
+ECC-on A6000 at 100.79 s loses to that ECC-off A40 at 96.32 s despite 10.3% more
+nominal bandwidth, so ECC-off is worth more than its capacity cost, or that host
+differs further. An ECC-on/ECC-off pair of one model would close it.
 
 **The gates now record it, so the next rental decides this without being
 asked.** Since 2026-11-12 `pod-prove.sh`, `pod-run.sh` and `entrypoint.sh` each

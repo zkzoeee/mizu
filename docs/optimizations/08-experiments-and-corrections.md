@@ -116,6 +116,33 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   dead is the stronger original claim that it beat *every* A40 run. The lesson is the
   same in both directions: a conclusion drawn against one new measurement is worth
   exactly one measurement.
+- **The A6000 is the fastest obtainable card here, and it confirmed the ECC signature
+  without settling the ECC ordering** (2026-11-12, pod `wu6t8vtk350ciw`, EU-SE-1, $0.59/hr,
+  four refused creates first). 100.79 s of prove loop, 123.26 s wall, 82 shards,
+  132,029,932 bytes, key `eed89d80…`, accepted and reloaded -- 7.7% under the A40
+  cluster's median and 5.7% under the A5000's, beaten only by the ECC-off A40 at 96.32 s.
+  **What it settles**: this is the first card to report `ecc.mode.current`, it reports
+  `Enabled`, and on the same 48 GB GA102 it shows the cluster's exact 46,068 MiB /
+  47,699,722,240 B, 6.27% under the nominal 49,152 MiB. The shortfall therefore IS the ECC
+  reservation, and the fast A40 (12 MiB under nominal) had ECC off -- the link that was
+  arithmetic yesterday is now read off a card. **What it does not settle**: an ECC-on card
+  loses to that ECC-off A40 despite 10.3% more nominal bandwidth, so ECC-off buys more than
+  its capacity cost, or that host differs further. An ECC-on/ECC-off pair of one model
+  would close it. **Why the comparison is worth anything**: against the A40 cluster this is
+  the most controlled pairing in the record -- same GA102 family and SM count, same
+  46,068 MiB with ECC on, same Xeon Gold 6342, same 96 vCPUs, same driver 595.91.07, only
+  768 GB/s nominal bandwidth against 696 -- so +10.3% of bandwidth bought -7.7% of prove
+  time. Caveats that stand: n=1, still cross-pod, and the executor also ran 116.01 s
+  against the A40's 127.01 on an identical CPU model, which the card cannot explain, so
+  part of the 7.7% is the unattributed host difference seen before. Device-busy 66.1 s
+  (A40 68.6, A5000 63.0) and peak VRAM 18,991 MiB, so the 48 GB is still unused. At
+  $0.0165 a proof against the A5000's $0.0080 it buys speed, not economy.
+- **The coverage fix and the ECC gate both worked on their first real pod** (same run).
+  The launcher read `8.6` off the card over SSH, probed architecture `86`, and hit the
+  stored fat `86,89,120` build in runtime scope -- the exact case that cost a failed
+  launch and 20 s of pod time the day before. Nothing was compiled or uploaded. The ECC
+  banner printed `Enabled` before any money went into proving, and
+  `ecc_mode_current`/`ecc_mode_pending` landed in `build-identity.json` as designed.
 - **Measured pod cost, from the billing API rather than from arithmetic.** The eleven
   rentals of the campaign billed $1.6196 in all (GPU $1.5893, disk $0.0302) against a
   $2.00 cap. The five cache-warm single-proof rentals cost $0.0225 to $0.0759 end to
