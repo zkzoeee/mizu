@@ -1,0 +1,57 @@
+{
+  "accepted": true,
+  "batch_size": 1,
+  "corrupt_accumulator_challenge": false,
+  "corrupt_index": 0,
+  "corrupt_statement": false,
+  "corrupt_wrap_opening": false,
+  "cycle_metric": "MinimalExecutorRunner::global_clk",
+  "cycles": 130367324,
+  "elapsed_seconds": 10.630589,
+  "elf": "/private/tmp/claude-501/-Users-user-000--Z/ff1d6ebe-9ac5-4ba4-a8dc-aed915807712/scratchpad/verifier-pp/o1-verifier",
+  "elf_sha256": "1f27156b78f95c5ca3937d2e4c90bb717321819b8a4d98979b19b234c810daf6",
+  "executor_implementation": "mizu-pasta-core-6.10.0",
+  "expected_statement_digest": "837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de",
+  "expected_vk_hash": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295",
+  "failure": null,
+  "fixture_dir": "fixtures/mainnet-blockchain-snark",
+  "fixture_sha256": {
+    "app_statement.json": "09c2165293509804e154dda4a210c05cb10337570b58175b5c3fb6bc5ec21f4f",
+    "proof.serde.json": "ec9f57d29162f6b06efd6c0b2bd37fd404dd0a50675f4f856528106597126c89",
+    "public_input_skeleton.json": "f8684d113958ec3d0e8b6f003b87185ca1c2aae2ed7391945ae3372c4e8ddb57",
+    "vk.serde.json": "109195c4577ecf15f3e2369d5c6cb857cee1f606d8c7e1e57a7282a06415c295"
+  },
+  "guest_abi": "boolean",
+  "guest_exit_code": 0,
+  "guest_memory_limit_bytes": 2147483648,
+  "mode": "cpu-execute-only",
+  "mutation": "none",
+  "pasta_executor_only": false,
+  "pasta_proving_air_available": true,
+  "pasta_syscall_counts": {
+    "pallas_add": 697988,
+    "pallas_double": 369,
+    "vesta_add": 1310683,
+    "vesta_double": 112
+  },
+  "proof_generated": false,
+  "proof_valid": true,
+  "public_values_hex": "01",
+  "public_values_len": 1,
+  "public_values_sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+  "schema_version": 2,
+  "sp1_executor_version": "6.10.0",
+  "stage_cycles": {
+    "pickles-accumulator": 75046840,
+    "pickles-wrap-kimchi": 48960261,
+    "pickles-wrap-prepare": 2642383,
+    "setup": 3540439,
+    "verify": 126767279
+  },
+  "stdin_items_sha256": [
+    "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1"
+  ],
+  "stdin_proof_sha256": "649da7f45438f33c2b407e91ab110686347c8989e0ad5076d078819af9875cb1",
+  "uint256_mul_count": 0,
+  "vk_hash": null
+}

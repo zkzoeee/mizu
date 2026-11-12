@@ -198,6 +198,38 @@ against default routing's 43,922,703,280 and 148.
 So **9.58% per hundred accounts** is the production figure, and the mirror alone
 is 3.77%. Cycle shares are unaffected, as expected.
 
+### The base itself moves with the precompiles, and it is measured now
+
+Rebuilt `o1-verifier` under `benchmarks/dev/pasta-poseidon.json` and ran it on
+the pinned mainnet fixture: **130,367,324 cycles**, accepted, output `01`,
+`uint256_mul_count` **0**. The guest hashes to
+`1f27156b78f95c5ca3937d2e4c90bb717321819b8a4d98979b19b234c810daf6`, which is the
+candidate ELF 04-poseidon.md records, and the cycle count matches its figure
+exactly — so this is a reproduction of a recorded result, not a new one.
+Receipt: `benchmarks/verifier-poseidon-precompile-cycles.json`.
+
+| base configuration | cycles | main cells | routing | diff share at N=100 |
+| --- | ---: | ---: | --- | ---: |
+| canonical (neither precompile) | 142,638,298 | 43,922,703,280 | default | 6.07% |
+| canonical, retained | 142,638,298 | 27,839,873,136 | retained | **9.58%** |
+| pasta-fp | 139,610,314 | 42,414,408,432 | default | 6.29% |
+| **pasta-poseidon (Fp + Poseidon)** | **130,367,324** | 40,201,470,720 | default | 6.63% |
+| pasta-poseidon, retained | 130,367,324 | **unmeasured** | retained | — |
+
+Decomposed: the Fp precompile alone is −2.12% of cycles, Poseidon on top of it
+is a further −6.62%, and both together are **−8.60%** against this repo's
+canonical base.
+
+**So the 9.58% above is conditional on a base that has neither precompile.** If
+production turns Poseidon on — which this plan recommends — the base is the
+130,367,324-cycle guest, and the honest answer for its retained-routing cell
+count is that nobody has measured it. Note why it is not a simple read-across:
+`uint256_mul_count` is **0** in that build, so the `uint` half of
+`PASTA_RETAIN=pasta-uint` becomes a no-op for the verifier exactly as it is for
+the mirror guest, while the `PallasAdd`/`VestaAdd` half still has 697,988 and
+1,310,683 calls to retain. **Open: run the trace accounting on
+`1f27156b…` under retention before quoting any production percentage.**
+
 ### And a correction to the cost of dropping the Poseidon precompile
 
 Retention is worth far more to the software-Poseidon build than to the verifier,
