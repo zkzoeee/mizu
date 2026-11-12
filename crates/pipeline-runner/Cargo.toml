@@ -1,0 +1,19 @@
+[package]
+name = "pipeline-runner"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# The fork's prover, reached through the root [patch.crates-io] closure.
+sp1-prover = { version = "=6.10.0", default-features = false }
+sp1-core-machine = { version = "=6.10.0" }
+sp1-hypercube = { version = "=6.10.0" }
+sp1-primitives = { version = "=6.10.0" }
+anyhow = { workspace = true }
+clap = { version = "4.0", features = ["derive"] }
+serde_json = { workspace = true }
+hex = { workspace = true }
+
+[[bin]]
+name = "pipeline-runner"
+path = "src/main.rs"

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/pickles-verifier", "crates/o1-verifier", "crates/o1-verifier-host", "crates/cycle-runner", "crates/poseidon-bench"]
+members = ["crates/pickles-verifier", "crates/o1-verifier", "crates/o1-verifier-host", "crates/cycle-runner", "crates/poseidon-bench", "crates/pipeline-runner"]
 default-members = ["crates/pickles-verifier", "crates/o1-verifier-host", "crates/cycle-runner"]
 exclude = ["mina/src/lib/crypto/proof-systems", "vendor/algebra", "vendor/proof-systems", "vendor/sp1", "examples/settlement", "tools/pasta-proof", "tools/pasta-guest"]
 
@@ -54,3 +54,56 @@ crypto-bigint = { git = "https://github.com/sp1-patches/RustCrypto-bigint", tag 
 # reached by the mirror guest under its `keccak-precompile` feature; vendor/sp1
 # is excluded from this workspace, so nothing else here sees the patch.
 tiny-keccak = { git = "https://github.com/sp1-patches/tiny-keccak", tag = "patch-2.0.2-sp1-6.10.0" }
+
+# The fork's prover and recursion stack, for the compress/shrink/wrap pipeline.
+# This is the transitive closure of sp1-prover's fork-local dependencies (40
+# crates), computed from vendor/sp1's own workspace.dependencies rather than
+# guessed; sp1-cli, sp1-build, sp1-cuda and sp1-helper are outside it and stay
+# unpatched. Patching the WHOLE closure is deliberate: a partial list resolves
+# some crates from crates.io and some from the fork, and two copies of
+# sp1-hypercube in one graph is a type error, not a warning.
+#
+# NOTE: this moves sp1-hypercube and sp1-primitives from crates.io to the fork
+# for every root crate, cycle-runner's existing bins included. Re-run
+# chip-widths and recursion-shapes after this lands and confirm the widths and
+# cluster count are unchanged.
+slop-air = { path = "vendor/sp1/slop/crates/air" }
+slop-algebra = { path = "vendor/sp1/slop/crates/algebra" }
+slop-alloc = { path = "vendor/sp1/slop/crates/alloc" }
+slop-baby-bear = { path = "vendor/sp1/slop/crates/baby-bear" }
+slop-basefold = { path = "vendor/sp1/slop/crates/basefold" }
+slop-basefold-prover = { path = "vendor/sp1/slop/crates/basefold-prover" }
+slop-bn254 = { path = "vendor/sp1/slop/crates/bn254" }
+slop-challenger = { path = "vendor/sp1/slop/crates/challenger" }
+slop-commit = { path = "vendor/sp1/slop/crates/commit" }
+slop-dft = { path = "vendor/sp1/slop/crates/dft" }
+slop-fri = { path = "vendor/sp1/slop/crates/fri" }
+slop-futures = { path = "vendor/sp1/slop/crates/futures" }
+slop-jagged = { path = "vendor/sp1/slop/crates/jagged" }
+slop-keccak-air = { path = "vendor/sp1/slop/crates/keccak-air" }
+slop-koala-bear = { path = "vendor/sp1/slop/crates/koala-bear" }
+slop-matrix = { path = "vendor/sp1/slop/crates/matrix" }
+slop-maybe-rayon = { path = "vendor/sp1/slop/crates/maybe-rayon" }
+slop-merkle-tree = { path = "vendor/sp1/slop/crates/merkle-tree" }
+slop-multilinear = { path = "vendor/sp1/slop/crates/multilinear" }
+slop-poseidon2 = { path = "vendor/sp1/slop/crates/poseidon2" }
+slop-primitives = { path = "vendor/sp1/slop/crates/primitives" }
+slop-stacked = { path = "vendor/sp1/slop/crates/stacked" }
+slop-sumcheck = { path = "vendor/sp1/slop/crates/sumcheck" }
+slop-symmetric = { path = "vendor/sp1/slop/crates/symmetric" }
+slop-tensor = { path = "vendor/sp1/slop/crates/tensor" }
+slop-uni-stark = { path = "vendor/sp1/slop/crates/uni-stark" }
+slop-utils = { path = "vendor/sp1/slop/crates/utils" }
+slop-whir = { path = "vendor/sp1/slop/crates/whir" }
+sp1-derive = { path = "vendor/sp1/crates/derive" }
+sp1-hypercube = { path = "vendor/sp1/crates/hypercube" }
+sp1-jit = { path = "vendor/sp1/crates/core/jit" }
+sp1-primitives = { path = "vendor/sp1/crates/primitives" }
+sp1-prover = { path = "vendor/sp1/crates/prover" }
+sp1-prover-types = { path = "vendor/sp1/crates/prover-types" }
+sp1-recursion-circuit = { path = "vendor/sp1/crates/recursion/circuit" }
+sp1-recursion-compiler = { path = "vendor/sp1/crates/recursion/compiler" }
+sp1-recursion-executor = { path = "vendor/sp1/crates/recursion/executor" }
+sp1-recursion-gnark-ffi = { path = "vendor/sp1/crates/recursion/gnark-ffi" }
+sp1-recursion-machine = { path = "vendor/sp1/crates/recursion/machine" }
+sp1-verifier = { path = "vendor/sp1/crates/verifier" }
