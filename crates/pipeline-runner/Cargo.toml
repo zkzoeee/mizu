@@ -40,3 +40,9 @@ plonk = ["sp1-prover/native-gnark"]
 [[bin]]
 name = "pipeline-runner"
 path = "src/main.rs"
+
+# Stage 2 of docs/groth16-ceremony-spike.md. Keygen-free and proving-free, so it
+# needs no GPU and none of the wrap features.
+[[bin]]
+name = "shrink-shape-probe"
+path = "src/bin/shrink-shape-probe.rs"

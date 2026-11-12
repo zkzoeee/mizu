@@ -229,7 +229,68 @@ rebuild (~5 min).
 **Kill:** if row 3 mismatches, something beyond depth and shape diverges and a
 ceremony is unavoidable. Report rather than keep hunting.
 
-### Stage 3 — prove the payoff. ~10 min
+### Stage 2 RESULT, 2026-11-12: the compress bump is invisible
+
+`crates/pipeline-runner/src/bin/shrink-shape-probe.rs`, keygen-free and
+proving-free, needing no fork change at all: `pub use components::*` (lib.rs:12)
+re-exports the components, `shrink_program_from_input` and `recursive_verifier`
+are already `pub`, and `SP1RecursionProofShape` derives `Deserialize` so both
+shapes come straight from the JSON.
+
+```
+compress machine: 8 chips, log_stacking_height 20, max_log_row_count 21
+vk map height held at 18 for both arms (the probe varies only the compress shape)
+
+upstream  Select 1087808   dummy_input c8750c918d01f33e..  total_memory 2016023
+ours      Select 1087840   dummy_input c8750c918d01f33e..  total_memory 2016023
+
+dummy_input identical: true   total_memory identical: true   event_counts identical: true
+```
+
+So the bump cannot move `shrink_shape`, the wrap input, or the wrap vk. The
+reason is visible in `shapes.rs:358-382`: compress heights enter only through
+`ceil(sum(height * width) / 2^20)`, and a 32-row delta does not straddle a
+multiple of 2^20. And `git diff` confirms `Select` is the *only* height we
+changed, so our shrink program is identical to upstream's.
+
+**The VK-map height is therefore the only channel**, and stage 1's trim brings
+it to upstream's 18. Every input to the wrap program then matches upstream:
+
+| input to wrap vk | ours vs upstream |
+| --- | --- |
+| shrink shape | identical — measured above |
+| VK-map height | 18 == 18, with `MIZU_LEAN_PASTA_CLUSTERS=1` |
+| recursion config (chips, fri, stacking) | untouched by this fork |
+| `vk_verification` | must be `true`; production needs it anyway |
+
+**Conclusion: SP1 custom STARK chips do not by themselves require a new Groth16
+ceremony — provided the chip clusters keep the padded VK-map count inside
+upstream's power-of-two bucket.** For this fork that means at most 43 clusters,
+and the default 54 exceeds it. The claim that prompted this spike is therefore
+correct in mechanism and correct in conclusion *once the cluster count is
+managed*; it is not automatic.
+
+### Stage 3 RESULT: production downloads by version, and will not warn you
+
+`try_install_circuit_artifacts` (`build.rs:468`) keys the download by
+`SP1_CIRCUIT_VERSION` — `v6.1.0` in this tree — **not** by the wrap vk hash.
+Only the dev path is hash-keyed (`<prefix>-groth16-dev`).
+
+So in production mode SP1 downloads artifacts for the pinned circuit version
+whatever our wrap circuit is. A wrap-vk mismatch is therefore **silent at
+download time** and surfaces only as a verification failure later. Matching the
+wrap vk is a correctness requirement, not an optimisation, and nothing in the
+pipeline checks it for you.
+
+### What is still not proven
+
+The chain above is complete by derivation plus the two measurements, but no
+end-to-end byte comparison of our computed wrap vk against
+`fce924068aa5a610` has been made. That needs `vk_verification = true`, which
+needs the real VK map built — 258,049 programs on the lean arm — i.e. Phase A
+task 3. Until then: strong, link-by-link, but not observed.
+
+### Stage 3 (superseded) — prove the payoff. ~10 min
 
 With `SP1_CIRCUIT_MODE` unset, confirm the production path actually fetches
 Groth16 artifacts for our wrap VK. A 404 here would mean the VK matches but
