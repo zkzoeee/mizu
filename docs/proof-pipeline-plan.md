@@ -101,6 +101,100 @@ build is resumable, which matters at this size.
 Do Milestone 1 first. It de-risks Phases B, C and D, and it prices the wrap
 before anyone commits GPU budget to Phase A task 3.
 
+## What a first attempt actually hit (2026-11-12, $0.32 spent, no proof produced)
+
+Milestone 1 was attempted on a rented CPU pod — cpu3g, 16 vCPU, 64 GB, EU-CZ-1,
+$0.64/hr, pod `2km3q7z1rgark2`. **No proof was produced.** Five things blocked
+it, in the order they appeared, and all five are prerequisites this plan was
+missing.
+
+### 1. CPU core proving needs 96–128 GB, not 64
+
+Two runs, both killed by the cgroup OOM killer (`oom_kill 1`, peak 59.6 GB):
+
+| run | threads | survived |
+| --- | --- | --- |
+| 1 | uncapped (load average 184 on 16 cores) | 2 min 37 s |
+| 2 | `RAYON_NUM_THREADS=4` | 5 min 39 s |
+
+The 30-second memory curve for the capped run:
+
+```
+12 GB → 18 GB → 46 GB → 46 → 47 → 48 → 48 → 49 → 55 → killed
+```
+
+The thread cap doubled time-to-death but **did not lower the ceiling**: the
+46–49 GB plateau held for three minutes at four threads. So the working set is
+inherent, not parallelism overhead — a claim made from two 50-second samples
+earlier in the session was wrong, and the curve is what refuted it. The
+development Mac, at 16 GB, was never a candidate.
+
+### 2. The committed compress shape is too small for this fork's machine
+
+```
+recursion/machine/src/chips/select.rs:75:
+fixed height is too small: got height 1087808 for number of rows 1087840
+```
+
+1,087,808 is exactly the `Select` entry in `compress_shape.json`. The fork needs
+1,087,840 — **one 32-row block more**. Bumping that single entry by hand got the
+run past the panic, which scopes Phase A task 2: the gap is small, not sprawling.
+Do it properly with SP1's own tool rather than by hand:
+
+```bash
+cargo test --release -p sp1-prover --features experimental -- test_find_recursion_shape --include-ignored
+```
+
+### 3. `ProofMode::Core` is not recursion-free
+
+The panic above fired on `--mode core`, in the recursion machine. SP1's local
+node normalizes regardless of mode, so **there is no cheap recursion-free
+calibration run**. Any first attempt pays the recursion path's prerequisites.
+
+### 4. Three host prerequisites, none visible from macOS
+
+- **`protoc`** — `sp1-prover-types` generates protobuf types at build time via
+  prost-build. `apt-get install protobuf-compiler`. Never surfaced locally
+  because the Mac already has it.
+- **the `profiling` feature on x86_64 Linux** — `vendor/sp1/crates/core/runner/build.rs:10`
+  asserts it, and `sp1-prover` reaches that crate transitively without it. A
+  `-p` build does not inherit another member's feature selection, so the
+  depending crate must declare it. The assert passes on aarch64-darwin, which is
+  why the Mac build said nothing.
+- **resolver 1 for anything CUDA** — see below.
+
+**The pipeline path cannot be validated on macOS.** The Mac builds binaries the
+target platform rejects, twice over. Plan for a Linux box from the start.
+
+### 5. The CUDA path needs its own workspace, not a patch-list edit
+
+`tools/pasta-proof` is a separate workspace with `resolver = "1"` deliberately,
+and its comment says why: resolver 2 does not apply a feature enabled on a
+normal dependency to the same crate in the *build* graph, and `sp1-gpu-sys`
+build-depends on `sp1-core-executor`, so the runner's assert fires and the CUDA
+build dies. Its warning is worth repeating: *"Do not satisfy the assert with
+`CARGO_FEATURE_PROFILING` instead: that silences the guard while leaving the
+unpatched native executor linked."*
+
+The root workspace is `resolver = "2"`. So:
+
+- **CPU driver** → root workspace is correct (`crates/pipeline-runner`, built and
+  working; the root's live lock sidesteps `vendor/sp1`'s stale one).
+- **CUDA driver** → needs a **third standalone workspace**, resolver 1, with its
+  own `[patch.crates-io]` closure over `../../vendor/sp1/...`, depending on
+  `sp1-gpu-prover` — which `tools/pasta-proof` avoided precisely because it pulls
+  the recursion and gnark stack a core proof never touches. Building it needs a
+  CUDA devel image for `sp1-gpu-sys`'s kernels; the comparable fat build measured
+  12 min 31 s.
+
+### What this says about the route
+
+The GPU prover is the only one proven for this arm — eleven runs, 100.8 s and
+18,991 MiB of peak VRAM — and its memory profile is nothing like the CPU one.
+Against a measured CPU requirement of 96–128 GB, the GPU path is the better
+target even though it costs the extra workspace. Estimated A40 cost for build
+plus run: **$0.25–0.35**.
+
 ## Phase B — compressed proving
 
 6. **Add a compress mode to the harness.** `tools/pasta-proof` has
