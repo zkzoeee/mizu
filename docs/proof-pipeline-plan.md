@@ -18,17 +18,52 @@ This phase gates everything else.
    precompiles add AIR ids — the Poseidon record cites **134 to 139** — and each
    has `*Control` and `*User` variants (`benchmarks/mirror/chip-widths.txt` lists
    them). Every shape the chosen routing can produce has to be in the allowed set.
+   **Measured 2026-11-12** (`crates/cycle-runner/src/bin/recursion-shapes.rs`,
+   output in `benchmarks/recursion-shapes.txt`). The real clustering is built in
+   `RiscvAir::machine()` (`riscv/mod.rs:1040`) — **not** `MachineShape::all`,
+   which collapses all 140 chips into one cluster and undercounts by 54x; my
+   first run made that mistake.
+
+   | | clusters | recursion programs | vk_map |
+   | --- | ---: | ---: | ---: |
+   | stock SP1 (implied, see below) | ~31 | ~186,037 | 7.4 MB |
+   | **this fork, mprotect off** | **54** | **324,060** | **~13.0 MB** |
+   | fork without the 14 `pasta_retained` clusters | 40 | 240,046 | 9.6 MB |
+
+   `create_all_input_shapes` emits one `Normalize` program per
+   `cluster x 6,001` shapes from the multiple space (max preprocessed multiple
+   33, max main multiple 193, padding-col axes contribute 1 each), plus 4
+   `Compose`, `Deferred` and `Shrink`. So **the fork needs 1.74x stock SP1's
+   recursion programs**, and **27 of 54 clusters touch a Pasta or Uint256
+   chip** — 162,027 programs exist only because of this fork.
+
+   Cross-check: stock `vk_map.bin` is 7,434,488 bytes, which at 40 B per entry
+   (a 32-byte digest plus a `usize`) is ~185,862 entries, implying ~31.0
+   clusters. The arithmetic lands on an integer, which is the reason to trust
+   the 6,001 multiplier.
+
 2. **Regenerate the compress shapes**: `vendor/sp1/crates/prover/compress_shape.json`
    and the `_mprotect` variant, via `crates/prover/src/shapes.rs`.
 3. **Build the recursion VK map.** The blocker the record names in three places:
    *"That map is not built; building it needs SP1's recursion toolchain and
    GPU-class compute."* Artifacts are `vk_map.bin` (7.4 MB at stock), plus
    `allowed_vk_map.bin` and `dummy_vk_map.bin` per `crates/prover/shapes.sh`.
-4. **Decide the routing the map must cover, before building it.** The retained
-   arm uses `pasta-uint` routing, placing all 2,542,549 retained calls on CPU
-   shards, and the record warns that flipping `SP1CoreOpts::default` *"would also
-   change the SDK's recursive proving path"*. Building for both routings doubles
-   the compute, so pick one.
+4. **Routing: there is nothing to choose, and that is the finding.** Both
+   routings' clusters are already compiled into `RiscvAir::machine()` — the
+   per-precompile `precompile_clusters` (7-8 chips each, clusters 20-38) *and*
+   the 14 `pasta_retained_clusters` (35-39 chips each, clusters 40-53). The VK
+   map built from this machine therefore covers both, and the 324,060 figure
+   already includes them. You cannot halve the build by picking a routing at
+   run time.
+
+   Dropping retained routing would mean **removing clusters from the machine
+   definition**, which changes the machine and every VK with it. It is worth
+   84,014 programs, 26% — a real saving, and a decision to take deliberately
+   rather than discover. Note also that the `mprotect` feature adds
+   `core_clusters_user`, `precompile_clusters_user` and
+   `pasta_retained_clusters_user`; it was **off** in the measured build, and
+   `compress_shape_mprotect.json` exists because it changes this set. Settle the
+   feature before building, for the same reason.
 5. **Stand up fork-local artifact hosting.** `shapes.sh` uploads to the
    `sp1-circuits` S3 bucket keyed by git ref; a fork needs its own location and
    its own ref discipline.

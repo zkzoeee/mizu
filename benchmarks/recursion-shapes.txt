@@ -1,0 +1,45 @@
+chips in the machine                140
+mprotect feature                    off
+chip clusters                       54
+max preprocessed multiple           33
+max main multiple                   193
+shapes from the multiple space       6001
+max padding cols per axis           1
+shapes per cluster                  6001
+
+Normalize recursion programs        324054
+Compose (arity 1..=4)                 4
+Deferred + Shrink                   2
+TOTAL recursion programs / VK map   324060
+
+clusters containing a Pasta/Uint256 chip:
+  [  5] Uint256Ops                   (35 chips)
+  [  7] Uint256Ops                   (44 chips)
+  [  8] Uint256Ops                   (41 chips)
+  [ 20] PallasAddAssign              (7 chips)
+  [ 21] VestaAddAssign               (7 chips)
+  [ 23] PallasDoubleAssign           (7 chips)
+  [ 24] VestaDoubleAssign            (7 chips)
+  [ 27] Uint256MulMod                (7 chips)
+  [ 28] Uint256Ops                   (7 chips)
+  [ 35] PallasFpOpAssign             (7 chips)
+  [ 36] VestaFpOpAssign              (7 chips)
+  [ 37] PallasPoseidonControl        (8 chips)
+  [ 38] VestaPoseidonControl         (8 chips)
+  [ 40] Uint256MulMod                (35 chips)
+  [ 41] Uint256MulMod                (37 chips)
+  [ 42] VestaAddAssign               (35 chips)
+  [ 43] VestaAddAssign               (37 chips)
+  [ 44] PallasAddAssign              (35 chips)
+  [ 45] PallasAddAssign              (37 chips)
+  [ 46] Uint256MulMod                (36 chips)
+  [ 47] Uint256MulMod                (38 chips)
+  [ 48] PallasAddAssign              (36 chips)
+  [ 49] PallasAddAssign              (38 chips)
+  [ 50] PallasAddAssign              (36 chips)
+  [ 51] PallasAddAssign              (38 chips)
+  [ 52] PallasAddAssign              (37 chips)
+  [ 53] PallasAddAssign              (39 chips)
+
+fork-specific clusters              27 of 54
+their share of the VK map           162027 programs
