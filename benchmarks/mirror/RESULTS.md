@@ -78,6 +78,52 @@ The speedup shrinks as the construction gets smaller (5.81x on the full tree,
 4.31x on the diff list) because the fixed per-call cost around the syscall is a
 larger share of a 7-permutation schedule than of a 76-permutation one.
 
+## Both precompiles on: Poseidon collapses and the mirror becomes the expensive half
+
+`MIZU_POSEIDON_PRECOMPILE=1` on top of `MIZU_PASTA_FP_PRECOMPILE=1`
+(`benchmarks/dev/pasta-poseidon.json`) routes each kimchi permutation to the
+fork's `PALLAS_POSEIDON` / `VESTA_POSEIDON` syscall, documented at
+[04-poseidon.md](../../docs/optimizations/04-poseidon.md#mizu-pasta-poseidon-precompile-the-kimchi-permutation-as-one-syscall).
+Per account, depth 35, 86 Poseidon and 76 keccak permutations:
+
+| build | Poseidon | c/perm | mirror | c/perm | total |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| canonical Poseidon + `sha3` keccak | 4,134,419 | 48,075 | 498,358 | 6,557 | 4,642,320 |
+| canonical Poseidon + `KECCAK_PERMUTE` | 4,134,421 | 48,075 | 85,793 | 1,129 | 4,229,756 |
+| `PALLAS_POSEIDON` + `KECCAK_PERMUTE` | **34,187** | **398** | 85,792 | 1,129 | **129,517** |
+
+The Poseidon stage falls **120.9x**, from 48,075 to **398 cycles per
+permutation**, and `UINT256_MUL` calls go from 100,046 to **zero**. The whole
+per-account diff proof falls 35.8x, 4,642,320 to 129,517.
+
+**The ranking inverts a third time.** With both precompiles the keccak mirror
+costs **+251% of the Poseidon ledger it mirrors** — 85,792 against 34,187 — and
+a keccak permutation now costs **2.8x** a Poseidon one, where it started at
+one-seventh. Every statement of the form "the mirror is cheap" or "Poseidon
+dominates" in this document is conditional on which precompiles are enabled,
+and nothing else.
+
+Scaling, per the 142,638,298-cycle retained guest: at 129,517 cycles/account a
+diff proof is +0.9% of the guest at 10 accounts, +9.1% at 100 and +90.8% at
+1000 — against +35%, +346% and +3463% in the software-Poseidon table above.
+
+**These cycle figures are no longer a proxy for cost, and at 398 they are
+barely a measurement of work.** A syscall is one `ecall` plus its memory
+accesses; the permutation's real cost moved into the AIR. 04-poseidon.md
+records the chips at 55 round rows per permutation of width 2,048, about
+113,000 main cells each, so the 86 permutations per account carry roughly 9.7 M
+main cells that the cycle count does not see. On the real guest the precompile
+still won on cells (−5.22%) as well as cycles (−6.62%), so the direction holds
+there; but the Poseidon-to-keccak *ratio* in cells is not 398:1,129, and the
+"mirror is now the expensive half" conclusion must be re-checked in cells
+before anyone designs around it.
+
+The runner reports `pasta_syscall_counts` as zero in this build: that counter
+covers the curve syscalls, not `PALLAS_POSEIDON`. The evidence the syscall is
+taken is the 120.9x drop, `UINT256_MUL` falling to zero, and the roots still
+matching the host's native reference — which they can only do if the
+permutations actually ran.
+
 ## Optimizing Poseidon raises the mirror's share, measured
 
 The same 498,794 mirror cycles against three Poseidon builds of the same guest:
