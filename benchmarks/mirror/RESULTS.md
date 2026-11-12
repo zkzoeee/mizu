@@ -162,7 +162,7 @@ Cycles count the `ecall`; cells count the AIR. Per account at depth 35:
 
 **In the metric that actually drives proving cost, the mirror is the cheap half
 again and Poseidon is still the expensive one.** Shard area, not cycle count,
-is what the prover pays for. Against the retained guest's 43,922,703,280 main
+is what the prover pays for. Against the guest's 43,922,703,280 main
 cells over 82 shards (535,642,723 per shard), a diff proof adds +0.3% of the
 guest's cells at 10 accounts, **+3.3% at 100** (~2.7 extra shards) and +33.1%
 at 1000 (~27 shards) — much friendlier than the cycles reading suggested, and
@@ -243,6 +243,24 @@ With the fixed overhead removed the two metrics agree closely at last — about
 +7.8% of the base in cycles and +6.1% in cells for a hundred accounts — so the
 planning number for a dual-tree diff proof with both precompiles on is
 **roughly 6 to 8% of the base guest per hundred accounts touched**.
+
+**But both sides of that comparison are default routing, and production is
+not.** `mirror-records` uses the trace accounting's `record_options()` with no
+retention preset, so the 26,671,788 cells/account above are default-routing
+figures — correctly compared against the default-routing base of
+43,922,703,280. The production arm is `retain-pasta-and-uint`, where
+[the retention record](../../docs/optimizations/06-sp1-runtime-and-proving.md)
+measures the same guest at **27,839,873,136 cells and 82 records, against
+43,922,703,280 and 148 under default routing — −36.6% cells, −46.9% interaction
+events, and identical cycles.**
+
+So the 6.07% is internally consistent but not the production number. Measuring
+the diff proof under retention would move both numerator and denominator, and
+which way the ratio goes is unknown until it is run: against the retained base
+alone the share would be 9.58%, and if the diff proof's own Pasta calls retain
+as well it could land back near 6%. **Open: rerun `mirror-records` with
+`PASTA_RETAIN=pasta-uint`'s presets in `record_options()`.** Cycle shares are
+unaffected, since routing does not change the instruction stream.
 
 ## Optimizing Poseidon raises the mirror's share, measured
 

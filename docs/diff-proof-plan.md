@@ -173,6 +173,16 @@ becomes real work. That circuit is not in this workspace —
 `miza-o1js-to-zkvm` is Miza's fork of the *verifier*, not the chain. Confirm
 before scheduling.
 
+## Open: the base these percentages compare against
+
+The measured cells above are **default routing**, because `mirror-records` uses
+the trace accounting's `record_options()` with no retention preset. The
+production arm is `retain-pasta-and-uint`, which the retention record measures
+at **27,839,873,136 cells and 82 records against default routing's
+43,922,703,280 and 148 — −36.6% cells, −46.9% interaction events, identical
+cycles**. Rerun `mirror-records` under the retained presets before quoting any
+percentage-of-base as a production figure. Cycle shares are unaffected.
+
 ## Validation
 
 Every change is checkable with the harness already on the branch, which is why
