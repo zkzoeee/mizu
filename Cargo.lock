@@ -4473,13 +4473,18 @@ name = "pipeline-runner"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bincode",
  "clap",
  "hex",
  "serde_json",
+ "sha2 0.10.9",
+ "sp1-core-executor",
  "sp1-core-machine",
  "sp1-hypercube",
  "sp1-primitives",
  "sp1-prover",
+ "sp1-prover-types",
+ "tokio",
 ]
 
 [[package]]
