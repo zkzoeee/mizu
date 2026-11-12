@@ -67,7 +67,8 @@ struct Args {
     proof_out: Option<PathBuf>,
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
@@ -135,8 +136,10 @@ fn main() -> Result<()> {
         (cycles, node_built, execute_seconds, setup_seconds, prove_seconds, verify_seconds, verified, proof.proof)
     });
 
+    // `SpawnHandle<T>` implements `IntoFuture` with `Output = Result<T, SpawnError>`;
+    // it has no `join`. Same await as `tools/pasta-proof/src/gpu.rs:308`.
     let (cycles, node_built, execute_seconds, setup_seconds, prove_seconds, verify_seconds, verified, proof) =
-        handle.join().map_err(|e| anyhow::anyhow!("cuda task failed: {e:?}"))?;
+        handle.await.map_err(|e| anyhow::anyhow!("the CUDA task failed: {e:?}"))?;
 
     let proof_bytes = bincode::serialize(&proof).context("serialize the proof")?;
     if let Some(path) = &args.proof_out {

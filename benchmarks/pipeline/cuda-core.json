@@ -1,0 +1,29 @@
+{
+  "cycles": 142638298,
+  "elf_sha256": "0cfb3eafeea0d450e3ae8efd9a472a363495d49a5ff055b31b7cb50541c5a871",
+  "mode": "pipeline-cuda",
+  "proof_bytes": 212657158,
+  "proof_mode": "Core",
+  "seconds": {
+    "execute": 23.727975183,
+    "node_build": 17.982348153,
+    "prove": 158.183063911,
+    "setup": 6.929790835,
+    "verify": 9.021434214
+  },
+  "soundness": "DEVELOPMENT ONLY: vk verification is off, so nothing binds the recursion program that produced this proof",
+  "verified": true,
+  "hardware": {
+    "gpu": "NVIDIA A40",
+    "vram_mib": 46068,
+    "ecc_mode": "Enabled",
+    "driver": "595.91.07",
+    "data_center": "EU-SE-1",
+    "vcpu": 96,
+    "note": "ECC Enabled, so comparable to the 107-111 s A40 cluster, not the 96.32 s ECC-off outlier"
+  },
+  "proof_sha256": "063bd6f5f9510763862ceb4c882369033458ebba872e882030f394118099b0f0",
+  "peak_vram_mib_observed": null,
+  "not_comparable_with": "the GPU harness's 132,029,932-byte core proof: local_gpu_opts() sets shard_size = 1 << 24 and its own sharding threshold, so this run shards differently",
+  "compress_shape_patched": "Select 1087808 -> 1087840 by hand; regenerate properly with test_find_recursion_shape"
+}

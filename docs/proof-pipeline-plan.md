@@ -219,6 +219,66 @@ by the same resolver/assert constraint that makes it a separate workspace.
   `shard_size = 1 << 24`, so a GPU run has fewer, larger shards than the 82 the
   CPU default produced.
 
+### Milestone 1 is DONE on CUDA (2026-11-12): a compressed proof, verified
+
+A40, EU-SE-1, $0.59/hr, pod `tirknbwxnncb2w`, **ECC Enabled** — so comparable to
+the 107–111 s A40 cluster, not the 96.32 s ECC-off outlier. Reports in
+`benchmarks/pipeline/`.
+
+| | core | compressed |
+| --- | ---: | ---: |
+| cycles | 142,638,298 | 142,638,298 |
+| proof bytes | 212,657,158 | **1,272,578** |
+| prove | 158.2 s | 229.8 s |
+| **verify** | 9.02 s | **0.17 s** |
+| verified | true | **true** |
+| peak VRAM observed | — | 24,383 MiB |
+
+**The size collapse is 167x and the verify speedup is 52x.** That 0.17 s is the
+point of the exercise: one proof to check instead of a shard set.
+
+Two figures that must not be compared with the GPU harness's records:
+
+- **212,657,158 core bytes against the harness's 132,029,932** for the same
+  guest. `local_gpu_opts()` sets `shard_size = 1 << 24` and its own sharding
+  threshold, so this run shards differently. Same cycles, different proof shape.
+- **158.2 s of core prove against the harness's ~100 s.** This path goes through
+  the worker/controller with normalize; the harness hand-assembles a core shard
+  prover and does not.
+
+**24,383 MiB of peak VRAM** is a third more than the 18,991 MiB the eleven
+core-only harness runs peaked at, which is why `local_gpu_opts()` panics below
+24 GB. The recursion tree would not fit on a 24 GB card with any headroom —
+so an A5000 or 3090 is out for this stage regardless of price.
+
+**This is a development artifact.** `vk_verification` is off, so nothing binds
+the recursion program that produced the proof; the caveat is a field in both
+report JSONs. And `compress_shape.json`'s `Select` was patched by hand from
+1,087,808 to 1,087,840 — the same 32-row gap seen on CPU, which confirms the
+requirement is a property of the machine and guest rather than the backend.
+Regenerate it properly before any of this counts.
+
+### What it took to get there, beyond the plan
+
+Four PATH-or-package prerequisites, none visible from macOS, and the protobuf
+one is **distro-dependent**:
+
+| | needed for | caught on |
+| --- | --- | --- |
+| `protoc` | `sp1-prover-types`' prost-build | Debian pod |
+| `libprotobuf-dev` | protobuf well-known types (`google/protobuf/empty.proto`) | **Ubuntu pod only** |
+| explicit `/root/.cargo/bin` | cargo over SSH | both pods |
+| explicit `/usr/local/cuda/bin` | `nvcc` over SSH, even on a `-devel` image | CUDA pod |
+
+sshd does not inherit the image's Docker `ENV`, which is why two of those are
+PATH problems rather than missing software.
+
+`--mode plonk` will **not** work as this workspace stands: only `experimental`
+is enabled on `sp1-prover`, not `native-gnark`, so the gnark FFI compiled
+against its Docker backend and there is no Docker in the container. PLONK needs
+`features = ["experimental", "native-gnark"]`, a Go toolchain on the pod, and
+another build cycle.
+
 ### How to build and run it on a pod
 
 Needs a CUDA **devel** image for `sp1-gpu-sys`'s kernels — the comparable fat
