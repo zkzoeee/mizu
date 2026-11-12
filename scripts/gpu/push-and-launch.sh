@@ -22,7 +22,10 @@
 #   CACHE             volume path to reuse/populate ("" disables the cache)
 #   ARMS              which manifest arms to prove
 #   TOOLCHAIN         Rust toolchain (default 1.92.0, this repo's pin)
-#   CUDA_ARCHS        override the architecture read from the card
+#   CUDA_ARCHS        override the architecture read from the card. Rarely
+#                     needed now: the cache probe reads the card's own
+#                     compute capability and a stored build counts as a hit
+#                     when its arch list covers that.
 #   CARGO_BUILD_JOBS  build parallelism (default 8; never $(nproc), see pod-run)
 set -euo pipefail
 
@@ -70,7 +73,24 @@ REPO="$(cd "$HERE/../.." && pwd)"
 SOURCE_FP="$(python3 -I "$HERE/cache-key.py" --root "$REPO" --fingerprint-only)"
 echo "=== source fingerprint: ${SOURCE_FP:0:16} ==="
 
-PROBE_ARCHS="${CUDA_ARCHS:-86}"
+# The architecture to probe with is the CARD's, read from the pod, not a
+# constant. r123's hardcoded 86 happened to be right for an A40 and still cost
+# a launch on 2026-11-12: the cache on the volume was built fat for 86,89,120,
+# the probe compared the string, and a warm cache read as a miss. cache-key.py
+# now accepts a stored build whose arch list COVERS what this card needs, so
+# the honest value to ask with is the capability the card reports.
+if [ -n "${CUDA_ARCHS:-}" ]; then
+  PROBE_ARCHS="$CUDA_ARCHS"
+else
+  PROBE_ARCHS="$(ssh "${SSHOPTS[@]}" "root@$HOST" \
+    'nvidia-smi --query-gpu=compute_cap --format=csv,noheader | head -1 | tr -d " ."' \
+    2>/dev/null || true)"
+  if [ -z "$PROBE_ARCHS" ]; then
+    echo "WARNING: could not read compute_cap from the pod; probing with 86" >&2
+    PROBE_ARCHS=86
+  fi
+fi
+echo "=== probing the cache for architecture $PROBE_ARCHS ==="
 MODE=build
 if [ -n "$CACHE" ]; then
   echo "=== asking the pod whether it already holds this build ==="

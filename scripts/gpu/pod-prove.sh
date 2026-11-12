@@ -32,8 +32,10 @@
 #                 computed by the launcher, which has the sources
 #   CACHE         default /workspace/mizu-cache (the mounted volume)
 #   RESULTS       default /root/results (container disk)
-#   CUDA_ARCHS    must match what built the cached binary; the key is exact,
-#                 so an auto-detected 86 misses an 86,89,120 cache
+#   CUDA_ARCHS    the architectures this run needs; normally leave it unset and
+#                 let the card answer. Since 2026-11-12 a stored build counts
+#                 as a hit when its arch list COVERS the card, so an 86 card
+#                 reuses an 86,89,120 cache instead of rebuilding it
 #   ARMS          manifest arms to prove, default retain-pasta-and-uint
 set -euo pipefail
 
@@ -130,8 +132,8 @@ command -v rustc >/dev/null || echo "note: no rustc here; the runtime-scoped key
 if [ -z "${CUDA_ARCHS:-}" ]; then
   CC=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader | head -1 | tr -d ' .')
   CUDA_ARCHS="$CC"
-  echo "WARNING: CUDA_ARCHS not given, using the card's own $CUDA_ARCHS."
-  echo "WARNING: a cache built for several architectures will MISS on this."
+  echo "CUDA_ARCHS not given, using the card's own $CUDA_ARCHS."
+  echo "A cache built for a superset of it still counts as a hit."
 fi
 export CUDA_ARCHS
 

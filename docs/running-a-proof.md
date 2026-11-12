@@ -284,22 +284,34 @@ on the identical card refused creates at 14:10Z the day before and the A6000's
 `LOW` refused eleven. **A grade is advisory in both directions**: it neither
 promises capacity nor denies it, and the create remains the only test.
 
-**The cache probe compares `cuda_archs` verbatim, and the launcher's default is
-wrong for this cache.** `push-and-launch.sh` sets `PROBE_ARCHS="${CUDA_ARCHS:-86}"`,
-but the cache on the EU-SE-1 volume was built fat, for `86,89,120`. With
-`CUDA_ARCHS` unset the probe therefore computed a key for `86`, missed in both
-the full and the runtime scope, chose the build path, and died on a slim image
-with no `nvcc` -- a warm cache reported as a miss, 20 s of pod time wasted.
-Launch with the stored key's arch list:
+**The arch component is now matched by coverage, not by string equality.**
+This cost a launch on 2026-11-12 before it was fixed. `push-and-launch.sh` set
+`PROBE_ARCHS="${CUDA_ARCHS:-86}"` while the EU-SE-1 cache was built fat for
+`86,89,120`; `cache-key.py` compared the two as strings, missed in both scopes,
+chose the build path, and died at once on a slim image with no `nvcc` -- a warm
+cache reported as a miss, 20 s of pod time for nothing. The trap was already
+written down in `pod-prove.sh`'s own header and contradicted by the launcher's
+default, which is the more interesting half of the mistake.
+
+Both now agree. `archs_cover()` asks the real question -- does the stored build
+carry every architecture this card needs -- in that direction only, since a
+binary built for `86` alone does not run on an `89` card. The stored key stays a
+hash of the exact components, because it is an identity rather than a
+compatibility test; coverage is applied when deciding whether to reuse that
+identity, and the per-component report prints ` covers` rather than `same`. The
+launcher reads the card's own `compute_cap` over SSH instead of assuming `86`.
+So the normal launch names no architecture at all:
 
 ```bash
-CUDA_ARCHS="86,89,120" DEADLINE_MINUTES=15 RATE_PER_HOUR=0.59 CAP_USD=2.00 \
+DEADLINE_MINUTES=15 RATE_PER_HOUR=0.59 CAP_USD=2.00 \
   CACHE=/workspace/mizu-cache ARMS="retain-pasta-and-uint" \
   bash scripts/gpu/push-and-launch.sh <host> <port>
 ```
 
-Read `cuda_archs` out of `$CACHE/key.json` on the pod before launching, or have
-the probe default to it rather than to `86`.
+`CUDA_ARCHS` remains an override for the case where the card should not decide.
+A slim pod still misses in the full scope -- correctly, on `nvcc`, since it
+cannot build -- and hits in the runtime scope, which is the trade a 101 MB image
+makes.
 
 **Two A40s are not the same A40.** The second run proved the identical ELF with
 the identical verification key, cycle count, shard count and inflight settings,

@@ -93,7 +93,8 @@ fi
 
 # Architecture from the card itself, rather than hardcoded as in r123. A
 # cached binary built for another architecture is useless here, which is why
-# this value is part of the cache key.
+# this value is part of the cache key. The comparison is containment, not
+# equality: a fat build covering this card is reusable, a narrower one is not.
 if [ -z "${CUDA_ARCHS:-}" ]; then
   CC=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader | head -1 | tr -d ' .')
   [ -n "$CC" ] || fail "could not read compute capability; set CUDA_ARCHS explicitly"

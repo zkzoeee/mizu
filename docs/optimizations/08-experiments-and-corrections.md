@@ -90,12 +90,21 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   rejected. It also retires one earlier claim: that the A5000's 128.43 s beat every A40
   run. It sits inside the A40 range now, so the A5000's price advantage stands and its
   speed advantage does not.
-- The cache probe compares `cuda_archs` as a string, and `push-and-launch.sh` defaults
-  it to `86` while the EU-SE-1 cache was built fat for `86,89,120`. A warm cache
-  therefore read as a miss, the launcher chose the build path, and the build died
-  immediately on a slim image with no `nvcc`. The failure was loud and cheap -- 20 s of
-  pod time -- but it is a default that is wrong for the only cache that exists. Pass
-  `CUDA_ARCHS` from `$CACHE/key.json`, or make the probe read it from there.
+- **An exact-string arch comparison is the wrong predicate, and both scripts said so
+  in opposite directions.** The cache probe compared `cuda_archs` as a string while
+  `push-and-launch.sh` defaulted it to `86` and the EU-SE-1 cache was built fat for
+  `86,89,120`, so a warm cache read as a miss, the launcher chose the build path, and
+  the build died immediately on a slim image with no `nvcc` -- 20 s of pod time for
+  nothing. `pod-prove.sh`'s own header had documented the trap ("the key is exact, so
+  an auto-detected 86 misses an 86,89,120 cache") and warned about it at runtime; the
+  launcher's default contradicted it. Knowing a trap and encoding it in a default are
+  different things. Fixed on 2026-11-12: `archs_cover()` asks whether the stored build
+  carries every architecture the card needs, in that direction only (a binary built for
+  `86` does not run on an `89` card), the stored key stays an exact hash because it is
+  an identity and not a compatibility test, and the launcher reads `compute_cap` from
+  the pod instead of assuming. Eleven cases checked, including every must-miss
+  direction and a moved source fingerprint; a slim pod still misses the full scope on
+  `nvcc` and hits the runtime scope, which is the intended trade.
 - "Retry the create, never re-read availability" was half a rule. It is right for a
   `LOW` pool, and useless against an empty one: the A5000 refused fourteen creates on
   2026-11-11 while its per-GPU read said `LOW`, because that figure spans Community

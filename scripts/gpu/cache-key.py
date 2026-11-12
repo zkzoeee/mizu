@@ -43,6 +43,29 @@ SKIP_DIRS = {"target", ".git", "book", "node_modules", "__pycache__"}
 RUNTIME_COMPONENTS = ("os", "cuda_archs", "source_fingerprint")
 
 
+def archs_set(value):
+    """"86,89,120" -> {"86", "89", "120"}; order and spacing are not identity."""
+    return {a.strip() for a in str(value).split(",") if a.strip()}
+
+
+def archs_cover(needed, built):
+    """Does a binary built for `built` run on a card that needs `needed`?
+
+    Compiling for 86,89,120 produces a fat binary that runs on an 86 card, so
+    comparing this component as a string is too strict: on 2026-11-12 it read a
+    perfectly good fat cache as a miss, sent the launcher down the build path,
+    and died on a slim image with no nvcc. Containment is the real question,
+    and only in this direction -- a binary built for 86 alone does NOT run on
+    an 89 card, so `needed` must be a subset of `built`, never the reverse.
+
+    The stored KEY is still a hash of the exact components. It is an identity,
+    not a compatibility predicate; this function is the predicate, and it is
+    used only when deciding whether a stored identity is good enough to reuse.
+    """
+    want, have = archs_set(needed), archs_set(built)
+    return bool(want) and want <= have
+
+
 def file_sha(path):
     h = hashlib.sha256()
     with open(path, "rb") as fh:
@@ -112,7 +135,12 @@ def nvcc_release():
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--root", help="unpacked bundle root; omit with --source-fingerprint")
-    p.add_argument("--archs", help="CUDA_ARCHS this build targets")
+    p.add_argument(
+        "--archs",
+        help="the architectures this run needs -- normally the card's own "
+        "compute capability. A stored key is reusable when it was built for a "
+        "SUPERSET of these, so a fat 86,89,120 cache serves an 86 card.",
+    )
     p.add_argument("--toolchain", default=os.environ.get("RUSTUP_TOOLCHAIN", "unknown"))
     p.add_argument("--write")
     p.add_argument("--compare")
@@ -184,6 +212,21 @@ def main():
             print(f"cache miss: no usable key at {args.compare} ({error})", file=sys.stderr)
             return 1
         old = stored.get("components", {})
+
+        def acceptable(name):
+            was, now = old.get(name, "<absent>"), components[name]
+            if name == "cuda_archs":
+                return archs_cover(now, was)
+            return was == now
+
+        def mark_for(name):
+            was, now = old.get(name, "<absent>"), components[name]
+            if was == now:
+                return "   same"
+            if acceptable(name):
+                return " covers"
+            return "CHANGED"
+
         if args.runtime:
             ignored = [n for n in sorted(components) if n not in RUNTIME_COMPONENTS]
             print(
@@ -194,14 +237,12 @@ def main():
                 + " because this path compiles nothing",
                 file=sys.stderr,
             )
-            moved = [
-                n for n in RUNTIME_COMPONENTS
-                if old.get(n, "<absent>") != components[n]
-            ]
+            moved = [n for n in RUNTIME_COMPONENTS if not acceptable(n)]
             for name in RUNTIME_COMPONENTS:
                 was, now = old.get(name, "<absent>"), components[name]
-                mark = "   same" if was == now else "CHANGED"
-                print(f"  {mark} {name}: {was} -> {now}", file=sys.stderr)
+                print(
+                    f"  {mark_for(name)} {name}: {was} -> {now}", file=sys.stderr
+                )
             if moved:
                 print("cache miss in runtime scope", file=sys.stderr)
                 return 1
@@ -213,11 +254,22 @@ def main():
         if stored.get("key") == key:
             print(f"cache hit: {key}", file=sys.stderr)
             return 0
+        moved = [n for n in sorted(components) if not acceptable(n)]
+        if not moved:
+            # Every component either matches or, for cuda_archs, is covered by
+            # a wider build. The keys differ because the key is exact; the
+            # binary is still the right one.
+            print(
+                "cache hit by coverage: the stored build targets "
+                f"{old.get('cuda_archs')} and this host needs "
+                f"{components['cuda_archs']}; its own key is {stored.get('key')}",
+                file=sys.stderr,
+            )
+            return 0
         print("cache miss, by component:", file=sys.stderr)
         for name in sorted(components):
             was, now = old.get(name, "<absent>"), components[name]
-            mark = "   same" if was == now else "CHANGED"
-            print(f"  {mark} {name}: {was} -> {now}", file=sys.stderr)
+            print(f"  {mark_for(name)} {name}: {was} -> {now}", file=sys.stderr)
         return 1
     return 0
 
