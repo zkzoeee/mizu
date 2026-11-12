@@ -27,7 +27,7 @@ use std::{collections::BTreeSet, fs, path::PathBuf, time::Instant};
 use anyhow::{Context, Result};
 use clap::{Parser, ValueEnum};
 use either::Either;
-use sp1_core_executor::SP1Context;
+use sp1_core_executor::{RetainedEventsPreset, SP1Context, SP1CoreOpts};
 use sp1_core_machine::{io::SP1Stdin, riscv::RiscvAir};
 use sp1_primitives::SP1Field;
 use sp1_prover::{
@@ -101,11 +101,27 @@ struct Args {
     /// Where to write the proof bytes. Omit to measure without keeping them.
     #[arg(long)]
     proof_out: Option<PathBuf>,
+    /// Retain the Pasta and UInt256 events instead of deferring them, as the
+    /// `pasta-proof` harness's retained arm does and as `vk-map-local` assumes.
+    /// Changes how shards are cut, so the VK map must have been built with the
+    /// same setting or its membership check will fail.
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    retain_pasta: bool,
     /// The recursion VK map. `--mode vk-map` writes it; every other mode reads
     /// it and turns vk verification ON. Omit it for a development run with
     /// verification off.
     #[arg(long)]
     vk_map: Option<PathBuf>,
+}
+
+/// The Pasta/UInt256 retention this project proves with, applied on top of
+/// whatever the prover's own options already retain. Must match the setting the
+/// VK map was built with (`vk-map-local --retain-pasta`), because retention
+/// changes how shards are cut and therefore their shapes.
+fn apply_retention(opts: &mut SP1CoreOpts) {
+    opts.retained_events_presets.insert(RetainedEventsPreset::Uint256MulMod);
+    opts.retained_events_presets.insert(RetainedEventsPreset::VestaAdd);
+    opts.retained_events_presets.insert(RetainedEventsPreset::PallasAdd);
 }
 
 #[tokio::main]
@@ -132,9 +148,13 @@ async fn main() -> Result<()> {
     if matches!(args.mode, Mode::VkMap) {
         let path = args.vk_map.clone().context("--mode vk-map needs --vk-map <path>")?;
         let core_verifier = CpuSP1ProverComponents::core_verifier(machine.clone());
-        let node = SP1LocalNodeBuilder::from_worker_client_builder(
-            cpu_worker_builder_with_machine(machine),
-        )
+        let mut vk_builder = cpu_worker_builder_with_machine(machine);
+        if args.retain_pasta {
+            let mut o = vk_builder.core_opts().clone();
+            apply_retention(&mut o);
+            vk_builder = vk_builder.with_core_opts(o);
+        }
+        let node = SP1LocalNodeBuilder::from_worker_client_builder(vk_builder)
         .build()
         .await
         .context("build the local node")?;
@@ -210,7 +230,12 @@ async fn main() -> Result<()> {
     }
 
     let started = Instant::now();
-    let builder = cpu_worker_builder_with_machine(machine);
+    let mut builder = cpu_worker_builder_with_machine(machine);
+    if args.retain_pasta {
+        let mut o = builder.core_opts().clone();
+        apply_retention(&mut o);
+        builder = builder.with_core_opts(o);
+    }
     let builder = match &args.vk_map {
         Some(path) => builder.with_vk_map_path(path.display().to_string()),
         None => builder.without_vk_verification(),
@@ -272,6 +297,7 @@ async fn main() -> Result<()> {
         "mode": "pipeline-local",
         "proof_mode": format!("{:?}", args.mode),
         "vk_verification": args.vk_map.is_some(),
+        "retain_pasta": args.retain_pasta,
         "groth16": groth16,
         "soundness": if args.vk_map.is_some() {
             "vk verification ON against the supplied partial vk map; the recursion programs are bound by its root"

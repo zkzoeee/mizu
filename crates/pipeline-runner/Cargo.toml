@@ -54,3 +54,8 @@ path = "src/bin/vk-map-guard.rs"
 [[bin]]
 name = "compress-shape-audit"
 path = "src/bin/compress-shape-audit.rs"
+
+# Builds the partial VK map locally, from records rather than a core proof.
+[[bin]]
+name = "vk-map-local"
+path = "src/bin/vk-map-local.rs"

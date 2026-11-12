@@ -29,7 +29,7 @@ use std::{collections::BTreeSet, fs, path::PathBuf, time::Instant};
 use anyhow::{Context, Result};
 use clap::{Parser, ValueEnum};
 use either::Either;
-use sp1_core_executor::SP1Context;
+use sp1_core_executor::{RetainedEventsPreset, SP1Context, SP1CoreOpts};
 use sp1_core_machine::{io::SP1Stdin, riscv::RiscvAir};
 use sp1_gpu_prover::cuda_worker_builder_with_machine;
 use sp1_primitives::SP1Field;
@@ -95,12 +95,28 @@ struct Args {
     output: PathBuf,
     #[arg(long)]
     proof_out: Option<PathBuf>,
+    /// Retain the Pasta and UInt256 events instead of deferring them, as the
+    /// `pasta-proof` harness's retained arm does and as `vk-map-local` assumes.
+    /// Changes how shards are cut, so the VK map must have been built with the
+    /// same setting or its membership check will fail.
+    #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
+    retain_pasta: bool,
     /// The recursion VK map. `--mode vk-map` writes it; every other mode reads
     /// it and turns vk verification ON, which is what makes the result real:
     /// SP1's own wrap-vk check then runs, and with `SP1_CIRCUIT_MODE` unset the
     /// released Groth16 artifacts are installed. Omit for a development run.
     #[arg(long)]
     vk_map: Option<PathBuf>,
+}
+
+/// The Pasta/UInt256 retention this project proves with, applied on top of
+/// whatever the prover's own options already retain. Must match the setting the
+/// VK map was built with (`vk-map-local --retain-pasta`), because retention
+/// changes how shards are cut and therefore their shapes.
+fn apply_retention(opts: &mut SP1CoreOpts) {
+    opts.retained_events_presets.insert(RetainedEventsPreset::Uint256MulMod);
+    opts.retained_events_presets.insert(RetainedEventsPreset::VestaAdd);
+    opts.retained_events_presets.insert(RetainedEventsPreset::PallasAdd);
 }
 
 #[tokio::main]
@@ -129,11 +145,16 @@ async fn main() -> Result<()> {
         let path = args.vk_map.clone().context("--mode vk-map needs --vk-map <path>")?;
         let clusters = machine.shape().chip_clusters.len();
         let elf_for_map = elf.clone();
+        let retain = args.retain_pasta;
         let handle = sp1_gpu_cudart::spawn(move |scope| async move {
             let core_verifier = CpuSP1ProverComponents::core_verifier(machine.clone());
-            let node = SP1LocalNodeBuilder::from_worker_client_builder(
-                cuda_worker_builder_with_machine(scope, machine).await,
-            )
+            let mut vk_builder = cuda_worker_builder_with_machine(scope, machine).await;
+            if retain {
+                let mut o = vk_builder.core_opts().clone();
+                apply_retention(&mut o);
+                vk_builder = vk_builder.with_core_opts(o);
+            }
+            let node = SP1LocalNodeBuilder::from_worker_client_builder(vk_builder)
             .build()
             .await
             .expect("build the cuda node");
@@ -220,6 +241,7 @@ async fn main() -> Result<()> {
     }
 
     let vk_map_for_task = args.vk_map.as_ref().map(|p| p.display().to_string());
+    let retain = args.retain_pasta;
 
     // Everything that touches the device has to happen inside the task scope:
     // a `TaskScope` is a weak handle into a pooled CUDA task and is valid only
@@ -230,7 +252,12 @@ async fn main() -> Result<()> {
         // `local_gpu_opts()` inside the builder panics under 24 GB of VRAM and
         // sets shard_size to 1 << 24, so a GPU proof has fewer, larger shards
         // than the CPU default.
-        let builder = cuda_worker_builder_with_machine(scope, machine).await;
+        let mut builder = cuda_worker_builder_with_machine(scope, machine).await;
+        if retain {
+            let mut o = builder.core_opts().clone();
+            apply_retention(&mut o);
+            builder = builder.with_core_opts(o);
+        }
         let builder = match vk_map_for_task {
             Some(path) => builder.with_vk_map_path(path),
             None => builder.without_vk_verification(),
@@ -296,6 +323,7 @@ async fn main() -> Result<()> {
         "mode": "pipeline-cuda",
         "proof_mode": format!("{:?}", args.mode),
         "vk_verification": args.vk_map.is_some(),
+        "retain_pasta": args.retain_pasta,
         "groth16": groth16,
         "soundness": if args.vk_map.is_some() {
             "vk verification ON against the supplied partial vk map; the recursion programs are bound by its root"
