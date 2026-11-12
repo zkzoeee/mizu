@@ -182,6 +182,66 @@ derived from widths and known rows per permutation, not read from generated
 records, so they omit the CPU-side chips the schedule still touches around the
 syscalls, and they omit interaction events entirely.
 
+## Generated records: the derived cells were low by about 2x
+
+`crates/cycle-runner/src/bin/mirror-records.rs` runs the guest through
+`generate_records_streaming_with_summary` under the same pinned `SP1CoreOpts`
+the project's trace accounting uses, and sums `num_rows(chip, record) *
+(cost() - preprocessed_width())` over every included chip, plus
+`global_interaction_events`. No proof, and no `shape_from_record` cross-check,
+so these are stored cells without stacking-height rounding or padding columns.
+
+Marginal per account at depth 35, taken as `(N=16 - N=1)/15` so each build's
+fixed startup drops out:
+
+| | cells/account | interactions | cycles |
+| --- | ---: | ---: | ---: |
+| Poseidon ledger, software | 1,107,068,853 | 3,629,429 | 4,124,969 |
+| Poseidon ledger, `PALLAS_POSEIDON` | **16,166,786** | 20,902 | 25,881 |
+| ledger + mirror, software Poseidon | 1,117,574,019 | 3,637,439 | 4,210,680 |
+| ledger + mirror, both precompiles | **26,671,788** | 28,912 | 111,592 |
+
+The mirror's own marginal cost comes out **10,505,166** cells in the
+software-Poseidon build and **10,505,002** in the precompiled one — 0.002%
+apart, as they must be, since the mirror does not depend on the Poseidon build.
+That agreement is what validates the differencing.
+
+**Corrections to the width-derived figures above:**
+
+| | derived | measured | |
+| --- | ---: | ---: | --- |
+| Poseidon ledger cells/account | 9,730,642 | 16,166,786 | 1.66x low |
+| keccak mirror cells/account | 4,815,360 | 10,505,002 | 2.18x low |
+| mirror's share of the ledger | 49.5% | **65.0%** | |
+| Poseidon precompile cell win | 85.4x | **68.5x** | 1.25x high |
+
+The derived numbers counted only the precompile chips' own rows. The records
+also carry the CPU chips that marshal data into and out of each syscall and the
+per-chip row padding, which is the gap the derived section warned about; it is
+worth roughly a factor of two. The 85.4x came from dividing a published
+whole-guest delta by its permutation count, which attributes all of that
+delta to the permutations; measured directly it is 68.5x.
+
+**Interaction events are the one axis where the keccak precompile costs more.**
+The mirror adds **8,010 events per account** with `KECCAK_PERMUTE`, against 52
+in total at one account with software keccak. The precompile buys a 2.3x cell
+reduction on the mirror and pays for it in memory interactions — the effect
+wazabi measured as 42.7% of trace cells on its own workload.
+
+Against the base guest (43,922,703,280 cells, 142,638,298 cycles):
+
+| accounts | mirror cells | % base | diff proof cells | % base | diff cycles | % base |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 10,505,002 | 0.02% | 26,671,788 | 0.06% | 111,592 | 0.08% |
+| 10 | 105,050,016 | 0.24% | 266,717,877 | 0.61% | 1,115,924 | 0.78% |
+| 100 | 1,050,500,160 | 2.39% | 2,667,178,773 | **6.07%** | 11,159,240 | **7.82%** |
+| 1000 | 10,505,001,600 | 23.92% | 26,671,787,733 | 60.72% | 111,592,400 | 78.23% |
+
+With the fixed overhead removed the two metrics agree closely at last — about
++7.8% of the base in cycles and +6.1% in cells for a hundred accounts — so the
+planning number for a dual-tree diff proof with both precompiles on is
+**roughly 6 to 8% of the base guest per hundred accounts touched**.
+
 ## Optimizing Poseidon raises the mirror's share, measured
 
 The same 498,794 mirror cycles against three Poseidon builds of the same guest:
