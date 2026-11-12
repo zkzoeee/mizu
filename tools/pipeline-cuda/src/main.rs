@@ -1,4 +1,4 @@
-//! The CUDA proof pipeline: core → compressed → PLONK, on one GPU.
+//! The CUDA proof pipeline: core → compressed → Groth16, on one GPU.
 //!
 //! Why this exists separately from `crates/pipeline-runner`: that one is the
 //! CPU driver and lives in the root workspace, which is `resolver = "2"`. A
@@ -39,36 +39,18 @@ use sp1_prover_types::network_base_types::ProofMode;
 enum Mode {
     Core,
     Compressed,
-    Plonk,
-    /// Compute this machine's wrap verifying key and compare it to upstream's
-    /// baked `WRAP_VK_BYTES`. Stops at `shrink_wrap`, so it never reaches gnark:
-    /// no `native-gnark` feature, no Go toolchain, no 107 GiB setup.
+    /// The only wrap this project targets. Needs the `native-gnark` feature and
+    /// `SP1_CIRCUIT_MODE=dev` to build the wrap keys locally.
     ///
-    /// Why this exists: `test_wrap_vk` (prover/src/build.rs:839) looks like it
-    /// checks this but is vacuous -- `verify.rs:93` is the only assignment to
-    /// `SP1Verifier::wrap_vk` and it deserializes `WRAP_VK_BYTES`, so the test
-    /// compares the baked bytes with themselves. The only computed wrap vk is
-    /// `shrink_wrap(..)?.vk` (build.rs:821).
-    ///
-    /// The printed prefix is what names the artifacts directory, which makes
-    /// this useful for cache management: it tells you which
-    /// `~/.sp1/circuits/<prefix>-{plonk,groth16}-dev` a run will look for,
-    /// without paying for the setup.
-    ///
-    /// It does **not** settle the ceremony question, despite appearances. This
-    /// driver builds with `without_vk_verification()`, and `vk_verification` is
-    /// a direct parameter to `wrap_program_from_input` whereas upstream's baked
-    /// vk was generated with it on — so the prefix here is guaranteed to differ
-    /// from upstream's for that reason alone, whatever the cluster count.
-    /// docs/groth16-ceremony-spike.md, stage 2, explains why and what would
-    /// actually settle it.
-    WrapVk,
-    /// Needs the same `native-gnark` build and `SP1_CIRCUIT_MODE=dev` as Plonk.
     /// The dev setup is gnark's own local one, which for Groth16 is *unsafe*:
-    /// whoever ran it could forge proofs for that circuit. Fine here, because
-    /// these are already development artifacts with vk verification off, and
-    /// proof size and verifier gas do not depend on how the setup was produced
-    /// — so the ceremony can wait until the circuit is frozen for production.
+    /// whoever ran it could forge proofs for that circuit. Acceptable only for
+    /// measurement, because these are already development artifacts with vk
+    /// verification off.
+    ///
+    /// For production the goal is not a ceremony at all but matching upstream's
+    /// wrap vk, so `try_install_circuit_artifacts("groth16")` serves Succinct's
+    /// released keys. That needs the cluster trim
+    /// (`MIZU_LEAN_PASTA_CLUSTERS`); see docs/groth16-ceremony-spike.md.
     Groth16,
 }
 
@@ -77,19 +59,9 @@ impl Mode {
         match self {
             Mode::Core => ProofMode::Core,
             Mode::Compressed => ProofMode::Compressed,
-            Mode::Plonk => ProofMode::Plonk,
             Mode::Groth16 => ProofMode::Groth16,
-            // Never reached: main() handles WrapVk before this is called.
-            Mode::WrapVk => ProofMode::Compressed,
         }
     }
-}
-
-/// `plonk_bn254_artifacts_dev_dir`'s naming, reproduced: the first 8 bytes of
-/// sha256 over the bincode of the vk (prover/src/build.rs:153-167).
-fn vk_hash_prefix(vk_bytes: &[u8]) -> String {
-    let digest = <sha2::Sha256 as sha2::Digest>::digest(vk_bytes);
-    format!("{:016x}", u64::from_be_bytes(digest[..8].try_into().unwrap()))
 }
 
 #[derive(Parser)]
@@ -99,7 +71,7 @@ struct Args {
     /// Directory holding `proof-input.bin` and `receipt-input.bin`.
     #[arg(long)]
     input_dir: PathBuf,
-    #[arg(long, value_enum, default_value = "compressed")]
+    #[arg(long, value_enum, default_value = "groth16")]
     mode: Mode,
     #[arg(long)]
     output: PathBuf,
@@ -128,63 +100,6 @@ async fn main() -> Result<()> {
     let machine = RiscvAir::<SP1Field>::machine();
     let mode = args.mode;
     let elf_for_task = elf.clone();
-
-    // Stage 2 of docs/groth16-ceremony-spike.md: prove compressed, shrink_wrap,
-    // and report the computed wrap vk's prefix against upstream's baked one.
-    if matches!(mode, Mode::WrapVk) {
-        let clusters = machine.shape().chip_clusters.len();
-        let elf_for_vk = elf.clone();
-        let handle = sp1_gpu_cudart::spawn(move |scope| async move {
-            let node = SP1LocalNodeBuilder::from_worker_client_builder(
-                cuda_worker_builder_with_machine(scope, machine).await.without_vk_verification(),
-            )
-            .build()
-            .await
-            .expect("build the cuda node");
-            let context = SP1Context { proof_nonce: [0, 0, 0, 0], ..Default::default() };
-            let t = Instant::now();
-            let compressed = node
-                .prove_with_mode(&elf_for_vk, stdin, context, ProofMode::Compressed)
-                .await
-                .expect("prove compressed");
-            let compressed_seconds = t.elapsed().as_secs_f64();
-            let t = Instant::now();
-            let wrapped = node.shrink_wrap(&compressed.proof).await.expect("shrink_wrap");
-            let shrink_wrap_seconds = t.elapsed().as_secs_f64();
-            let vk_bytes = bincode::serialize(&wrapped.vk).expect("serialize wrap vk");
-            (vk_bytes, compressed_seconds, shrink_wrap_seconds)
-        });
-        let (vk_bytes, compressed_seconds, shrink_wrap_seconds) =
-            handle.await.map_err(|e| anyhow::anyhow!("the CUDA task failed: {e:?}"))?;
-
-        let ours = vk_hash_prefix(&vk_bytes);
-        let upstream = vk_hash_prefix(sp1_prover::verify::WRAP_VK_BYTES);
-        let matches = ours == upstream;
-
-        let report = serde_json::json!({
-            "mode": "wrap-vk",
-            "lean_pasta_clusters": std::env::var_os("MIZU_LEAN_PASTA_CLUSTERS").is_some(),
-            "chip_clusters": clusters,
-            "computed_wrap_vk_prefix": ours,
-            "upstream_wrap_vk_prefix": upstream,
-            "matches_upstream": matches,
-            "meaning": if matches {
-                "upstream's released groth16/plonk artifacts apply: no ceremony of our own"
-            } else {
-                "wrap circuit diverges from upstream: a groth16 ceremony would be ours to run"
-            },
-            "seconds": { "compressed": compressed_seconds, "shrink_wrap": shrink_wrap_seconds },
-        });
-        if let Some(parent) = args.output.parent() {
-            fs::create_dir_all(parent)?;
-        }
-        fs::write(&args.output, format!("{}\n", serde_json::to_string_pretty(&report)?))?;
-        println!(
-            "clusters {clusters}: ours {ours} vs upstream {upstream} -> {}",
-            if matches { "MATCH" } else { "MISMATCH" }
-        );
-        return Ok(());
-    }
 
     // Everything that touches the device has to happen inside the task scope:
     // a `TaskScope` is a weak handle into a pooled CUDA task and is valid only

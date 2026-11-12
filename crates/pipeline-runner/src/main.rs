@@ -1,5 +1,5 @@
-//! Milestone 1 of the proof pipeline: core → compressed → PLONK, driven from
-//! the pinned ELF and the manifest's inputs.
+//! The CPU proof pipeline: core → compressed → Groth16, driven from the pinned
+//! ELF and the manifest's inputs.
 //!
 //! ## What this is, and what it is not
 //!
@@ -38,20 +38,20 @@ enum Mode {
     Core,
     /// Recursion tree over the shards. The size collapse.
     Compressed,
-    /// Compressed, shrunk, then wrapped for an EVM verifier.
-    Plonk,
-    /// As Plonk, but the Groth16 wrap. Needs the same `native-gnark` build and
-    /// `SP1_CIRCUIT_MODE=dev`.
+    /// Compressed, shrunk, then wrapped for an EVM verifier. The only wrap this
+    /// project targets. Needs the `native-gnark` feature and
+    /// `SP1_CIRCUIT_MODE=dev` to build the wrap keys locally.
     ///
-    /// The dev setup is gnark's own local one, which for Groth16 is *unsafe*:
-    /// whoever ran it could forge proofs for that circuit. Acceptable here
-    /// because these are already development artifacts with vk verification
-    /// off, and neither proof size nor verifier gas depends on how the setup
-    /// was produced -- so a ceremony can wait until the circuit is frozen.
+    /// That local setup is gnark's own, which for Groth16 is *unsafe*: whoever
+    /// ran it could forge proofs for that circuit. Acceptable only for
+    /// measurement, because these are already development artifacts with vk
+    /// verification off.
     ///
-    /// Unlike PLONK, whose SRS is universal (the non-dev path downloads Aztec
-    /// Ignition), a Groth16 setup is circuit-specific and must be re-run
-    /// whenever the wrap circuit changes.
+    /// A Groth16 setup is circuit-specific, so for production the goal is not a
+    /// ceremony but matching upstream's wrap vk, which lets
+    /// try_install_circuit_artifacts("groth16") serve Succinct's released keys.
+    /// That needs the cluster trim (MIZU_LEAN_PASTA_CLUSTERS); see
+    /// docs/groth16-ceremony-spike.md.
     Groth16,
 }
 
@@ -60,7 +60,6 @@ impl Mode {
         match self {
             Mode::Core => ProofMode::Core,
             Mode::Compressed => ProofMode::Compressed,
-            Mode::Plonk => ProofMode::Plonk,
             Mode::Groth16 => ProofMode::Groth16,
         }
     }
@@ -75,7 +74,7 @@ struct Args {
     /// bundle's `gpu/input/` does.
     #[arg(long)]
     input_dir: PathBuf,
-    #[arg(long, value_enum, default_value = "compressed")]
+    #[arg(long, value_enum, default_value = "groth16")]
     mode: Mode,
     #[arg(long)]
     output: PathBuf,

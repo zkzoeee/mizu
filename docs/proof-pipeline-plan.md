@@ -1,7 +1,44 @@
-# Proof pipeline plan: core → compressed → PLONK wrap
+# Proof pipeline plan: core → compressed → Groth16 wrap
 
 Tasks for getting from today's core proofs to an EVM-verifiable proof.
-**Wrap decision: PLONK.** Rationale and the rejected alternatives are at the end.
+**Wrap decision: Groth16**, reversed from PLONK on 2026-11-12. The gas table and
+the rejected alternatives are at the end.
+
+## The decision was reversed, and why
+
+PLONK was chosen for exactly one reason: its SRS is universal, so no ceremony is
+ever needed, and the gas table below says PLONK costs ~75,000 gas more per
+verification (1.30x) for that privilege. The clinching sentence was that a
+Groth16 ceremony means "a full redo every time the circuit changes -- which, with
+custom precompiles in the core machine, it will."
+
+**That last clause is false, and docs/groth16-ceremony-spike.md measures why.**
+The precompiles add no constraints to the wrap circuit: it is built over
+`CompressAir`, and the VK-map root is a witnessed public value. They reach the
+wrap verifying key through exactly one channel, the padded VK-map count's
+power-of-two bucket, which sets a Merkle depth that *is* in the circuit. Our 54
+chip clusters put that at depth 19 against upstream's 18; trimming the 14
+`pasta_retained_clusters` to 3 lands on 43 clusters, 258,049 keys, depth 18.
+
+Two measurements closed the other candidates. The compress-shape `Select` bump
+is invisible to the shrink program -- identical `dummy_input`, `total_memory` and
+`event_counts` -- because compress heights reach the input only through
+`ceil(sum / 2^20)` and a 32-row delta does not straddle that. And the trim
+itself is nearly free: 43 of 54 clusters lose nothing, the worst case is +2
+zero-row chips, and wasted rows are **zero** because an event-free chip in the
+chosen cluster is `PaddedMle::zeros` with `num_real_entries() == 0`.
+
+So the ceremony objection does not apply to this fork, provided the cluster count
+stays inside upstream's bucket, and Groth16 is then strictly better: ~75,000 gas
+cheaper per verification, a 256 B proof instead of 864 B, and Succinct's released
+artifacts instead of a local setup that needed 107.4 GiB.
+
+**One caveat carried forward:** 43 clusters is the exact boundary, 258,049
+against a 262,144 ceiling. Any future chip cluster tips back to depth 19 and the
+ceremony question reopens. And matching upstream's wrap vk is a *correctness*
+requirement that nothing checks: `try_install_circuit_artifacts` keys its
+download by `SP1_CIRCUIT_VERSION`, not by the vk hash, so a mismatch is silent
+until verification fails.
 
 ## Where this starts
 
@@ -273,11 +310,12 @@ one is **distro-dependent**:
 sshd does not inherit the image's Docker `ENV`, which is why two of those are
 PATH problems rather than missing software.
 
-`--mode plonk` will **not** work as this workspace stands: only `experimental`
-is enabled on `sp1-prover`, not `native-gnark`, so the gnark FFI compiled
-against its Docker backend and there is no Docker in the container. PLONK needs
-`features = ["experimental", "native-gnark"]`, a Go toolchain on the pod, and
-another build cycle.
+**RESOLVED 2026-11-12.** Both drivers now carry a `native-gnark` feature
+(`sp1-prover/native-gnark`), which the Groth16 wrap needs for the same reason
+PLONK did: without it the gnark FFI compiles against its Docker backend and a
+container with no Docker fails at wrap time. The pod also needs a Go toolchain at
+or above the go.mod directive (1.24.0 — 1.23.3 is too old) and libclang for
+bindgen, which `build-essential` does not provide.
 
 ### How to build and run it on a pod
 
@@ -321,12 +359,27 @@ anything succeeds (see blocker 2 above).
 ## Phase C — shrink, wrap, EVM verifier
 
 11. **Build the gnark FFI** (`miza-sp1-runtime/Dockerfile.gnark-ffi`).
-12. **Generate the PLONK wrap circuit and its keys for this fork.** SP1's
-    published artifacts are keyed to stock circuit versions, and extra core chips
-    change the compress circuit → its VK → what shrink and wrap verify → the wrap
-    circuit. **PLONK's universal SRS means no ceremony**: no 1-of-N honesty
-    assumption of our own, no transcript to coordinate, and no redo when a chip
-    changes. That is the reason for the decision.
+12. **Match upstream's wrap vk, then install Succinct's Groth16 artifacts.**
+    This task used to read "generate the PLONK wrap circuit and its keys for this
+    fork", on the premise that extra core chips change the compress circuit → its
+    VK → what shrink and wrap verify → the wrap circuit. **That premise was
+    wrong** (docs/groth16-ceremony-spike.md): the chips reach the wrap vk only
+    through the padded VK-map count's power-of-two bucket, and the compress-shape
+    bump is invisible to the shrink program.
+
+    So the work is not generating keys but *not needing to*: build with
+    `MIZU_LEAN_PASTA_CLUSTERS=1` (43 clusters, depth 18), leave
+    `SP1_CIRCUIT_MODE` unset so the production path runs, and confirm
+    `try_install_circuit_artifacts("groth16")` serves keys that verify. No
+    ceremony, no 1-of-N assumption, and none of the 107.4 GiB the local setup
+    needed.
+
+    Still unproven: no end-to-end byte comparison of our computed wrap vk against
+    upstream's `fce924068aa5a610`. That needs `vk_verification = true`, hence the
+    real VK map — task 3. Until then the chain is complete by derivation plus two
+    measurements, not observed. And because the download is keyed by
+    `SP1_CIRCUIT_VERSION` rather than the vk hash, a mismatch would be silent
+    until a verification failure, so this must be confirmed before it is trusted.
 13. **Deploy and gas-profile the generated Solidity verifier.** Needed for real,
     not estimated: the settlement economics key off it.
 14. **Re-pin `SP1_CIRCUIT_VERSION`** and record artifact hashes beside the
@@ -356,7 +409,7 @@ build needs SP1's recursion toolchain and GPU-class compute, and it is the
 prerequisite for everything downstream. Budget it, and settle task 4's routing
 question first so it is built once.
 
-## Why PLONK, in numbers
+## The gas comparison (which favours Groth16)
 
 Proof sizes are exact, from `vendor/sp1/crates/verifier/src/constants.rs` and the
 two converters at the SP1 6.10 pin. Operation counts are read from
@@ -376,10 +429,13 @@ precompile floor is estimated.
 | **with Solidity overhead (est.)** | **~250,000** | **~300,000–350,000** |
 
 PLONK costs about **75,000 gas more per verification, 1.30x** — roughly 10.8M
-gas/day at a 10-minute cadence. Against that: a Groth16 phase-2 ceremony, a
-1-of-N honesty assumption, a public transcript and beacon, and a **full redo
-every time the circuit changes** — which, with custom precompiles in the core
-machine, it will.
+gas/day at a 10-minute cadence. The original plan accepted that cost to avoid a
+Groth16 phase-2 ceremony, its 1-of-N honesty assumption, transcript and beacon,
+and a full redo on every circuit change.
+
+**That trade no longer exists.** The spike showed this fork can match upstream's
+wrap vk and install Succinct's released Groth16 artifacts, so there is no
+ceremony to avoid — and the 75,000 gas is then paid for nothing. Hence Groth16.
 
 Note the structure, which is counter-intuitive: pairings favour PLONK by 68,000
 gas, and everything else favours Groth16 by 125,720, almost entirely scalar

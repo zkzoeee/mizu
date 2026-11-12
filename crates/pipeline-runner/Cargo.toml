@@ -26,16 +26,17 @@ sha2 = "0.10"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 [features]
-# --mode plonk / --mode groth16 only. Routes the gnark FFI through its native
+# --mode groth16 only. Routes the gnark FFI through its native
 # backend, which compiles the Go library in sp1-recursion-gnark-ffi's build.rs,
 # so a Go toolchain (>= the go.mod directive, 1.24.0) and libclang for bindgen
 # are required on the builder. Without it the FFI uses its Docker backend and
 # fails at wrap time rather than at build time.
 #
 # Also needs SP1_CIRCUIT_MODE=dev at runtime, which is what makes
-# try_build_plonk_artifacts_dir fall back to building the wrap keys locally
-# (unsafekzg) instead of installing released artifacts from S3.
-plonk = ["sp1-prover/native-gnark"]
+# try_build_groth16_artifacts_dir fall back to building the wrap keys locally
+# instead of installing released artifacts from S3. That local setup is gnark's
+# own unsafe one: measurement only, never production.
+native-gnark = ["sp1-prover/native-gnark"]
 
 [[bin]]
 name = "pipeline-runner"

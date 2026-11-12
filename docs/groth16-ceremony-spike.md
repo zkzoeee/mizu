@@ -296,7 +296,35 @@ With `SP1_CIRCUIT_MODE` unset, confirm the production path actually fetches
 Groth16 artifacts for our wrap VK. A 404 here would mean the VK matches but
 nothing usable is published — worth knowing before claiming success.
 
-### Stage 4 — price the trim. Conditional, ~30 min
+### Stage 4 RESULT, 2026-11-12: the trim wastes zero rows
+
+`crates/cycle-runner/src/bin/cluster-cost.rs`. The premise of this stage -- that
+coarser clusters waste cells -- was **wrong**, and the code says so:
+`smallest_cluster` picks the cluster (`prover/trace.rs:157`), and a chip in it
+with no events becomes `PaddedMle::zeros(width, max_log_row_count)` whose `inner`
+is `None`, so `num_real_entries()` is 0 (`slop/multilinear/src/padded.rs:64-125`)
+and the jagged prover's row count for it is 0 (`slop/jagged/src/prover.rs:110`).
+
+So there are no wasted rows at all. The only cost is per-chip constant overhead,
+and it is small:
+
+```
+extra chips per shard, over all 54 full-machine clusters:
+  +0 chips   43 clusters
+  +1 chips    6 clusters
+  +2 chips    5 clusters
+
+worst case: +2 zero-row chips (clusters 40-43, 45)
+```
+
+43 of 54 clusters lose nothing. The worst affected shard carries 2 extra named
+traces, row-count entries and constraint evaluations, and zero extra rows.
+
+**Verdict: the trim is effectively free**, so ceremony-free Groth16 costs
+essentially nothing in proving. The real cost is the lost headroom -- 43 is the
+exact boundary.
+
+### Stage 4 (superseded) — price the trim. Conditional, ~30 min
 
 Only if 1-3 succeed. Coarser clusters waste rows: a `PallasAdd`-only shard gets
 proved in a cluster that also allocates `Uint256Mul` and `VestaAdd`. Measure with
