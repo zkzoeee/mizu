@@ -195,6 +195,50 @@ Against a measured CPU requirement of 96–128 GB, the GPU path is the better
 target even though it costs the extra workspace. Estimated A40 cost for build
 plus run: **$0.25–0.35**.
 
+## The CUDA driver: `tools/pipeline-cuda`
+
+Written 2026-11-12, **not yet compiled or run** — it cannot be built on macOS,
+by the same resolver/assert constraint that makes it a separate workspace.
+
+- A standalone workspace with `resolver = "1"`, excluded from the root, for the
+  reason `tools/pasta-proof` is: `sp1-gpu-sys` build-depends on
+  `sp1-core-executor`, and resolver 2 would drop the `profiling` feature in the
+  build graph.
+- 48 `[patch.crates-io]` entries at `../../vendor/...`. Not because the fork
+  modified 48 crates — it modifies four — but to force **one** resolution:
+  `sp1-prover` patched to a path takes its `workspace = true` deps from the
+  fork's workspace while the crates.io `sp1-gpu-*` crates would take
+  `sp1-hypercube` from the registry, and two of those in one graph is a type
+  error.
+- Depends on `sp1-gpu-prover`, which `tools/pasta-proof` deliberately avoids
+  because it pulls `sp1-prover` and the recursion and gnark stack. Compress and
+  wrap need exactly that.
+- Proves inside `sp1_gpu_cudart::spawn`, since a `TaskScope` is valid only for
+  its task's lifetime.
+- `local_gpu_opts()` **panics below 24 GB of VRAM** and sets
+  `shard_size = 1 << 24`, so a GPU run has fewer, larger shards than the 82 the
+  CPU default produced.
+
+### How to build and run it on a pod
+
+Needs a CUDA **devel** image for `sp1-gpu-sys`'s kernels — the comparable fat
+build measured 12 min 31 s — plus `protobuf-compiler`, and Rust 1.92.0 to match
+`rust-toolchain.toml`. An A40 or A6000 at $0.59/hr satisfies the 24 GB floor;
+peak VRAM for the core arm was 18,991 MiB.
+
+```bash
+# on the pod, from the repo root
+apt-get install -y protobuf-compiler
+cd tools/pipeline-cuda && cargo build --release
+./target/release/pipeline-cuda --elf <pinned ELF> --input-dir <dir with the two .bin inputs> \
+  --mode compressed --output /root/compressed.json
+```
+
+Run `--mode core` first: it is the cheapest exercise of the whole path, and the
+2026-11-12 attempt showed the first failures come from prerequisites rather
+than from proving. Expect the compress shape to need regenerating before
+anything succeeds (see blocker 2 above).
+
 ## Phase B — compressed proving
 
 6. **Add a compress mode to the harness.** `tools/pasta-proof` has

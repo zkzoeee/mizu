@@ -2,7 +2,7 @@
 resolver = "2"
 members = ["crates/pickles-verifier", "crates/o1-verifier", "crates/o1-verifier-host", "crates/cycle-runner", "crates/poseidon-bench", "crates/pipeline-runner"]
 default-members = ["crates/pickles-verifier", "crates/o1-verifier-host", "crates/cycle-runner"]
-exclude = ["mina/src/lib/crypto/proof-systems", "vendor/algebra", "vendor/proof-systems", "vendor/sp1", "examples/settlement", "tools/pasta-proof", "tools/pasta-guest"]
+exclude = ["mina/src/lib/crypto/proof-systems", "vendor/algebra", "vendor/proof-systems", "vendor/sp1", "examples/settlement", "tools/pasta-proof", "tools/pasta-guest", "tools/pipeline-cuda"]
 
 [workspace.dependencies]
 kimchi = { path = "vendor/proof-systems/kimchi", default-features = false }
