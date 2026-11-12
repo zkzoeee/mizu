@@ -1,5 +1,7 @@
 # Mirror-root cycles, measured on CPU
 
+The plan that acts on these numbers is [docs/diff-proof-plan.md](../../docs/diff-proof-plan.md).
+
 Branch experiment: what a keccak mirror of the Poseidon ledger costs in SP1
 guest cycles, for five mirror constructions, at the Zeko ledger's depth 35,
 with keccak as software and as SP1's `KECCAK_PERMUTE` precompile.
