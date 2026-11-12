@@ -124,6 +124,64 @@ taken is the 120.9x drop, `UINT256_MUL` falling to zero, and the roots still
 matching the host's native reference — which they can only do if the
 permutations actually ran.
 
+## Trace cells, which disagree with cycles about which half is expensive
+
+Widths read from the fork's own machine by `crates/cycle-runner/src/bin/chip-widths.rs`,
+using the same decomposition the project's trace accounting uses
+(`main_width = cost() - preprocessed_width()`). Rows per permutation come from
+the chips: keccak's trace generator sets `nb_rows = events * NUM_ROUNDS` with
+`NUM_ROUNDS = 24`, and the Pasta Poseidon controller anchors 55 round rows.
+
+| chip | main width | rows/perm | main cells/perm |
+| --- | ---: | ---: | ---: |
+| `KeccakPermute` | 2,640 | 24 | **63,360** |
+| `PallasPoseidonPermute` | 2,048 | 55 (+1 controller, 507) | **113,147** |
+
+`KeccakPermute` at 2,640 is the widest chip in the whole machine; the Poseidon
+chips at 2,048 match 04-poseidon.md's recorded width exactly, and the formula
+reproduces its published total (12,608 x 2,048 + 256 x 507 = 25,950,976 against
+"25.95 M main cells"), so the method is the project's own, not a new one.
+
+**The two metrics disagree in direction.**
+
+| per permutation | Poseidon | keccak | |
+| --- | ---: | ---: | --- |
+| cycles | 398 | 1,129 | keccak **2.84x** worse |
+| main cells | 113,147 | 63,360 | Poseidon **1.79x** worse |
+
+A Poseidon syscall does 55 rounds behind one `ecall`: cheap in cycles, wide and
+tall in rows. Keccak's 24 rounds are fewer rows but the widest in the machine.
+Cycles count the `ecall`; cells count the AIR. Per account at depth 35:
+
+| | Poseidon ledger | keccak mirror | mirror's share |
+| --- | ---: | ---: | ---: |
+| cycles | 34,187 | 85,792 | +251% |
+| main cells | 9,730,642 | 4,815,360 | **+49.5%** |
+
+**In the metric that actually drives proving cost, the mirror is the cheap half
+again and Poseidon is still the expensive one.** Shard area, not cycle count,
+is what the prover pays for. Against the retained guest's 43,922,703,280 main
+cells over 82 shards (535,642,723 per shard), a diff proof adds +0.3% of the
+guest's cells at 10 accounts, **+3.3% at 100** (~2.7 extra shards) and +33.1%
+at 1000 (~27 shards) — much friendlier than the cycles reading suggested, and
+the diff proof is less cell-dense per cycle than the verifier it rides along
+with (112 against 308 cells/cycle).
+
+The published Poseidon precompile figures give the software-to-precompile cell
+win directly: 229 permutations moved saved 2,212,937,712 main cells, so
+**9,663,483 software cells per permutation against 113,147 precompiled, 85.4x
+fewer** — the precompile is an 85x cell win as well as a 121x cycle win. There
+is no equivalent measured anchor for software keccak's cells, so no comparable
+figure is claimed for it.
+
+Caveats that stand. Main cells are prover inputs, not proving time: the run
+manifest says so in as many words (`main_cells_are_prover_inputs_not_proving_time`).
+Shard count depends on the stacking height and row-count limits, not on a
+simple division, so the shard numbers above are indicative. Cells here are
+derived from widths and known rows per permutation, not read from generated
+records, so they omit the CPU-side chips the schedule still touches around the
+syscalls, and they omit interaction events entirely.
+
 ## Optimizing Poseidon raises the mirror's share, measured
 
 The same 498,794 mirror cycles against three Poseidon builds of the same guest:

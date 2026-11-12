@@ -2004,7 +2004,10 @@ dependencies = [
  "sha3",
  "sp1-core-executor",
  "sp1-core-executor-runner",
+ "sp1-core-machine",
+ "sp1-hypercube",
  "sp1-jit",
+ "sp1-primitives",
 ]
 
 [[package]]

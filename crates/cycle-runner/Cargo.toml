@@ -19,6 +19,12 @@ sha2 = "0.10"
 # Already pinned in this workspace via crates/pickles-verifier.
 sha3 = { version = "0.10.9", default-features = false }
 # Intentionally no SDK, prover, CUDA, network client, or build-time guest compilation.
+# Chip widths only, for turning permutation counts into trace cells. Both are
+# already in this graph as dependencies of the executor/runner; sp1-core-machine
+# is the local fork via the root [patch.crates-io].
+sp1-core-machine = { version = "=6.10.0" }
+sp1-hypercube = { version = "=6.10.0" }
+sp1-primitives = { version = "=6.10.0" }
 sp1-core-executor = { version = "=6.10.0", features = ["profiling"] }
 sp1-core-executor-runner = { version = "=6.10.0", features = ["profiling"] }
 sp1-jit = { version = "=6.10.0", features = ["profiling"] }
