@@ -1,0 +1,300 @@
+{
+  "what": "every recorded GPU measurement of the pinned manifest arm retain-pasta-and-uint, with cost",
+  "arm": "retain-pasta-and-uint",
+  "invariants_across_every_measurement": {
+    "generated_shards": 82,
+    "guest_cycles": 142638298,
+    "proof_bytes": 132029932,
+    "elf_sha256_prefix": "0cfb3eafee",
+    "verification_key_sha256": "eed89d80326950303c787b1fbf0e08034cd8b986425de27c9e4e7475da295113",
+    "complete_verifier_accepted": true,
+    "reloaded_from_disk_in_a_fresh_process": true
+  },
+  "cost_definitions": {
+    "prove_cost_usd": "gpu_prove_seconds * rate_usd_per_hour / 3600; the prove loop alone",
+    "pod_billed_usd": "what Runpod charged for that rental, GPU + disk, from list-pod-billing with bucketSize=hour",
+    "caveat": "a pod that also compiled the CUDA prover, or proved several times, has no per-proof bill; see pod_billed_is_per_proof"
+  },
+  "measurements": [
+    {
+      "card": "A40",
+      "gpu_uuid_prefix": "GPU-7d6ed7f9",
+      "pod_id": "ukj1etk6hnwrfr",
+      "data_center": "EU-SE-1",
+      "rate_usd_per_hour": 0.59,
+      "pasta_r5_inflight": 8,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 96.317668562,
+      "total_seconds": 118.242630172,
+      "prove_cost_usd": 0.015785,
+      "pod_billed_usd": 0.05300586763769388,
+      "pod_billed_is_per_proof": true,
+      "pod_also_compiled": false,
+      "gpu_total_vram_bytes": 50899386368,
+      "run": "20261112T0502Z-a40-cachewarm"
+    },
+    {
+      "card": "A40",
+      "gpu_uuid_prefix": "GPU-508a1a8a",
+      "pod_id": "re9fy8hs6yx5gj",
+      "data_center": "EU-SE-1",
+      "rate_usd_per_hour": 0.59,
+      "pasta_r5_inflight": 8,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 107.7389539,
+      "total_seconds": 134.157783577,
+      "prove_cost_usd": 0.017657,
+      "pod_billed_usd": null,
+      "pod_billed_is_per_proof": false,
+      "pod_also_compiled": true,
+      "gpu_total_vram_bytes": 47699722240,
+      "run": "20261110T1655Z-inflight-sweep/sweep-inflight8-pass1"
+    },
+    {
+      "card": "A40",
+      "gpu_uuid_prefix": "GPU-9686af90",
+      "pod_id": "u3w0n319nhb4qa",
+      "data_center": "EU-SE-1",
+      "rate_usd_per_hour": 0.59,
+      "pasta_r5_inflight": 8,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 108.358430877,
+      "total_seconds": 134.437136481,
+      "prove_cost_usd": 0.017759,
+      "pod_billed_usd": 0.059557830332778394,
+      "pod_billed_is_per_proof": true,
+      "pod_also_compiled": false,
+      "gpu_total_vram_bytes": 47699722240,
+      "run": "20261111T0910Z-cudaprobe-validation"
+    },
+    {
+      "card": "A40",
+      "gpu_uuid_prefix": "GPU-37cd5cd6",
+      "pod_id": "7mvcnoafazzpet",
+      "data_center": "EU-SE-1",
+      "rate_usd_per_hour": 0.59,
+      "pasta_r5_inflight": 8,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 108.89383264,
+      "total_seconds": 136.144875412,
+      "prove_cost_usd": 0.017846,
+      "pod_billed_usd": 0.2014078312786296,
+      "pod_billed_is_per_proof": false,
+      "pod_also_compiled": true,
+      "gpu_total_vram_bytes": 47699722240,
+      "run": "20261111T0628Z-fatbuild-populate"
+    },
+    {
+      "card": "A40",
+      "gpu_uuid_prefix": "GPU-508a1a8a",
+      "pod_id": "re9fy8hs6yx5gj",
+      "data_center": "EU-SE-1",
+      "rate_usd_per_hour": 0.59,
+      "pasta_r5_inflight": 8,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 109.408637402,
+      "total_seconds": 135.17795085,
+      "prove_cost_usd": 0.017931,
+      "pod_billed_usd": null,
+      "pod_billed_is_per_proof": false,
+      "pod_also_compiled": true,
+      "gpu_total_vram_bytes": 47699722240,
+      "run": "20261110T1655Z-inflight-sweep/sweep-inflight8-pass3"
+    },
+    {
+      "card": "A40",
+      "gpu_uuid_prefix": "GPU-d6ffcd7e",
+      "pod_id": "4c8i6zyte7uuo3",
+      "data_center": "EU-SE-1",
+      "rate_usd_per_hour": 0.59,
+      "pasta_r5_inflight": 8,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 110.068867134,
+      "total_seconds": 138.556514813,
+      "prove_cost_usd": 0.018039,
+      "pod_billed_usd": 0.04520718043204397,
+      "pod_billed_is_per_proof": true,
+      "pod_also_compiled": false,
+      "gpu_total_vram_bytes": 47699722240,
+      "run": "20261111T1104Z-slim-timed"
+    },
+    {
+      "card": "A40",
+      "gpu_uuid_prefix": "GPU-37cd5cd6",
+      "pod_id": "lxvxl82gr73er4",
+      "data_center": "EU-SE-1",
+      "rate_usd_per_hour": 0.59,
+      "pasta_r5_inflight": 8,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 111.357684868,
+      "total_seconds": 137.984235,
+      "prove_cost_usd": 0.01825,
+      "pod_billed_usd": 0.07593541161622852,
+      "pod_billed_is_per_proof": true,
+      "pod_also_compiled": false,
+      "gpu_total_vram_bytes": 47699722240,
+      "run": "20261111T0649Z-cachehit"
+    },
+    {
+      "card": "RTX A5000",
+      "gpu_uuid_prefix": "GPU-b2d5ccd2",
+      "pod_id": "15q8r3im2yy0ph",
+      "data_center": "EU-SE-1",
+      "rate_usd_per_hour": 0.27,
+      "pasta_r5_inflight": 8,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 104.087892568,
+      "total_seconds": 128.426550064,
+      "prove_cost_usd": 0.007807,
+      "pod_billed_usd": 0.08211155328899622,
+      "pod_billed_is_per_proof": false,
+      "pod_also_compiled": true,
+      "gpu_total_vram_bytes": 25285623808,
+      "run": "20261111T0751Z-a5000"
+    },
+    {
+      "card": "RTX A5000",
+      "gpu_uuid_prefix": "GPU-a41332a8",
+      "pod_id": "ygu0g4uj1vclat",
+      "data_center": "EU-SE-1",
+      "rate_usd_per_hour": 0.27,
+      "pasta_r5_inflight": 8,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 106.878500218,
+      "total_seconds": 131.922802262,
+      "prove_cost_usd": 0.008016,
+      "pod_billed_usd": 0.032780652050860226,
+      "pod_billed_is_per_proof": true,
+      "pod_also_compiled": false,
+      "gpu_total_vram_bytes": 25285623808,
+      "run": "20261111T0856Z-a5000-proveonly"
+    },
+    {
+      "card": "RTX A5000",
+      "gpu_uuid_prefix": "GPU-0d82daa9",
+      "pod_id": "28694z52e90qvd",
+      "data_center": "EU-SE-1",
+      "rate_usd_per_hour": 0.27,
+      "pasta_r5_inflight": 8,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 108.230155208,
+      "total_seconds": 135.539383159,
+      "prove_cost_usd": 0.008117,
+      "pod_billed_usd": 0.02250000089406967,
+      "pod_billed_is_per_proof": true,
+      "pod_also_compiled": false,
+      "gpu_total_vram_bytes": 25285623808,
+      "run": "20261111T1041Z-slim-base-image"
+    },
+    {
+      "card": "A40",
+      "gpu_uuid_prefix": "GPU-352a2d77",
+      "pod_id": "a9okellgv9d0hd",
+      "data_center": "CA-MTL-1",
+      "rate_usd_per_hour": 0.59,
+      "pasta_r5_inflight": 2,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 137.578843418,
+      "total_seconds": 162.01603802,
+      "prove_cost_usd": 0.022548,
+      "pod_billed_usd": 0.16269084066152573,
+      "pod_billed_is_per_proof": false,
+      "pod_also_compiled": true,
+      "gpu_total_vram_bytes": 47699722240,
+      "run": "20261110T1436Z-a40-montreal"
+    },
+    {
+      "card": "A40",
+      "gpu_uuid_prefix": "GPU-07e10fba",
+      "pod_id": "2sdy2pearcbmai",
+      "data_center": "EU-SE-1",
+      "rate_usd_per_hour": 0.59,
+      "pasta_r5_inflight": 2,
+      "gpu_workers": 2,
+      "gpu_prove_seconds": 141.968045817,
+      "total_seconds": 168.631096527,
+      "prove_cost_usd": 0.023267,
+      "pod_billed_usd": 0.46051145845558494,
+      "pod_billed_is_per_proof": false,
+      "pod_also_compiled": true,
+      "gpu_total_vram_bytes": 47699722240,
+      "run": "20261110T1311Z"
+    }
+  ],
+  "analysis_at_inflight_8": {
+    "a40": {
+      "n": 7,
+      "distinct_cards": 5,
+      "min": 96.32,
+      "max": 111.36,
+      "median": 108.89,
+      "cluster_excluding_fastest_host": {
+        "range": [
+          107.74,
+          111.36
+        ],
+        "width_pct": 3.4,
+        "median": 109.15
+      },
+      "fastest_host_below_cluster_median_pct": 11.8
+    },
+    "a5000": {
+      "n": 3,
+      "distinct_cards": 3,
+      "range": [
+        104.09,
+        108.23
+      ],
+      "median": 106.88,
+      "spread_pct": 4.0,
+      "faster_than_a40_cluster_median_pct": 2.1,
+      "cheaper_per_proof_pct": 55
+    },
+    "ecc_hypothesis": "the record holds exactly two A40 VRAM totals: 50,899,386,368 B on the fast host (1.2% below nominal 48 GiB) and 47,699,722,240 B on the other six (7.5% below). All three A5000s report an identical 25,285,623,808 B (1.9% below nominal 24 GiB). The extra ~6.3% matches ECC's reservation, so the fast host most likely had ECC disabled. UNMEASURED: confirm with nvidia-smi --query-gpu=ecc.mode.current.",
+    "rule": "compare arms only inside one pod and one session; a repeat on one card is good to ~3%, but the A40 pool is not one part"
+  },
+  "inflight_sweep_one_host": {
+    "host": "GPU-508a1a8a",
+    "note": "the only strictly comparable depth series",
+    "gpu_prove_seconds": {
+      "2": [
+        135.886871356,
+        135.266278577
+      ],
+      "8": [
+        107.7389539,
+        109.408637402
+      ],
+      "16": [
+        109.128628019
+      ],
+      "32": [
+        112.157270891
+      ]
+    }
+  },
+  "heavier_default_arm": {
+    "arm": "default",
+    "shards": 148,
+    "proof_bytes": 227918740,
+    "gpu_prove_seconds": 193.870873593,
+    "total_seconds": 223.144365112,
+    "card": "A40",
+    "pasta_r5_inflight": 2
+  },
+  "campaign_billing": {
+    "source": "list-pod-billing 2026-11-10T00:00Z..2026-11-13T00:00Z, bucketSize hour",
+    "unique_pods": 11,
+    "gpu_usd": 1.5893480571685359,
+    "disk_usd": 0.030208332813344896,
+    "total_usd": 1.6195563899818808,
+    "authorized_cap_usd": 2.0,
+    "cheapest_complete_verified_proof_usd": 0.02250000089406967,
+    "cache_warm_single_proof_rental_range_usd": [
+      0.0225,
+      0.0759
+    ],
+    "note": "terminated pods 404 on get-pod, so hourly billing buckets are the only retrospective source; attribution to a run is by clock and by rate arithmetic"
+  },
+  "recorded": "2026-11-12"
+}

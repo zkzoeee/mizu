@@ -60,13 +60,73 @@ the [dependency and optimization inventory](docs/dependencies-and-optimizations.
 [changed-file list](docs/file-changes.md), and [receipt example](examples/settlement/README.md). Full historical runs and
 retired applications are recoverable from the external consolidation archive.
 
-## One real proof on a rented GPU: about 5 minutes, for about 5 cents
+## One real proof on a rented GPU: under two minutes of proving, two to eight cents of pod
 
-Measured end to end twice, on two different A40 hosts in EU-SE-1, both on the
+Ten measurements of the same retained arm — 82 shards, 132,029,932 proof bytes,
+142,638,298 cycles, the same ELF and the same verification key, accepted by the
+complete verifier and reloaded from disk in a fresh process — at the production
+`PASTA_R5_INFLIGHT=8`, on eight distinct physical cards in EU-SE-1. *Prove cost*
+is the prove loop at the card's hourly rate; *pod billed* is what Runpod
+actually charged for that rental, GPU plus disk, from the billing API.
+
+| Card | Host | $/hr | Prove (s) | Total (s) | Prove cost | Pod billed | Run |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| A40 | `7d6ed7f9` | 0.59 | **96.32** | 118.24 | $0.0158 | $0.0530 | `20261112T0502Z-a40-cachewarm` |
+| A40 | `508a1a8a` | 0.59 | 107.74 | 134.16 | $0.0177 | —ᵃ | `20261110T1655Z-inflight-sweep` |
+| A40 | `9686af90` | 0.59 | 108.36 | 134.44 | $0.0178 | $0.0596 | `20261111T0910Z-cudaprobe-validation` |
+| A40 | `37cd5cd6` | 0.59 | 108.89 | 136.14 | $0.0178 | $0.2014ᵇ | `20261111T0628Z-fatbuild-populate` |
+| A40 | `508a1a8a` | 0.59 | 109.41 | 135.18 | $0.0179 | —ᵃ | `20261110T1655Z-inflight-sweep` |
+| A40 | `d6ffcd7e` | 0.59 | 110.07 | 138.56 | $0.0180 | $0.0452 | `20261111T1104Z-slim-timed` |
+| A40 | `37cd5cd6` | 0.59 | 111.36 | 137.98 | $0.0183 | $0.0759 | `20261111T0649Z-cachehit` |
+| A5000 | `b2d5ccd2` | 0.27 | 104.09 | 128.43 | $0.0078 | $0.0821ᵇ | `20261111T0751Z-a5000` |
+| A5000 | `a41332a8` | 0.27 | 106.88 | 131.92 | $0.0080 | $0.0328 | `20261111T0856Z-a5000-proveonly` |
+| A5000 | `0d82daa9` | 0.27 | 108.23 | 135.54 | **$0.0081** | **$0.0225** | `20261111T1041Z-slim-base-image` |
+
+ᵃ one pod proved six times across the inflight sweep; $0.4238 for the rental as
+a whole is not a per-proof figure. ᵇ this pod also compiled the CUDA prover, so
+its bill is a build, not a proof. The five cache-warm single-proof rentals
+**cost $0.0225 to $0.0759 end to end**, create through terminate; the cheapest
+complete verified proof on record is **2.3 cents**, on the A5000 under the
 101 MB `nvidia/cuda:12.8.1-base-ubuntu24.04` image with the build cache on a
-network volume. The retained arm both times: 82 shards, 132,029,932 proof
-bytes, 142,638,298 cycles, the same ELF and the same verification key, accepted
-by the complete verifier and reloaded from disk in a fresh process.
+network volume. All eleven rentals in the whole measurement campaign, builds
+included, billed **$1.62** against the authorized $2.00 cap.
+
+**A40 hosts are reproducible to 3.4%, and one host in seven was not an A40 like
+the others.** Six of the seven A40 measurements, spanning four cards and two
+repeat pairs on the same card, fall in **107.74–111.36 s** — a 3.4% band. The
+seventh (`7d6ed7f9`, 2026-11-12) proved in **96.32 s**, **11.8% below that
+cluster's median** and 10.6% below even its fastest member, with nothing in the
+software different: identical `elf_sha256`, identical
+`verification_key_sha256`, identical cycle and shard counts, the same
+`PASTA_R5_INFLIGHT=8` and `PASTA_GPU_WORKERS=2`. What differed was the card.
+The fast host reported **50,899,386,368 bytes of total VRAM against the other
+six hosts' 47,699,722,240**, and those are the only two values in the record —
+not a continuum. Against the A40's nominal 48 GiB the fast host is **1.2%
+short** and the other six are **7.5% short**; for comparison, all three A5000s
+report an identical 25,285,623,808 bytes, **1.9% short** of their nominal
+24 GiB. The extra ~6.3% on the six is the size of ECC's reservation (~6.25%),
+and ECC costs memory bandwidth as well as capacity. **Hypothesis, not
+measurement**: the fast host had ECC disabled.
+`nvidia-smi --query-gpu=ecc.mode.current` on the next pod settles it, and if it
+holds, "A40" is two populations and the faster one is worth selecting for.
+Either way, **a single rented-A40 timing cannot be compared against one from
+another pod** — not because any one card is noisy, but because the pool is not
+uniform. The per-arm deltas in the optimization records are measured on one host
+in one session for exactly this reason.
+
+**The A5000 is both faster and less than half the price.** Its three runs, on
+three cards, give **104.09–108.23 s, median 106.88 s — 2.1% faster than the A40
+cluster's 109.15 s median**, and faster than every A40 except the ECC outlier.
+At $0.27/hr against $0.59 that is **$0.0080 of prove against $0.0179, 55%
+cheaper per proof**. An earlier revision of this section retired the A5000's
+speed advantage on the strength of a single A40 run; the full set restores it,
+modestly and consistently. What the A5000 does not have is availability: it
+refused **thirty-six creates** in EU-SE-1 across eighteen hours on
+2026-11-11/12 and, when its pool finally returned, returned in Montreal and
+Illinois instead. **Budget at the A40's price and treat the A5000 as a
+windfall.**
+
+Where the five minutes goes, from the two runs timed end to end:
 
 | Segment | 2026-11-11 (`4c8i6zyte7uuo3`) | 2026-11-12 (`ukj1etk6hnwrfr`) |
 | --- | ---: | ---: |
@@ -77,35 +137,18 @@ by the complete verifier and reloaded from disk in a fresh process.
 | **Proof** | **139** | **118** |
 | From-disk verification | 20 | 16 |
 | Collection and terminate | 39 | 38 |
-| **Pod life, as billed** | **280 (4 min 40 s)** | **317 (5 min 17 s)** |
-| **Cost at $0.59/hr** | **$0.046** | **$0.052** |
+| **Pod life** | **280 (4 min 40 s)** | **317 (5 min 17 s)** |
+| **Billed** | **$0.0452** | **$0.0530** |
 
-**The same work on the same card type differed by 12.5%.** The prove loop
-reported **110.07 s** on the first host and **96.32 s** on the second; total
-proof time 138.56 s against 118.24 s, executor 128.93 s against 111.15 s, CPU
-verification 7.65 s against 5.68 s. Nothing in the software differed —
-identical `elf_sha256`, identical `verification_key_sha256`, identical cycle
-count and shard count, the same `PASTA_R5_INFLIGHT=8` and
-`PASTA_GPU_WORKERS=2`. What differed was the machine: the faster host reported
-**50,899,386,368 bytes of total VRAM against 47,699,722,240**, about 3 GiB
-more, so these were not equivalent A40s. **Treat any single rented-A40 timing
-as carrying at least 12.5% host variance**, which is larger than most of the
-per-arm deltas in the optimization records — those are measured on one host in
-one session for exactly this reason, and must not be compared across pods.
-
-The cheaper RTX A5000 at $0.27/hr proved this same arm in **128.43 s**. That is
-now the *middle* of the A40 range rather than faster than it, so the earlier
-claim that the A5000 beat every A40 run does not survive the second
-measurement. Its price advantage is real and its speed advantage is not
-established. It is also the harder card to get: it refused **thirty-six
-creates** in EU-SE-1 across eighteen hours on 2026-11-11/12 and, when its pool
-finally returned, returned in Montreal and Illinois instead. **Plan for the
-A40's price and treat the A5000 as a windfall.**
+So **the proof is 37% to 50% of a cache-warm rental**; the rest is create,
+launch, verification and teardown, and the largest single variable is how long
+Runpod takes to hand over the pod — 18 s on one run, 67 s on the other.
 
 ¹ mine, not the system's, on the first run only. ² the second run paid 20 s for
-a failed launch first: the cache probe compares `cuda_archs` verbatim and the
-launcher defaults it to `86`, while the stored key was built for `86,89,120`,
-so a warm cache read as a miss. Pass `CUDA_ARCHS` matching the stored key.
+a failed launch first: the cache probe compared `cuda_archs` verbatim while the
+launcher defaulted it to `86`, so a cache built for `86,89,120` read as a miss.
+Fixed since: the probe reads the card's compute capability over SSH and a stored
+build counts as a hit when its arch list *covers* the card.
 See [running a proof](docs/running-a-proof.md).
 
 Nothing was compiled, uploaded or installed beyond `openssh-server`, `libgomp1`,
@@ -113,8 +156,9 @@ Nothing was compiled, uploaded or installed beyond `openssh-server`, `libgomp1`,
 were involved. [Running a proof](docs/running-a-proof.md) has the machine
 choice, prices and per-phase costs, the [runbook](docs/gpu-run-on-runpod.md) has
 the procedure, and the figures above come from
-[the measurement](benchmarks/gpu-slim-pod-timed.json) with receipts in
-`benchmarks/gpu/runs/20261111T1104Z-slim-timed`.
+[every recorded measurement with its cost](benchmarks/gpu/cross-machine-timings.json)
+and [the end-to-end timing](benchmarks/gpu-slim-pod-timed.json), with receipts
+in `benchmarks/gpu/runs/`.
 
 ## Mizu development workflow
 

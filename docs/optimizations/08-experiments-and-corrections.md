@@ -76,20 +76,48 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   took the very first create, after forty-nine refusals across eighteen hours. So the
   grade is advisory in BOTH directions. It neither promises capacity nor denies it, and
   a `LOW` that refused an hour ago is still worth one attempt.
-- **Two A40s in the same data centre differ by 12.5%, so cross-pod timings are not
-  comparable.** Two runs of the retained arm, 2026-11-11 and 2026-11-12, shared the
-  `elf_sha256`, the `verification_key_sha256`, 142,638,298 cycles, 82 shards,
-  `PASTA_R5_INFLIGHT=8` and `PASTA_GPU_WORKERS=2` -- bit-identical work -- and reported
-  prove loops of 110.07 s and 96.32 s (total 138.56 s against 118.24 s, executor
-  128.93 s against 111.15 s, CPU verify 7.65 s against 5.68 s). The faster host
-  reported about 3 GiB more total VRAM (50,899,386,368 against 47,699,722,240 bytes),
-  so the cards were not equivalent parts. **This bounds what a rented A40 can measure:
-  a single-run delta below roughly 13% is indistinguishable from the host.** Every
-  per-arm comparison in these records that matters is therefore measured on one pod in
-  one session, and any future arm-versus-arm claim built from two pods must be
-  rejected. It also retires one earlier claim: that the A5000's 128.43 s beat every A40
-  run. It sits inside the A40 range now, so the A5000's price advantage stands and its
-  speed advantage does not.
+- **The A40 pool is not uniform: six hosts agree to 3.4% and a seventh was 11.8%
+  faster, so cross-pod timings are still not comparable -- for a different reason than
+  I first wrote.** The first version of this bullet had n=2 and read the gap as
+  symmetric host noise, "at least 12.5% variance on any A40 timing". Tabulating all ten
+  recorded measurements of the retained arm at `PASTA_R5_INFLIGHT=8` refutes that
+  shape. Seven A40 runs across five cards: six of them, including two repeat pairs on
+  one card, fall in 107.74-111.36 s, a 3.4% band; the seventh (`7d6ed7f9`, 2026-11-12)
+  proved in 96.32 s, 11.8% below that cluster's median and 10.6% below even its fastest
+  member. The work was bit-identical throughout -- same `elf_sha256`, same
+  `verification_key_sha256`, 142,638,298 cycles, 82 shards, same inflight depth and
+  worker count. So a repeated measurement on one card is good to ~3%, and the risk is
+  not noise but drawing the wrong card: the outlier reported 50,899,386,368 bytes of
+  total VRAM against the cluster's 47,699,722,240, and the record holds only those two
+  values. Against the nominal 48 GiB the outlier is 1.2% short and the cluster 7.5%
+  short, while all three A5000s report an identical 25,285,623,808 bytes, 1.9% short of
+  their nominal 24 GiB -- so the extra ~6.3% on the cluster is the size of the ECC
+  reservation. **Hypothesis, unmeasured**: the fast host
+  had ECC off, which would also explain the bandwidth. `nvidia-smi
+  --query-gpu=ecc.mode.current` on the next pod decides it. The operative rule is
+  unchanged -- every per-arm comparison in these records is measured on one pod in one
+  session, and an arm-versus-arm claim built from two pods must be rejected -- but the
+  number attached to it was wrong, and so was its character.
+- **The A5000's speed advantage does stand; I retired it on n=1 and had to restore
+  it.** On 2026-11-12 I concluded from the single fast A40 run that the A5000's
+  128.43 s "sits inside the A40 range" and that only its price advantage survived. The
+  full set says otherwise: three A5000 runs on three cards give 104.09/106.88/108.23 s,
+  median 106.88 s, which is 2.1% faster than the A40 cluster's 109.15 s median and
+  faster than every A40 except the ECC outlier. At $0.27/hr against $0.59 that is
+  $0.0080 of prove-loop cost against $0.0179, 55% cheaper per proof. What is genuinely
+  dead is the stronger original claim that it beat *every* A40 run. The lesson is the
+  same in both directions: a conclusion drawn against one new measurement is worth
+  exactly one measurement.
+- **Measured pod cost, from the billing API rather than from arithmetic.** The eleven
+  rentals of the campaign billed $1.6196 in all (GPU $1.5893, disk $0.0302) against a
+  $2.00 cap. The five cache-warm single-proof rentals cost $0.0225 to $0.0759 end to
+  end; the cheapest complete verified proof was 2.3 cents, on an A5000 under the slim
+  base image. Per-pod figures confirm the earlier pod-life arithmetic to the cent
+  ($0.0452 and $0.0530 for the two end-to-end timed runs). The proof is 37-50% of a cache-warm
+  rental; the largest single variable is Runpod's create-to-ready
+  handover, 18 s on one run and 67 s on another. Pods terminate out of the API, so
+  `get-pod` 404s afterwards and `list-pod-billing` with `bucketSize: hour` is the only
+  retrospective source -- attribution back to a run is by clock and by rate arithmetic.
 - **An exact-string arch comparison is the wrong predicate, and both scripts said so
   in opposite directions.** The cache probe compared `cuda_archs` as a string while
   `push-and-launch.sh` defaulted it to `86` and the EU-SE-1 cache was built fat for
