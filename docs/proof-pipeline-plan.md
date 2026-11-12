@@ -68,6 +68,39 @@ This phase gates everything else.
    `sp1-circuits` S3 bucket keyed by git ref; a fork needs its own location and
    its own ref discipline.
 
+## Phase A can be deferred: a PLONK proof is reachable without the VK map
+
+Read out of `vendor/sp1/crates/prover/src/shapes.rs` and
+`crates/verifier/src/recursion_vks.rs`. Two switches make the whole pipeline
+runnable before a single recursion program is compiled:
+
+- **`build_vk_map(dummy: true, …)`** returns `dummy_vk_map(machine)` and
+  `return`s immediately (`shapes.rs:485`) — no compilation, no setup, no GPU.
+- **`VerifierRecursionVks { vk_verification: false, … }`** switches off the
+  membership check: `if self.vk_verification() && !self.recursion_vks.verify(…)`
+  (`verify.rs:578`). SP1's own comment: *"This `vk_verification` must be only
+  turned off for testing purposes."*
+
+So the ordering changes:
+
+**Milestone 1 — the pipeline, with the map stubbed.** Dummy map plus
+`vk_verification: false`, then core → compress → shrink → wrap. Produces a real
+PLONK proof that verifies against its own VK, and hands over the three numbers
+the settlement design is waiting on: proof size, EVM verification gas, and
+per-stage latency. **Costs no VK map build.** What it does *not* give is
+soundness — with a dummy map, nothing binds the recursion program that produced
+the proof, so a prover could substitute a different one. Development only, and
+it must be labelled that way wherever its outputs are quoted.
+
+**Milestone 2 — the real map, sharded.** `build_vk_map` takes
+`indices: Option<Vec<usize>>` and an explicit `merkle_tree_height`, so the
+324,060-program build splits across workers and runs incrementally rather than
+as one long job. That is what `shapes.sh`'s S3 upload is for. It also means the
+build is resumable, which matters at this size.
+
+Do Milestone 1 first. It de-risks Phases B, C and D, and it prices the wrap
+before anyone commits GPU budget to Phase A task 3.
+
 ## Phase B — compressed proving
 
 6. **Add a compress mode to the harness.** `tools/pasta-proof` has
