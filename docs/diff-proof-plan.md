@@ -223,6 +223,14 @@ accounts per 2^18 before recursion, so that number bounds the design on both
 sides — batch size, settlement cadence, and whether change 2's saving is 6.6% or
 25.6%.
 
+## Downstream
+
+The proof pipeline that consumes this work — core → compressed → PLONK wrap —
+is planned separately in [proof-pipeline-plan.md](proof-pipeline-plan.md). Its
+first sequencing rule matters here: shapes, the recursion VK map and the wrap
+keys are all downstream of the core machine's chips, so **the changes in this
+plan belong before that pipeline work**, not after.
+
 ## Explicitly out of scope
 
 - **Depth reduction to 16–20.** Retracted. If miza runs Mina's ledger code, the
