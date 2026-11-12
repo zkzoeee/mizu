@@ -8,9 +8,18 @@ sp1-zkvm = { workspace = true }
 ark-ff = { workspace = true }
 mina-curves = { workspace = true }
 mina-poseidon = { workspace = true }
+# Already a pinned workspace dependency (crates/pickles-verifier); no new
+# external crate enters the graph. Keccak-256 here is Ethereum's, not SHA3.
+sha3 = { version = "0.10.9", default-features = false }
 
 [[bin]]
 name = "poseidon-operation-program"
 path = "src/main.rs"
+test = false
+bench = false
+
+[[bin]]
+name = "mirror-operation-program"
+path = "src/mirror.rs"
 test = false
 bench = false

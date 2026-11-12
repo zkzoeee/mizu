@@ -2001,6 +2001,7 @@ dependencies = [
  "poly-commitment",
  "serde_json",
  "sha2 0.10.9",
+ "sha3",
  "sp1-core-executor",
  "sp1-core-executor-runner",
  "sp1-jit",
@@ -4520,6 +4521,7 @@ dependencies = [
  "ark-ff 0.5.0",
  "mina-curves",
  "mina-poseidon",
+ "sha3",
  "sp1-zkvm",
 ]
 
