@@ -1,0 +1,76 @@
+{
+  "cycles": 142638298,
+  "elf_sha256": "0cfb3eafeea0d450e3ae8efd9a472a363495d49a5ff055b31b7cb50541c5a871",
+  "groth16": {
+    "encoded_proof_bytes": 352,
+    "groth16_vkey_hash": "4388a21c687fdd5f218d7e3d13190cac4c5355818d3605fd5fb811df468ee696",
+    "public_inputs": [
+      "115606250089201229887878699926774188647193001899549666446872640217797404708",
+      "5408444369343130360314198614562428875014335023761526637751134529685417182618",
+      "0",
+      "61375062705707510446562259796098175011132227652769664341616467766027193008",
+      "0"
+    ],
+    "raw_proof_bytes": 324,
+    "vk_root": "61375062705707510446562259796098175011132227652769664341616467766027193008"
+  },
+  "mode": "pipeline-cuda",
+  "proof_bytes": 1671,
+  "proof_mode": "Groth16",
+  "seconds": {
+    "execute": 23.697234205,
+    "node_build": 16.871297544,
+    "prove": 497.353764161,
+    "setup": 6.804838468,
+    "verify": 0.333062811
+  },
+  "soundness": "vk verification ON against the supplied partial vk map; the recursion programs are bound by its root",
+  "verified": true,
+  "vk_verification": true,
+  "hardware": {
+    "gpu": "NVIDIA A40",
+    "vram_mib": 46068,
+    "ecc_mode": "Enabled",
+    "compute_cap": "8.6",
+    "data_center": "CA-MTL-1",
+    "host_ram_gib_cgroup": 46.6,
+    "usd_per_hour": 0.59,
+    "build": "cargo build --release --features native-gnark, CUDA_ARCHS=86, 7m31s cold"
+  },
+  "proof_sha256": "04509b88c8f0bafaabcff6e9bccdaed9e222f8a06c7cecd92e932813051d638f",
+  "vk_map_sha256": "03448a39fbbdfef68e6b77b2e8c68109b67aed67f49f81bdc0e18746edb0f7ba",
+  "vk_root_bytes32": "0x0022bcaf99d2825785f3e498584d8f4aca3e1df07f71c95355c610b069bb8ab0",
+  "peak_vram_mib_observed": 24767,
+  "peak_process_rss_gib": 34.9,
+  "peak_cgroup_gib": 46.6,
+  "peak_cgroup_note": "at the cgroup limit but oom_kill 0: the 7.9 GB artifact download and extraction fill page cache; the process itself peaked at 34.9 GiB",
+  "circuit_artifacts": {
+    "source": "https://sp1-circuits.s3-us-east-2.amazonaws.com/v6.1.0-groth16.tar.gz",
+    "how": "try_install_circuit_artifacts(\"groth16\") with SP1_CIRCUIT_MODE unset -- Succinct's released keys, no local setup, no ceremony",
+    "size_on_disk": "7.9G (groth16_pk.bin 5,862,173,061 B, groth16_circuit.bin 2,437,991,441 B)",
+    "released_VERIFIER_HASH": "0x4388a21c687fdd5f218d7e3d13190cac4c5355818d3605fd5fb811df468ee696",
+    "matches_proof_groth16_vkey_hash": true,
+    "released_VK_ROOT": "0x002f850ee998974d6cc00e50cd0814b098c05bfade466d28573240d057f25352",
+    "SP1VerifierGroth16_sol_sha256": "48e1db5baca3b102242ebd88280b3689a088076688146cd0d98876f5dacb76d0",
+    "Groth16Verifier_sol_sha256": "d5e777120d9f675aefcc8c0c8786d4043acb8e063646e60818564b44fb2ec457",
+    "groth16_vk_bin_sha256": "4388a21c687fdd5f218d7e3d13190cac4c5355818d3605fd5fb811df468ee696"
+  },
+  "gnark": {
+    "nbConstraints": 15972262,
+    "read_r1cs_s": 19.4,
+    "read_pk_s": 4.0,
+    "solver_s": 23.2,
+    "prover_s": 65.3,
+    "generating_proof": "1m28.46s",
+    "verifier_ms": 2.98
+  },
+  "prove_seconds_breakdown": {
+    "stark_pipeline_core_to_wrap": "about 247 s (prove start ~22:33:56Z to the artifact download line at 22:38:03Z)",
+    "artifact_download_and_extract": "about 135 s, one-off per machine",
+    "gnark_load_and_prove": "about 112 s",
+    "with_warm_artifacts": "about 6 minutes per proof on this card"
+  },
+  "wrap_vk_check": "SP1's wrap-prover init compares the computed wrap vk with the baked WRAP_VK_BYTES whenever vk verification is on and is fatal on mismatch (worker/prover/recursion.rs:659-680). It ran here and did not fire.",
+  "on_chain_note": "Succinct's own deployed v6.1.0 verifier pins THEIR VK_ROOT, so it would reject this proof. Deploy SP1VerifierGroth16.sol with VK_ROOT() set to vk_root_bytes32 above; Groth16Verifier.sol (the pairing constants) is unchanged.",
+  "partial_vk_map_caveat": "the map holds exactly the 67 programs this proof needs. A shard whose shape is not among them cannot be proved until the map is extended, and extending it changes vk_root."
+}

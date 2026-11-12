@@ -4,9 +4,10 @@
 > (lean) cluster set, `vk_verification` on and the compress shape now pinned
 > in-tree, this fork's computed wrap verifying key is byte-identical to
 > upstream's baked one (`fce924068aa5a610`), so Succinct's released Groth16
-> artifacts apply. Measured, with a negative control. See "FINAL" below; the
-> stages above it are the path there, including two wrong turns kept for the
-> record.
+> artifacts apply. Measured, with a negative control — and then exercised: a
+> real Groth16 proof was made and verified under those artifacts on 2026-11-12.
+> The result is in "The answer" below; "How we got here" records the two wrong
+> turns on the way, both the same mistake.
 
 ## The question
 
@@ -102,209 +103,67 @@ with/without the memory-global pair. Trimming it to 3 lands on 43 exactly:
 Those 14 exist to route the `PASTA_RETAIN` presets, so this is a real trade and
 not a free win — see stage 4.
 
-## Stages
+## How we got here, and the two wrong turns
 
-Each stage is free and needs no GPU. Build time dominates.
+The path ran through four stages: confirm upstream's VK-map depth is 18; trim the
+pasta clusters so ours is too; test whether the compress shape reaches the wrap
+vk; and price the trim. The stage write-ups are gone — the results below
+supersede them, and `git log` has the detail — but two mistakes are worth keeping
+because both were the same mistake.
 
-### Stage 0 — upstream's depth. DONE
+**Wrong turn one.** The `Select` height bump is +32 rows, and a probe showed it
+invisible to the shrink program. I generalised that to "the compress shape is
+invisible to the wrap vk". It is not: a 64-program VK-map sample then panicked on
+`ExtAlu` needing +320,059 rows and `PrefixSumChecks` +94,952, four orders of
+magnitude past what I had tested. The 8-program sample that missed them used a
+stride of 31,218.
 
-Depth 18, by both routes in the table above.
+**Wrong turn two.** Measuring those real deltas showed they *do* change the
+shrink program, and I concluded a ceremony was required. That stopped one link
+short: the wrap program sees the shrink proof only through
+`ceil(area / 2^18)` stacking multiples, and the larger shrink tables stay inside
+the same multiple.
 
-### Stage 1 — trim, and confirm our depth drops. ~15 min
+Both errors were reasoning one link past the last measurement. The fix was to
+measure the final artifact — the wrap vk bytes — which is what
+`compress-shape-audit` now does, with a negative control so it can fail.
 
-Gate the 14 clusters down to 3, rebuild `recursion-shapes`, expect
-`chip clusters 43` and `TOTAL 258049`.
+## Traps already paid for
 
-**Kill:** a count outside [22, 43] means this approach cannot reach depth 18.
-Stop.
+- **`test_wrap_vk` is vacuous.** `verify.rs:93` is the only assignment to
+  `SP1Verifier::wrap_vk` and it deserializes the baked `WRAP_VK_BYTES`, so the
+  test compares those bytes with themselves and cannot fail.
+- **A wrap vk computed with `without_vk_verification()` is not comparable to
+  upstream's**, which was generated with it on, since `vk_verification` is a
+  direct parameter to `wrap_program_from_input`. With verification off, every
+  development run here produced `4806ebe3d6454da2` and nothing complained.
+- **With verification on, SP1 does check.** The wrap prover's lazy init compares
+  its computed vk against `WRAP_VK_BYTES` and returns a fatal "Wrap vk mismatch"
+  (`worker/prover/recursion.rs:659-680`). It ran in the real proof and did not
+  fire.
+- **The VK map need not be complete for a first proof.** SP1's own
+  `test_build_vk_map` builds a partial map from the shapes in one core proof plus
+  the last 12, and proves against it via `with_vk_map_path`.
+- `vendor/sp1`'s own `Cargo.lock` does not satisfy its workspace, so
+  `cargo --locked` fails inside it, and the standing rule forbids running cargo
+  there without `--locked`. Work from the root workspace.
+- SP1's bundled test ELF is 32-bit and fails setup on this rv64 fork; pass a
+  fork-built guest to `compress-shape-audit`.
 
-### Stage 1 RESULT, 2026-11-12: passed
+## Tools
 
-The lean set is now the **compile-time default**; `pasta-full-clusters` restores
-the original 14. It is a cargo feature, not an env var, because the choice
-changes the machine: prover and verifier must agree, and a runtime switch would
-let them disagree silently. (It was an env var during the spike, promoted once
-the result stood.)
-
-Counts are from `crates/pipeline-runner/src/bin/vk-map-guard.rs`, which calls the
-real `create_all_input_shapes` and dedups through a `BTreeSet` exactly as
-`from_map` does (`prover/src/recursion.rs:63-67`):
-
-| arm | clusters | VK map keys | next_pow2 | depth |
-| --- | --- | --- | --- | --- |
-| `pasta-full-clusters` (14) | 54 | 313,638 | 2^19 | 19 |
-| **default, lean (3)** | 43 | **249,750** | 2^18 | **18** |
-| upstream, est. from `vk_map.bin` | - | ~155k-186k | 2^18 | **18** |
-
-Headroom on the default is **12,394 keys**, roughly two clusters.
-
-**Correction.** Earlier figures here, and in commits cc81871e2, f16f511 and
-912875c, said 324,060 and 258,049, and 912875c blamed the gap on shapes shared
-between clusters not being dedup'd. **That explanation was wrong.**
-`create_all_input_shapes` returns no duplicates at all — its `len()` and its
-dedup'd length are both 249,750. The real cause was an off-by-one in
-`recursion-shapes`, which iterated `0..=max_preprocessed_multiple` where the
-real loop (`shapes.rs:711`) starts at 1, adding a phantom band worth ~193 shapes
-per cluster: 193 x 43 = 8,299 against the observed 8,293 gap. Fixed in the tool.
-
-The depth conclusions are unchanged. `vk-map-guard` is authoritative because it
-calls the real function, and it exits non-zero when the depth leaves 18 — which
-matters because nothing else checks it (stage 3).
-
-### Stage 2 — REDESIGNED, and the news is worse
-
-Three corrections to the plan above, all found before spending any GPU time.
-
-**1. `test_wrap_vk` is vacuous.** `verify.rs:93` is the *only* assignment to
-`SP1Verifier::wrap_vk` and it deserializes `WRAP_VK_BYTES`, so the test compares
-the baked bytes with themselves and cannot fail. Exposing `wrap_vk()` would
-report nothing. The only computed wrap vk in the tree is `shrink_wrap(..)?.vk`
-(`build.rs:821`), which needs a real compressed proof — so it is *not*
-keygen-only as the plan claimed.
-
-**2. `vk_verification` makes the obvious experiment self-defeating.** It is a
-direct parameter to `wrap_program_from_input`, and upstream's baked vk was
-generated with it **true**. But proving needs it **false** here, because our
-recursion programs are not in the baked map. So:
-
-- `true`  -> vk comparable to upstream, proving fails before `shrink_wrap`.
-- `false` -> proving works, vk incomparable to upstream by construction.
-
-Renting a GPU to run a `--mode wrap-vk` built on `without_vk_verification()`
-would have produced a guaranteed mismatch that proved nothing.
-
-**3. The compress shape does reach the wrap vk.** The real construction site
-(`worker/prover/recursion.rs:1165-1183`) enumerates every input:
-
-```rust
-let wrap_input = shrink_proof_shape.dummy_input(
-    1,
-    prover_data.recursion_vks.height(),   // VK map tree height
-    verifier.shard_verifier().machine().chips()..,
-    verifier.max_log_row_count(), *verifier.fri_config(), verifier.log_stacking_height(),
-);
-let program = wrap_program_from_input(&recursive_verifier(..), config.vk_verification, &wrap_input);
-```
-
-so wrap vk = f(shrink shape, VK-map height, fixed recursion config,
-vk_verification). And `shrink_shape` is `preprocessed_table_heights` of the
-*shrink program* (`recursion.rs:1056-1065`), which is itself built from a
-compress-shaped input. The chain is therefore
-
-```
-compress_shape -> shrink program -> shrink_shape -> wrap_input -> wrap vk
-```
-
-**So the precompiles reach the wrap vk through two channels, not one:**
-
-| channel | fixable? |
+| tool | what it does |
 | --- | --- |
-| VK-map height, 19 vs 18 | yes — trim to <=43 clusters, done in stage 1 |
-| compress shape -> shrink shape | **not while keeping the chips** |
+| `compress-shape-audit` | per-cluster compress needs, the shrink-shape link, and the real wrap vk with a depth-19 negative control. Exits non-zero unless the in-tree arm matches and the control does not. ~20 min single-threaded; pass a fork-built ELF. |
+| `vk-map-guard` | the padded VK-map count and resulting depth, from the real `create_all_input_shapes`. Seconds. Exits non-zero off depth 18. |
+| `pipeline-runner` / `pipeline-cuda` `--mode vk-map` | builds the partial map for one workload and writes it for `--vk-map`. |
+| `recursion-shapes` | per-cluster breakdown and which clusters hold Pasta chips. |
 
-The second is the hard one. Our `Select` bump exists because the compress program
-has to verify core shard proofs for 140 chips, and trimming clusters does not
-reduce the chip count. Upstream's non-mprotect `compress_shape.json` pins
-`Select` at 1,087,808; we need 1,087,840. (Upstream's *mprotect* shape happens to
-pin exactly 1,087,840, but its other heights differ, so it is not a drop-in.)
+Run `vk-map-guard` after any change to chips or clusters, and
+`compress-shape-audit` after any change to the compress shape, before spending
+on a pod.
 
-**Open question, and the one worth answering next:** does a larger compress
-`Select` height actually change the shrink program's *preprocessed* table
-heights? Preprocessed tables are the program's own instruction/constant tables.
-If the recursion DSL unrolls proportionally to the verified shape, they change
-and a ceremony is unavoidable while we keep the chips. If they do not, the
-compress bump is invisible to the wrap vk and the cluster trim alone suffices.
-
-That check is keygen of the shrink program for both compress shapes — no
-proving, no GPU, locally runnable — but it needs `wrap_program_from_input`,
-`recursive_verifier` and the recursion prover's `setup` reachable from outside
-`sp1-prover`, i.e. three `pub(crate)` -> `pub` changes in the fork.
-
-Note also that full *empirical* confirmation needs `vk_verification = true`,
-which needs the real VK map built (249,750 programs on the lean arm) — Phase A
-task 3. So the derivation above is as far as reasoning alone can go.
-
-### Stage 2 (superseded) — the original decisive comparison
-
-`test_wrap_vk` (`prover/src/build.rs:839`) already asserts the computed wrap VK
-equals the baked bytes. It cannot be run as-is: `cargo metadata --locked
---offline` in `vendor/sp1` fails with *"cannot update the lock file ... because
---locked was passed"*, the fork's lock does not satisfy its own workspace, and
-the standing rule forbids running cargo there without `--locked`. The root
-workspace cannot substitute because it does not resolve `sp1-prover`'s
-dev-dependencies.
-
-**The unlock:** add a `pub fn wrap_vk()` beside the existing `#[cfg(test)]
-pub(crate)` one and call it from a small binary in the **root** workspace.
-`WRAP_VK_BYTES` is already `pub`. No dev-dependencies, so the root lock resolves
-it unchanged and neither lockfile is touched.
-
-`wrap_vk()` does keygen only — no proving — so `Select` can be set to upstream's
-height even though proving would fail with it. That makes a clean 2x2:
-
-| clusters | `Select` | isolates |
-| --- | --- | --- |
-| 54 | 1,087,840 | baseline; expect mismatch |
-| 43 | 1,087,840 | the compress shape |
-| 43 | 1,087,808 (upstream) | **the hoped-for match** |
-| 54 | 1,087,808 | the clusters |
-
-`compress_shape.json` is `include_bytes!`, so each row forces an `sp1-prover`
-rebuild (~5 min).
-
-**Kill:** if row 3 mismatches, something beyond depth and shape diverges and a
-ceremony is unavoidable. Report rather than keep hunting.
-
-### Stage 2 RESULT, 2026-11-12: the compress bump is invisible
-
-`crates/pipeline-runner/src/bin/shrink-shape-probe.rs`, keygen-free and
-proving-free, needing no fork change at all: `pub use components::*` (lib.rs:12)
-re-exports the components, `shrink_program_from_input` and `recursive_verifier`
-are already `pub`, and `SP1RecursionProofShape` derives `Deserialize` so both
-shapes come straight from the JSON.
-
-```
-compress machine: 8 chips, log_stacking_height 20, max_log_row_count 21
-vk map height held at 18 for both arms (the probe varies only the compress shape)
-
-upstream  Select 1087808   dummy_input c8750c918d01f33e..  total_memory 2016023
-ours      Select 1087840   dummy_input c8750c918d01f33e..  total_memory 2016023
-
-dummy_input identical: true   total_memory identical: true   event_counts identical: true
-```
-
-So the bump cannot move `shrink_shape`, the wrap input, or the wrap vk. The
-reason is visible in `shapes.rs:358-382`: compress heights enter only through
-`ceil(sum(height * width) / 2^20)`, and a 32-row delta does not straddle a
-multiple of 2^20. And `git diff` confirms `Select` is the *only* height we
-changed, so our shrink program is identical to upstream's.
-
-**The VK-map height is therefore the only channel**, and stage 1's trim brings
-it to upstream's 18. Every input to the wrap program then matches upstream:
-
-| input to wrap vk | ours vs upstream |
-| --- | --- |
-| shrink shape | identical — measured above |
-| VK-map height | 18 == 18, with the default (lean) cluster set |
-| recursion config (chips, fri, stacking) | untouched by this fork |
-| `vk_verification` | must be `true`; production needs it anyway |
-
-**Conclusion: SP1 custom STARK chips do not by themselves require a new Groth16
-ceremony — provided the chip clusters keep the padded VK-map count inside
-upstream's power-of-two bucket.** For this fork that means at most 43 clusters,
-and the default 54 exceeds it. The claim that prompted this spike is therefore
-correct in mechanism and correct in conclusion *once the cluster count is
-managed*; it is not automatic.
-
-### FINAL, 2026-11-13: no ceremony is needed — measured on wrap vk bytes
-
-The "REVERSED" section below stopped one link short. It showed that the fork's
-larger compress shape changes the shrink *program*, and concluded the wrap vk
-must change. But the wrap program sees the shrink proof only through
-`shrink_shape.dummy_input(..)`, and `dummy_input` sees a shape only through
-`ceil(sum(height * width) / 2^log_stacking_height)` — the same insensitivity
-that made `Select` +32 invisible one link earlier. Nobody had measured whether
-the changed shrink tables actually cross a stacking multiple. They do not.
+## The answer, 2026-11-13: no ceremony is needed — measured on wrap vk bytes
 
 `crates/pipeline-runner/src/bin/compress-shape-audit.rs` does three things with
 SP1's own builders and no proving.
@@ -388,10 +247,47 @@ cluster default — is necessary, not incidental.
   public inputs, and the Solidity template carries `VK_ROOT()` as a substituted
   constant. We deploy Succinct's Groth16 key material with our own `VK_ROOT`.
 
-**Still not done:** an actual Groth16 proof. Everything above is keygen-level.
-The remaining run is: core proof -> partial VK map from its shapes -> prove
-`--mode groth16` with verification on and `SP1_CIRCUIT_MODE` unset, so the
-released artifacts install and SP1's own wrap-vk check runs for real.
+**Done, 2026-11-12 22:42Z: a real Groth16 proof, verified, under Succinct's
+keys.** Records in `benchmarks/pipeline/groth16-20261112/`. One A40 pod
+($0.59/hr, 46.6 GiB, about 24 minutes billed, about $0.24), `tools/pipeline-cuda`
+built with `--features native-gnark`:
+
+1. `--mode vk-map` proved core (138 shards, 155.6 s), found 55 distinct shard
+   shapes, added the last 12 shapes and built 67 vks in **19.1 s** on the GPU —
+   0.285 s per program against 13.3 s on one CPU core. A 2,688-byte map.
+2. `--mode groth16 --vk-map ..` with `SP1_CIRCUIT_MODE` unset: vk verification on
+   against that map, the wrap-vk check ran and did not fire, SP1 downloaded
+   `v6.1.0-groth16.tar.gz` (7.9 GB) and gnark proved.
+
+```
+Groth16: 142638298 cycles, verified true, prove 497.4 s (incl. the one-off artifact download)
+  STARK pipeline, core -> wrap     ~247 s
+  artifact download + extract      ~135 s, once per machine
+  gnark load + prove               ~112 s   (15,972,262 constraints; prover 65.3 s)
+  raw proof 324 B, encoded 352 B   peak RSS 34.9 GiB, peak VRAM 24,767 MiB
+```
+
+The proof's `groth16_vkey_hash` is
+`4388a21c687fdd5f218d7e3d13190cac4c5355818d3605fd5fb811df468ee696`, which is
+exactly `VERIFIER_HASH()` in the `SP1VerifierGroth16.sol` Succinct ships in that
+tarball. So the keys are theirs, from their ceremony, and none of the 107.4 GiB
+local setup was needed.
+
+**What is ours is the root.** The proof's `vk_root` public input is
+`0x0022bcaf99d2825785f3e498584d8f4aca3e1df07f71c95355c610b069bb8ab0`; Succinct's
+contract pins `0x002f850e..`, so *their deployed* verifier would reject this
+proof. Deploy `SP1VerifierGroth16.sol` with `VK_ROOT()` set to ours;
+`Groth16Verifier.sol`, the pairing constants, is unchanged.
+
+**The partial map's limit.** It holds exactly the 67 programs this proof needs. A
+different Pickles proof that shards differently would need shapes outside it, the
+map would have to be extended, and that changes the root and so the contract.
+The full map removes that: 249,750 programs at the measured GPU rate is about
+19.8 hours on one A40, about $12.
+
+**Not yet done:** the contract deployed and gas-profiled on a chain; and a second,
+different input proved against the same map, which is what would show how stable
+the shard shapes are.
 
 **Margin.** 45,072 cells of shrink main-area slack. Compress growth of roughly
 five more stacking multiples would cross it, so a new wide chip in a retained
@@ -400,60 +296,7 @@ cluster could. Dropping clusters 41 and 42 would restore almost all of the
 `compress-shape-audit` after any change to chips, clusters or the compress shape:
 it exits non-zero unless the in-tree arm matches and the control does not.
 
-### (superseded by FINAL above) REVERSED, 2026-11-13: a ceremony IS required
-
-Stage 2 concluded the compress shape was invisible to the wrap vk. **That
-conclusion was wrong**, and the error was generalising from an unrepresentative
-delta.
-
-Stage 2 tested the `Select` bump alone: +32 rows. But a 64-program VK-map sample
-(stride 3,902, vs the 8-program sample's stride 31,218, which missed every large
-shape) panicked on two *other* chips:
-
-```
-alu_ext.rs:99            fixed height is too small: got 795264  for 1115323 rows
-prefix_sum_checks.rs:95  fixed height is too small: got 224608  for 319560  rows
-```
-
-So this fork needs `ExtAlu` +320,059 rows and `PrefixSumChecks` +94,952, not +32.
-Upstream's *mprotect* shape pins 1,027,424 and 274,144 — both still short, so
-there is no upstream shape to borrow either.
-
-`shrink-shape-probe`, generalised to arbitrary `--override Chip=Height`:
-
-| arm | dummy_input sha256 | shrink total_memory |
-| --- | --- | --- |
-| Select only, +32 | `c8750c918d01f33e..` | 2,016,023 |
-| ExtAlu + PrefixSumChecks + Select | `cc05a71c627cbafb..` | 2,021,271 |
-
-Different input, different program, different `event_counts`. The chain
-`compress_shape -> shrink program -> shrink_shape -> wrap_input -> wrap vk`
-therefore carries this change through, so our wrap vk cannot equal upstream's
-`fce924068aa5a610` while the fork's chips need a larger compress shape — and
-they do, because the compress program must verify core shard proofs for 140
-chips.
-
-**Consequences.**
-
-- Ceremony-free Groth16 is **not** available to this fork. A phase-2 ceremony
-  over the 27.6M-constraint wrap circuit is required, and must be redone on every
-  change to the recursion layer.
-- The lean cluster default (43 clusters, depth 18) was necessary but not
-  sufficient; with the wrap vk diverging anyway, matching upstream's VK-map depth
-  buys nothing. Keeping or reverting it is close to cost-free either way (stage 4:
-  zero wasted rows, at most +2 chips), but its stated justification is gone.
-- The real VK map is still required, for soundness: every proof so far carries
-  `without_vk_verification()`. It simply no longer buys ceremony avoidance, which
-  was most of the case for spending on it.
-- **PLONK's universal SRS now looks like the right call after all** — which is
-  what `docs/proof-pipeline-plan.md` originally decided, on exactly this reasoning,
-  before the reversal in f16f511. The gas table favours Groth16 by ~75,000 gas per
-  verification; a repeated ceremony is the price of that.
-- The compress shape still needs regenerating properly with
-  `test_find_recursion_shape`. Hand-bumping fixed only the first panic each time,
-  twice now.
-
-### Stage 3 RESULT: production downloads by version, and will not warn you
+## Production downloads by version, and will not warn you
 
 `try_install_circuit_artifacts` (`build.rs:468`) keys the download by
 `SP1_CIRCUIT_VERSION` — `v6.1.0` in this tree — **not** by the wrap vk hash.
@@ -465,24 +308,10 @@ download time** and surfaces only as a verification failure later. Matching the
 wrap vk is a correctness requirement, not an optimisation, and nothing in the
 pipeline checks it for you.
 
-### What is still not proven
+## The cluster trim wastes zero rows
 
-The chain above is complete by derivation plus the two measurements, but no
-end-to-end byte comparison of our computed wrap vk against
-`fce924068aa5a610` has been made. That needs `vk_verification = true`, which
-needs the real VK map built — 249,750 programs on the lean arm — i.e. Phase A
-task 3. Until then: strong, link-by-link, but not observed.
-
-### Stage 3 (superseded) — prove the payoff. ~10 min
-
-With `SP1_CIRCUIT_MODE` unset, confirm the production path actually fetches
-Groth16 artifacts for our wrap VK. A 404 here would mean the VK matches but
-nothing usable is published — worth knowing before claiming success.
-
-### Stage 4 RESULT, 2026-11-12: the trim wastes zero rows
-
-`crates/cycle-runner/src/bin/cluster-cost.rs`. The premise of this stage -- that
-coarser clusters waste cells -- was **wrong**, and the code says so:
+The premise — that coarser clusters waste cells — was **wrong**, and the code
+says so (measured with a tool since retired, `cluster-cost`; see `git log`):
 `smallest_cluster` picks the cluster (`prover/trace.rs:157`), and a chip in it
 with no events becomes `PaddedMle::zeros(width, max_log_row_count)` whose `inner`
 is `None`, so `num_real_entries()` is 0 (`slop/multilinear/src/padded.rs:64-125`)
@@ -506,25 +335,6 @@ traces, row-count entries and constraint evaluations, and zero extra rows.
 **Verdict: the trim is effectively free**, so ceremony-free Groth16 costs
 essentially nothing in proving. The real cost is the lost headroom -- 43 is the
 exact boundary.
-
-### Stage 4 (superseded) — price the trim. Conditional, ~30 min
-
-Only if 1-3 succeed. Coarser clusters waste rows: a `PallasAdd`-only shard gets
-proved in a cluster that also allocates `Uint256Mul` and `VestaAdd`. Measure with
-`mirror-records` and the chip-width/cells accounting, then decide whether
-ceremony-free Groth16 is worth the proving overhead.
-
-## What this spike does not do
-
-- It does not produce a Groth16 proof, or a PLONK one. As of 2026-11-12 we have
-  neither: the A40 was OOM-killed in `plonk.Setup` at the 46.6 GiB cgroup limit,
-  and the 238 GiB CPU run was stopped by choice at 1 h 04 min, 30 h of CPU time,
-  107.4 GiB peak, still pre-wrap.
-- It does not build the real VK map (249,750 programs on the default set).
-  Production needs that for
-  soundness regardless, and `without_vk_verification()` is itself a divergence:
-  `vk_verification` is a direct parameter to `wrap_program_from_input`.
-- It says nothing about Groth16 proof size or verifier gas.
 
 ## Note on PLONK
 

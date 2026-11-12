@@ -1,58 +1,53 @@
 # Proof pipeline plan: core → compressed → Groth16 wrap
 
 Tasks for getting from today's core proofs to an EVM-verifiable proof.
-**Wrap decision: Groth16**, reversed from PLONK on 2026-11-12. The gas table and
-the rejected alternatives are at the end.
+**Wrap decision: Groth16**, with no ceremony — proved end to end on 2026-11-12.
+The gas table and the rejected alternatives are at the end.
 
-## The decision was reversed, and why
+## Wrap decision: Groth16, and no ceremony
 
-PLONK was chosen for exactly one reason: its SRS is universal, so no ceremony is
-ever needed, and the gas table below says PLONK costs ~75,000 gas more per
-verification (1.30x) for that privilege. The clinching sentence was that a
-Groth16 ceremony means "a full redo every time the circuit changes -- which, with
-custom precompiles in the core machine, it will."
+Groth16 costs ~75,000 gas less per verification than PLONK (1.30x) and 256 B of
+proof against 864 B — see the gas table at the end. PLONK was originally chosen
+anyway, for one reason: its SRS is universal, so no ceremony is ever needed,
+whereas a Groth16 ceremony is circuit-specific and was assumed to need redoing
+"every time the circuit changes — which, with custom precompiles in the core
+machine, it will."
 
-**That last clause is false for this fork, measured on wrap vk bytes
-(2026-11-13).** `compress-shape-audit` computes the wrap verifying key for the
-in-tree compress shape at VK-map depth 18 with `vk_verification` on and gets
-`fce924068aa5a610` — upstream's baked value — with a depth-19 negative control
-that correctly mismatches. Details in docs/groth16-ceremony-spike.md, "FINAL".
+**That assumption was wrong, and the measurement is on wrap vk bytes.** The
+precompiles reach the wrap verifying key through exactly one channel — the padded
+VK-map count's power-of-two bucket, which sets a Merkle depth that is in the
+circuit — and the fork's larger compress shape does not reach it at all, because
+the shrink tables stay inside the same stacking multiples. With the default
+(lean) cluster set at depth 18, `vk_verification` on and the compress shape
+pinned in-tree, `compress-shape-audit` computes `fce924068aa5a610`: upstream's
+baked value, with a depth-19 negative control that correctly mismatches.
 
-This section went back and forth twice on the way: a first argument that the
-compress shape was invisible (right for `Select` +32, wrongly generalised), then
-a reversal when the real `ExtAlu` +334,157 was found to change the shrink
-program. Both stopped short of the last link. The larger shrink program stays
-inside the same 2^18 stacking multiples, so the wrap input, wrap program and wrap
-vk are unchanged.
+So Succinct's released Groth16 artifacts apply, and Groth16 is strictly better
+than PLONK here — cheaper gas, smaller proof, and no ceremony either.
 
-The precompiles add no constraints to the wrap circuit: it is built over
-`CompressAir`, and the VK-map root is a witnessed public value. They reach the
-wrap verifying key through exactly one channel, the padded VK-map count's
-power-of-two bucket, which sets a Merkle depth that *is* in the circuit. Our 54
-chip clusters put that at depth 19 (313,638 keys) against upstream's 18; trimming
-the 14 `pasta_retained_clusters` to 3 lands on 43 clusters, 249,750 keys, depth
-18, with 12,394 keys of headroom. The lean set is now the compile-time default.
+**Exercised, not just argued** (2026-11-12 22:42Z,
+`benchmarks/pipeline/groth16-20261112/`): one A40, vk verification on against a
+67-program partial VK map built from the proof's own shard shapes in 19 s,
+Succinct's released v6.1.0 artifacts installed, proof verified. 497 s cold
+including a one-off 7.9 GB artifact download, about 6 min warm; raw proof 324 B;
+the proof's `groth16_vkey_hash` equals the released `VERIFIER_HASH`.
 
-Two measurements closed the other candidates. The compress-shape `Select` bump
-is invisible to the shrink program -- identical `dummy_input`, `total_memory` and
-`event_counts` -- because compress heights reach the input only through
-`ceil(sum / 2^20)` and a 32-row delta does not straddle that. And the trim
-itself is nearly free: 43 of 54 clusters lose nothing, the worst case is +2
-zero-row chips, and wasted rows are **zero** because an event-free chip in the
-chosen cluster is `PaddedMle::zeros` with `num_real_entries() == 0`.
+Details and the two wrong turns taken on the way:
+docs/groth16-ceremony-spike.md.
 
-So the ceremony objection does not apply to this fork, provided the cluster count
-stays inside upstream's bucket, and Groth16 is then strictly better: ~75,000 gas
-cheaper per verification, a 256 B proof instead of 864 B, and Succinct's released
-artifacts instead of a local setup that needed 107.4 GiB.
+**Three conditions, all in place, and one guard.** The lean cluster default
+(depth 18), `vk_verification` on, and the in-tree compress shape. The ceiling is
+262,144 keys against the default's 249,750, so roughly two more chip clusters
+would tip back to depth 19 and reopen the question; `vk-map-guard` fails when
+that happens, and `compress-shape-audit` checks the whole chain.
 
-**One caveat carried forward:** the ceiling is 262,144 keys and the default sits
-at 249,750, so roughly two more chip clusters would tip back to depth 19 and
-reopen the ceremony question. `cargo run --bin vk-map-guard` fails when that
-happens. And matching upstream's wrap vk is a *correctness*
-requirement that nothing checks: `try_install_circuit_artifacts` keys its
-download by `SP1_CIRCUIT_VERSION`, not by the vk hash, so a mismatch is silent
-until verification fails.
+**What remains for settlement.** Our `vk_root` is
+`0x0022bcaf99d2825785f3e498584d8f4aca3e1df07f71c95355c610b069bb8ab0` and
+Succinct's deployed verifier pins theirs, so deploy `SP1VerifierGroth16.sol` with
+our `VK_ROOT()` — `Groth16Verifier.sol`, the pairing constants, is unchanged —
+then gas-profile it (task 13). The partial map covers only this proof's 67
+programs; a differently-sharding input needs it extended, which changes the root
+and so the contract.
 
 ## Where this starts
 
@@ -124,18 +119,26 @@ This phase gates everything else.
    `sp1-circuits` S3 bucket keyed by git ref; a fork needs its own location and
    its own ref discipline.
 
-## Phase A can be deferred: a PLONK proof is reachable without the VK map
+## Phase A can be deferred, and a partial VK map replaces most of it
 
-Read out of `vendor/sp1/crates/prover/src/shapes.rs` and
-`crates/verifier/src/recursion_vks.rs`. Two switches make the whole pipeline
-runnable before a single recursion program is compiled:
+**Superseded in part by the 2026-11-12 run, which used neither switch.** A
+*partial* VK map — the shapes in one core proof plus the last 12 — is built in
+19 s on an A40 and proves with `vk_verification` ON
+(`node.build_vks(Either::Left(indices), chunk)` plus `with_vk_map_path`, which is
+SP1's own `test_build_vk_map` flow). That is the route to take: it keeps the
+soundness the two switches below throw away, and it costs seconds.
+
+The switches remain documented because every development proof before that run
+used them, so any proof bytes from before 2026-11-12 carry this caveat:
 
 - **`build_vk_map(dummy: true, …)`** returns `dummy_vk_map(machine)` and
   `return`s immediately (`shapes.rs:485`) — no compilation, no setup, no GPU.
 - **`VerifierRecursionVks { vk_verification: false, … }`** switches off the
   membership check: `if self.vk_verification() && !self.recursion_vks.verify(…)`
   (`verify.rs:578`). SP1's own comment: *"This `vk_verification` must be only
-  turned off for testing purposes."*
+  turned off for testing purposes."* It also disables SP1's wrap-vk check, which
+  is why those runs silently produced `4806ebe3d6454da2` instead of upstream's
+  key.
 
 So the ordering changes:
 
@@ -452,9 +455,9 @@ gas/day at a 10-minute cadence. The original plan accepted that cost to avoid a
 Groth16 phase-2 ceremony, its 1-of-N honesty assumption, transcript and beacon,
 and a full redo on every circuit change.
 
-**That trade no longer exists.** The spike showed this fork can match upstream's
-wrap vk and install Succinct's released Groth16 artifacts, so there is no
-ceremony to avoid — and the 75,000 gas is then paid for nothing. Hence Groth16.
+**That trade does not exist for this fork.** Its wrap vk matches upstream's, so
+Succinct's released Groth16 artifacts install and there is no ceremony to avoid.
+The 75,000 gas would be paid for nothing. Hence Groth16, now proved end to end.
 
 Note the structure, which is counter-intuitive: pairings favour PLONK by 68,000
 gas, and everything else favours Groth16 by 125,720, almost entirely scalar

@@ -45,21 +45,10 @@ native-gnark = ["sp1-prover/native-gnark"]
 name = "pipeline-runner"
 path = "src/main.rs"
 
-# Stage 2 of docs/groth16-ceremony-spike.md. Keygen-free and proving-free, so it
-# needs no GPU and none of the wrap features.
-[[bin]]
-name = "shrink-shape-probe"
-path = "src/bin/shrink-shape-probe.rs"
-
 # Guard for the recursion VK map depth; see docs/groth16-ceremony-spike.md.
 [[bin]]
 name = "vk-map-guard"
 path = "src/bin/vk-map-guard.rs"
-
-# Sizes Phase A task 3 before renting for it; see docs/proof-pipeline-plan.md.
-[[bin]]
-name = "vk-map-sample"
-path = "src/bin/vk-map-sample.rs"
 
 # Per-cluster compress-shape needs, and whether they reach the wrap input.
 [[bin]]
