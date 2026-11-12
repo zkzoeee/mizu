@@ -1,0 +1,69 @@
+{
+  "air_ids_total": 140,
+  "air_ids_with_cost_entries": 140,
+  "chip_cost_mismatches": [
+    {
+      "chip": "Program",
+      "registered": 17,
+      "width": 1
+    },
+    {
+      "chip": "Byte",
+      "registered": 13,
+      "width": 6
+    },
+    {
+      "chip": "Range",
+      "registered": 3,
+      "width": 1
+    }
+  ],
+  "operations": [
+    {
+      "actual_air_width": 1599,
+      "air_id": "VestaAddAssign",
+      "chip": "VestaAddAssign",
+      "operation": "vesta-add",
+      "registered_trace_cost": 1599,
+      "syscall_code": "0x00010172",
+      "syscall_id": 114,
+      "touched_addresses": 16,
+      "touched_pages": 4
+    },
+    {
+      "actual_air_width": 1591,
+      "air_id": "VestaDoubleAssign",
+      "chip": "VestaDoubleAssign",
+      "operation": "vesta-double",
+      "registered_trace_cost": 1591,
+      "syscall_code": "0x00000173",
+      "syscall_id": 115,
+      "touched_addresses": 8,
+      "touched_pages": 2
+    },
+    {
+      "actual_air_width": 1599,
+      "air_id": "PallasAddAssign",
+      "chip": "PallasAddAssign",
+      "operation": "pallas-add",
+      "registered_trace_cost": 1599,
+      "syscall_code": "0x00010170",
+      "syscall_id": 112,
+      "touched_addresses": 16,
+      "touched_pages": 4
+    },
+    {
+      "actual_air_width": 1591,
+      "air_id": "PallasDoubleAssign",
+      "chip": "PallasDoubleAssign",
+      "operation": "pallas-double",
+      "registered_trace_cost": 1591,
+      "syscall_code": "0x00000171",
+      "syscall_id": 113,
+      "touched_addresses": 8,
+      "touched_pages": 2
+    }
+  ],
+  "registered_chips": 140,
+  "syscall_ids_unique": true
+}

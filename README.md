@@ -60,38 +60,53 @@ the [dependency and optimization inventory](docs/dependencies-and-optimizations.
 [changed-file list](docs/file-changes.md), and [receipt example](examples/settlement/README.md). Full historical runs and
 retired applications are recoverable from the external consolidation archive.
 
-## One real proof on a rented GPU: 4 minutes 40 seconds
+## One real proof on a rented GPU: about 5 minutes, for about 5 cents
 
-Measured end to end on 2026-11-11 (pod `4c8i6zyte7uuo3`, A40 in EU-SE-1, the
+Measured end to end twice, on two different A40 hosts in EU-SE-1, both on the
 101 MB `nvidia/cuda:12.8.1-base-ubuntu24.04` image with the build cache on a
-network volume). The retained arm: 82 shards, 132,029,932 proof bytes, accepted
+network volume. The retained arm both times: 82 shards, 132,029,932 proof
+bytes, 142,638,298 cycles, the same ELF and the same verification key, accepted
 by the complete verifier and reloaded from disk in a fresh process.
 
-| Segment | Seconds |
-| --- | ---: |
-| Create → pod ready (image pull, apt, sshd, GPU and CUDA-context gates) | **18** |
-| Operator latency before launch¹ | 37 |
-| Launcher: scripts, source fingerprint, cache probe, tmux | 26 |
-| Cache check and pre-flight | 3 |
-| **Proof** | **139** |
-| From-disk verification | 20 |
-| Collection and terminate | 39 |
-| **Pod life, as billed** | **280 (4 min 40 s)** |
+| Segment | 2026-11-11 (`4c8i6zyte7uuo3`) | 2026-11-12 (`ukj1etk6hnwrfr`) |
+| --- | ---: | ---: |
+| Create → pod ready | 18 | 67 |
+| Operator latency before launch¹ | 37 | — |
+| Launcher: scripts, fingerprint, cache probe, tmux | 26 | 45² |
+| Cache check and pre-flight | 3 | 3 |
+| **Proof** | **139** | **118** |
+| From-disk verification | 20 | 16 |
+| Collection and terminate | 39 | 38 |
+| **Pod life, as billed** | **280 (4 min 40 s)** | **317 (5 min 17 s)** |
+| **Cost at $0.59/hr** | **$0.046** | **$0.052** |
 
-The proof itself reported **138.56 s** — executor 128.93 s, GPU prove loop
-110.07 s hidden inside it — and is **50% of the pod life**. At the A40's
-$0.59/hr this run cost **$0.046**.
+**The same work on the same card type differed by 12.5%.** The prove loop
+reported **110.07 s** on the first host and **96.32 s** on the second; total
+proof time 138.56 s against 118.24 s, executor 128.93 s against 111.15 s, CPU
+verification 7.65 s against 5.68 s. Nothing in the software differed —
+identical `elf_sha256`, identical `verification_key_sha256`, identical cycle
+count and shard count, the same `PASTA_R5_INFLIGHT=8` and
+`PASTA_GPU_WORKERS=2`. What differed was the machine: the faster host reported
+**50,899,386,368 bytes of total VRAM against 47,699,722,240**, about 3 GiB
+more, so these were not equivalent A40s. **Treat any single rented-A40 timing
+as carrying at least 12.5% host variance**, which is larger than most of the
+per-arm deltas in the optimization records — those are measured on one host in
+one session for exactly this reason, and must not be compared across pods.
 
-The cheaper RTX A5000 at $0.27/hr is the machine to prefer — it proved this same
-arm in **128.43 s**, faster than any A40 run — and the same 4 min 40 s there
-would be **$0.021**. That figure is arithmetic, not a measurement: this run went
-to an A40 because the A5000 refused **fourteen creates** across the afternoon,
-and a deep capacity probe then reported it `Out` on every CUDA version in Secure
-EU-SE-1. **Plan for the A40's price and treat the A5000 as a windfall.**
+The cheaper RTX A5000 at $0.27/hr proved this same arm in **128.43 s**. That is
+now the *middle* of the A40 range rather than faster than it, so the earlier
+claim that the A5000 beat every A40 run does not survive the second
+measurement. Its price advantage is real and its speed advantage is not
+established. It is also the harder card to get: it refused **thirty-six
+creates** in EU-SE-1 across eighteen hours on 2026-11-11/12 and, when its pool
+finally returned, returned in Montreal and Illinois instead. **Plan for the
+A40's price and treat the A5000 as a windfall.**
 
-¹ mine, not the system's: one API read and a log check between ready and
-launch. Scripting create-to-launch removes it, putting a clean run near
-**4 minutes**.
+¹ mine, not the system's, on the first run only. ² the second run paid 20 s for
+a failed launch first: the cache probe compares `cuda_archs` verbatim and the
+launcher defaults it to `86`, while the stored key was built for `86,89,120`,
+so a warm cache read as a miss. Pass `CUDA_ARCHS` matching the stored key.
+See [running a proof](docs/running-a-proof.md).
 
 Nothing was compiled, uploaded or installed beyond `openssh-server`, `libgomp1`,
 `python3`, `tmux` and certificates; no image of ours and no registry credential

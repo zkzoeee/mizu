@@ -71,7 +71,31 @@ All candidate cycle figures above are historical receipt-ABI measurements.
   none of them -- and all eleven creates were refused while both reads still said
   `LOW`. So an availability grade can be unconditionally false, not merely stale or
   mis-scoped. A grade is not a promise on any card class; budget for the create to
-  fail, and never wait on a catalog field.
+  fail, and never wait on a catalog field. The converse closed it on 2026-11-12: the
+  A40's `LOW` in EU-SE-1 -- the same grade that had refused creates the day before --
+  took the very first create, after forty-nine refusals across eighteen hours. So the
+  grade is advisory in BOTH directions. It neither promises capacity nor denies it, and
+  a `LOW` that refused an hour ago is still worth one attempt.
+- **Two A40s in the same data centre differ by 12.5%, so cross-pod timings are not
+  comparable.** Two runs of the retained arm, 2026-11-11 and 2026-11-12, shared the
+  `elf_sha256`, the `verification_key_sha256`, 142,638,298 cycles, 82 shards,
+  `PASTA_R5_INFLIGHT=8` and `PASTA_GPU_WORKERS=2` -- bit-identical work -- and reported
+  prove loops of 110.07 s and 96.32 s (total 138.56 s against 118.24 s, executor
+  128.93 s against 111.15 s, CPU verify 7.65 s against 5.68 s). The faster host
+  reported about 3 GiB more total VRAM (50,899,386,368 against 47,699,722,240 bytes),
+  so the cards were not equivalent parts. **This bounds what a rented A40 can measure:
+  a single-run delta below roughly 13% is indistinguishable from the host.** Every
+  per-arm comparison in these records that matters is therefore measured on one pod in
+  one session, and any future arm-versus-arm claim built from two pods must be
+  rejected. It also retires one earlier claim: that the A5000's 128.43 s beat every A40
+  run. It sits inside the A40 range now, so the A5000's price advantage stands and its
+  speed advantage does not.
+- The cache probe compares `cuda_archs` as a string, and `push-and-launch.sh` defaults
+  it to `86` while the EU-SE-1 cache was built fat for `86,89,120`. A warm cache
+  therefore read as a miss, the launcher chose the build path, and the build died
+  immediately on a slim image with no `nvcc`. The failure was loud and cheap -- 20 s of
+  pod time -- but it is a default that is wrong for the only cache that exists. Pass
+  `CUDA_ARCHS` from `$CACHE/key.json`, or make the probe read it from there.
 - "Retry the create, never re-read availability" was half a rule. It is right for a
   `LOW` pool, and useless against an empty one: the A5000 refused fourteen creates on
   2026-11-11 while its per-GPU read said `LOW`, because that figure spans Community

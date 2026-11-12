@@ -275,6 +275,40 @@ API predicts a create** -- grades are advisory on 48 GB cards exactly as they
 are on 24 GB ones. So **$0.59/hr is the practical floor for a cache-warm run**, and the
 A5000's $0.27 is a best case that needs its pool to be free.
 
+**The watch ended by giving up on the card, not by getting it.** Asked on
+2026-11-12 to run on the A40 instead, the create succeeded on the first attempt
+-- the first success after forty-nine refusals -- and the proof ran on pod
+`ukj1etk6hnwrfr` for 5 min 17 s at $0.59/hr, about five cents. So the A40's
+`LOW` grade in EU-SE-1 did predict a create this time, while the identical grade
+on the identical card refused creates at 14:10Z the day before and the A6000's
+`LOW` refused eleven. **A grade is advisory in both directions**: it neither
+promises capacity nor denies it, and the create remains the only test.
+
+**The cache probe compares `cuda_archs` verbatim, and the launcher's default is
+wrong for this cache.** `push-and-launch.sh` sets `PROBE_ARCHS="${CUDA_ARCHS:-86}"`,
+but the cache on the EU-SE-1 volume was built fat, for `86,89,120`. With
+`CUDA_ARCHS` unset the probe therefore computed a key for `86`, missed in both
+the full and the runtime scope, chose the build path, and died on a slim image
+with no `nvcc` -- a warm cache reported as a miss, 20 s of pod time wasted.
+Launch with the stored key's arch list:
+
+```bash
+CUDA_ARCHS="86,89,120" DEADLINE_MINUTES=15 RATE_PER_HOUR=0.59 CAP_USD=2.00 \
+  CACHE=/workspace/mizu-cache ARMS="retain-pasta-and-uint" \
+  bash scripts/gpu/push-and-launch.sh <host> <port>
+```
+
+Read `cuda_archs` out of `$CACHE/key.json` on the pod before launching, or have
+the probe default to it rather than to `86`.
+
+**Two A40s are not the same A40.** The second run proved the identical ELF with
+the identical verification key, cycle count, shard count and inflight settings,
+and was **12.5% faster in the prove loop**: 96.32 s against 110.07 s, with
+total proof time 118.24 s against 138.56 s. The faster host reported about 3 GiB
+more total VRAM (50,899,386,368 bytes against 47,699,722,240). So **a single
+rented-A40 timing carries at least 12.5% host variance**, which exceeds most
+per-arm optimization deltas; never compare arms measured on different pods.
+
 **And when the pool came back, it came back somewhere else.** At 02:45Z on
 2026-11-12, after fifteen hours and forty-five minutes of `NONE`, the A5000 read
 `LOW` on Secure -- in CA-MTL-1 and US-IL-1. EU-SE-1 was not in the

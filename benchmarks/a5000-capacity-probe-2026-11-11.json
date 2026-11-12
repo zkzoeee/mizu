@@ -509,5 +509,12 @@
   "the_timing_does_not_need_the_cache": {
     "point": "the cached build buys wall-clock and therefore money, not measurement. gpu_prove_seconds is measured after the ELF exists, so a build-in-pod run on an A5000 anywhere produces a README row that is directly comparable with the cached A40 row. The cache is a cost optimisation, not a measurement precondition.",
     "consequence": "the A5000 row can be had from US-IL-1 without any volume: roughly seventeen minutes of build plus two and a half minutes of proving at $0.27/hr, about nine cents, against $0.434 remaining under the cap."
+  },
+  "how_the_watch_ended": {
+    "at": "05:00:03Z on 2026-11-12",
+    "what_happened": "the watch was abandoned, not satisfied. The A5000 never became obtainable in EU-SE-1 at any point in eighteen hours. Asked to run on the A40 instead, the create succeeded on the first attempt -- the first successful create since 11:00Z the previous day, after forty-nine refusals -- and the proof ran. So the A40's LOW grade in EU-SE-1 did predict a create this time, while the same grade on the same card had refused creates at 14:10Z and the A6000's LOW refused eleven. A grade remains advisory in both directions: it does not promise capacity and it does not deny it.",
+    "pod": "ukj1etk6hnwrfr, NVIDIA A40, EU-SE-1, Secure, $0.59/hr, 5 min 17 s of life",
+    "run": "benchmarks/gpu/runs/20261112T0502Z-a40-cachewarm",
+    "total_refusals_before_the_success": 49
   }
 }
