@@ -13,7 +13,7 @@
   "failure": null,
   "guest_exit_code": 0,
   "input_sha256": "1dcfcf4619b9760300e6ee729c569c2f2065499ee03213878374f50c566f8270",
-  "keccak_implementation": "sha3 software; SP1's KECCAK_PERMUTE precompile is NOT patched in, so every keccak figure is an upper bound",
+  "keccak_implementation": "SP1 KECCAK_PERMUTE precompile (1129 cycles/permutation measured here; the 1,129 figure in RESULTS.md). The previous label on this record said software sha3 and called its keccak figures an upper bound, which contradicted the measurement -- corrected 2026-11-14.",
   "mirror_mode": 1,
   "mirror_name": "full-keccak-merkle-mirror",
   "mode": "cpu-mirror-benchmark",
