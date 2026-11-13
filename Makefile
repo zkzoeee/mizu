@@ -2,7 +2,7 @@ CARGO_BUILD_JOBS ?= 1
 RAYON_NUM_THREADS ?= 1
 export CARGO_BUILD_JOBS RAYON_NUM_THREADS
 
-.PHONY: help install build-rust rust-unit-tests rust-e2e-tests rust-e2e-tests-profile prove-cpu prove-cuda prove-network lint-check lint dump-simplechain-fixtures clear-simplechain-fixtures dump-treeproofreturn-fixtures clear-treeproofreturn-fixtures dump-nrr-fixtures clear-nrr-fixtures fetch-mainnet-fixture
+.PHONY: help install build-rust build-guest rust-unit-tests rust-e2e-tests rust-e2e-tests-profile prove-cpu prove-cuda prove-network lint-check lint dump-simplechain-fixtures clear-simplechain-fixtures dump-treeproofreturn-fixtures clear-treeproofreturn-fixtures dump-nrr-fixtures clear-nrr-fixtures fetch-mainnet-fixture
 
 # Default fixture: the real mainnet blockchain SNARK we fetch via the
 # `fetch_blockchain_fixture` OCaml tool. The guest's build.rs reads
@@ -41,8 +41,24 @@ install: ## Install SP1 toolchain and protoc
 # profiling target to flip on sp1-sdk/profiling (which also forces the
 # portable executor; do not enable for production prove runs).
 CARGO_FEATURES ?=
-build-rust: ## Build the o1zkvm Rust binary (override VK_JSON for a different baked-in VK)
+build-rust: ## Build the o1zkvm host binary. NOT the guest we prove with -- see build-guest
+	@echo "note: this builds the HOST and whatever guest sp1_build's defaults produce."
+	@echo "      The guest the benchmarks and proofs use comes from 'make build-guest',"
+	@echo "      which runs cargo prove build with the pinned recipe. The two differ:"
+	@echo "      make build-rust -> d4ed009f..,  harness -> dc8e4b40..  (2026-11-13)."
 	cargo build --release -p o1-verifier-host $(if $(CARGO_FEATURES),--features $(CARGO_FEATURES))
+
+# The guest the proofs are made against. `cargo prove build --locked
+# --rustflags=-C,passes=lower-atomic --warning-level minimal`, with the ambient
+# ZEKO_*/MIZU_* scrubbed and exactly the config's optimization_env applied, and
+# a receipt (elf_sha256, builder commit, both rustc versions, source hashes)
+# written next to the ELF. Reproducible: on 2026-11-13 it rebuilt 2026-11-12's
+# dc8e4b40.. byte for byte.
+GUEST_CONFIG ?= benchmarks/dev/pasta-poseidon.json
+GUEST_OUT ?= benchmarks/runs/guest-$(shell date -u +%Y%m%dT%H%M%SZ)
+build-guest: ## Build the guest ELF the proofs use, with a provenance receipt (GUEST_CONFIG=, GUEST_OUT=)
+	python3 scripts/benchmark.py build --config $(GUEST_CONFIG) --output $(GUEST_OUT)
+	@python3 -c "import json,sys;r=json.load(open('$(GUEST_OUT)/build.json'));print('elf_sha256',r['elf_sha256']);print('builder   ',r['tools']['sp1_builder'])"
 
 rust-unit-tests: ## Run pickles-verifier's std unit tests over the fixture matrix
 	CARGO_BUILD_JOBS=1 RAYON_NUM_THREADS=1 cargo test --profile native-test -p pickles-verifier -p cycle-runner -- --test-threads=1
