@@ -31,6 +31,8 @@ Both EU-SE-1 cards are LOW availability, so expect refused creates; retry the
 ```
 /workspace/
   sp1/              -> symlinked as /root/.sp1     7.9 GB  the released Groth16 artifacts
+                                                           (install with install-artifacts.sh,
+                                                            NOT by letting SP1 download here)
   cargo-registry/   -> /root/.cargo/registry       0.8 GB  crate sources
   target/            = CARGO_TARGET_DIR            2.4 GB  warm build, incl. the CUDA kernels
   src/mizu/                                        ~1 GB   the checkout
@@ -43,7 +45,15 @@ Both EU-SE-1 cards are LOW availability, so expect refused creates; retry the
 About 13 GB used of 30.
 
 `~/.sp1` has to be a symlink rather than an env var: SP1 resolves it through
-`dirs::home_dir()` with no override (`prover/src/build.rs:153-167`). The crate
+`dirs::home_dir()` with no override (`prover/src/build.rs:153-167`).
+
+**SP1 cannot populate it here itself.** Its installer runs `tar -Pxzf` with no
+`--no-same-owner` (`build.rs:215`) and the tarball is packed on macOS, so MooseFS
+refuses the `chown` and SP1 reports "artifact not found". Run
+`install-artifacts.sh` once per volume instead: it extracts with
+`--no-same-owner` and writes the `.complete` marker that
+`circuit_artifacts_installed` (`build.rs:639`) is the only thing checking.
+207 s to download, 94 s to extract. The crate
 registry is symlinked on its own rather than moving `CARGO_HOME`, which also
 holds the cargo shims rustup installs at boot.
 
@@ -69,17 +79,21 @@ map was built with, because retention changes how shards are cut.
 
 ## What each run should cost
 
-| | first (populating) | subsequent |
+Measured 2026-11-13, not estimated — see docs/groth16-runs.md:
+
+| | first (populating) | subsequent (fresh pod) |
 | --- | --- | --- |
 | boot + prereqs | ~2 min | ~2 min |
-| source upload | ~50 s | skipped (on the volume) |
-| cargo build | ~7.5 min | ~20 s, nothing to recompile |
-| artifact download | ~2.3 min | skipped |
-| VK map | uploaded, built locally | skipped |
-| proof | ~6 min | ~6 min |
-| **total** | **~19 min, ~$0.19** | **~8 min, ~$0.08** |
+| source upload + extract | ~4.3 min | 0 |
+| cargo build | 10m23s (slower here than the 7m31s off-volume: CARGO_TARGET_DIR writes to MooseFS) | **10.5 s** |
+| artifact install | 207 s download + 94 s extract | 0 |
+| VK map | 11 s on the pod | 0 |
+| proof | ~5m51s | **~5m51s** |
+| **total** | **~25 min, ~$0.25** | **5m50.9s, ~$0.06** |
 
-The proof itself is then most of the bill, which is the point.
+The proof is then almost the whole bill, which is the point. One real cost of the
+volume: gnark reads the 5.9 GB proving key in 16.0 s from here against 3.8 s from
+container disk, so each proof pays about +12 s to avoid a 2-4 min download.
 
 ## Caveats
 
@@ -90,3 +104,7 @@ The proof itself is then most of the bill, which is the point.
   would otherwise be reused and fail at runtime.
 - Deleting the volume loses the artifacts, the warm build and the registry;
   budget ~10 min to repopulate.
+- **Build the VK map on the pod, not locally.** `vk-map-local` mispredicted the
+  shard cut and the proof died with `vk not allowed`; `--mode vk-map` costs 11 s
+  there. See docs/groth16-runs.md.
+- At 19 GB of 30 used, with `cargo-registry` alone at 6.0 GB.

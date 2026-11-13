@@ -1,0 +1,152 @@
+{
+  "mode": "pipeline-cuda, Poseidon+Fp precompile ELF, Pasta retention, network volume",
+  "elf_sha256": "dc8e4b406c7f075cc0c5d2e3dab11eb7bcd9083a15aa9e4934d8a6ddacd37b51",
+  "elf_recipe": "benchmarks/dev/pasta-poseidon.json (MIZU_POSEIDON_PRECOMPILE=1, MIZU_PASTA_FP_PRECOMPILE=1, + 40 ZEKO flags)",
+  "cycles": 130367324,
+  "cycles_default_elf": 142638298,
+  "retain_pasta": true,
+  "retained_presets": [
+    "Bls12381Field",
+    "Bn254Field",
+    "PallasAdd",
+    "Poseidon2",
+    "Sha256",
+    "U256Ops",
+    "Uint256MulMod",
+    "VestaAdd"
+  ],
+  "vk_map": {
+    "built": "on the pod, --mode vk-map, 11 s",
+    "shards": 84,
+    "distinct_shard_shapes": 21,
+    "keys": 33,
+    "sha256": "a6bcb20d06c0e9ed325f3d32a1fd0410629ff832337e46ecae70611060bb6cc2",
+    "local_prediction": {
+      "records": 89,
+      "distinct_shard_shapes": 24,
+      "keys": 36,
+      "overlap": "had 21 of the pod's 27 indices, missed 6",
+      "conclusion": "vk-map-local predicts clusters and preprocessed multiple correctly but not the exact shard cut; build the map where the proof runs"
+    }
+  },
+  "runs": {
+    "run1c": {
+      "cycles": 130367324,
+      "elf_sha256": "dc8e4b406c7f075cc0c5d2e3dab11eb7bcd9083a15aa9e4934d8a6ddacd37b51",
+      "groth16": {
+        "encoded_proof_bytes": 352,
+        "groth16_vkey_hash": "4388a21c687fdd5f218d7e3d13190cac4c5355818d3605fd5fb811df468ee696",
+        "public_inputs": [
+          "427991761448684973149768667836115426820020182140402775878189737218659379213",
+          "5408444369343130360314198614562428875014335023761526637751134529685417182618",
+          "0",
+          "146043302688896039011755426089877291133476984444833909276968832339532477972",
+          "0"
+        ],
+        "raw_proof_bytes": 324,
+        "vk_root": "146043302688896039011755426089877291133476984444833909276968832339532477972"
+      },
+      "mode": "pipeline-cuda",
+      "proof_bytes": 1672,
+      "proof_mode": "Groth16",
+      "retain_pasta": true,
+      "seconds": {
+        "execute": 25.688610435,
+        "node_build": 19.253863491,
+        "prove": 547.476148348,
+        "setup": 6.961025709,
+        "verify": 0.35169729
+      },
+      "soundness": "vk verification ON against the supplied partial vk map; the recursion programs are bound by its root",
+      "verified": true,
+      "vk_verification": true,
+      "proof_sha256": "a2689b41de158ee2870629e47e15bfefee417c8119308eb88bbf5942b08c45bc",
+      "hardware": {
+        "gpu": "NVIDIA A40",
+        "vram_mib": 46068,
+        "ecc_mode": "Enabled",
+        "compute_cap": "8.6",
+        "data_center": "EU-SE-1",
+        "usd_per_hour": 0.59,
+        "network_volume": {
+          "id": "mue9i1oojc",
+          "size_gb": 30,
+          "type": "STANDARD",
+          "measured_sequential": "636 MB/s write, 835 MB/s read (container disk: 3.3 / 9.3 GB/s)"
+        }
+      }
+    },
+    "run2": {
+      "cycles": 130367324,
+      "elf_sha256": "dc8e4b406c7f075cc0c5d2e3dab11eb7bcd9083a15aa9e4934d8a6ddacd37b51",
+      "groth16": {
+        "encoded_proof_bytes": 352,
+        "groth16_vkey_hash": "4388a21c687fdd5f218d7e3d13190cac4c5355818d3605fd5fb811df468ee696",
+        "public_inputs": [
+          "427991761448684973149768667836115426820020182140402775878189737218659379213",
+          "5408444369343130360314198614562428875014335023761526637751134529685417182618",
+          "0",
+          "146043302688896039011755426089877291133476984444833909276968832339532477972",
+          "0"
+        ],
+        "raw_proof_bytes": 324,
+        "vk_root": "146043302688896039011755426089877291133476984444833909276968832339532477972"
+      },
+      "mode": "pipeline-cuda",
+      "proof_bytes": 1672,
+      "proof_mode": "Groth16",
+      "retain_pasta": true,
+      "seconds": {
+        "execute": 26.024027311,
+        "node_build": 17.873814517,
+        "prove": 294.52930267,
+        "setup": 7.3064945550000004,
+        "verify": 0.350256729
+      },
+      "soundness": "vk verification ON against the supplied partial vk map; the recursion programs are bound by its root",
+      "verified": true,
+      "vk_verification": true,
+      "proof_sha256": "ba7b84bcc50efdc92fd769823550d40b97e822bbd8e00cc12dbf8a1054d23ee5",
+      "hardware": {
+        "gpu": "NVIDIA A40",
+        "vram_mib": 46068,
+        "ecc_mode": "Enabled",
+        "compute_cap": "8.6",
+        "data_center": "EU-SE-1",
+        "usd_per_hour": 0.59,
+        "network_volume": {
+          "id": "mue9i1oojc",
+          "size_gb": 30,
+          "type": "STANDARD",
+          "measured_sequential": "636 MB/s write, 835 MB/s read (container disk: 3.3 / 9.3 GB/s)"
+        }
+      }
+    }
+  },
+  "wall_clock": {
+    "run1c_cold_artifacts": "10m04.9s (prove 547.5 s, incl. ~4m11s one-off artifact download)",
+    "run2_fresh_pod_all_cached": "5m50.9s (prove 294.5 s, no download)",
+    "build_cold": "10m23s",
+    "build_warm": "10.5-18.2 s",
+    "source_upload_plus_extract_cold": "~4.3 min, 0 when on the volume"
+  },
+  "gnark_run2": {
+    "read_r1cs_s": 24.0,
+    "read_pk_s": 16.0,
+    "solver_s": 25.4,
+    "prover_s": 63.5,
+    "generating_proof": "1m28.9s",
+    "verifier_ms": 3.2,
+    "nbConstraints": 15972262
+  },
+  "proofs_differ": "run1c and run2 proof bytes differ: Groth16 proving is randomised, and both verify",
+  "artifact_install": "Succinct's v6.1.0-groth16.tar.gz (6,211,807,514 B) is packed on macOS, owner fakedev9999:wheel. SP1's installer runs  with no --no-same-owner (prover/src/build.rs:215), so on MooseFS the chown is refused and the extract fails with 'artifact not found'. install-artifacts.sh extracts with --no-same-owner and writes the .complete marker that circuit_artifacts_installed (build.rs:639) is the only thing checking. download 207 s, extract 94 s, 7.9 GB, once per volume.",
+  "stark_phase": "~2m30s here against ~4m07s for the default ELF on 2026-11-12: 84 shards vs 138, 130.4M cycles vs 142.6M",
+  "on_chain": "vk_root 0x0052a8572a7f35ebb9bdd7e5291d2c974a4f84c05c946bacb66ca5d26bae7614 -- differs from the 2026-11-12 run because the map differs. Deploy SP1VerifierGroth16.sol with this VK_ROOT(); not yet deployed or gas-profiled.",
+  "caveats": [
+    "Only this one Pickles input has been proved. A differently-sharding input needs the map extended, which changes vk_root and so the contract.",
+    "The map is valid only for a prover sharding identically: VRAM above ~26 GB. A 24 GB card takes local_gpu_opts' reduced element_threshold.",
+    "Volume at 19 GB of 30; cargo-registry is 6.0 GB, not the 0.8 GB estimated.",
+    "CUDA_ARCHS=86 in vol-run.sh: the cached build is Ampere-only. A 5090 would need CUDA_ARCHS=120 and its own target dir."
+  ]
+}
