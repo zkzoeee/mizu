@@ -1,0 +1,17 @@
+begin=2026-11-13T01:41:36Z
+NVIDIA A40, 46068 MiB, Enabled, 8.6
+NVIDIA A40, 46068 MiB, Enabled, 8.6
+volume wired:
+  /root/.sp1            -> /workspace/sp1            7.9G
+  groth16 artifacts present: yes
+  /root/.cargo/registry -> /workspace/cargo-registry 6.0G
+  CARGO_TARGET_DIR       = /workspace/target          2.2G
+  note: df shows the MooseFS cluster, not this volume's 30 GB quota
+go mod ok
+   Compiling sp1-prover v6.10.0 (/workspace/src/mizu/vendor/sp1/crates/prover)
+   Compiling sp1-gpu-prover v6.10.0
+   Compiling pipeline-cuda v0.1.0 (/workspace/src/mizu/tools/pipeline-cuda)
+   --> src/main.rs:154:13
+    Finished `release` profile [optimized] target(s) in 7m 05s
+build_exit=0
+BUILD_DONE=2026-11-13T01:49:00Z

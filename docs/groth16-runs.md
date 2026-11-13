@@ -96,6 +96,86 @@ observed range of that download across runs A and B; S3 throughput varied.
 The cold build is slower on the volume than off it (10m23s against 7m31s on
 container disk) because `CARGO_TARGET_DIR` writes to MooseFS. That is paid once.
 
+## Three more levers, measured on a 2xA40 (2026-11-13)
+
+One pod, 16.15 cores against run C's 7.65, everything else identical. Records
+in `benchmarks/pipeline/groth16-vcpu-20261113/`.
+
+| | run C | run A | run B |
+| --- | ---: | ---: | ---: |
+| GPUs / cores | 1xA40 / 7.65 | 2xA40 / 16.15 | 2xA40 / 16.15 |
+| go tags | `debug` | `debug` | none |
+| redundant `execute` | yes | yes | no |
+| **wall clock** | 5m50.9s | 5m05.8s | **4m39.2s** |
+| gnark solver | 25.4 s | 12.9 s | 12.8 s |
+| gnark prover | 63.5 s | 31.3 s | 31.5 s |
+
+**Cores halve the CPU-bound stages** -- solver -49%, prover -51%, near linear --
+but 2xA40 costs twice the hourly rate for 20% less wall clock, so cost per proof
+rises. Latency or cost: pick one. The reads went the other way (R1CS
+24.0 -> 27.0 s, key 16.0 -> 20.3 s), which looks like MooseFS variance and was
+not isolated.
+
+**The `debug` go tag does nothing.** Solver 12.9 -> 12.8 s, prover
+31.3 -> 31.5 s, "Generating proof" 44.28 -> 44.27 s. The debug information that
+costs 24 s to read is inside Succinct's released R1CS artifact, so no build tag
+reaches it. `SP1_GNARK_GO_TAGS` in the fork stays only because it made this
+measurable.
+
+**Dropping the redundant execute saved 26.6 s**, as predicted. `--count-cycles`
+now defaults to false in both drivers and the record reports `cycles: null`.
+
+Run A also silently proved with the *previous* binary -- a driver edit failed to
+compile and `vol-run.sh` only checked that the binary existed. It now deletes
+the binary before building, logs `nproc`, logs the go tags, and falls back to
+cgroup v1 for the memory sampler.
+
+## What upstream is about to change, and by how much
+
+succinctlabs/sp1#3017 (opened 2026-10-21, unmerged and unreviewed as of
+2026-11-13; main's `gnark-ffi` untouched since v6.10.0) **deletes ICICLE** and
+replaces it with Succinct's own BN254 CUDA kernels in Go. Their reason matters
+to us: ICICLE's MSM *"gave wrong results for Montgomery-form inputs from about
+2^15 points"*, and our circuit is 15,972,262 constraints. The `groth16-cuda`
+lead this project was holding would have produced wrong proofs.
+
+The replacement skips the R1CS debug info and the proving key's FFT twiddle
+tables, reads both in parallel, decompresses the key's points on the GPU, and
+replaces gnark's solver -- which is, stage for stage, our whole gnark bill.
+
+| stage | ours, run C | upstream before | upstream now | our estimate |
+| --- | ---: | ---: | ---: | ---: |
+| read R1CS | 24.0 s | 11.0 s | 0.77 s | 3-5 s |
+| read key + setup | 16.0 s | 2.3 s | 2.2 s | 8-10 s |
+| witness | 1.2 s | -- | -- | 1.2 s |
+| solve | 25.4 s | 2.6 s | 1.4-1.9 s | 7-12 s |
+| prove | 63.5 s | 5.3 s | 0.78 s | 2-3 s |
+| **total** | **130.1 s** | 21.6 s | **5.6 s** | **21-31 s** |
+
+Upstream's figures are one run on an RTX 5090 with a Threadripper 7970X, from
+the PR body, not reproduced here. The estimates scale them by our core count
+for the host-bound stages and by bandwidth for the GPU one; the reads are then
+I/O-bound on the volume (2.4 GB and 5.9 GB at 835 MB/s are floors of 2.9 s and
+7.1 s).
+
+That is about **-105 s of a ~325 s proof, -32%**, and at the 1xA40 rate roughly
+**$0.017 a proof** -- a latency lever, not a cost one. It changes the prover
+only, not the circuit or the keys, so the no-ceremony result, the v6.1.0
+artifacts and `vk_root` all survive untouched.
+
+Two consequences for when it lands. The reads become the largest part of the
+gnark step and they are I/O-bound, so **the artifacts belong on container disk**
+(9.3 GB/s) rather than the volume (835 MB/s), reversing the trade above. And
+**extra vCPU stops paying**: it buys 45 s today and would buy about 5 s after.
+What is left is STARK plus re-execution at 156 s, 71% of the remaining proof.
+
+Their later proofs run 2.8 s against 5.6 s for the first, because circuit and
+key stay resident. We prove once per pod and so always pay the first-proof
+price; a batching daemon is worth ~40 s with or without CUDA, and becomes the
+larger lever after it.
+
+User decision 2026-11-13: revisit when #3017 merges.
+
 ## Gotchas, each paid for once
 
 **1. The artifacts cannot be installed by SP1 onto network storage.** Its
@@ -150,8 +230,8 @@ different bytes and both verify: gnark's Groth16 proving is randomised.
   identically — VRAM above ~26 GB. A 24 GB A5000/3090/4090 takes
   `local_gpu_opts`' reduced `element_threshold` and would fail the membership
   check.
-- **`groth16-cuda` untried.** It targets the 63.5 s gnark prover, ~20% of run C.
-  `icicle-gnark` v3.2.2 is source-only and SP1's build links four curves'
-  libraries, so it needs a from-source CUDA build.
+- **GPU gnark is parked, not open.** `groth16-cuda` is a dead end: ICICLE is
+  removed upstream and was wrong above 2^15 MSM points. Its replacement,
+  succinctlabs/sp1#3017, is unmerged; the section above costs it out.
 - **Volume headroom.** 19 GB of 30, with `cargo-registry` at 6.0 GB. A second
   guest ELF plus another artifact set would not fit.

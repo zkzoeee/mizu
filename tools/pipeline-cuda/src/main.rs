@@ -95,6 +95,11 @@ struct Args {
     output: PathBuf,
     #[arg(long)]
     proof_out: Option<PathBuf>,
+    /// Execute the guest once up front purely to report its cycle count.
+    /// Off by default: `prove_with_mode` re-executes from the ELF anyway, so
+    /// this is the same work twice -- 26.0 s of run C's 350.9 s on 2026-11-13.
+    #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
+    count_cycles: bool,
     /// Retain the Pasta and UInt256 events instead of deferring them, as the
     /// `pasta-proof` harness's retained arm does and as `vk-map-local` assumes.
     /// Changes how shards are cut, so the VK map must have been built with the
@@ -146,6 +151,7 @@ async fn main() -> Result<()> {
         let clusters = machine.shape().chip_clusters.len();
         let elf_for_map = elf.clone();
         let retain = args.retain_pasta;
+        let count_cycles = args.count_cycles;
         let handle = sp1_gpu_cudart::spawn(move |scope| async move {
             let core_verifier = CpuSP1ProverComponents::core_verifier(machine.clone());
             let mut vk_builder = cuda_worker_builder_with_machine(scope, machine).await;
@@ -242,6 +248,7 @@ async fn main() -> Result<()> {
 
     let vk_map_for_task = args.vk_map.as_ref().map(|p| p.display().to_string());
     let retain = args.retain_pasta;
+    let count_cycles = args.count_cycles;
 
     // Everything that touches the device has to happen inside the task scope:
     // a `TaskScope` is a weak handle into a pooled CUDA task and is valid only
@@ -270,13 +277,18 @@ async fn main() -> Result<()> {
 
         let context = SP1Context { proof_nonce: [0, 0, 0, 0], ..Default::default() };
 
-        let t = Instant::now();
-        let (_pv, _digest, report) = node
-            .execute(&elf_for_task, stdin.clone(), context.clone())
-            .await
-            .expect("execute the guest");
-        let execute_seconds = t.elapsed().as_secs_f64();
-        let cycles = report.total_instruction_count();
+        // Opt-in: prove_with_mode re-executes from the ELF regardless, so this
+        // is the same work twice.
+        let (cycles, execute_seconds) = if count_cycles {
+            let t = Instant::now();
+            let (_pv, _digest, report) = node
+                .execute(&elf_for_task, stdin.clone(), context.clone())
+                .await
+                .expect("execute the guest");
+            (report.total_instruction_count(), t.elapsed().as_secs_f64())
+        } else {
+            (0u64, 0.0)
+        };
 
         let t = Instant::now();
         let vk = node.setup(&elf_for_task).await.expect("setup");
@@ -331,7 +343,7 @@ async fn main() -> Result<()> {
             "DEVELOPMENT ONLY: vk verification is off, so nothing binds the recursion program that produced this proof"
         },
         "elf_sha256": hex::encode(<sha2::Sha256 as sha2::Digest>::digest(&elf)),
-        "cycles": cycles,
+        "cycles": if cycles == 0 { serde_json::Value::Null } else { cycles.into() },
         "verified": verified,
         "proof_bytes": proof_bytes.len(),
         "seconds": {

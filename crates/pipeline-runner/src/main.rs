@@ -101,6 +101,11 @@ struct Args {
     /// Where to write the proof bytes. Omit to measure without keeping them.
     #[arg(long)]
     proof_out: Option<PathBuf>,
+    /// Execute the guest once up front purely to report its cycle count.
+    /// Off by default: `prove_with_mode` re-executes from the ELF anyway, so
+    /// this is the same work twice -- 26.0 s of run C's 350.9 s on 2026-11-13.
+    #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
+    count_cycles: bool,
     /// Retain the Pasta and UInt256 events instead of deferring them, as the
     /// `pasta-proof` harness's retained arm does and as `vk-map-local` assumes.
     /// Changes how shards are cut, so the VK map must have been built with the
@@ -246,13 +251,18 @@ async fn main() -> Result<()> {
         .context("build the local node")?;
     let node_built = started.elapsed();
 
-    let t = Instant::now();
-    let (_public_values, _digest, report) = node
-        .execute(&elf, stdin.clone(), context.clone())
-        .await
-        .context("execute the guest")?;
-    let execute_seconds = t.elapsed().as_secs_f64();
-    let cycles = report.total_instruction_count();
+    // Opt-in: prove_with_mode re-executes from the ELF regardless, so this is
+    // the same work twice.
+    let (cycles, execute_seconds) = if args.count_cycles {
+        let t = Instant::now();
+        let (_public_values, _digest, report) = node
+            .execute(&elf, stdin.clone(), context.clone())
+            .await
+            .context("execute the guest")?;
+        (report.total_instruction_count(), t.elapsed().as_secs_f64())
+    } else {
+        (0u64, 0.0)
+    };
 
     let t = Instant::now();
     let vk = node.setup(&elf).await.context("setup")?;
@@ -306,7 +316,7 @@ async fn main() -> Result<()> {
         },
         "elf_sha256": hex::encode(<sha2::Sha256 as sha2::Digest>::digest(&elf)),
         "chip_clusters": clusters,
-        "cycles": cycles,
+        "cycles": if cycles == 0 { serde_json::Value::Null } else { cycles.into() },
         "verified": verified,
         "proof_bytes": proof_bytes.len(),
         "seconds": {

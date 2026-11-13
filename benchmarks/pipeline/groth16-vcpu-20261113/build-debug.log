@@ -1,0 +1,21 @@
+begin=2026-11-13T01:29:45Z
+NVIDIA A40, 46068 MiB, Enabled, 8.6
+NVIDIA A40, 46068 MiB, Enabled, 8.6
+volume wired:
+  /root/.sp1            -> /workspace/sp1            7.9G
+  groth16 artifacts present: yes
+  /root/.cargo/registry -> /workspace/cargo-registry 6.0G
+  CARGO_TARGET_DIR       = /workspace/target          2.3G
+  note: df shows the MooseFS cluster, not this volume's 30 GB quota
+go mod ok
+   Compiling sp1-prover-types v6.10.0 (/workspace/src/mizu/vendor/sp1/crates/prover-types)
+   Compiling sp1-prover v6.10.0 (/workspace/src/mizu/vendor/sp1/crates/prover)
+   Compiling sp1-gpu-prover v6.10.0
+   Compiling pipeline-cuda v0.1.0 (/workspace/src/mizu/tools/pipeline-cuda)
+error[E0425]: cannot find value `count_cycles` in this scope
+   --> src/main.rs:282:44
+error[E0282]: type annotations needed for `(_, f64, _, f64, f64, f64, bool, SP1Proof)`
+   --> src/main.rs:315:9
+error: could not compile `pipeline-cuda` (bin "pipeline-cuda") due to 2 previous errors
+build_exit=101
+BUILD_DONE=2026-11-13T01:33:48Z

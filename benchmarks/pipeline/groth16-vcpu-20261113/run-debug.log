@@ -1,0 +1,68 @@
+begin=2026-11-13T01:33:48Z
+[2m2026-11-13T01:34:08.108030Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m ┌╴setup
+[2m2026-11-13T01:34:08.347339Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m └╴3,540,439 cycles
+[2m2026-11-13T01:34:08.347711Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m ┌╴verify
+[2m2026-11-13T01:34:08.350718Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m │ ┌╴pickles-accumulator
+[2m2026-11-13T01:34:20.648497Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m │ └╴75,046,840 cycles
+[2m2026-11-13T01:34:20.649656Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m │ ┌╴pickles-wrap-prepare
+[2m2026-11-13T01:34:20.741988Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m │ └╴2,642,383 cycles
+[2m2026-11-13T01:34:20.744964Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m │ ┌╴pickles-wrap-kimchi
+[2m2026-11-13T01:34:26.210431Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m │ └╴48,960,261 cycles
+[2m2026-11-13T01:34:26.210802Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m └╴126,767,279 cycles
+[2m2026-11-13T01:34:26.220912Z[0m [32m INFO[0m [2msp1_prover::worker::prover::execute[0m[2m:[0m public_value_stream: [1]
+[2m2026-11-13T01:34:39.638958Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m ┌╴setup
+[2m2026-11-13T01:34:39.895618Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m └╴3,540,439 cycles
+[2m2026-11-13T01:34:39.895833Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m ┌╴verify
+[2m2026-11-13T01:34:39.899377Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m │ ┌╴pickles-accumulator
+[2m2026-11-13T01:34:51.248289Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m │ └╴75,046,840 cycles
+[2m2026-11-13T01:34:51.249361Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m │ ┌╴pickles-wrap-prepare
+[2m2026-11-13T01:34:51.377611Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m │ └╴2,642,383 cycles
+[2m2026-11-13T01:34:51.383352Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m │ ┌╴pickles-wrap-kimchi
+[2m2026-11-13T01:35:22.356413Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m │ └╴48,960,261 cycles
+[2m2026-11-13T01:35:22.357400Z[0m [32m INFO[0m [2msp1_core_executor::minimal::write[0m[2m:[0m └╴126,767,279 cycles
+[2m2026-11-13T01:37:14.253864Z[0m [32m INFO[0m [2msp1_prover::build[0m[2m:[0m [sp1] groth16 circuit artifacts are already installed at /root/.sp1/circuits/groth16/v6.1.0. if you want to re-download them, delete the directory
+Setting environment variables took 71.953µs
+Reading R1CS took 29.352469567s
+Reading proving key took 20.110489706s
+Reading witness file took 5.459201ms
+Deserializing JSON data took 49.304502ms
+Generating witness took 1.044879568s
+[90m01:38:17[0m DBG constraint system solver done [36mnbConstraints=[0m15972262 [36mtook=[0m12946.188455
+[90m01:38:49[0m DBG prover done [36macceleration=[0mnone [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mnbConstraints=[0m15972262 [36mtook=[0m31326.855937
+Generating proof took 44.275169767s
+[90m01:38:49[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m01:38:49[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m01:38:49[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m01:38:49[0m DBG verifier done [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mtook=[0m3.616129
+Groth16: 130367324 cycles, 1672 proof bytes, verified true, prove 254.2s
+	Command being timed: "/workspace/target/release/pipeline-cuda --elf /workspace/elf/o1-verifier-poseidon --input-dir /workspace/src/mizu-gpu-input --mode groth16 --vk-map /workspace/vkmap/pod-poseidon-retained.bin --retain-pasta true --output /workspace/out/vcpu-debug/groth16.json --proof-out /workspace/out/vcpu-debug/groth16.proof.bin"
+	User time (seconds): 1613.86
+	System time (seconds): 178.21
+	Percent of CPU this job got: 585%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 5:05.84
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 37362924
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 127
+	Minor (reclaiming a frame) page faults: 48561532
+	Voluntary context switches: 1470264
+	Involuntary context switches: 75044
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 5480
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+exit=0
+done=2026-11-13T01:38:54Z
+peak_vram_mib=24639
+peak_cgroup_gib=46.4
+7.9G	/workspace/sp1
+2.3G	/workspace/target
+6.0G	/workspace/cargo-registry
+mfs#eu-se-1.runpod.net:9421  700T  442T  258T  64% /workspace
