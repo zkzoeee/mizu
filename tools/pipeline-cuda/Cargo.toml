@@ -64,6 +64,12 @@ sp1-gpu-cudart = "=6.10.0"
 # production route is to match upstream's wrap vk and install Succinct's
 # released keys; see docs/groth16-ceremony-spike.md.
 native-gnark = ["sp1-prover/native-gnark"]
+# Succinct's own BN254 CUDA kernels for the gnark wrap (succinctlabs/sp1#3017,
+# unmerged upstream; carried on the fork's codex/mizu-cuda-gnark branch). Needs
+# nvcc at build time and libcudart at runtime, and builds the Go library with
+# the `cuda` tag so the GPU Groth16 prover replaces the CPU one. Targets the
+# ~130 s gnark half, which is what `--mode from-wrap` isolates.
+gnark-cuda = ["sp1-prover/gnark-cuda"]
 
 # Every SP1/slop crate is pinned to the fork, not because the fork modified
 # them all -- it modifies four -- but to force ONE resolution. sp1-prover
