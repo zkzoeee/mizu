@@ -232,6 +232,39 @@ existing binding check unmodified.
   carry across a VK change, since the fixed-table work means a VK change touches
   build-time derived tables and not just a constant.
 
+**That warning is now qualified by a measurement.** A VK rotation was performed
+on 2026-11-13: the guest was rebuilt against a different wrap VK
+(`fixtures/simplechain/wrap0`) with the same 42 optimization flags, and proved.
+
+| | mainnet VK guest | simplechain VK guest |
+| --- | ---: | ---: |
+| ELF | `dc8e4b40..` | `51241c13..` |
+| cycles | 130,367,324 | **130,307,322** (0.05% apart) |
+| raw preprocessed area | 4,722,688 cells | same preprocessed block (3) |
+| clusters reached | 10 of 43 | the same 10 |
+| `vk_root` | — | **unchanged** — verified under the same block-3 map |
+| verifier deployment | — | **the same one** |
+
+So the derived-table rebuild is real but its *consequences* are narrow. A VK
+rotation changes the ELF and therefore the `programVKey`; it does not move the
+cycle count materially, the preprocessed block, the VK map, `vk_root`, or the
+deployed verifier. The only on-chain consequence is a registry entry for the new
+`programVKey` — which the allowlist design needs regardless. The rebuild itself
+is ~7.5 min marginal through `make build-guest`, with a provenance receipt
+(`benchmarks/provenance/`).
+
+Two caveats. The rotation was to a *different circuit's* VK rather than a new VK
+for the same circuit after a zkApp upgrade; the latter should be the smaller
+change of the two, but that is an inference. And a VK whose blob is much larger
+could push the preprocessed area past block 3's 6,291,456-cell ceiling — there is
+1,568,768 cells of headroom, and `vk-map-local --shapes-only` settles it in 95 s.
+
+**Also free on our side: the longer statement.** Putting the digest in the
+statement lengthens `app_state`. `statement.rs` absorbs it at any length, and the
+`statement-digest` ABI hashes `statement.len()` before the fields, so a longer
+app state is bound rather than silently truncated at either layer. No code
+change in the verifier or the ABI.
+
 **Unverified precondition.** The 5.7% figure assumes miza's transition circuit
 walks the paths in-circuit. If it instead takes the new root as a witness and
 checks something weaker, the commitment is no longer nearly free and this
