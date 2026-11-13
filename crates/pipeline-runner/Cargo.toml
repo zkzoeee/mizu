@@ -40,12 +40,6 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 # instead of installing released artifacts from S3. That local setup is gnark's
 # own unsafe one: measurement only, never production.
 native-gnark = ["sp1-prover/native-gnark"]
-# The GPU gnark prover (succinctlabs/sp1#3017, carried on the fork's
-# codex/mizu-cuda-gnark branch). With `--mode from-wrap` this is the direct
-# measurement of the gnark half: same saved wrap proof, CPU prover against GPU
-# prover, no STARK work in between. Needs nvcc at build time, libcudart and a
-# CUDA device at runtime.
-gnark-cuda = ["sp1-prover/gnark-cuda"]
 
 [[bin]]
 name = "pipeline-runner"
