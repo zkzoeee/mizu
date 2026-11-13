@@ -25,69 +25,71 @@ from measured per-permutation costs — Poseidon 187,986 cells/permutation, kecc
 sizing, not results, and re-measure each one as it lands. The harness for that
 is already on the branch and described under *Validation* below.
 
-## Decision 2026-11-14: the full keccak Merkle mirror, and what it reorders
+## Decision 2026-11-14: the full keccak Merkle mirror
 
 **Mode 1, the full keccak Merkle mirror, is the chosen construction** — the one
-that lets Ethereum prove inclusion of any account. Taken with the cost known
-rather than assumed, because the cost is much higher than the table above
-implies.
+that lets Ethereum prove inclusion of any account.
 
-### The table above is measured on the wrong build
+### Correction: this plan's baseline was already the right build
 
-Every figure in *The target* comes from the canonical build, where Poseidon is
-48,075 cycles a permutation and software keccak 6,563. On the **fully
-precompiled** build — `pp-n1-mode1.json`, the configuration we now prove with —
-the per-permutation costs are:
+An earlier version of this section claimed the target table was measured on the
+canonical build and that the precompiled costs reordered the plan. **That was
+wrong.** The baseline is the fully precompiled build, and the marginal figures
+reproduce exactly from the committed records:
 
-| | canonical | precompiled | |
-| --- | ---: | ---: | --- |
-| Poseidon | 48,075 | **397** | 121x cheaper |
-| keccak | 6,563 (sha3) | **1,129** | the `KECCAK_PERMUTE` precompile |
+```
+records-pp-default-{n1,n16}-mode1.json, ELF f6300e05 (the one we prove with)
+  (437,445,632 - 37,368,816) / 15 = 26,671,788 cells/account
+  (  1,803,397 -    129,517) / 15 =    111,592 cycles/account
+```
 
-So a keccak node now costs **2.8 Poseidon nodes**, where it used to cost a
-seventh of one. One account at depth 35, mode 1:
+which are the baseline row's numbers to the digit. The plan's ordering of its
+three changes stands as written. The error came from reading `RESULTS.md`'s
+per-permutation table — which spans four builds — without checking which build
+the plan had taken.
 
-| | canonical | precompiled |
+### What the decomposition does add
+
+`RESULTS.md` and the baseline give totals; the stage split on the chosen build
+makes the balance explicit. One account, depth 35, mode 1, `pp-n1-mode1.json`:
+
+| stage | cycles | share |
 | --- | ---: | ---: |
-| poseidon-ledger | 4,134,419 | **34,187** |
-| keccak-mirror | 498,794 | **85,792** |
-| mirror as a share | +12.04% | **+251%** |
+| poseidon-ledger | 34,187 | 26% |
+| keccak-mirror | **85,792** | **74%** |
 
-**The mirror is no longer a tax on the ledger walk; it is 74% of the work.**
-That is the fact the plan's ordering does not reflect.
+Per permutation on this build, Poseidon is **397** cycles and keccak **1,129**,
+so **a keccak node costs 2.8 Poseidon nodes** — the reverse of the canonical
+build, where Poseidon cost 7.3x a software keccak. The mirror is the dominant
+term, which is worth stating plainly next to a decision to keep the most
+expensive mirror construction.
 
-### What it reorders
+It also sharpens where effort goes, without changing the plan's order. Change 2
+scales down the ~70 node hashes per account per tree that are most of that 74%,
+and applies to both trees. Change 1's two saved permutations are ~2.6% of the
+mirror, so take it for the structural leaf-swap property its section argues
+rather than for cycles. Change 3 remains the largest number on the table and
+remains in tension with this decision, since a diff-set commitment removes the
+per-account walks the full mirror exists to provide.
 
-**Change 2 (sorted-prefix sharing) is now the only lever that matters.** It is
-the one change that scales down the ~70 node hashes per account per tree that
-*are* the full mirror's cost, and it applies to both trees. At N=100 the plan's
-own table gives 16.1% fewer hashes per account per tree; on the precompiled
-build that is roughly a fifth off the total, because both terms scale with node
-hashes. Its witness shrinks too, to about 29.4 siblings per account.
+### Build choice is worth 7.7x
 
-**Change 1 stays worth doing, but not for its cycles.** Two permutations of 76
-is ~2.6% of the mirror on this build. Take it for the structural property the
-section below argues for — leaf-swap resistance becoming a property of the leaf
-format rather than an invariant the guest maintains — and respect the 136-byte
-limit, since `H_p` plus three words is 128 and a fourth costs a second
-permutation.
+The same records show what the configuration is worth, marginal per account:
 
-**Change 3 is in tension with this decision.** A diff-set commitment is the
-largest saving on the table (63.6%), but it removes per-account tree walks,
-which is exactly what the full mirror exists to provide. Choosing mode 1 is
-choosing against that shape for the mirror, whatever it does for the ledger side.
+| build | cells/account | cycles/account |
+| --- | ---: | ---: |
+| `pp` (Poseidon + keccak precompiles) | **26,671,788** | **111,592** |
+| `pc-retained` (keccak precompile, canonical Poseidon) | 205,668,094 | 4,210,680 |
 
-### What still has to be measured
+So the plan's choice of build is not incidental: it is 7.7x the cells and 37.7x
+the cycles.
 
-Cells, not cycles, on the precompiled build. The baseline above is 26,671,788
-cells per account from the canonical build, and RESULTS.md puts the Poseidon
-precompile's cell win at 68.5x measured against 85.4x published — so the real
-figure is far smaller and nobody has taken it. Use the plan's own marginal
-method, `(N=16 - N=1)/15`, on the `pp` build. CPU only, no prover, free.
+### Proved, not only executed
 
-A proof of this configuration now exists — `benchmarks/pipeline/mirror-proof-20261114/`,
-5 shards, preprocessed block 1, 11-key map, 71 s end to end, verified on an EVM
-— so the mirror is provable on our rails, not only executable.
+`benchmarks/pipeline/mirror-proof-20261114/` — this exact configuration now has
+a Groth16 proof: 5 shards, preprocessed block 1, an 11-key map, 71 s end to end,
+verified on an EVM. Every one of the eleven runs behind `RESULTS.md` has
+`proof_generated: false`.
 
 ## Change 1 — `H_p` as the keccak leaf
 
