@@ -14,6 +14,8 @@ GPU. This is the first proof of that guest.
 | wall clock | **71 s** — node_build 17.8, setup 0.2, prove 48.2, verify 0.4 |
 | peak VRAM | 11,679 MiB |
 
+Verified on an EVM too: `contracts-check/test/TwoRoots.t.sol`, 226,157 gas.
+
 Proved with the **CUDA gnark prover** (succinctlabs/sp1#3017, fork branch
 `codex/mizu-cuda-gnark`) — a second independent check of that carried code on a
 completely different workload from the Pickles proof it was measured on.
@@ -74,3 +76,30 @@ logic — `docs/diff-proof-plan.md` changes 1 and 2 — which keeps it in **bloc
 with 1,568,768 cells of headroom, about 150x the 10,240 cells that adding
 `statement-digest` cost. That guest does not exist yet, and when it does the
 existing block-3 map and root already cover it.
+
+## The public values, and a test that was missing
+
+`verifyProof` recomputes `sha256(publicValues) & ((1<<253)-1)` and compares it
+against public input 1, so calling the contract needs the **raw** public values
+— and every driver mode recorded only the hashed inputs. A proof could be made
+and then not be checkable on chain for want of 76 bytes.
+
+`--mode execute` now dumps them (no proving, no GPU, about a second, since public
+values are a function of the guest and its input alone):
+
+```
+0x 01000000 01000000 23000000                     mode=1, accounts=1, depth=35
+   78e5d634835f9916088795f293bcc447727750dbb2490cbbf5aeb5cfa6489006   poseidon root
+   3316f90d43ec63afc0ea49cd4d5da38456d9e421f0bc39b7b6baaa63ba5d2085   keccak root
+```
+
+and it checks itself: `hash_public_values` is
+`0xfe07758907d52c9763c7b5aca403c732831d5b147a0f1f616f0b703698ae4a3`, which is
+the proof's public input 1 exactly, and the execution reports the same 129,517
+cycles as the proof.
+
+**The gap this closed.** `TwoRoots.t.sol` originally asserted only that each
+verifier *rejects* the other's proof — two negatives and no positive, which would
+have passed just as happily for a garbage proof. It now also asserts that the
+mirror verifier accepts the mirror proof (226,157 gas) and that one flipped byte
+of public values is refused.

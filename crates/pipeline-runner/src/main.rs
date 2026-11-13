@@ -117,6 +117,18 @@ enum Mode {
     ///
     /// Ignores `--elf` and `--input-dir`.
     FromWrap,
+    /// Execute the guest and report what it committed. No proving, no GPU,
+    /// seconds.
+    ///
+    /// `verifyProof` needs the raw public values, because it recomputes
+    /// `sha256(publicValues) & mask` and compares that against public input 1.
+    /// Every other mode records the *hashed* inputs, which is not enough to
+    /// call the contract -- so a proof could be made and then not be checkable
+    /// on chain for want of 76 bytes. This dumps them.
+    ///
+    /// Public values are a function of the guest and its input alone, so this
+    /// recovers them for a proof that was already made elsewhere.
+    Execute,
 }
 
 impl Mode {
@@ -127,7 +139,7 @@ impl Mode {
             // Wrap proves compressed, then shrink-wraps the result itself.
             Mode::Wrap => ProofMode::Compressed,
             // Never reached: main() handles these before this is called.
-            Mode::VkMap | Mode::VkMapBlock | Mode::FromWrap => ProofMode::Core,
+            Mode::VkMap | Mode::VkMapBlock | Mode::FromWrap | Mode::Execute => ProofMode::Core,
         }
     }
 }
@@ -159,6 +171,9 @@ struct Args {
     /// `--mode from-wrap`: the wrap proof to Groth16-prove.
     #[arg(long)]
     wrap_in: Option<PathBuf>,
+    /// `--mode execute`: where to write the raw committed public values.
+    #[arg(long)]
+    public_values_out: Option<PathBuf>,
     /// `--mode vk-map-block`: the preprocessed multiple to cover.
     #[arg(long, default_value = "3")]
     block: usize,
@@ -267,6 +282,56 @@ async fn main() -> Result<()> {
 
     let machine = RiscvAir::<SP1Field>::machine();
     let clusters = machine.shape().chip_clusters.len();
+
+    if matches!(args.mode, Mode::Execute) {
+        let node = SP1LocalNodeBuilder::from_worker_client_builder(
+            cpu_worker_builder_with_machine(machine),
+        )
+        .build()
+        .await
+        .context("build the local node")?;
+        let context = SP1Context { proof_nonce: [0, 0, 0, 0], ..Default::default() };
+        let t = Instant::now();
+        let (public_values, _digest, report) = node
+            .execute(&elf, stdin, context)
+            .await
+            .context("execute the guest")?;
+        let seconds = t.elapsed().as_secs_f64();
+        let bytes = public_values.as_slice().to_vec();
+        // What the contract does with them, so a mismatch shows up here and not
+        // in a failing forge test: sha256 masked to 253 bits is public input 1.
+        let digest = <sha2::Sha256 as sha2::Digest>::digest(&bytes);
+        let mut masked = [0u8; 32];
+        masked.copy_from_slice(&digest);
+        masked[0] &= 0x1f;
+        if let Some(path) = &args.public_values_out {
+            fs::write(path, &bytes).context("write the public values")?;
+        }
+        let report_json = serde_json::json!({
+            "mode": "pipeline-local",
+            "proof_mode": "Execute",
+            "elf_sha256": hex::encode(<sha2::Sha256 as sha2::Digest>::digest(&elf)),
+            "cycles": report.total_instruction_count(),
+            "public_values_len": bytes.len(),
+            "public_values": hex::encode(&bytes),
+            "public_values_sha256": hex::encode(digest),
+            "hash_public_values": format!("0x{}", hex::encode(masked)),
+            "note": "hash_public_values is sha256(publicValues) & ((1<<253)-1), which SP1VerifierGroth16 compares against public input 1",
+            "seconds": { "execute": seconds },
+        });
+        if let Some(parent) = args.output.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(&args.output, format!("{}\n", serde_json::to_string_pretty(&report_json)?))?;
+        println!(
+            "{} cycles, {} public-value bytes: 0x{}",
+            report.total_instruction_count(),
+            bytes.len(),
+            hex::encode(&bytes)
+        );
+        return Ok(());
+    }
+
 
     // A fixed nonce so two runs of the same inputs are comparable.
     let context = SP1Context { proof_nonce: [0, 0, 0, 0], ..Default::default() };

@@ -1,0 +1,14 @@
+{
+  "cycles": 129517,
+  "elf_sha256": "f6300e05bdec069215e65d7ea3db34af15bc90caac20e2cbfc5730171ff9a254",
+  "hash_public_values": "0x0fe07758907d52c9763c7b5aca403c732831d5b147a0f1f616f0b703698ae4a3",
+  "mode": "pipeline-local",
+  "note": "hash_public_values is sha256(publicValues) & ((1<<253)-1), which SP1VerifierGroth16 compares against public input 1",
+  "proof_mode": "Execute",
+  "public_values": "01000000010000002300000078e5d634835f9916088795f293bcc447727750dbb2490cbbf5aeb5cfa64890063316f90d43ec63afc0ea49cd4d5da38456d9e421f0bc39b7b6baaa63ba5d2085",
+  "public_values_len": 76,
+  "public_values_sha256": "cfe07758907d52c9763c7b5aca403c732831d5b147a0f1f616f0b703698ae4a3",
+  "seconds": {
+    "execute": 0.0166375
+  }
+}
