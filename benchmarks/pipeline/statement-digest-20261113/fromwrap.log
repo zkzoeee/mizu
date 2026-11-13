@@ -1,0 +1,37 @@
+[16:49:47] artifacts: /workspace/sp1/circuits/groth16/v6.1.0/.complete
+7.9G
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+tar: Ignoring unknown extended header keyword 'LIBARCHIVE.xattr.com.apple.provenance'
+[16:49:47] wrap proof: 1340949 bytes, sha 320d4997d91b2ef3
+    Finished `release` profile [optimized] target(s) in 11m 17s
+[17:01:14] build_exit=0 seconds=687
+[17:01:14] === FROM-WRAP: CPU only, no GPU, no execution, no core proving ===
+wrap proof: 1340949 bytes from /workspace/out/fromwrap/wrap-proof.bin
+Setting environment variables took 20.97µs
+Reading R1CS took 24.671893213s
+Reading proving key took 15.377245895s
+Reading witness file took 1.081407ms
+Deserializing JSON data took 24.004467ms
+Generating witness took 969.730362ms
+[90m17:02:18[0m DBG constraint system solver done [36mnbConstraints=[0m15972262 [36mtook=[0m23156.078142
+[90m17:03:25[0m DBG prover done [36macceleration=[0mnone [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mnbConstraints=[0m15972262 [36mtook=[0m66693.049494
+Generating proof took 1m29.850751153s
+[90m17:03:25[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m17:03:25[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m17:03:25[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m17:03:25[0m DBG verifier done [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mtook=[0m1.880696
+groth16 in 130.9s, 324 raw bytes
+[17:03:27] fromwrap_exit=0 seconds=133
+[17:03:27] peak_gib=31.4
+[17:03:27] FROMWRAP_DONE

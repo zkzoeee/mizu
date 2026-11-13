@@ -83,4 +83,46 @@ contract SP1VerifierGroth16Test {
         verifier.verifyProof(VKEY, PUBLIC_VALUES, PROOF);
         emit GasUsed("verifyProof", start - gasleft());
     }
+
+    /// The **statement-digest** ABI: the guest commits
+    /// keccak("mizu/verified-statement/v1" || vk_id || len || app_state)
+    /// instead of a bare boolean, so the proof says WHICH Mina VK verified
+    /// WHICH statement. 32 bytes of public values instead of one.
+    ///
+    /// This proof was produced by `--mode from-wrap` on a CPU, from a wrap
+    /// proof made earlier on a GPU -- 133 s with no execution, no core proving
+    /// and no reduce tree.
+    bytes constant PUBLIC_VALUES_DIGEST =
+        hex"837d502c516768d427bec74b35a7f732d30ad6591956719b95f7f17ffb9ff7de";
+    bytes32 constant VKEY_DIGEST = 0x0048286295929381e821ab0c0733f189f87ef83be3552bfe69c29ce25f07eff7;
+    bytes constant PROOF_DIGEST = hex"4388a21c000000000000000000000000000000000000000000000000000000000000000000ec8a081fbf4a164e95ed2147c675a5a2cbe32dbc9c6d60c026ccb8c2bce83500000000000000000000000000000000000000000000000000000000000000000cb9b25d80961f74d699877313b6cf67c1cd5d8de03ffc9ba75f285649977a2d2c68f58ed5e35b645bcca1b669a062dd5e0fa18929a00d97634e2dccaff20a43027170bdf2c1091e75b5f1297915dce68d6b5b257c28b24a064d3793cfd33c012cb92ce95a44ab05a97d2bc14fec104298dea926f4aae57c2b26e12022d4894024fefcd77a997b2a058d4f4e4141928329ac300afc71926e047079b7b444fcdc0fc9fb510582f8b720cf4ae6a2ee0810da607c2b67938eecf56b4a65982dcd161f74a3b6c094bbd5837885d2645e67bd30cff25721356d1747936c8d1811a8c01784d763a073cf7c761a5332a1cfac635ce9a5fbcd68e18aba61dd5e62f50934";
+
+    function test_statement_digest_proof_verifies() public view {
+        verifier.verifyProof(VKEY_DIGEST, PUBLIC_VALUES_DIGEST, PROOF_DIGEST);
+    }
+
+    /// The digest is the pinned mainnet fixture's expected statement, so the
+    /// contract's own hashPublicValues reproduces public input 1 from it.
+    function test_the_digest_is_the_expected_statement() public view {
+        require(
+            uint256(verifier.hashPublicValues(PUBLIC_VALUES_DIGEST))
+                == 10450732416361500606638862004718813867545877298259723900316985715029809860773,
+            "the committed digest is not the expected statement"
+        );
+    }
+
+    /// Same root as the boolean-ABI proof above: switching ABI did not move
+    /// the map, so one deployed verifier serves both.
+    function test_both_abis_share_one_root() public view {
+        require(
+            verifier.VK_ROOT() == 0x00ec8a081fbf4a164e95ed2147c675a5a2cbe32dbc9c6d60c026ccb8c2bce835,
+            "root moved"
+        );
+    }
+
+    function test_gas_statement_digest() public {
+        uint256 start = gasleft();
+        verifier.verifyProof(VKEY_DIGEST, PUBLIC_VALUES_DIGEST, PROOF_DIGEST);
+        emit GasUsed("verifyProof statement-digest", start - gasleft());
+    }
 }

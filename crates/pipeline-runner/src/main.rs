@@ -110,6 +110,13 @@ enum Mode {
     /// stale the moment the guest, the input, the retention config or the map
     /// changes.
     Wrap,
+    /// Groth16-prove a wrap proof saved earlier by `--mode wrap`. No GPU, no
+    /// execution, no core proving, no reduce tree -- the Groth16 circuit reads
+    /// nothing but the wrap proof. This is the cheap half of the pipeline, and
+    /// the only one that has to re-run when the gnark side changes.
+    ///
+    /// Ignores `--elf` and `--input-dir`.
+    FromWrap,
 }
 
 impl Mode {
@@ -120,7 +127,7 @@ impl Mode {
             // Wrap proves compressed, then shrink-wraps the result itself.
             Mode::Wrap => ProofMode::Compressed,
             // Never reached: main() handles these before this is called.
-            Mode::VkMap | Mode::VkMapBlock => ProofMode::Core,
+            Mode::VkMap | Mode::VkMapBlock | Mode::FromWrap => ProofMode::Core,
         }
     }
 }
@@ -149,6 +156,9 @@ struct Args {
     /// `--mode wrap`: where to write the wrap proof.
     #[arg(long)]
     wrap_out: Option<PathBuf>,
+    /// `--mode from-wrap`: the wrap proof to Groth16-prove.
+    #[arg(long)]
+    wrap_in: Option<PathBuf>,
     /// `--mode vk-map-block`: the preprocessed multiple to cover.
     #[arg(long, default_value = "3")]
     block: usize,
@@ -204,6 +214,45 @@ fn apply_retention(opts: &mut SP1CoreOpts) {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
+
+    // No ELF, no input, no node: the Groth16 circuit's whole witness comes out
+    // of the wrap proof.
+    if matches!(args.mode, Mode::FromWrap) {
+        let path = args.wrap_in.clone().context("--mode from-wrap needs --wrap-in <path>")?;
+        let bytes = fs::read(&path).with_context(|| format!("read {}", path.display()))?;
+        let wrap: sp1_hypercube::SP1WrapProof<
+            sp1_primitives::SP1OuterGlobalContext,
+            sp1_hypercube::SP1PcsProofOuter,
+        > = bincode::deserialize(&bytes).context("deserialize the wrap proof")?;
+        println!("wrap proof: {} bytes from {}", bytes.len(), path.display());
+        let t = Instant::now();
+        let proof = sp1_prover::build::groth16_from_wrap(wrap).await?;
+        let seconds = t.elapsed().as_secs_f64();
+        let report = serde_json::json!({
+            "mode": "pipeline-local",
+            "proof_mode": "FromWrap",
+            "wrap_in": path.display().to_string(),
+            "wrap_proof_bytes": bytes.len(),
+            "groth16": {
+                "public_inputs": proof.public_inputs,
+                "raw_proof_bytes": proof.raw_proof.len() / 2,
+                "encoded_proof_bytes": proof.encoded_proof.len() / 2,
+                "groth16_vkey_hash": hex::encode(proof.groth16_vkey_hash),
+            },
+            "seconds": { "groth16": seconds },
+            "note": "verified inside groth16_from_wrap before it returned",
+        });
+        if let Some(parent) = args.output.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(&args.output, format!("{}\n", serde_json::to_string_pretty(&report)?))?;
+        if let Some(path) = &args.proof_out {
+            fs::write(path, bincode::serialize(&proof).context("serialize the proof")?)?;
+        }
+        println!("groth16 in {seconds:.1}s, {} raw bytes", proof.raw_proof.len() / 2);
+        return Ok(());
+    }
+
     let elf = fs::read(&args.elf).context("read guest ELF")?;
     let proof_input =
         fs::read(args.input_dir.join("proof-input.bin")).context("read proof-input.bin")?;

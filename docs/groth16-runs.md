@@ -451,6 +451,67 @@ input; the membership check still passed, which was accidental evidence that the
 map covers a foreign program, but it was not a valid proof and the run was
 redone.
 
+## statement-digest, and proving from a saved wrap proof (2026-11-13)
+
+Two changes that together make a proof mean something on chain and make the
+gnark half of the pipeline runnable without a GPU. Records in
+`benchmarks/pipeline/statement-digest-20261113/`.
+
+### The ABI is effectively free
+
+`--features statement-digest` makes the guest commit
+`keccak("mizu/verified-statement/v1" || vk_id || len || app_state)` instead of a
+bare boolean, so the public values say **which** Mina VK verified **which**
+statement. The boolean ABI says only that *some* Pickles proof verified, which
+is close to meaningless to a contract.
+
+| | boolean | statement-digest |
+| --- | ---: | ---: |
+| cycles | 130,367,324 | **130,374,139** (+6,815, +0.005%) |
+| raw preprocessed area | 4,722,688 | 4,732,928 (+0.2%) |
+| preprocessed block | 3 | **3** |
+| clusters reached | 10 of 43 | the same 10 |
+| distinct shard shapes | 21 | 24 |
+
+Same block, same clusters, so **the block-3 map covers it and `vk_root` does
+not move** — no re-map, no redeploy. Build it with
+`make build-guest GUEST_CONFIG=benchmarks/dev/pasta-poseidon-digest.json`
+(33 s).
+
+### `--mode wrap` / `--mode from-wrap`
+
+The Groth16 circuit reads nothing but the wrap proof, so the pipeline splits:
+
+| | where | time |
+| --- | --- | ---: |
+| `--mode wrap` (execute, core, reduce, shrink, wrap) | GPU | 205 s |
+| wrap proof | 1,340,949 bytes | |
+| `--mode from-wrap` (gnark only) | **CPU, no GPU** | **133 s** |
+
+`groth16_from_wrap` (`sp1_prover::build`) is `run_groth16`'s body as a free
+function taking the wrap proof directly — no node, no artifact client, no
+prover setup. It verifies before returning, so a wrap proof that does not match
+the installed artifacts fails there rather than on chain.
+
+**Peak memory 31.4 GiB.** The 4090 pod this wrap proof was made on has a 31.0 GB
+cgroup limit, so from-wrap would have OOMed on it by 0.4 GiB. A from-wrap box
+needs **40 GB or more**, which rules out the cheapest CPU flavours. (The figure
+is `memory.current`, so it counts the page cache of 8 GB of artifacts as well as
+the process.)
+
+### Verified on the EVM, with no artifacts anywhere
+
+`contracts-check` verifies both ABIs against one contract: **11 tests pass**,
+`verifyProof` **225,922-226,005 gas**, on a machine with no `~/.sp1` at all.
+On-chain verification needs the *verifying* key, which is already compiled into
+`Groth16Verifier.sol`; the 7.9 GB is the proving key and the R1CS, needed only
+to *make* a proof. The whole verification surface is 30,987 bytes of Solidity.
+
+The suite also checks the digest is the right one: the contract's own
+`hashPublicValues` reproduces public input 1 from the pinned mainnet fixture's
+expected statement `837d502c..`, so the guest committed the statement it should
+have.
+
 ## Still open
 
 - **Nothing is deployed.** Our `vk_root` differs from Succinct's, so their
