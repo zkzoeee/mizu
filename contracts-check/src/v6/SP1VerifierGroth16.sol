@@ -34,10 +34,13 @@ contract SP1Verifier is Verifier, ISP1VerifierWithHash {
     }
 
     /// @notice The recursion vk root.
-    /// @dev Upstream ships 0x002f850ee998974d6cc00e50cd0814b098c05bfade466d28573240d057f25352; this is OUR map's root,
-    ///      the only edit made to the artifact's contracts.
+    /// @dev Upstream ships 0x002f850ee998974d6cc00e50cd0814b098c05bfade466d28573240d057f25352.
+    ///      This is the root of our FULL preprocessed-block-3 map (8,176 keys),
+    ///      the only edit made to the artifact's contracts. The earlier
+    ///      75-key union map's root was 0x007ef473..ae0; proofs against it are
+    ///      rejected here, which is the point of pinning a root.
     function VK_ROOT() public pure returns (bytes32) {
-        return 0x007ef473fdfbe096cc4e1e3235be51f83c613ca77f431564b062220769ff8ae0;
+        return 0x00ec8a081fbf4a164e95ed2147c675a5a2cbe32dbc9c6d60c026ccb8c2bce835;
     }
 
     /// @notice Hashes the public values to a field elements inside Bn254.

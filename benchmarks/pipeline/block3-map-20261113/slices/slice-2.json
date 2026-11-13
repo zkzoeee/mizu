@@ -1,0 +1,25 @@
+{
+  "block_first_index": 16469,
+  "block_last_index": 24638,
+  "block_shapes": 8170,
+  "chip_clusters": 43,
+  "chunk": 4,
+  "complete": false,
+  "mode": "pipeline-cuda",
+  "note": "covers every shape an input to a program in this preprocessed block can reach, so the root does not move with the input",
+  "panic_indices": [],
+  "preprocessed_multiple": 3,
+  "programs_built": 79,
+  "proof_mode": "VkMapBlock",
+  "sampled": null,
+  "seconds": {
+    "build_vks": 24.501696013
+  },
+  "seconds_per_program": 0.3101480507974684,
+  "shape_space": 249750,
+  "slice_count": 103,
+  "slice_index": 2,
+  "vk_map_keys": 79,
+  "vk_map_path": "/root/slices/slice-2.bin",
+  "vk_map_sha256": "cb84e441afdee0bb2501aabacc50ff0f41fe28c72d7b0c65edddfb2eb8a0526a"
+}

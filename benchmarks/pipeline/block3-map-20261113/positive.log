@@ -1,0 +1,17 @@
+[14:16:36] simplechain guest (flags) + wrap0 input, against the block map
+Setting environment variables took 70.091µs
+Reading R1CS took 20.745060522s
+Reading proving key took 4.581619951s
+Reading witness file took 1.53787ms
+Deserializing JSON data took 26.35792ms
+Generating witness took 1.102257325s
+[90m14:21:36[0m DBG constraint system solver done [36mnbConstraints=[0m15972262 [36mtook=[0m24344.522976
+[90m14:22:44[0m DBG prover done [36macceleration=[0mnone [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mnbConstraints=[0m15972262 [36mtook=[0m68786.778852
+Generating proof took 1m33.132424416s
+[90m14:22:44[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m14:22:44[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m14:22:44[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m14:22:44[0m DBG verifier done [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mtook=[0m3.072807
+Groth16: 130307322 cycles, 1672 proof bytes, verified true, prove 315.1s
+[14:22:49] exit=0 seconds=373
+POSITIVE2_DONE

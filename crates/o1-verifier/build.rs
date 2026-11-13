@@ -1,5 +1,7 @@
 mod blob_cache;
 
+include!("build-env.rs");
+
 use std::{env, fs, path::PathBuf, time::Instant};
 
 use blob_cache::{fingerprint, Blobs};
@@ -23,19 +25,9 @@ fn main() {
     for path in [&vk_path, &srs_paths[0], &srs_paths[1]] {
         println!("cargo::rerun-if-changed={}", path.display());
     }
-    for name in [
-        "VK_JSON",
-        "SETTLEMENT_VK_JSON",
-        "SETTLEMENT_BLOB_CACHE_DIR",
-        "SETTLEMENT_REBUILD_VERIFIER_BLOB",
-        "ZEKO_PRECOMPUTED_SETUP",
-        "ZEKO_FIXED_VESTA_SRS",
-        "ZEKO_FIXED_VESTA_COUPLED",
-        "ZEKO_BORROW_POSITIONAL_SCALARS",
-        "ZEKO_PACKED_PALLAS_HALVES",
-        "ZEKO_FIXED_PALLAS_SRS",
-        "ZEKO_BORROW_PALLAS_SRS",
-    ] {
+    // The shared list, so the host's build script and this one can never drift
+    // apart about what invalidates the guest.
+    for name in GUEST_BUILD_ENV {
         println!("cargo::rerun-if-env-changed={name}");
     }
     let vk_bytes = fs::read(&vk_path).expect("read wrap VK");

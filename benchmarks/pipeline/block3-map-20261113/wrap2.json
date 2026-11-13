@@ -1,0 +1,21 @@
+{
+  "cycles": null,
+  "elf_sha256": "51241c13ae733a66449184997b6a6f10939e8312fa1bcf13d58eddf85191c5c8",
+  "groth16": null,
+  "mode": "pipeline-cuda",
+  "proof_bytes": 1277154,
+  "proof_mode": "Wrap",
+  "retain_pasta": true,
+  "seconds": {
+    "execute": 0.0,
+    "node_build": 19.708961423,
+    "prove": 188.564861602,
+    "setup": 7.406106304,
+    "shrink_wrap": 9.995023822,
+    "verify": 0.117909688
+  },
+  "soundness": "vk verification ON against the supplied partial vk map; the recursion programs are bound by its root",
+  "verified": true,
+  "vk_verification": true,
+  "wrap_proof_bytes": 1340949
+}

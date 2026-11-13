@@ -367,15 +367,98 @@ the single byte `0x01` — the guest's boolean — confirmed by
 
 Still not deployed to any chain, and the gas figure is a local EVM measurement.
 
+## The block-3 map, built and tested (2026-11-13)
+
+Built on an **RTX A5000** at $0.27/hr — less than half the A40's rate, and the
+A40 was out of stock anyway. Records in
+`benchmarks/pipeline/block3-map-20261113/`.
+
+**The cost estimate in this document was wrong twice.** The A40 probe reported
+1.1 s/program and OOMed; that was a process slowing down as it approached the
+50 GB ceiling, not the block's real rate. Built in bounded slices the rate is
+**0.31-0.33 s/program**, measured at both ends of the block (slice 0, main
+multiples 1-2; slice 102, main multiples ~189-190) — they differ by 5%, so the
+big-main-multiple programs are *not* more expensive, which is the opposite of
+what I assumed when sizing the slices.
+
+| | |
+| --- | --- |
+| slices | 103 x ~80 programs, one process each |
+| rate | 0.31-0.33 s/program |
+| peak RSS | 23 GiB (30 GiB once the artifact download filled the page cache) |
+| wall clock | 1h21m |
+| cost | **~$0.37** |
+| result | **8,176 keys**, `sha256 51d9a371..`, root `0x00ec8a08..e835` |
+
+### What was checked, and what each check would have caught
+
+| check | catches |
+| --- | --- |
+| slices tile 0..8,170, no gap or overlap | a missing or double-counted slice |
+| exactly 8,176 keys | a silently dropped shape, or two shapes colliding to one digest |
+| `panic_indices` empty on every slice | a shape that failed to build |
+| 56 spot-rebuilt keys all present | a slice that built *something else* than its indices say |
+| a proof verifies against it | `from_map` and the membership check agree |
+| the same workload against `mapB` fails | that the membership check is live at all |
+
+The last one matters most: it failed in 39 s with
+`task failed with fatal error: vk not allowed`, which is what makes every
+positive result above non-vacuous.
+
+### The map covers a guest it was never built for
+
+The proof against the block map is from the **simplechain** guest — built
+against a *different Mina wrap VK* (`fixtures/simplechain/wrap0`), proving a
+*different Pickles proof*, on a 24 GB A5000 whose reduced `element_threshold`
+shards differently from the A40 the map was conceived on.
+
+| | mainnet guest | simplechain guest |
+| --- | ---: | ---: |
+| wrap VK | mainnet-blockchain-snark | simplechain/wrap0 |
+| ELF | `dc8e4b40..` | `51241c13..` |
+| cycles | 130,367,324 | **130,307,322** |
+| `programVKey` | `0x00f23c18bd..` | `0x00f8491590..` |
+| verified against `block3.bin` | — | **yes**, 315.1 s |
+
+Those cycle counts are 0.05% apart. The guest's size and shape are set by the
+42 `ZEKO_*`/`MIZU_*` flags, not by which VK is baked in — which also corrects an
+earlier scare in this document: a flagless simplechain build came out at 12.2 MB
+against the mainnet guest's 26.4 MB, and I read that as the VK's circuit size
+when it was the flags. Rebuilt with the flags, the simplechain guest is
+26.4 MB and lands in the same preprocessed block.
+
+**So one deployed root serves a family of guests**, which is what the block map
+was for. `contracts-check` now verifies that proof on a local EVM with
+`VK_ROOT()` set to the block-3 root: 7 tests pass, `verifyProof` **226,005 gas**,
+and the earlier union-map proof is *rejected* by the same contract — the root
+binds.
+
+### Traps found on the way
+
+**`make build-rust VK_JSON=... ` silently does nothing from a warm tree.**
+`crates/o1-verifier-host/build.rs` declared no `rerun-if-env-changed`, so cargo
+reran it only when the host crate's own sources changed. Changing `VK_JSON` or
+the 42 flags never invalidated it, `sp1_build` was never called, and the build
+exited 0 in 1.6 s leaving the previous guest in place — a guest against the
+wrong VK, with no error anywhere. The Makefile advertises that override, so the
+documented path was the broken one. Fixed: `crates/o1-verifier/build-env.rs`
+now lists the 54 variables that change the guest, and both build scripts
+declare them.
+
+**An ELF uploaded four minutes after something overwrote it is not the ELF you
+think.** The first verification run proved a *panicking* guest fed mismatched
+input; the membership check still passed, which was accidental evidence that the
+map covers a foreign program, but it was not a valid proof and the run was
+redone.
+
 ## Still open
 
 - **Nothing is deployed.** Our `vk_root` differs from Succinct's, so their
   deployed verifier would reject these proofs. `SP1VerifierGroth16.sol` has to be
   deployed with our `VK_ROOT()`; `Groth16Verifier.sol`, the pairing constants, is
   unchanged. Verified locally at **219,096 gas** (see above); never on a chain.
-- **One input, one map.** Only this Pickles proof has been proved. A
-  differently-sharding input needs the map extended, which changes `vk_root`.
-  The fix is an ELF-scoped map, costed below.
+- ~~**One input, one map.**~~ Settled: the block-3 map covers two different
+  guests against two different Mina VKs, on two cards that shard differently.
 - **Card class is load-bearing.** The map is valid only for a prover sharding
   identically — VRAM above ~26 GB. A 24 GB A5000/3090/4090 takes
   `local_gpu_opts`' reduced `element_threshold` and would fail the membership

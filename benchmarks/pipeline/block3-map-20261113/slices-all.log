@@ -1,0 +1,306 @@
+begin=2026-11-13T12:32:30Z
+slice=1/103 exit=0 seconds=46 peak_gib=22.8
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.310s/program) -> /root/slices/slice-1.bin
+slice=2/103 exit=0 seconds=49 peak_gib=22.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.310s/program) -> /root/slices/slice-2.bin
+slice=3/103 exit=0 seconds=49 peak_gib=22.7
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.324s/program) -> /root/slices/slice-3.bin
+slice=4/103 exit=0 seconds=46 peak_gib=22.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.311s/program) -> /root/slices/slice-4.bin
+slice=5/103 exit=0 seconds=47 peak_gib=22.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.320s/program) -> /root/slices/slice-5.bin
+slice=6/103 exit=0 seconds=49 peak_gib=22.1
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 25s (0.313s/program) -> /root/slices/slice-6.bin
+slice=7/103 exit=0 seconds=49 peak_gib=22.5
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.315s/program) -> /root/slices/slice-7.bin
+slice=8/103 exit=0 seconds=47 peak_gib=22.5
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 24s (0.310s/program) -> /root/slices/slice-8.bin
+slice=9/103 exit=0 seconds=48 peak_gib=22.0
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 24s (0.301s/program) -> /root/slices/slice-9.bin
+slice=10/103 exit=0 seconds=49 peak_gib=22.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.332s/program) -> /root/slices/slice-10.bin
+slice=11/103 exit=0 seconds=51 peak_gib=22.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.327s/program) -> /root/slices/slice-11.bin
+slice=12/103 exit=0 seconds=49 peak_gib=21.9
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 25s (0.319s/program) -> /root/slices/slice-12.bin
+slice=13/103 exit=0 seconds=49 peak_gib=22.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.317s/program) -> /root/slices/slice-13.bin
+slice=14/103 exit=0 seconds=52 peak_gib=22.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 28s (0.351s/program) -> /root/slices/slice-14.bin
+slice=15/103 exit=0 seconds=49 peak_gib=22.4
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 24s (0.304s/program) -> /root/slices/slice-15.bin
+slice=16/103 exit=0 seconds=49 peak_gib=23.2
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.321s/program) -> /root/slices/slice-16.bin
+slice=17/103 exit=0 seconds=49 peak_gib=22.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.321s/program) -> /root/slices/slice-17.bin
+slice=18/103 exit=0 seconds=48 peak_gib=22.3
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.321s/program) -> /root/slices/slice-18.bin
+slice=19/103 exit=0 seconds=49 peak_gib=22.4
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.320s/program) -> /root/slices/slice-19.bin
+slice=20/103 exit=0 seconds=50 peak_gib=22.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.322s/program) -> /root/slices/slice-20.bin
+slice=21/103 exit=0 seconds=50 peak_gib=22.6
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.323s/program) -> /root/slices/slice-21.bin
+slice=22/103 exit=0 seconds=50 peak_gib=23.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.331s/program) -> /root/slices/slice-22.bin
+slice=23/103 exit=0 seconds=51 peak_gib=26.2
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 27s (0.339s/program) -> /root/slices/slice-23.bin
+slice=24/103 exit=0 seconds=53 peak_gib=30.8
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 29s (0.356s/program) -> /root/slices/slice-24.bin
+slice=25/103 exit=0 seconds=48 peak_gib=30.9
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 24s (0.300s/program) -> /root/slices/slice-25.bin
+slice=26/103 exit=0 seconds=49 peak_gib=30.4
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.324s/program) -> /root/slices/slice-26.bin
+slice=27/103 exit=0 seconds=49 peak_gib=30.8
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 24s (0.302s/program) -> /root/slices/slice-27.bin
+slice=28/103 exit=0 seconds=48 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 25s (0.309s/program) -> /root/slices/slice-28.bin
+slice=29/103 exit=0 seconds=49 peak_gib=30.3
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.310s/program) -> /root/slices/slice-29.bin
+slice=30/103 exit=0 seconds=47 peak_gib=30.2
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 24s (0.307s/program) -> /root/slices/slice-30.bin
+slice=31/103 exit=0 seconds=47 peak_gib=30.2
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 25s (0.311s/program) -> /root/slices/slice-31.bin
+slice=32/103 exit=0 seconds=49 peak_gib=29.8
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.313s/program) -> /root/slices/slice-32.bin
+slice=33/103 exit=0 seconds=46 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.315s/program) -> /root/slices/slice-33.bin
+slice=34/103 exit=0 seconds=50 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.324s/program) -> /root/slices/slice-34.bin
+slice=35/103 exit=0 seconds=49 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.317s/program) -> /root/slices/slice-35.bin
+slice=36/103 exit=0 seconds=48 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.318s/program) -> /root/slices/slice-36.bin
+slice=37/103 exit=0 seconds=48 peak_gib=30.4
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 25s (0.314s/program) -> /root/slices/slice-37.bin
+slice=38/103 exit=0 seconds=47 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 24s (0.302s/program) -> /root/slices/slice-38.bin
+slice=39/103 exit=0 seconds=48 peak_gib=30.4
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.315s/program) -> /root/slices/slice-39.bin
+slice=40/103 exit=0 seconds=50 peak_gib=30.5
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.330s/program) -> /root/slices/slice-40.bin
+slice=41/103 exit=0 seconds=49 peak_gib=30.2
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.325s/program) -> /root/slices/slice-41.bin
+slice=42/103 exit=0 seconds=48 peak_gib=30.5
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 24s (0.309s/program) -> /root/slices/slice-42.bin
+slice=43/103 exit=0 seconds=48 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.319s/program) -> /root/slices/slice-43.bin
+slice=44/103 exit=0 seconds=48 peak_gib=30.3
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.318s/program) -> /root/slices/slice-44.bin
+slice=45/103 exit=0 seconds=48 peak_gib=30.4
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 23s (0.297s/program) -> /root/slices/slice-45.bin
+slice=46/103 exit=0 seconds=48 peak_gib=31.0
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.322s/program) -> /root/slices/slice-46.bin
+slice=47/103 exit=0 seconds=47 peak_gib=30.5
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.318s/program) -> /root/slices/slice-47.bin
+slice=48/103 exit=0 seconds=48 peak_gib=30.4
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.321s/program) -> /root/slices/slice-48.bin
+slice=49/103 exit=0 seconds=48 peak_gib=31.2
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 25s (0.314s/program) -> /root/slices/slice-49.bin
+slice=50/103 exit=0 seconds=49 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.323s/program) -> /root/slices/slice-50.bin
+slice=51/103 exit=0 seconds=48 peak_gib=29.8
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.316s/program) -> /root/slices/slice-51.bin
+slice=52/103 exit=0 seconds=49 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.313s/program) -> /root/slices/slice-52.bin
+slice=53/103 exit=0 seconds=49 peak_gib=30.1
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.321s/program) -> /root/slices/slice-53.bin
+slice=54/103 exit=0 seconds=49 peak_gib=30.5
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.315s/program) -> /root/slices/slice-54.bin
+slice=55/103 exit=0 seconds=50 peak_gib=29.8
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.326s/program) -> /root/slices/slice-55.bin
+slice=56/103 exit=0 seconds=50 peak_gib=30.2
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 27s (0.334s/program) -> /root/slices/slice-56.bin
+slice=57/103 exit=0 seconds=47 peak_gib=30.4
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 24s (0.308s/program) -> /root/slices/slice-57.bin
+slice=58/103 exit=0 seconds=46 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 24s (0.307s/program) -> /root/slices/slice-58.bin
+slice=59/103 exit=0 seconds=48 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 24s (0.304s/program) -> /root/slices/slice-59.bin
+slice=60/103 exit=0 seconds=48 peak_gib=30.5
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.313s/program) -> /root/slices/slice-60.bin
+slice=61/103 exit=0 seconds=50 peak_gib=30.5
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.330s/program) -> /root/slices/slice-61.bin
+slice=62/103 exit=0 seconds=50 peak_gib=30.5
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 25s (0.316s/program) -> /root/slices/slice-62.bin
+slice=63/103 exit=0 seconds=50 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.330s/program) -> /root/slices/slice-63.bin
+slice=64/103 exit=0 seconds=47 peak_gib=30.5
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.314s/program) -> /root/slices/slice-64.bin
+slice=65/103 exit=0 seconds=50 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.323s/program) -> /root/slices/slice-65.bin
+slice=66/103 exit=0 seconds=46 peak_gib=30.1
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 24s (0.300s/program) -> /root/slices/slice-66.bin
+slice=67/103 exit=0 seconds=49 peak_gib=30.8
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.328s/program) -> /root/slices/slice-67.bin
+slice=68/103 exit=0 seconds=47 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 25s (0.318s/program) -> /root/slices/slice-68.bin
+slice=69/103 exit=0 seconds=50 peak_gib=30.5
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.332s/program) -> /root/slices/slice-69.bin
+slice=70/103 exit=0 seconds=50 peak_gib=30.3
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.326s/program) -> /root/slices/slice-70.bin
+slice=71/103 exit=0 seconds=49 peak_gib=30.2
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 25s (0.311s/program) -> /root/slices/slice-71.bin
+slice=72/103 exit=0 seconds=47 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.321s/program) -> /root/slices/slice-72.bin
+slice=73/103 exit=0 seconds=49 peak_gib=30.4
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.334s/program) -> /root/slices/slice-73.bin
+slice=74/103 exit=0 seconds=48 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.324s/program) -> /root/slices/slice-74.bin
+slice=75/103 exit=0 seconds=49 peak_gib=30.5
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.327s/program) -> /root/slices/slice-75.bin
+slice=76/103 exit=0 seconds=51 peak_gib=30.1
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.330s/program) -> /root/slices/slice-76.bin
+slice=77/103 exit=0 seconds=50 peak_gib=30.5
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.324s/program) -> /root/slices/slice-77.bin
+slice=78/103 exit=0 seconds=46 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 25s (0.314s/program) -> /root/slices/slice-78.bin
+slice=79/103 exit=0 seconds=46 peak_gib=30.8
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.325s/program) -> /root/slices/slice-79.bin
+slice=80/103 exit=0 seconds=50 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.328s/program) -> /root/slices/slice-80.bin
+slice=81/103 exit=0 seconds=49 peak_gib=30.8
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.329s/program) -> /root/slices/slice-81.bin
+slice=82/103 exit=0 seconds=51 peak_gib=30.8
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.329s/program) -> /root/slices/slice-82.bin
+slice=83/103 exit=0 seconds=46 peak_gib=30.2
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 23s (0.296s/program) -> /root/slices/slice-83.bin
+slice=84/103 exit=0 seconds=50 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.330s/program) -> /root/slices/slice-84.bin
+slice=85/103 exit=0 seconds=52 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.332s/program) -> /root/slices/slice-85.bin
+slice=86/103 exit=0 seconds=51 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.334s/program) -> /root/slices/slice-86.bin
+slice=87/103 exit=0 seconds=52 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 28s (0.345s/program) -> /root/slices/slice-87.bin
+slice=88/103 exit=0 seconds=49 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.317s/program) -> /root/slices/slice-88.bin
+slice=89/103 exit=0 seconds=49 peak_gib=30.7
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.332s/program) -> /root/slices/slice-89.bin
+slice=90/103 exit=0 seconds=49 peak_gib=30.2
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.320s/program) -> /root/slices/slice-90.bin
+slice=91/103 exit=0 seconds=47 peak_gib=30.8
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.311s/program) -> /root/slices/slice-91.bin
+slice=92/103 exit=0 seconds=47 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.323s/program) -> /root/slices/slice-92.bin
+slice=93/103 exit=0 seconds=49 peak_gib=30.2
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 26s (0.328s/program) -> /root/slices/slice-93.bin
+slice=94/103 exit=0 seconds=48 peak_gib=30.8
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.320s/program) -> /root/slices/slice-94.bin
+slice=95/103 exit=0 seconds=47 peak_gib=30.3
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 24s (0.309s/program) -> /root/slices/slice-95.bin
+slice=96/103 exit=0 seconds=46 peak_gib=29.8
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 24s (0.299s/program) -> /root/slices/slice-96.bin
+slice=97/103 exit=0 seconds=46 peak_gib=31.0
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.315s/program) -> /root/slices/slice-97.bin
+slice=98/103 exit=0 seconds=51 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.335s/program) -> /root/slices/slice-98.bin
+slice=99/103 exit=0 seconds=48 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 80 + 6 fixed
+80 keys in 25s (0.316s/program) -> /root/slices/slice-99.bin
+slice=100/103 exit=0 seconds=46 peak_gib=30.9
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 25s (0.315s/program) -> /root/slices/slice-100.bin
+slice=101/103 exit=0 seconds=48 peak_gib=30.6
+block 3: 8170 shapes (indices 16469..24639), building 79 + 6 fixed
+79 keys in 26s (0.323s/program) -> /root/slices/slice-101.bin
+ALL_SLICES_DONE=2026-11-13T13:54:21Z
+103

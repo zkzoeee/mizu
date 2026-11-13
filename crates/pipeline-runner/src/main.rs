@@ -98,6 +98,18 @@ enum Mode {
     ///
     /// Ignores `--elf` and `--input-dir`.
     VkMapBlock,
+    /// Prove compressed, then shrink and wrap, and save the wrap proof.
+    ///
+    /// The wrap proof is the last STARK artifact and the only thing the Groth16
+    /// circuit reads (`worker/prover/recursion.rs:732` builds its whole witness
+    /// from `wrap_proof.vk` and `wrap_proof.proof`), so saving it lets a later
+    /// Groth16 run skip execution, core proving and the reduce tree.
+    ///
+    /// Only valid for re-proving the SAME input: the wrap proof's public values
+    /// carry the vk digest, the committed values digest and `vk_root`, so it is
+    /// stale the moment the guest, the input, the retention config or the map
+    /// changes.
+    Wrap,
 }
 
 impl Mode {
@@ -105,6 +117,8 @@ impl Mode {
         match self {
             Mode::Core => ProofMode::Core,
             Mode::Groth16 => ProofMode::Groth16,
+            // Wrap proves compressed, then shrink-wraps the result itself.
+            Mode::Wrap => ProofMode::Compressed,
             // Never reached: main() handles these before this is called.
             Mode::VkMap | Mode::VkMapBlock => ProofMode::Core,
         }
@@ -132,6 +146,9 @@ struct Args {
     /// this is the same work twice -- 26.0 s of run C's 350.9 s on 2026-11-13.
     #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
     count_cycles: bool,
+    /// `--mode wrap`: where to write the wrap proof.
+    #[arg(long)]
+    wrap_out: Option<PathBuf>,
     /// `--mode vk-map-block`: the preprocessed multiple to cover.
     #[arg(long, default_value = "3")]
     block: usize,
@@ -139,6 +156,17 @@ struct Args {
     /// the block and always including both ends. For rate and memory probing.
     #[arg(long)]
     sample: Option<usize>,
+    /// `--mode vk-map-block`: build only slice `i` of `--slice-count`, so the
+    /// block fits a machine. `build_vks` holds every built vk in the local
+    /// in-memory artifact client until it merges, so RSS grows with the program
+    /// count: a 50 GB container OOMs at about 126 programs (measured
+    /// 2026-11-13). Slices are contiguous and disjoint, and the fixed tail is
+    /// built with slice 0 only. Merge the results with tools/merge-vkmap.py.
+    #[arg(long)]
+    slice_index: Option<usize>,
+    /// How many slices the block is cut into.
+    #[arg(long, default_value = "1")]
+    slice_count: usize,
     /// `build_vks` chunk size. The controller submits every chunk up front, so
     /// this trades task count against per-task memory.
     #[arg(long, default_value = "4")]
@@ -213,10 +241,23 @@ async fn main() -> Result<()> {
         anyhow::ensure!(!block.is_empty(), "no shapes at preprocessed multiple {}", args.block);
         let block_len = block.len();
 
-        let selected: Vec<usize> = match args.sample {
+        anyhow::ensure!(args.slice_count >= 1, "--slice-count must be at least 1");
+        let selected: Vec<usize> = match (args.slice_index, args.sample) {
+            // One contiguous slice of the block. Disjoint across indices, and
+            // together they cover it exactly.
+            (Some(i), _) => {
+                anyhow::ensure!(
+                    i < args.slice_count,
+                    "--slice-index {i} is out of range for --slice-count {}",
+                    args.slice_count
+                );
+                let lo = i * block_len / args.slice_count;
+                let hi = (i + 1) * block_len / args.slice_count;
+                block[lo..hi].to_vec()
+            }
             // Evenly spread, both ends included: the extremes are the shapes
             // most likely to panic and the least likely to have been built.
-            Some(n) if n < block_len => {
+            (None, Some(n)) if n < block_len => {
                 let mut v: BTreeSet<usize> = BTreeSet::new();
                 for k in 0..n.max(2) {
                     let pos = k * (block_len - 1) / (n.max(2) - 1);
@@ -227,7 +268,10 @@ async fn main() -> Result<()> {
             _ => block.clone(),
         };
         let mut indices: BTreeSet<usize> = selected.iter().copied().collect();
-        indices.extend(shapes.len() - FIXED_TAIL..shapes.len());
+        // The fixed tail rides with slice 0, so the slices stay disjoint.
+        if args.slice_index.unwrap_or(0) == 0 {
+            indices.extend(shapes.len() - FIXED_TAIL..shapes.len());
+        }
 
         println!(
             "block {}: {block_len} shapes (indices {}..{}), building {} + {FIXED_TAIL} fixed",
@@ -277,6 +321,8 @@ async fn main() -> Result<()> {
             "block_first_index": block[0],
             "block_last_index": block[block_len - 1],
             "sampled": args.sample,
+            "slice_index": args.slice_index,
+            "slice_count": args.slice_count,
             "programs_built": indices.len(),
             "shape_space": shapes.len(),
             "vk_map_keys": result.vk_map.len(),
@@ -286,7 +332,7 @@ async fn main() -> Result<()> {
             "chunk": args.chunk,
             "seconds": { "build_vks": build_seconds },
             "seconds_per_program": build_seconds / indices.len() as f64,
-            "complete": args.sample.is_none(),
+            "complete": args.sample.is_none() && args.slice_index.is_none(),
             "note": "covers every shape an input to a program in this preprocessed block can reach, so the root does not move with the input",
         });
         if let Some(parent) = args.output.parent() {
@@ -449,6 +495,29 @@ async fn main() -> Result<()> {
     };
     let verify_seconds = t.elapsed().as_secs_f64();
 
+    // The wrap proof, for a later `--from-wrap`. `shrink_wrap` takes a
+    // compressed proof and refuses anything else
+    // (`worker/node/full/mod.rs:259`), which is why this mode proves
+    // compressed rather than groth16.
+    let t = Instant::now();
+    let (wrap_bytes, wrap_seconds) = if matches!(args.mode, Mode::Wrap) {
+        let wrapped = node.shrink_wrap(&proof.proof).await.context("shrink wrap")?;
+        (
+            Some(bincode::serialize(&wrapped).context("serialize the wrap proof")?),
+            t.elapsed().as_secs_f64(),
+        )
+    } else {
+        (None, 0.0)
+    };
+    if let Some(bytes) = &wrap_bytes {
+        let path = args.wrap_out.clone().context("--mode wrap needs --wrap-out <path>")?;
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(&path, bytes).context("write the wrap proof")?;
+        println!("wrap proof: {} bytes -> {}", bytes.len(), path.display());
+    }
+
     let proof_bytes = bincode::serialize(&proof.proof).context("serialize the proof")?;
     if let Some(path) = &args.proof_out {
         fs::write(path, &proof_bytes).context("write the proof")?;
@@ -481,12 +550,14 @@ async fn main() -> Result<()> {
         "cycles": if cycles == 0 { serde_json::Value::Null } else { cycles.into() },
         "verified": verified,
         "proof_bytes": proof_bytes.len(),
+        "wrap_proof_bytes": wrap_bytes.as_ref().map(|b| b.len()),
         "seconds": {
             "node_build": node_built.as_secs_f64(),
             "execute": execute_seconds,
             "setup": setup_seconds,
             "prove": prove_seconds,
             "verify": verify_seconds,
+            "shrink_wrap": wrap_seconds,
         },
     });
     if let Some(parent) = args.output.parent() {

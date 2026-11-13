@@ -95,6 +95,19 @@ enum Mode {
     ///
     /// Ignores `--elf` and `--input-dir`.
     VkMapBlock,
+    /// Prove compressed, then shrink and wrap, and save the wrap proof.
+    ///
+    /// The wrap proof is the last STARK artifact and the only thing the Groth16
+    /// circuit reads (`worker/prover/recursion.rs:732` builds its whole witness
+    /// from `wrap_proof.vk` and `wrap_proof.proof`). Saving it means a later
+    /// Groth16 run can skip execution, core proving and the reduce tree
+    /// entirely -- ~153 s of GPU work -- and run the gnark half on a CPU box.
+    ///
+    /// Only valid for re-proving the SAME input: the wrap proof's public values
+    /// carry the vk digest, the committed values digest and `vk_root`, so it is
+    /// stale the moment the guest, the input, the retention config or the map
+    /// changes.
+    Wrap,
 }
 
 impl Mode {
@@ -102,6 +115,8 @@ impl Mode {
         match self {
             Mode::Core => ProofMode::Core,
             Mode::Groth16 => ProofMode::Groth16,
+            // Wrap proves compressed, then shrink-wraps the result itself.
+            Mode::Wrap => ProofMode::Compressed,
             // Never reached: main() handles these before this is called.
             Mode::VkMap | Mode::VkMapBlock => ProofMode::Core,
         }
@@ -126,6 +141,9 @@ struct Args {
     /// this is the same work twice -- 26.0 s of run C's 350.9 s on 2026-11-13.
     #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
     count_cycles: bool,
+    /// `--mode wrap`: where to write the wrap proof.
+    #[arg(long)]
+    wrap_out: Option<PathBuf>,
     /// `--mode vk-map-block`: the preprocessed multiple to cover.
     #[arg(long, default_value = "3")]
     block: usize,
@@ -133,6 +151,17 @@ struct Args {
     /// the block and always including both ends. For rate and memory probing.
     #[arg(long)]
     sample: Option<usize>,
+    /// `--mode vk-map-block`: build only slice `i` of `--slice-count`, so the
+    /// block fits a machine. `build_vks` holds every built vk in the local
+    /// in-memory artifact client until it merges, so RSS grows with the program
+    /// count: a 50 GB container OOMs at about 126 programs (measured
+    /// 2026-11-13). Slices are contiguous and disjoint, and the fixed tail is
+    /// built with slice 0 only. Merge the results with tools/merge-vkmap.py.
+    #[arg(long)]
+    slice_index: Option<usize>,
+    /// How many slices the block is cut into.
+    #[arg(long, default_value = "1")]
+    slice_count: usize,
     /// `build_vks` chunk size. The controller submits every chunk up front, so
     /// this trades task count against per-task memory.
     #[arg(long, default_value = "4")]
@@ -195,6 +224,8 @@ async fn main() -> Result<()> {
         let clusters = machine.shape().chip_clusters.len();
         let block_arg = args.block;
         let sample = args.sample;
+        let slice_index = args.slice_index;
+        let slice_count = args.slice_count;
         let chunk = args.chunk;
         let allow_panics = args.allow_panics;
         let handle = sp1_gpu_cudart::spawn(move |scope| async move {
@@ -217,11 +248,23 @@ async fn main() -> Result<()> {
             }
             assert!(!block.is_empty(), "no shapes at preprocessed multiple {block_arg}");
             let block_len = block.len();
-            let selected: Vec<usize> = match sample {
+            assert!(slice_count >= 1, "--slice-count must be at least 1");
+            let selected: Vec<usize> = match (slice_index, sample) {
+                // One contiguous slice of the block. Disjoint across indices,
+                // and together they cover it exactly.
+                (Some(i), _) => {
+                    assert!(
+                        i < slice_count,
+                        "--slice-index {i} is out of range for --slice-count {slice_count}"
+                    );
+                    let lo = i * block_len / slice_count;
+                    let hi = (i + 1) * block_len / slice_count;
+                    block[lo..hi].to_vec()
+                }
                 // Evenly spread, both ends included: the extremes are the
                 // shapes most likely to panic and the least likely to have
                 // been built before.
-                Some(n) if n < block_len => {
+                (None, Some(n)) if n < block_len => {
                     let mut v: BTreeSet<usize> = BTreeSet::new();
                     for k in 0..n.max(2) {
                         v.insert(block[k * (block_len - 1) / (n.max(2) - 1)]);
@@ -231,7 +274,10 @@ async fn main() -> Result<()> {
                 _ => block.clone(),
             };
             let mut indices: BTreeSet<usize> = selected.iter().copied().collect();
-            indices.extend(shapes.len() - FIXED_TAIL..shapes.len());
+            // The fixed tail rides with slice 0, so the slices stay disjoint.
+            if slice_index.unwrap_or(0) == 0 {
+                indices.extend(shapes.len() - FIXED_TAIL..shapes.len());
+            }
             println!(
                 "block {block_arg}: {block_len} shapes (indices {}..{}), building {} + {FIXED_TAIL} fixed",
                 block[0],
@@ -302,6 +348,8 @@ async fn main() -> Result<()> {
             "block_first_index": block_first,
             "block_last_index": block_last,
             "sampled": sample,
+            "slice_index": slice_index,
+            "slice_count": slice_count,
             "programs_built": programs,
             "shape_space": shape_space,
             "vk_map_keys": keys,
@@ -311,7 +359,7 @@ async fn main() -> Result<()> {
             "chunk": chunk,
             "seconds": { "build_vks": build_seconds },
             "seconds_per_program": build_seconds / programs as f64,
-            "complete": sample.is_none(),
+            "complete": sample.is_none() && slice_index.is_none(),
             "note": "covers every shape an input to a program in this preprocessed block can reach, so the root does not move with the input",
         });
         if let Some(parent) = args.output.parent() {
@@ -451,6 +499,7 @@ async fn main() -> Result<()> {
     let vk_map_for_task = args.vk_map.as_ref().map(|p| p.display().to_string());
     let retain = args.retain_pasta;
     let count_cycles = args.count_cycles;
+    let want_wrap = matches!(mode, Mode::Wrap);
 
     // Everything that touches the device has to happen inside the task scope:
     // a `TaskScope` is a weak handle into a pooled CUDA task and is valid only
@@ -509,13 +558,47 @@ async fn main() -> Result<()> {
         let verified = node.verify(&vk, &proof.proof).is_ok();
         let verify_seconds = t.elapsed().as_secs_f64();
 
-        (cycles, node_built, execute_seconds, setup_seconds, prove_seconds, verify_seconds, verified, proof.proof)
+        // The wrap proof, for `--from-wrap` to pick up later. `shrink_wrap`
+        // takes a compressed proof and refuses anything else
+        // (`worker/node/full/mod.rs:259`), which is why this mode proves
+        // compressed rather than groth16.
+        let t = Instant::now();
+        let (wrap_bytes, wrap_seconds) = if want_wrap {
+            let wrapped = node.shrink_wrap(&proof.proof).await.expect("shrink wrap");
+            (
+                Some(bincode::serialize(&wrapped).expect("serialize the wrap proof")),
+                t.elapsed().as_secs_f64(),
+            )
+        } else {
+            (None, 0.0)
+        };
+
+        (cycles, node_built, execute_seconds, setup_seconds, prove_seconds, verify_seconds, verified, proof.proof, wrap_bytes, wrap_seconds)
     });
 
     // `SpawnHandle<T>` implements `IntoFuture` with `Output = Result<T, SpawnError>`;
     // it has no `join`. Same await as `tools/pasta-proof/src/gpu.rs:308`.
-    let (cycles, node_built, execute_seconds, setup_seconds, prove_seconds, verify_seconds, verified, proof) =
-        handle.await.map_err(|e| anyhow::anyhow!("the CUDA task failed: {e:?}"))?;
+    let (
+        cycles,
+        node_built,
+        execute_seconds,
+        setup_seconds,
+        prove_seconds,
+        verify_seconds,
+        verified,
+        proof,
+        wrap_bytes,
+        wrap_seconds,
+    ) = handle.await.map_err(|e| anyhow::anyhow!("the CUDA task failed: {e:?}"))?;
+
+    if let Some(bytes) = &wrap_bytes {
+        let path = args.wrap_out.clone().context("--mode wrap needs --wrap-out <path>")?;
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(&path, bytes).context("write the wrap proof")?;
+        println!("wrap proof: {} bytes -> {}", bytes.len(), path.display());
+    }
 
     let proof_bytes = bincode::serialize(&proof).context("serialize the proof")?;
     if let Some(path) = &args.proof_out {
@@ -548,12 +631,14 @@ async fn main() -> Result<()> {
         "cycles": if cycles == 0 { serde_json::Value::Null } else { cycles.into() },
         "verified": verified,
         "proof_bytes": proof_bytes.len(),
+        "wrap_proof_bytes": wrap_bytes.as_ref().map(|b| b.len()),
         "seconds": {
             "node_build": node_built,
             "execute": execute_seconds,
             "setup": setup_seconds,
             "prove": prove_seconds,
             "verify": verify_seconds,
+            "shrink_wrap": wrap_seconds,
         },
     });
     if let Some(parent) = args.output.parent() {

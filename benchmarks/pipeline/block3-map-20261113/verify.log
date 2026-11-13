@@ -1,0 +1,53 @@
+[14:06:15] === FUZZ: spot-rebuild 50 shapes spread across block 3 ===
+block 3: 8170 shapes (indices 16469..24639), building 50 + 6 fixed
+56 keys in 20s (0.348s/program) -> /root/verify/spot50.bin
+[14:06:57] spot50_exit=0
+[14:06:57] === POSITIVE: Groth16 against the block map ===
+stderr: 
+stderr: thread '<unnamed>' (1) panicked at crates/o1-verifier/src/main.rs:61:5:
+stderr: Pickles proof verification failed
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: Pickles proof verification failed
+[sp1] downloaded https://sp1-circuits.s3-us-east-2.amazonaws.com/v6.1.0-groth16.tar.gz to /root/.sp1/circuits/groth16/v6.1.0.incomplete.CNAoOd
+Setting environment variables took 60.32µs
+Reading R1CS took 20.67643045s
+Reading proving key took 4.695919258s
+Reading witness file took 1.535762ms
+Deserializing JSON data took 21.656798ms
+Generating witness took 1.289970147s
+[90m14:11:24[0m DBG constraint system solver done [36mnbConstraints=[0m15972262 [36mtook=[0m20458.08933
+[90m14:12:31[0m DBG prover done [36macceleration=[0mnone [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mnbConstraints=[0m15972262 [36mtook=[0m66712.816282
+Generating proof took 1m27.172040107s
+[90m14:12:31[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m14:12:31[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m14:12:31[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m14:12:31[0m DBG verifier done [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mtook=[0m2.873103
+Groth16: 0 cycles, 1671 proof bytes, verified true, prove 306.8s
+[14:12:35] positive_exit=0 seconds=338
+[14:12:35] === NEGATIVE: same ELF against mapB, which lacks its shapes ===
+stderr: 
+stderr: thread '<unnamed>' (1) panicked at crates/o1-verifier/src/main.rs:61:5:
+stderr: Pickles proof verification failed
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: Pickles proof verification failed
+[2m2026-11-13T14:13:12.131923Z[0m [31mERROR[0m [2msp1_prover::worker::node::full::init[0m[2m:[0m task failed with fatal error: vk not allowed
+[2m2026-11-13T14:13:12.906670Z[0m [31mERROR[0m [2msp1_prover::worker::node::full::init[0m[2m:[0m Controller: task failed: Fatal(Core proof task local_worker_01m7am2j16eeraecg4djbg39v8 failed)
+
+thread 'tokio-rt-worker' (29420) panicked at src/main.rs:552:14:
+prove: artifact not found
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Error: the CUDA task failed: JoinError(JoinError::Panic(Id(8), "prove: artifact not found", ...))
+[14:13:14] negative_exit=1 seconds=39  (non-zero is the PASS here)
+[14:13:14] === WRAP: save the wrap proof for later CPU-only gnark runs ===
+stderr: 
+stderr: thread '<unnamed>' (1) panicked at crates/o1-verifier/src/main.rs:61:5:
+stderr: Pickles proof verification failed
+stderr: stack backtrace:
+stderr: note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+stderr: Pickles proof verification failed
+wrap proof: 1340949 bytes -> /root/verify/wrap-proof.bin
+Wrap: 0 cycles, 1277154 proof bytes, verified true, prove 29.9s
+[14:14:33] wrap_exit=0 seconds=79
+[14:14:33] VERIFY_DONE
