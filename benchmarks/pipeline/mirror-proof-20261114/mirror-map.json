@@ -1,0 +1,30 @@
+{
+  "chip_clusters": 43,
+  "distinct_shard_shapes": 5,
+  "elf_sha256": "f6300e05bdec069215e65d7ea3db34af15bc90caac20e2cbfc5730171ff9a254",
+  "mode": "pipeline-cuda",
+  "panic_indices": [],
+  "proof_mode": "VkMap",
+  "seconds": {
+    "build_vks": 7.330489013,
+    "core": 2.343637839
+  },
+  "shape_indices": [
+    78,
+    95,
+    147,
+    215,
+    252,
+    249744,
+    249745,
+    249746,
+    249747,
+    249748,
+    249749
+  ],
+  "shape_space": 249750,
+  "shards": 5,
+  "vk_map_keys": 11,
+  "vk_map_path": "/workspace/out/mirror/mirror-map.bin",
+  "vk_map_sha256": "705287e16243e08fb9c23b6c7475f082ed9df0cfe66e089883e04a8913d2ed37"
+}

@@ -1,0 +1,31 @@
+{
+  "cycles": 129517,
+  "elf_sha256": "f6300e05bdec069215e65d7ea3db34af15bc90caac20e2cbfc5730171ff9a254",
+  "groth16": {
+    "encoded_proof_bytes": 352,
+    "groth16_vkey_hash": "4388a21c687fdd5f218d7e3d13190cac4c5355818d3605fd5fb811df468ee696",
+    "public_inputs": [
+      "221943117929816337340326176627071282809054177347881648534796676525386628296",
+      "7181290166766453752978272924793523749741872562661257144737208806668919039139",
+      "0",
+      "389973028274861134296427354738815382751842248966514177215423031405886768809",
+      "0"
+    ],
+    "raw_proof_bytes": 324,
+    "vk_root": "389973028274861134296427354738815382751842248966514177215423031405886768809"
+  },
+  "mode": "pipeline-cuda",
+  "proof_bytes": 1672,
+  "proof_mode": "Groth16",
+  "retain_pasta": true,
+  "seconds": {
+    "execute": 0.055575071,
+    "node_build": 17.750367515,
+    "prove": 48.238697726,
+    "setup": 0.166836238,
+    "verify": 0.400641467
+  },
+  "soundness": "vk verification ON against the supplied partial vk map; the recursion programs are bound by its root",
+  "verified": true,
+  "vk_verification": true
+}

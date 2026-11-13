@@ -1,0 +1,63 @@
+{
+  "census": {
+    "block_ceiling_cells": 2097152,
+    "clusters_reached": [
+      0,
+      9,
+      18,
+      35,
+      37
+    ],
+    "headroom_cells": 1181696,
+    "main_multiples_seen": [
+      2,
+      3,
+      4,
+      6
+    ],
+    "note": "the preprocessed block is fixed by the program; only the cluster and the main multiple vary with the input, so an all-cluster map over this block covers every input to this ELF",
+    "preprocessed_multiples": [
+      1
+    ],
+    "raw_preprocessed_area": {
+      "max": 915456,
+      "min": 915456
+    }
+  },
+  "chip_clusters": 43,
+  "complete": true,
+  "cycles": 129517,
+  "distinct_shard_shapes": 5,
+  "elf": "target/elf-compilation/riscv64im-succinct-zkvm-elf/release/mirror-operation-program",
+  "elf_sha256": "f6300e05bdec069215e65d7ea3db34af15bc90caac20e2cbfc5730171ff9a254",
+  "mode": "vk-map-local --shapes-only",
+  "records": 5,
+  "retain_pasta": true,
+  "retained_events_presets": [
+    "Bls12381Field",
+    "Bn254Field",
+    "PallasAdd",
+    "Poseidon2",
+    "Sha256",
+    "U256Ops",
+    "Uint256MulMod",
+    "VestaAdd"
+  ],
+  "seconds": {
+    "stream_records": 0.61281075
+  },
+  "shape_indices": [
+    78,
+    95,
+    147,
+    215,
+    252,
+    249744,
+    249745,
+    249746,
+    249747,
+    249748,
+    249749
+  ],
+  "shape_space": 249750
+}

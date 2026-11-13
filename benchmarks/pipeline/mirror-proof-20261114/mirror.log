@@ -1,0 +1,19 @@
+[18:18:58] cuda gnark source on the volume: 3 kernels
+[18:18:58] mirror elf: 131008 bytes sha f6300e05bdec0692
+/root/p6-run.sh: line 19: xxd: command not found
+[18:18:58] input: 
+   --> src/main.rs:334:13
+    Finished `release` profile [optimized] target(s) in 8m 28s
+[18:27:36] build_exit=0 seconds=518
+[18:27:36] === MAP: the mirror guest's own shapes (block 1) ===
+vk map: 5 shards, 5 distinct shard shapes, 11 keys built in 7s -> /workspace/out/mirror/mirror-map.bin
+[18:28:06] map_exit=0 seconds=30
+[18:28:06] === GROTH16: first proof of the mirror guest, CUDA gnark ===
+[90m18:29:13[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m18:29:13[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m18:29:13[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m18:29:13[0m DBG verifier done [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mtook=[0m7.201813
+Groth16: 129517 cycles, 1672 proof bytes, verified true, prove 48.2s
+[18:29:17] groth16_exit=0 seconds=71
+[18:29:17] peak_vram_mib=11679
+[18:29:17] MIRROR_DONE
