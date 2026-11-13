@@ -216,6 +216,89 @@ contract pins it as `VK_ROOT()`, so the map has to be settled before deployment.
 **5. Two Groth16 proofs of the same input differ.** Run B and run C produced
 different bytes and both verify: gnark's Groth16 proving is randomised.
 
+## The ELF-scoped map, and what it takes
+
+`--mode vk-map` covers the shapes one input happened to produce. The map that
+outlives the input covers a whole **preprocessed block**, and
+`shape-space-audit` (pipeline-runner bin, 2.7 s) establishes why that is enough:
+
+```
+[1] fixed tail           OK  last 6 are Compose(1..=4), Deferred, Shrink
+[2] enumeration order    OK  33 contiguous blocks, cluster fastest, main next
+[3] block sizes          OK  main multiple runs 1..=193-pp for T = 193
+[4] closed form          OK  checked against all 249744 entries
+[5] fuzz                 OK  200000 round trips, seed 0
+[6] vk tree depth        OK  249750 distinct (0 duplicates) -> depth 18
+```
+
+A shard's shape is (preprocessed multiple, main multiple, padding columns,
+cluster). The padding dimensions collapse to one value each, because
+`(1 << 21).div_ceil(1 << 22)` is 1. The preprocessed multiple is fixed by the
+*program*. So for one ELF only the cluster and the main multiple vary with the
+input, and enumerating both exhaustively covers every input that ELF can take.
+
+For our guest that block is **pp = 3, indices 16469..24639, 8,170 shapes**, main
+multiples 1..=190 — the whole legal range, which the 2026-11-12 map already
+spans end to end. With the 6 fixed programs that is **8,176 vks, ~39 min and
+~$0.38** on an A40 at the measured 0.285 s/program. `--mode vk-map-block`
+builds it with no proving at all.
+
+Measured on the Poseidon+retention ELF (`vk-map-local --shapes-only`, 95 s on
+this Mac, no vks built; records in
+`benchmarks/pipeline/elf-shape-census-20261113/`):
+
+| | |
+| --- | --- |
+| preprocessed blocks reached | **{3}** — one, as the theory requires |
+| raw preprocessed area | **4,722,688 cells, identical in all 89 records** |
+| block ceiling (3 × 2^21) | 6,291,456 cells |
+| headroom | **1,568,768 cells — 75.1% of the block used** |
+| main multiples seen | 1..190 of 17 distinct |
+| clusters reached | **10 of 43**: 0, 9, 23, 24, 35-38, 40, 41 |
+
+The constant raw area across every shard is the direct evidence that the
+preprocessed multiple is a property of the program, not the input. The 10
+clusters correct an earlier figure of 12 in this document.
+
+**So: build block 3.** On the headroom, the guest can grow by a third before it
+crosses into pp = 4, and shrink by 528,384 cells before dropping to pp = 2.
+Covering **3 and 4 together** is 16,303 programs, ~78 min and ~$0.76, and buys
+a root that survives a guest rebuild that crosses the boundary — cheap against
+redeploying the verifier contract. Block 2 as well would be 24,516 programs,
+~116 min, ~$1.15.
+
+Depth stays 18 either way: `from_map` pads to the full 249,750-entry space, so
+the key count moves the root, not the height. An all-cluster map also makes the
+card-class caveat go away — a 24 GB card's smaller shards still land in this
+block.
+
+### Before building the one we deploy against
+
+1. **The tail was 6 too wide** until 2026-11-13: the tools took `len()-12..`,
+   where only the last 6 are Compose/Deferred/Shrink. The other 6 were
+   arbitrary `pp=33` Normalize shapes, built, never used, and in the root.
+   Fixed at all three sites; check [1] above guards it.
+2. **Confirm the guest's block and its headroom** with
+   `vk-map-local --shapes-only`, which reports the raw preprocessed area
+   against the block ceiling. A guest that grows past it moves to pp = 4
+   (another 8,127 shapes) and the map is dead.
+3. **Decide bucket 3 alone, or 3 and 4** on that headroom.
+4. **Run `vk-map-guard` first.** Seconds, and it fails if the cluster set has
+   drifted off depth 18 — cheaper than discovering it after 39 minutes.
+5. **Sample before committing.** `build_vks` has no resume: the controller
+   submits every chunk up front and holds each one's artifacts until the end
+   (`worker/controller/vk_tree.rs:95`), so a failure at 90% loses everything.
+   `--sample n` builds an even spread including both ends of the block.
+6. **Decide the panic policy.** `build_vk_map` *collects* shapes that panic
+   rather than failing (`worker/prover/vk_worker.rs:39`). Both drivers now
+   refuse by default and record the indices; `--allow-panics true` accepts a
+   map without them, whose root differs from a clean build's and whose missing
+   shapes can never be proved.
+
+A local smoke test built both ends of the block — main multiple 1 and 190,
+the shapes least likely to have been built before — in 100 s on CPU at 12.49
+s/program, with no panics.
+
 ## Still open
 
 - **Nothing is deployed.** Our `vk_root` differs from Succinct's, so their
@@ -224,8 +307,7 @@ different bytes and both verify: gnark's Groth16 proving is randomised.
   unchanged. Gas is still the ~250,000 estimate, not measured on chain.
 - **One input, one map.** Only this Pickles proof has been proved. A
   differently-sharding input needs the map extended, which changes `vk_root`.
-  An ELF-scoped map over the 12 clusters this guest reaches is ~2,280 programs,
-  about 11 min and $0.11 on an A40.
+  The fix is an ELF-scoped map, costed below.
 - **Card class is load-bearing.** The map is valid only for a prover sharding
   identically — VRAM above ~26 GB. A 24 GB A5000/3090/4090 takes
   `local_gpu_opts`' reduced `element_threshold` and would fail the membership

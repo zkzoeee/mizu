@@ -1,0 +1,21 @@
+clusters                 43
+shape space              249750 entries
+max preprocessed mult.   33
+max main multiple        193
+reported capacity        6001  (shapes.rs counts 0..=max_pp; the loop is 1..=max_pp)
+
+[1] fixed tail           OK  last 6 are Compose(1..=4), Deferred, Shrink
+                             (a 12-wide tail would take 6 Normalize shapes with it)
+[2] enumeration order    OK  33 contiguous blocks, cluster fastest, main next
+[3] block sizes          OK  main multiple runs 1..=193-pp for T = 193
+                             5808 shapes per cluster, 249744 Normalize entries
+[4] closed form          OK  checked against all 249744 entries
+[5] fuzz                 OK  200000 round trips, seed 0
+[6] vk tree depth        OK  249750 distinct (0 duplicates) -> depth 18
+
+block pp=3: indices 16469..24639 (8170 shapes)
+  main multiples        1..=190
+  all-cluster map       8170 programs + 6 fixed = 8176
+  at 0.285 s/program    39 min
+
+OK: the shape-space arithmetic holds.

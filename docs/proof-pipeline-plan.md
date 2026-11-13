@@ -122,7 +122,7 @@ This phase gates everything else.
 ## Phase A can be deferred, and a partial VK map replaces most of it
 
 **Superseded in part by the 2026-11-12 run, which used neither switch.** A
-*partial* VK map — the shapes in one core proof plus the last 12 — is built in
+*partial* VK map — the shapes in one core proof plus the fixed tail — is built in
 19 s on an A40 and proves with `vk_verification` ON
 (`node.build_vks(Either::Left(indices), chunk)` plus `with_vk_map_path`, which is
 SP1's own `test_build_vk_map` flow). That is the route to take: it keeps the

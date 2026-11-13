@@ -143,7 +143,7 @@ measure the final artifact — the wrap vk bytes — which is what
   fire.
 - **The VK map need not be complete for a first proof.** SP1's own
   `test_build_vk_map` builds a partial map from the shapes in one core proof plus
-  the last 12, and proves against it via `with_vk_map_path`.
+  the fixed tail, and proves against it via `with_vk_map_path`.
 - `vendor/sp1`'s own `Cargo.lock` does not satisfy its workspace, so
   `cargo --locked` fails inside it, and the standing rule forbids running cargo
   there without `--locked`. Work from the root workspace.
@@ -239,7 +239,7 @@ cluster default — is necessary, not incidental.
   far went through with `4806ebe3d6454da2`.
 - The VK map is not a 249,750-program prerequisite for a first proof. SP1's own
   `test_build_vk_map` builds a *partial* map — the shapes that appear in one core
-  proof plus the last 12 (compose, deferred, shrink) — and proves against it via
+  proof plus the fixed tail (one compose per arity, deferred, shrink) — and proves against it via
   `with_vk_map_path`; `from_map` pads the rest. Dozens of programs, not a quarter
   of a million. The full map is for generality later, since a shape missing from
   the map cannot be proved until it is added, and adding changes the root.
@@ -253,7 +253,8 @@ keys.** Records in `benchmarks/pipeline/groth16-20261112/`. One A40 pod
 built with `--features native-gnark`:
 
 1. `--mode vk-map` proved core (138 shards, 155.6 s), found 55 distinct shard
-   shapes, added the last 12 shapes and built 67 vks in **19.1 s** on the GPU —
+   shapes, added the tail and built 67 vks in **19.1 s** on the GPU (a 12-wide
+   tail: 6 of those were arbitrary Normalize shapes, fixed 2026-11-13) —
    0.285 s per program against 13.3 s on one CPU core. A 2,688-byte map.
 2. `--mode groth16 --vk-map ..` with `SP1_CIRCUIT_MODE` unset: vk verification on
    against that map, the wrap-vk check ran and did not fire, SP1 downloaded

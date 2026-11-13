@@ -1,0 +1,8 @@
+chip clusters            43
+padded VK map keys       249750
+next power of two        262144 = 2^18
+allowed_vk_height        18  (upstream: 18)
+ceiling for depth 18     262144
+headroom                 12394 keys
+
+OK: depth 18 matches upstream, so its released Groth16 artifacts apply.

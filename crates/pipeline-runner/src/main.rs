@@ -39,6 +39,15 @@ use sp1_prover_types::network_base_types::ProofMode;
 
 /// `prover/src/shapes.rs:71`.
 const DEFAULT_ARITY: usize = 4;
+/// `prover/src/components.rs:16`.
+const LOG_STACKING_HEIGHT: usize = 21;
+
+/// The fixed programs `create_all_input_shapes` appends after the Normalize
+/// shapes: one Compose per arity, then Deferred and Shrink
+/// (`prover/src/shapes.rs:730-738`). Taking a wider tail than this pulls in
+/// arbitrary Normalize shapes that are built, never used, and still change the
+/// map's root -- this said 12 until 2026-11-13.
+const FIXED_TAIL: usize = DEFAULT_ARITY + 2;
 
 #[derive(Copy, Clone, Debug, ValueEnum)]
 enum Mode {
@@ -63,8 +72,9 @@ enum Mode {
     Groth16,
     /// Build a partial recursion VK map for exactly this workload, the way
     /// SP1's own `test_build_vk_map` does (`prover/src/shapes.rs:1037`): prove
-    /// core, collect the recursion shape of every shard, add the last 12 shapes
-    /// (compose, deferred, shrink), and build the vks for those alone. Writes
+    /// core, collect the recursion shape of every shard, add the fixed tail
+    /// (one compose per arity, deferred, shrink), and build the vks for those
+    /// alone. Writes
     /// the map to `--vk-map`; `from_map` pads the rest of the tree.
     ///
     /// This is what makes `vk_verification` usable without building all
@@ -72,6 +82,22 @@ enum Mode {
     /// the map cannot be proved until the map is extended, and extending it
     /// changes the root, which the verifier contract pins as `VK_ROOT`.
     VkMap,
+    /// Build the VK map for a whole preprocessed block, without proving
+    /// anything. `--mode vk-map` covers only the shapes one input happened to
+    /// produce; this covers every shape any input to a program in this block
+    /// can produce, because the preprocessed area is fixed by the program while
+    /// the cluster and the main multiple are what vary. One of these outlives
+    /// the input, so the root it pins in the verifier contract stops moving.
+    ///
+    /// `--block` picks the preprocessed multiple (3 is our guest's; run
+    /// `vk-map-local --shapes-only` against an ELF to find its own). `--sample`
+    /// builds a spread of the block instead of all of it, which is how to
+    /// measure the rate and the memory before committing to the full run --
+    /// this build has no resume, and the controller holds every chunk's
+    /// artifacts until the end (`worker/controller/vk_tree.rs:95`).
+    ///
+    /// Ignores `--elf` and `--input-dir`.
+    VkMapBlock,
 }
 
 impl Mode {
@@ -79,8 +105,8 @@ impl Mode {
         match self {
             Mode::Core => ProofMode::Core,
             Mode::Groth16 => ProofMode::Groth16,
-            // Never reached: main() handles VkMap before this is called.
-            Mode::VkMap => ProofMode::Core,
+            // Never reached: main() handles these before this is called.
+            Mode::VkMap | Mode::VkMapBlock => ProofMode::Core,
         }
     }
 }
@@ -106,6 +132,24 @@ struct Args {
     /// this is the same work twice -- 26.0 s of run C's 350.9 s on 2026-11-13.
     #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
     count_cycles: bool,
+    /// `--mode vk-map-block`: the preprocessed multiple to cover.
+    #[arg(long, default_value = "3")]
+    block: usize,
+    /// `--mode vk-map-block`: build only this many indices, spread evenly over
+    /// the block and always including both ends. For rate and memory probing.
+    #[arg(long)]
+    sample: Option<usize>,
+    /// `build_vks` chunk size. The controller submits every chunk up front, so
+    /// this trades task count against per-task memory.
+    #[arg(long, default_value = "4")]
+    chunk: usize,
+    /// Keep going when `build_vks` panics on a shape, recording the indices in
+    /// the report instead of failing. `build_vk_map` collects panicking shapes
+    /// rather than failing (`worker/prover/vk_worker.rs:39`), so the default is
+    /// to refuse: a map missing a shape still builds, and the shard that lands
+    /// on it fails much later with `vk not allowed`.
+    #[arg(long, default_value_t = false, action = clap::ArgAction::Set)]
+    allow_panics: bool,
     /// Retain the Pasta and UInt256 events instead of deferring them, as the
     /// `pasta-proof` harness's retained arm does and as `vk-map-local` assumes.
     /// Changes how shards are cut, so the VK map must have been built with the
@@ -150,6 +194,115 @@ async fn main() -> Result<()> {
     // A fixed nonce so two runs of the same inputs are comparable.
     let context = SP1Context { proof_nonce: [0, 0, 0, 0], ..Default::default() };
 
+    if matches!(args.mode, Mode::VkMapBlock) {
+        let path = args.vk_map.clone().context("--mode vk-map-block needs --vk-map <path>")?;
+        let shapes = create_all_input_shapes(machine.shape(), DEFAULT_ARITY);
+
+        // Select by reading the enumeration rather than by index arithmetic:
+        // the block is whichever Normalize shapes carry this preprocessed
+        // multiple, and `shape-space-audit` is what checks that they form one
+        // contiguous run.
+        let mut block: Vec<usize> = Vec::new();
+        for (i, shape) in shapes.iter().enumerate() {
+            if let SP1RecursionProgramShape::Normalize(core) = shape {
+                if core.preprocessed_area >> LOG_STACKING_HEIGHT == args.block {
+                    block.push(i);
+                }
+            }
+        }
+        anyhow::ensure!(!block.is_empty(), "no shapes at preprocessed multiple {}", args.block);
+        let block_len = block.len();
+
+        let selected: Vec<usize> = match args.sample {
+            // Evenly spread, both ends included: the extremes are the shapes
+            // most likely to panic and the least likely to have been built.
+            Some(n) if n < block_len => {
+                let mut v: BTreeSet<usize> = BTreeSet::new();
+                for k in 0..n.max(2) {
+                    let pos = k * (block_len - 1) / (n.max(2) - 1);
+                    v.insert(block[pos]);
+                }
+                v.into_iter().collect()
+            }
+            _ => block.clone(),
+        };
+        let mut indices: BTreeSet<usize> = selected.iter().copied().collect();
+        indices.extend(shapes.len() - FIXED_TAIL..shapes.len());
+
+        println!(
+            "block {}: {block_len} shapes (indices {}..{}), building {} + {FIXED_TAIL} fixed",
+            args.block,
+            block[0],
+            block[block_len - 1] + 1,
+            selected.len()
+        );
+
+        let node = SP1LocalNodeBuilder::from_worker_client_builder(
+            cpu_worker_builder_with_machine(machine),
+        )
+        .build()
+        .await
+        .context("build the local node")?;
+        let t = Instant::now();
+        let result = node
+            .build_vks(Some(Either::Left(indices.iter().copied().collect())), args.chunk)
+            .await
+            .context("build_vks")?;
+        let build_seconds = t.elapsed().as_secs_f64();
+        if !result.panic_indices.is_empty() {
+            eprintln!(
+                "WARNING: build_vks panicked on {} shape indices: {:?}",
+                result.panic_indices.len(),
+                result.panic_indices
+            );
+            anyhow::ensure!(
+                args.allow_panics,
+                "build_vks panicked on {} shape indices; pass --allow-panics true to accept a \
+                 map without them (its root differs from a clean build's)",
+                result.panic_indices.len()
+            );
+        }
+
+        let map_bytes = bincode::serialize(&result.vk_map).context("serialize the vk map")?;
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(&path, &map_bytes).context("write the vk map")?;
+        let report_json = serde_json::json!({
+            "mode": "pipeline-local",
+            "proof_mode": "VkMapBlock",
+            "chip_clusters": clusters,
+            "preprocessed_multiple": args.block,
+            "block_shapes": block_len,
+            "block_first_index": block[0],
+            "block_last_index": block[block_len - 1],
+            "sampled": args.sample,
+            "programs_built": indices.len(),
+            "shape_space": shapes.len(),
+            "vk_map_keys": result.vk_map.len(),
+            "vk_map_sha256": hex::encode(<sha2::Sha256 as sha2::Digest>::digest(&map_bytes)),
+            "vk_map_path": path.display().to_string(),
+            "panic_indices": result.panic_indices,
+            "chunk": args.chunk,
+            "seconds": { "build_vks": build_seconds },
+            "seconds_per_program": build_seconds / indices.len() as f64,
+            "complete": args.sample.is_none(),
+            "note": "covers every shape an input to a program in this preprocessed block can reach, so the root does not move with the input",
+        });
+        if let Some(parent) = args.output.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(&args.output, format!("{}\n", serde_json::to_string_pretty(&report_json)?))?;
+        println!(
+            "{} keys in {:.0}s ({:.3}s/program) -> {}",
+            result.vk_map.len(),
+            build_seconds,
+            build_seconds / indices.len() as f64,
+            path.display()
+        );
+        return Ok(());
+    }
+
     if matches!(args.mode, Mode::VkMap) {
         let path = args.vk_map.clone().context("--mode vk-map needs --vk-map <path>")?;
         let core_verifier = CpuSP1ProverComponents::core_verifier(machine.clone());
@@ -186,19 +339,27 @@ async fn main() -> Result<()> {
             indices.insert(index);
         }
         let distinct_shard_shapes = indices.len();
-        indices.extend(shapes.len() - 12..shapes.len());
+        indices.extend(shapes.len() - FIXED_TAIL..shapes.len());
 
         let t = Instant::now();
         let result = node
-            .build_vks(Some(Either::Left(indices.iter().copied().collect())), 4)
+            .build_vks(Some(Either::Left(indices.iter().copied().collect())), args.chunk)
             .await
             .context("build_vks")?;
         let build_seconds = t.elapsed().as_secs_f64();
-        anyhow::ensure!(
-            result.panic_indices.is_empty(),
-            "build_vks panicked on shape indices {:?}",
-            result.panic_indices
-        );
+        if !result.panic_indices.is_empty() {
+            eprintln!(
+                "WARNING: build_vks panicked on {} shape indices: {:?}",
+                result.panic_indices.len(),
+                result.panic_indices
+            );
+            anyhow::ensure!(
+                args.allow_panics,
+                "build_vks panicked on {} shape indices; pass --allow-panics true to accept a \
+                 map without them (its root differs from a clean build's)",
+                result.panic_indices.len()
+            );
+        }
 
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
@@ -217,6 +378,7 @@ async fn main() -> Result<()> {
             "shape_space": shapes.len(),
             "vk_map_keys": result.vk_map.len(),
             "vk_map_path": path.display().to_string(),
+            "panic_indices": result.panic_indices,
             "seconds": { "core": core_seconds, "build_vks": build_seconds },
         });
         if let Some(parent) = args.output.parent() {

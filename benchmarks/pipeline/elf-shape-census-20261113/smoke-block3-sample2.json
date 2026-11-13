@@ -1,0 +1,23 @@
+{
+  "block_first_index": 16469,
+  "block_last_index": 24638,
+  "block_shapes": 8170,
+  "chip_clusters": 43,
+  "chunk": 2,
+  "complete": false,
+  "mode": "pipeline-local",
+  "note": "covers every shape an input to a program in this preprocessed block can reach, so the root does not move with the input",
+  "panic_indices": [],
+  "preprocessed_multiple": 3,
+  "programs_built": 8,
+  "proof_mode": "VkMapBlock",
+  "sampled": 2,
+  "seconds": {
+    "build_vks": 99.930957083
+  },
+  "seconds_per_program": 12.491369635375,
+  "shape_space": 249750,
+  "vk_map_keys": 8,
+  "vk_map_path": "/private/tmp/claude-501/-Users-user-000--Z/ff1d6ebe-9ac5-4ba4-a8dc-aed915807712/scratchpad/smoke-block3.bin",
+  "vk_map_sha256": "c124ce30807438e2dca4368011834ff07e38e0bdac0a2aa264fb2799e284d39d"
+}
