@@ -125,4 +125,18 @@ contract SP1VerifierGroth16Test {
         verifier.verifyProof(VKEY_DIGEST, PUBLIC_VALUES_DIGEST, PROOF_DIGEST);
         emit GasUsed("verifyProof statement-digest", start - gasleft());
     }
+
+    /// The same wrap proof, Groth16-proved by the CUDA prover from
+    /// succinctlabs/sp1#3017 instead of gnark's CPU one: 37 s against 133 s,
+    /// 3,141 MiB of VRAM. Different bytes (gnark proving is randomised),
+    /// identical public inputs, and it must verify under the same contract.
+    bytes constant PROOF_CUDA = hex"4388a21c000000000000000000000000000000000000000000000000000000000000000000ec8a081fbf4a164e95ed2147c675a5a2cbe32dbc9c6d60c026ccb8c2bce835000000000000000000000000000000000000000000000000000000000000000024bf81eac101e4a3b347a308a167b5ad919b4a080d8137cef8dbd39f0b42be5807e5b9c28d23e4b648eec96fa80ff12c3be03bc1ca4e38d12de73919189f2588163def3a26fcd97de4d2166cc7325d0e164a175c5f393e9dc9145bab652e452d046e3cc1edd7a943467776c13ee15049abaf7326ed806199326d6ce31c63ae840b9fc5eaa17a353e91a72d2d0c92f9c49be79c976541a4f1e9f0e0c8412fcb1c0d92749eb6e090aa4c3e09816a0bc2f2bfb609a5790dcd0751a96fddd1854b71159d1e5632fd48a37f7cf72e0c3495a148d24bbdb9f746e84552d8afdeda59a126aabe6f46df13b046d8059db8bb84ef4cf5ad94f659df42cf846d38fb469cfe";
+
+    function test_cuda_proved_groth16_verifies() public view {
+        verifier.verifyProof(VKEY_DIGEST, PUBLIC_VALUES_DIGEST, PROOF_CUDA);
+    }
+
+    function test_cuda_and_cpu_proofs_differ() public pure {
+        require(keccak256(PROOF_CUDA) != keccak256(PROOF_DIGEST), "identical bytes");
+    }
 }
