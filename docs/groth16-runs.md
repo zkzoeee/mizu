@@ -239,9 +239,17 @@ input, and enumerating both exhaustively covers every input that ELF can take.
 
 For our guest that block is **pp = 3, indices 16469..24639, 8,170 shapes**, main
 multiples 1..=190 — the whole legal range, which the 2026-11-12 map already
-spans end to end. With the 6 fixed programs that is **8,176 vks, ~39 min and
-~$0.38** on an A40 at the measured 0.285 s/program. `--mode vk-map-block`
-builds it with no proving at all.
+spans end to end. `--mode vk-map-block` builds it with no proving at all.
+
+> **It costs far more than the ~39 min / ~$0.38 first estimated here, and a
+> single pod cannot do it.** Measured 2026-11-13 by the `--sample 500` probe:
+> **1.1 s/program, not 0.285** (that figure came from 67 *real* shard shapes;
+> a block sample reaches main multiples up to 190, whose programs are much
+> bigger), so the block is **~2.5 hours**. And `build_vks` accumulates every
+> built vk in the local in-memory artifact client before merging, so RSS grows
+> with program count: the probe was **OOM-killed (exit 137) at 126 of 506
+> programs** inside a 50 GB container. A block map needs a disk-backed artifact
+> store or a sliced build with offline merging. Not attempted.
 
 Measured on the Poseidon+retention ELF (`vk-map-local --shapes-only`, 95 s on
 this Mac, no vks built; records in
@@ -299,12 +307,72 @@ A local smoke test built both ends of the block — main multiple 1 and 190,
 the shapes least likely to have been built before — in 100 s on CPU at 12.49
 s/program, with no panics.
 
+## Two workloads, one root, verified on the EVM (2026-11-13)
+
+With the whole block out of reach, the ELF-scoped claim was tested at the scale
+that was affordable: build a map for each of two deliberately different
+workloads, **merge them offline into one map**, and prove both against it.
+
+| | proof A | proof B |
+| --- | --- | --- |
+| guest ELF | `dc8e4b40..` Poseidon + Fp precompiles | `0cfb3eaf..` default |
+| retention | on | **off** |
+| shards | 84 | **138** |
+| distinct shard shapes | 21 | **55** |
+| own map | 27 keys | 61 keys |
+| `prove` | 316.6 s | 368.1 s |
+| `programVKey` | `0x00f23c18bd..` | `0x00416e4a23..` — different |
+| **`vk_root`** | `0x007ef473..ae0` | **identical** |
+
+The merged map is **75 keys**: 27 + 61 with 13 shared — the 6 fixed programs
+plus 7 shard shapes both workloads genuinely reach, which matches the census
+(both ELFs hit clusters 0, 9, 23, 24).
+
+Merging offline is sound rather than a shortcut. The controller merges chunk
+outputs by collecting every vk into a `BTreeSet` and `.enumerate()`-ing it
+(`worker/controller/vk_tree.rs`), and `from_map` derives the root from the map
+alone, so a union assembled with `tools/merge-vkmap.py` is byte-identical to
+what one build over that union would produce. The tool checks its own
+assumptions: every input map must already be sorted under its comparator with
+values exactly 0..n-1, and it round-trips the bytes. **Both proofs verifying
+against the merged map is the end-to-end evidence that it is right.**
+
+So a map is not tied to one input, and not even to one program: what it is tied
+to is the set of shard shapes it covers. Two programs sharding two different
+ways share one root and so one deployed verifier constant.
+
+## Verified locally with forge
+
+`contracts-check/` runs Succinct's released v6.1.0 verifier contracts —
+`SP1VerifierGroth16.sol` and `Groth16Verifier.sol`, taken from the installed
+artifacts — against both proofs. The **only** edit is `VK_ROOT()`:
+
+```
+0x002f850ee998974d6cc00e50cd0814b098c05bfade466d28573240d057f25352   upstream
+0x007ef473fdfbe096cc4e1e3235be51f83c613ca77f431564b062220769ff8ae0   ours
+```
+
+`forge test` — 8 passed, 0 failed, no `forge-std` dependency:
+
+| | |
+| --- | --- |
+| `verifyProof(bytes32,bytes,bytes)` | **219,096 gas** (both proofs) |
+| deployment | 1,510,757 gas, 6,770 bytes |
+| a flipped bit in the `vkRoot` word | rejected at 9,923 gas (`InvalidVkRoot`, before the pairing) |
+| a flipped bit in the proof | rejected by the pairing |
+
+219,096 against the ~250,000 this document used to estimate. `publicValues` is
+the single byte `0x01` — the guest's boolean — confirmed by
+`sha256(0x01) & ((1<<253)-1)` matching public input 1 of both proofs.
+
+Still not deployed to any chain, and the gas figure is a local EVM measurement.
+
 ## Still open
 
 - **Nothing is deployed.** Our `vk_root` differs from Succinct's, so their
   deployed verifier would reject these proofs. `SP1VerifierGroth16.sol` has to be
   deployed with our `VK_ROOT()`; `Groth16Verifier.sol`, the pairing constants, is
-  unchanged. Gas is still the ~250,000 estimate, not measured on chain.
+  unchanged. Verified locally at **219,096 gas** (see above); never on a chain.
 - **One input, one map.** Only this Pickles proof has been proved. A
   differently-sharding input needs the map extended, which changes `vk_root`.
   The fix is an ELF-scoped map, costed below.

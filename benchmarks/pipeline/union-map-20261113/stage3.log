@@ -1,0 +1,7 @@
+[11:34:01] === MAP A: Poseidon ELF, retention ON ===
+vk map: 84 shards, 21 distinct shard shapes, 27 keys built in 12s -> /workspace/vkmap/mapA.bin
+[11:36:47] mapA_exit=0 seconds=166
+[11:36:47] === MAP B: default ELF 0cfb3eaf, retention OFF ===
+vk map: 138 shards, 55 distinct shard shapes, 61 keys built in 19s -> /workspace/vkmap/mapB.bin
+[11:40:13] mapB_exit=0 seconds=206
+[11:40:13] STAGE3_DONE

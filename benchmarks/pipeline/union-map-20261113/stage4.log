@@ -1,0 +1,34 @@
+[11:41:16] union map: 5ba448620691944d 3008 bytes
+[11:41:16] === PROOF A: Poseidon ELF, retention ON, union map ===
+Setting environment variables took 17.222µs
+Reading R1CS took 24.494721036s
+Reading proving key took 18.129128784s
+Reading witness file took 3.41839ms
+Deserializing JSON data took 40.639355ms
+Generating witness took 917.915681ms
+[90m11:45:51[0m DBG constraint system solver done [36mnbConstraints=[0m15972262 [36mtook=[0m24520.436169
+[90m11:46:59[0m DBG prover done [36macceleration=[0mnone [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mnbConstraints=[0m15972262 [36mtook=[0m68779.820323
+Generating proof took 1m33.303177379s
+[90m11:46:59[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m11:46:59[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m11:46:59[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m11:46:59[0m DBG verifier done [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mtook=[0m2.235051
+Groth16: 0 cycles, 1672 proof bytes, verified true, prove 316.6s
+[11:47:03] proofA_exit=0 seconds=347
+[11:47:03] === PROOF B: default ELF 0cfb3eaf, retention OFF, same union map ===
+Setting environment variables took 86.145µs
+Reading R1CS took 24.462646386s
+Reading proving key took 15.239280731s
+Reading witness file took 2.319221ms
+Deserializing JSON data took 25.539976ms
+Generating witness took 1.41066818s
+[90m11:52:29[0m DBG constraint system solver done [36mnbConstraints=[0m15972262 [36mtook=[0m21872.914385
+[90m11:53:38[0m DBG prover done [36macceleration=[0mnone [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mnbConstraints=[0m15972262 [36mtook=[0m68435.078566
+Generating proof took 1m30.310978773s
+[90m11:53:38[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m11:53:38[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m11:53:38[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m11:53:38[0m DBG verifier done [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mtook=[0m13.613659
+Groth16: 0 cycles, 1672 proof bytes, verified true, prove 368.1s
+[11:53:42] proofB_exit=0 seconds=399
+[11:53:42] STAGE4_DONE
