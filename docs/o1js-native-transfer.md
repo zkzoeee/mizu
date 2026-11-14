@@ -64,6 +64,54 @@ natively. The other candidates named in
 setup and VK digest — are untested natively and should be measured the same way
 before anyone argues for them.
 
+## Why, exactly — two causes, both deliberate
+
+**It does not parallelise because it was built not to.** Our fork added
+`msm_bigint_serial` to arkworks, and its own doc comment states the reason: it
+"deliberately contains no `cfg_into_iter!`, Rayon iterators, or thread-count
+queries. zkVM targets use this entry point even when Cargo feature unification
+enables arkworks' `parallel` feature." The `curves` crate has **no rayon
+dependency at all**, so `canonical_pallas` physically cannot thread. The same
+comment says the function stays available natively so "downstream verifier tests
+exercise the exact arithmetic schedule selected inside the zkVM" — which is
+exactly what the table above does. The 10x is not a defect; it is a serial path
+measured against a parallel one.
+
+**The 1.7x single-threaded gap is a conversion with no payoff.** The canonical
+path converts every base into `CanonicalFp` storage so fixed-limb values can be
+handed to SP1's `UINT256_MULMOD` and `PALLAS_ADD` syscalls. `msm_bigint`'s doc
+comment is explicit that it computes "the same Pallas MSM as arkworks with
+canonical coordinate storage". Natively there is no syscall at the other end, so
+the conversion is paid — 65,536 points at 2^16 — and nothing is bought.
+
+## The Zakura comparison, and the rule it suggests
+
+Worth contrasting, because Zakura's Pasta techniques *did* reduce proving time
+for us: batch inversion by Montgomery's trick, fixed four-limb Montgomery
+arithmetic, and a variable-time extended-Euclid inverse, recorded as
+`mizu-zakura-host-witness` at **-49.3% single-threaded record generation** with a
+bit-identical witness. Techniques adapted, no code imported.
+
+Neither of those transfers either, but for different reasons:
+
+- **The implementation is SP1-specific.** It landed in `vendor/sp1`
+  (`e0b57de84`), and its own commit message is about shards, trace rows and
+  byte-lookup dependencies: witness generation "populates every addition twice
+  per shard" and the fix decodes "rows per parallel chunk". o1js has no shards,
+  no trace rows and no byte lookups.
+- **The general technique is already upstream.** kimchi already calls
+  `batch_inversion` in `lagrange_basis_evaluations.rs`, `verifier.rs`,
+  `circuits/expr.rs`, `circuits/lookup/constraints.rs` and
+  `circuits/polynomials/permutation.rs`. There is no unclaimed win to port.
+
+**The rule this suggests: ask where a win was measured, not what it does.**
+Zakura's was measured host-side, on multi-threaded native hardware generating a
+trace — the same cost model o1js's native prover lives in, which is why it was a
+real win there. The MSM schedules were measured guest-side, in a single-threaded
+zkVM where syscalls do the arithmetic and threads do not exist. Nothing measured
+in that model should be expected to survive the move to o1js, and the 10x above
+is what happens when it does not.
+
 ## Reproducing
 
 ```sh
