@@ -12,8 +12,8 @@ branch `codex/mirror-root-cycles` (`benchmarks/mirror/RESULTS.md`, commits
 | baseline | — | 26,671,788 | — |
 | `H_p` as the keccak leaf | **mizu's SP1 guest** | 26,118,893 | 2.1% |
 | + sorted-prefix sharing, N=100 | **mizu's SP1 guest** | 22,436,733 | 15.9% |
-| + diff-set commitment | **Zeko's transition circuit** | 9,142,141 | 65.7% |
-| *alternative:* keccak tree in Zeko's settlement | **nobody's circuit** | 16,166,796 | 39.4% |
+| + diff-set commitment | **Miza's transition circuit** | 9,142,141 | 65.7% |
+| *alternative:* root built in the settlement layer | **no circuit at all** | 16,166,796 | 39.4% |
 
 **Row 3 was corrected 2026-11-14.** It read 9,696,716 / 63.6%, which does not
 reconstruct from the permutation counts as a cumulative row: it silently reverts
@@ -31,7 +31,7 @@ not an option**: a guest with no `H_p` of its own can only build a keccak leaf
 from the committed `H_p` and `evm_fields`, which is change 1's format exactly.
 The sequencing below already puts change 1 first; this is the reason it has to be.
 
-The first two need nothing from Zeko. They are changes to the guest that walks
+The first two need nothing from Miza. They are changes to the guest that walks
 the tree, so they can land independently of anything on the chain side.
 
 **Only the baseline is measured.** 26,671,788 cells and 111,592 cycles per
@@ -46,6 +46,11 @@ is already on the branch and described under *Validation* below.
 
 **Mode 1, the full keccak Merkle mirror, is the chosen construction** — the one
 that lets Ethereum prove inclusion of any account.
+
+Chosen *among mirror constructions*. The mirror itself is an **option** on
+Mizu, not a requirement: it exists so that a proof settled to an EVM is easy to
+use there, and nothing else in this repository depends on it. Whether it is
+built inside the guest at all is the step-0 question in *Sequencing*.
 
 ### Correction: this plan's baseline was already the right build
 
@@ -191,15 +196,15 @@ update. Dedup before witnessing, or fold repeated touches into one old→new pai
 **Risk.** Medium. Touches the witness format and the walk at once. Land change 1
 first so the leaf invariant is already simplified when this rewrite happens.
 
-## Change 3 — diff-set commitment (needs Zeko)
+## Change 3 — diff-set commitment (needs Miza)
 
-**What.** Zeko's transition circuit absorbs `(index, H_p_old, H_p_new,
+**What.** Miza's transition circuit absorbs `(index, H_p_old, H_p_new,
 evm_fields_old, evm_fields_new)` for every changed account, in sorted index
 order, into a Poseidon sponge, and exposes the digest as one more element of the
 proof's statement. mizu's guest then checks the witness list against that digest
 and **never walks the Poseidon tree**.
 
-**Why it is nearly free on the Zeko side.** The transition circuit already walks
+**Why it is nearly free on the Miza side.** The transition circuit already walks
 the Merkle paths in-circuit — that is how it proves `root_old → root_new` — so it
 already holds every triple. About 7 fields per account is 4 Poseidon
 permutations, 52 rows at 13 rows per permutation:
@@ -245,7 +250,7 @@ existing binding check unmodified.
 
 **But the verification key changes**, and that has a tail:
 
-- Mina side: a deployment or upgrade of Zeko's zkApp with the new VK.
+- Mina side: a deployment or upgrade of Miza's zkApp with the new VK.
 - mizu side: the VK is pinned. `verification_key_sha256 = eed89d80…`, app
   statement `0x11D6…`, embedded at build time through `fixed_srs.rs` and
   `fixed_pallas.rs`. A new VK means a new embedded setup, new fixture, new
@@ -287,100 +292,101 @@ statement lengthens `app_state`. `statement.rs` absorbs it at any length, and th
 app state is bound rather than silently truncated at either layer. No code
 change in the verifier or the ABI.
 
-**Unverified precondition.** The 5.7% figure assumes Zeko's transition circuit
+**Unverified precondition.** The 5.7% figure assumes Miza's transition circuit
 walks the paths in-circuit. If it instead takes the new root as a witness and
 checks something weaker, the commitment is no longer nearly free and this
 becomes real work. That circuit is not in this workspace —
-`miza-o1js-to-zkvm` is Miza's fork of the *verifier*, not the chain. **Resolved
-2026-11-14 as to ownership, still open as to the walk:** the chain is
-zeko-labs/ethereum-settlement, so the question goes to Zeko and not to Miza.
-Whether that circuit walks the paths in-circuit is still unconfirmed, and still
-decides whether this is a small ask or a project.
+`miza-o1js-to-zkvm` is Miza's fork of the *verifier*, not the chain. The chain
+is Miza's own L2; whether its transition circuit walks the paths in-circuit is
+still unconfirmed, and still decides whether this is a small ask or a project.
 
-## Alternatives to change 3, and the one that needs no circuit
+## Where the mirror root is produced
 
-Change 3 is the largest number on the table and the hardest thing on it to get:
-it needs a sponge added to a transition circuit we do not own, a new element in
-that proof's public interface, and a zkApp upgrade on a live chain. Written
-2026-11-14, after establishing who owns what.
+Written 2026-11-14. An earlier version of this section asserted that Zeko owns
+the chain and gated the plan on Mizu running as a Zeko L2 zkApp. **That was
+wrong**, and the correction is in *What this project is* below.
 
-### Who owns the chain: Zeko, not Miza
+### What this project is
 
-Change 3's section says the circuit "is not in this workspace" and to confirm
-before scheduling. Confirmed, and more precisely than that. `MIZA.md` states
-that "`zeko` identifies the source application repository" and that "Ethereum
-receipts, custody, wallets and deployment policy remain application code outside
-this fork", and the fork's `zeko` remote is
-`https://github.com/zeko-labs/ethereum-settlement.git`.
+**Mizu** is this repository: making o1js-to-zkvm fast, which it has done —
+precompiles at -8.6% of cycles, Pasta retention at -39% of shards, a Groth16
+proof end to end, and a wrap verifying key equal to upstream's so no ceremony is
+needed. **The mirror tree is an option on top of that**, so that a proof settled
+to an EVM is easy to use there. It is not the point of the project and nothing
+depends on it.
 
-So Miza is the **verifier** and Zeko is the **application**. Change 3's ask is
-addressed to zeko-labs, and this plan's "needs miza" was misfiled. The table and
-change 3's heading now say Zeko.
+**Miza** is a Mina L2. It may settle to Mina, or to an EVM; for the EVM path it
+would use Mizu, and that is the only path on which the mirror tree matters.
+Change 3's ask is addressed to Miza's transition circuit.
 
-### The alternative: the keccak tree already exists, in Zeko's settlement
+**Zeko is not in this repository and is not a dependency.** It is referenced for
+its settlement work only. The misreading was of `MIZA.md`'s line that "`zeko`
+identifies the source application repository": that names Zeko as an upstream
+*source of ported work* in Miza's verifier fork, alongside `nori`. It does not
+make Zeko the chain.
 
-`DESIGN-zeko-inner-action-payload.md` (worked out 2026-11-04 against
+### The real choice
+
+If Miza settles to an EVM, something has to produce a keccak root the EVM can
+check inclusion against. Two places it can happen:
+
+| | where | cells/account | cycles/account |
+| --- | --- | ---: | ---: |
+| **in the proof** | Mizu's guest walks a keccak mirror (today) | 10,505,024 | 85,804 |
+| **in the settlement layer** | the root is built outside the zk proof | 0 | 0 |
+
+The second is free to this proof and it is where the 39.4% of cells and 71.5% of
+cycles go. It is not free overall — the work moves to Miza's settlement, which
+has to build the tree and publish the root — but it moves out of a SNARK and
+into ordinary code, which is the cheapest place for keccak to live.
+
+This is the decision step 0 in *Sequencing* now asks for, and it is Miza's, not
+ours. What this repository should do either way is keep the mirror tree as a
+working, measured option, which it now is: proved, verified on an EVM, with its
+own `vk_root` and verifier.
+
+### Zeko's encoding, as a reference
+
+`DESIGN-zeko-inner-action-payload.md` (2026-11-04, written against
 `zeko-labs/ethereum-settlement` at `fix/pasta-complete-execution-verification`,
-every encoding read from source) opens with **"No new Zeko code is needed."**
-Zeko's settlement guest already falls through to a generic leaf for any inner
-action it does not recognise as a withdrawal (`receipt.rs:483-509`), and that
-leaf is already committed into the depth-16 Keccak root every settlement
-publishes. `innerActionBatch` is a public mapping on `ZekoSettlement`, so any
-EVM contract can read the root without permission.
+every encoding read from source, not inferred) is a worked example of the
+settlement-layer option. Zeko's settlement guest commits any inner action it
+does not recognise as a withdrawal into a depth-16 keccak root
+(`receipt.rs:483-509`), and `innerActionBatch` is a public mapping on
+`ZekoSettlement`, so any EVM contract can read the root without permission.
 
-**That removes the keccak mirror from our proof entirely.** Not reduced — moved,
-into a settlement that is being produced anyway. Depth drops 35 to 16, and
-Ethereum verifies membership with 16 keccak steps in Solidity instead of our
-guest proving them. 10,505,024 cells and 85,804 cycles per account go away, for
-no change to any circuit, ours or theirs.
+**Riding Zeko's own settlement is not on the table** — that would need Miza to be
+a Zeko L2, and it is not. The value is the encoding, and these parts are worth
+copying if Miza builds its own settlement tree:
 
-**Which is the larger win, and it loads the opposite resource from change 3:**
+- field bytes **big-endian, right-aligned** (`into_bigint().to_bytes_be()`,
+  `receipt.rs:973`). This plan's change 1 already adopts that convention for the
+  same reason: endianness silently produces a different root for identical data.
+- domain separators **pre-hashed** — the preimage holds `keccak256(DOMAIN)`, not
+  the string.
+- a `u32` length word inside the fields hash, so a shorter field vector cannot
+  be extended into a longer one.
+- **context binding**: chain id, bridge address and global index in the leaf.
+  Spike-09's encoding has none of this, which makes its leaves replayable across
+  chains and deployments. This is the most valuable part to copy.
+- fixed depth with a zero-hash ladder, so membership proofs are a fixed-size
+  array and an empty tree has a defined root.
 
-| half | cells/account | share | cycles/account | share |
-| --- | ---: | ---: | ---: | ---: |
-| Poseidon ledger walk | 16,166,796 | **60.6%** | 34,142 | 28.5% |
-| keccak mirror | 10,505,024 | 39.4% | 85,804 | **71.5%** |
-
-Poseidon dominates cells; keccak dominates cycles. Change 3 attacks the first and
-this alternative attacks the second, so they are complementary rather than
-competing — and the cheap one is the bigger cycle saving by a factor of 2.5.
-
-It also makes **change 1 moot**, since there would be no mizu keccak leaf to
-reformat; Zeko's leaf shape applies instead, and it carries
-`(chain_id, bridge_address, global_index)` context binding that this plan's
-encoding lacks entirely. A raw leaf without it is replayable across chains and
-deployments.
-
-**Its precondition.** The settlement guest replays the exact inner actions the
-Pickles proof attests to, and Solidity rejects a batch whose
-`inner_action_count` does not equal the proof-bound length delta, so leaves
-cannot be injected from outside. Mizu's zkApp therefore has to run as a Zeko L2
-zkApp emitting real inner actions. That is an architectural fit, not a fork —
-but it is not free, and it is the whole question.
-
-**Its unverified part, which is ours to close.** That receipt path has never
-been proven. Zeko's audit figures are execute-mode, its contract tests use a mock
-verifier, and the r5 GPU proof took the `receipt_input = None` branch. The
-encodings are read from source and unit-tested there, not attested by any proof.
-We now hold a working Groth16 pipeline and an EVM test harness
-(`contracts-check`, 20 tests), so proving that path once is a job we can do and
-nobody else has.
-
-**Its limits.** 65,536 leaves per settlement, shared with withdrawals and every
-other inner action — Mizu gets no private budget. Finality inherits Zeko's
-settlement cadence through the `slot_lower`/`slot_upper` window. And a raw leaf
-proves only that an action with a given fields hash sat at a given global index,
-so the consumer must hold the preimage to give it meaning.
+Two cautions carried from that doc. The receipt path that builds the tree **has
+never been proven** — Zeko's audit figures are execute-mode, its contract tests
+use a mock verifier, and the r5 GPU proof took the `receipt_input = None`
+branch; the encodings are source-read and unit-tested there, not attested by any
+proof. And a raw leaf proves only that an action with a given fields hash sat at
+a given index, so the consumer must hold the preimage for it to mean anything.
 
 ### A cheaper route to change 3's own property
 
-If the diff-set commitment is still wanted after the above, there is a smaller
-circuit edit than a sponge plus a statement field: **emit the diffs as Mina
-actions and use the action state as the commitment.** Mina maintains the action
-state at the protocol level, so soundness stays cryptographic without the
-circuit computing a digest, and the edit is an `emitAction` call — no change to
-the proof's public interface, no new statement field, no pressure on the eight
-on-chain state slots.
+If the diff-set commitment is wanted, there is a smaller circuit edit than a
+sponge plus a statement field: **emit the diffs as Mina actions and use the
+action state as the commitment.** Mina maintains the action state at the
+protocol level, so soundness stays cryptographic without the circuit computing a
+digest, and the edit is an `emitAction` call — no change to the proof's public
+interface, no new statement field, no pressure on the eight on-chain state slots.
 
 Two caveats. The action state is a *sequence* commitment in emission order, not
 the sorted set this plan wants, so dedup and ordering move into the guest. And
@@ -389,26 +395,35 @@ per checkpoint on mainnet is zero.
 
 ### Ruled out by measurement
 
-Having Zeko compute the keccak root in o1js directly — which would remove the
-mirror without any settlement dependency — does not fit. The o1js keccak tree
-was measured at 171x a 2^18 circuit for 1,000 actions. This is a measurement,
-not an estimate.
+Computing the keccak root in o1js, inside the Mina-side circuit, does not fit.
+The o1js keccak tree was measured at 171x a 2^18 circuit for 1,000 actions.
+A measurement, not an estimate.
 
-### What decides between them
+### None of this is a cost lever
 
-None of this is a cost lever. On a 1xA40 at $0.59/hr the whole mirror tree adds
-**+$0.0024** to a proof at N=100, because cells and cycles only touch the 156 s
-re-execution-plus-STARK half while the gnark half is a fixed 15,972,262-constraint
-circuit at 130 s on CPU or 37 s on CUDA. Changes 1 and 2 together save $0.0004;
+On a 1xA40 at $0.59/hr the whole mirror tree adds **+$0.0024** to a proof at
+N=100. Cells and cycles only touch the 156 s re-execution-plus-STARK half, while
+the gnark half is a fixed 15,972,262-constraint circuit costing 130 s on CPU or
+37 s on CUDA regardless of guest size. Changes 1 and 2 together save $0.0004;
 all three save $0.0016. Pod cost cannot justify any of this work.
 
-What they buy is **capacity** — cells are what make large batches fit, and at
-N=1000 the diff proof is 95.8% of the production base. So the deciding
-measurement is the one this plan already names and nobody has made: accounts
-changed per batch. At ~10 accounts none of changes 1-3 is load-bearing. At ~1000
-the Poseidon walk is the binding constraint and change 3 or its action-state
-variant matters. The keccak half is worth moving either way, and it needs
-nobody's circuit.
+What these changes buy is **capacity** — cells are what make large batches fit,
+and at N=1000 the diff proof is 95.8% of the production base. Which is why the
+deciding measurement is still the one this plan already names and nobody has
+made: accounts changed per batch. At ~10 accounts none of changes 1-3 is
+load-bearing. At ~1000 the Poseidon walk is the binding constraint.
+
+### What the half-and-half split says about priority
+
+| half | cells/account | share | cycles/account | share |
+| --- | ---: | ---: | ---: | ---: |
+| Poseidon ledger walk | 16,166,796 | **60.6%** | 34,142 | 28.5% |
+| keccak mirror | 10,505,024 | 39.4% | 85,804 | **71.5%** |
+
+Poseidon dominates cells; keccak dominates cycles. Change 3 attacks the first,
+moving the root out of the proof attacks the second, and they are complementary
+rather than competing. If wall clock binds, move the root out. If capacity at
+large N binds, change 3 or its action-state variant is the one that matters.
 
 ## Settled: the production share is 9.58%, not 6.07%
 
@@ -519,22 +534,22 @@ Rules that kept the earlier numbers honest and should keep these honest:
    than a patch. Confirm the in-circuit walk first; it decides whether this is a
    small ask or a project.
 
-**Revised 2026-11-14, and step 0 now comes before all three.** Settle whether
-Mizu runs as a Zeko L2 zkApp emitting inner actions. If it does, the keccak
-mirror leaves our proof for Zeko's settlement tree — 39.4% of cells and 71.5% of
-cycles, for no circuit change anywhere — change 1 becomes moot, and change 2's
-saving halves because it would apply to one tree instead of two. Deciding that
-first avoids building a leaf format and a shared sweep for a tree we then delete.
-See *Alternatives to change 3*. Change 3 itself stays last either way: it is the
-only item that needs another team's circuit, and the measurement that gates it
-(accounts per batch) gates everything below.
+**Revised 2026-11-14, and step 0 now comes before all three.** Decide **where
+the mirror root is produced** — inside Mizu's guest, as the mirror tree does
+today, or in Miza's settlement layer, outside the zk proof. The second removes
+39.4% of cells and 71.5% of cycles from this proof, makes change 1 moot, and
+halves change 2 because it would then apply to one tree instead of two. Deciding
+it first avoids building a leaf format and a shared sweep for a tree that then
+moves out. See *Where the mirror root is produced*. Change 3 stays last either
+way: it is the only item needing a circuit we do not own, and the measurement
+that gates it (accounts per batch) gates everything below.
 
 ## The measurement that gates all of it
 
 Accounts changed per batch. Everything here is linear in it, and nothing in this
 work has measured it. `mizu/RESULTS-09.md` calls it "the deciding measurement",
 records that "nothing in spikes 01-09 has measured" it, and notes the one real
-block examined had zero actions. At depth 35 Zeko's circuit fits roughly 280
+block examined had zero actions. At depth 35 Miza's circuit fits roughly 280
 accounts per 2^18 before recursion, so that number bounds the design on both
 sides — batch size, settlement cadence, and whether change 2's saving is 6.6% or
 25.6%.
@@ -549,7 +564,7 @@ plan belong before that pipeline work**, not after.
 
 ## Explicitly out of scope
 
-- **Depth reduction to 16–20.** Retracted. If Zeko runs Mina's ledger code, the
+- **Depth reduction to 16–20.** Retracted. If Miza runs Mina's ledger code, the
   ledger is depth 35 with accounts placed by hashing `(token_id, public_key)`.
   Re-indexing means forking the ledger and losing the compatibility that makes a
   Mina-shaped settlement proof possible.
