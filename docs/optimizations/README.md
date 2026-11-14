@@ -27,9 +27,9 @@ settings have one primary area below; many settings affect multiple modules.
 - [Current full measurement](../../benchmarks/core-proof-systems-0.7-sp1-6.10.json)
   and [upgrade validation](../proof-systems-upgrade.md): **142,650,295 cycles**,
   valid proof input, output `01`, 249 native tests and two rejected corruptions.
-- [Build-flag reference](../build-flags.md): all 54 environment variables that
+- [Build-flag reference](../build-flags.md): all 58 environment variables that
   shape the guest, one row each — value domain, read site, which recipes set it,
-  and the three tiers (48 compile-time, 5 build-script, 1 host-only).
+  and the three tiers (52 compile-time, 5 build-script, 1 host-only).
 - [Groth16 runs](../groth16-runs.md): the retained configuration proved end to
   end — **130,367,324 cycles** with both Pasta precompiles, 84 shards, a
   324-byte Groth16 proof verified in a Solidity contract at 225,954 gas, under
@@ -38,6 +38,9 @@ settings have one primary area below; many settings affect multiple modules.
 - [Running a proof](../running-a-proof.md): wall time and price per card, from
   eleven measurements on nine physical cards; the cheapest complete verified
   core proof on record is **$0.023** end to end.
+- [Does this transfer to o1js?](../o1js-native-transfer.md): measured no for the
+  MSM work — our canonical schedules are 1.7x slower than stock arkworks
+  single-threaded and ~10x slower with threads, because they never parallelise.
 - [Dependency/version inventory](../dependencies-and-optimizations.md),
   [complete changed-file list](../file-changes.md), and
   [upstream sync guide](../../dependencies/README.md).

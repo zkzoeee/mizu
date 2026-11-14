@@ -1,0 +1,6 @@
+threads=Ok(10)
+  size      arkworks        affine    affine+glv    glv/ark  glv/affine
+2^12         32.90ms       65.25ms       55.99ms     1.702x     0.858x
+2^14        109.89ms      204.08ms      187.89ms     1.710x     0.921x
+2^16        371.70ms      684.42ms      642.17ms     1.728x     0.938x
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.51s

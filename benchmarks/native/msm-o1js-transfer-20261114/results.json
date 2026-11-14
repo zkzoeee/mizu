@@ -1,0 +1,50 @@
+{
+  "what": "Native wall-clock Pallas MSM: arkworks stock vs our canonical schedules",
+  "why": "Decide whether Mizu's MSM work transfers to o1js, whose prover runs these same crates natively (kimchi-napi) or in WASM (kimchi-wasm)",
+  "harness": "crates/pickles-verifier/tests/pallas_msm_native_timing.rs, --profile native-test (release, lto=false, codegen-units=4)",
+  "host": "Apple Silicon Mac, 10 logical cores, shared machine",
+  "correctness": "every arm asserted equal to arkworks' msm_bigint at every size",
+  "milliseconds_best_of": {
+    "RAYON_NUM_THREADS=1": {
+      "2^12": {
+        "arkworks": 32.9,
+        "affine": 65.25,
+        "affine_glv": 55.99
+      },
+      "2^14": {
+        "arkworks": 109.89,
+        "affine": 204.08,
+        "affine_glv": 187.89
+      },
+      "2^16": {
+        "arkworks": 371.7,
+        "affine": 684.42,
+        "affine_glv": 642.17
+      }
+    },
+    "RAYON_NUM_THREADS=10": {
+      "2^12": {
+        "arkworks": 6.31,
+        "affine": 62.21,
+        "affine_glv": 53.74
+      },
+      "2^14": {
+        "arkworks": 16.82,
+        "affine": 206.38,
+        "affine_glv": 189.28
+      },
+      "2^16": {
+        "arkworks": 82.41,
+        "affine": 691.84,
+        "affine_glv": 635.35
+      }
+    }
+  },
+  "findings": {
+    "glv_helps_within_our_path": "5.9% to 14.2% faster than our affine schedule, shrinking as size grows",
+    "our_path_is_slower_than_stock": "1.70x to 1.73x single-threaded, 7.7x to 11.3x with threads",
+    "our_msm_does_not_parallelise": "identical times at 1 and 10 threads; arkworks scales 4.5x at 2^16",
+    "verdict": "Do not port the MSM schedules to o1js. They would be a large regression."
+  },
+  "reproduction": "Re-run at 10 threads reproduced our arms within 0.3% (affine 691.1 ms, affine+glv 635.2 ms at 2^16). arkworks' 2^16 varied 61.5-82.4 ms across runs on this shared machine, so its advantage is quoted as a range, not a point. threads-10.txt holds the second run."
+}
