@@ -22,7 +22,12 @@
 //!
 //! Construction follows SP1's own `test_e2e_node_trap`
 //! (`worker/node/full/mod.rs:396`) rather than an invented arrangement.
-use std::{collections::BTreeSet, fs, path::PathBuf, time::Instant};
+use std::{
+    collections::BTreeSet,
+    fs,
+    path::{Path, PathBuf},
+    time::Instant,
+};
 
 use anyhow::{Context, Result};
 use clap::{Parser, ValueEnum};
@@ -168,9 +173,15 @@ struct Args {
     /// `--mode wrap`: where to write the wrap proof.
     #[arg(long)]
     wrap_out: Option<PathBuf>,
-    /// `--mode from-wrap`: the wrap proof to Groth16-prove.
+    /// `--mode from-wrap`: the wrap proof to Groth16-prove. Repeatable, and
+    /// repeating it is the point: the Go prover keeps the R1CS and the proving
+    /// key in package globals for the life of the process
+    /// (`prove_groth16.go`'s `globalR1cs`/`globalPk`, and the CUDA path's
+    /// `groth16CudaProvers` map), so every proof after the first skips both
+    /// reads. On CPU gnark that was 24.0 s + 16.0 s = 40.0 s of run C's
+    /// 130.1 s gnark half. One `--wrap-in` per proof, one process.
     #[arg(long)]
-    wrap_in: Option<PathBuf>,
+    wrap_in: Vec<PathBuf>,
     /// `--mode execute`: where to write the raw committed public values.
     #[arg(long)]
     public_values_out: Option<PathBuf>,
@@ -226,6 +237,17 @@ fn apply_retention(opts: &mut SP1CoreOpts) {
     opts.retained_events_presets.insert(RetainedEventsPreset::PallasAdd);
 }
 
+/// `proof.bin` -> `proof-0.bin`, so a multi-proof run does not overwrite itself.
+fn indexed_path(base: &Path, index: usize) -> PathBuf {
+    let stem = base.file_stem().map(|s| s.to_string_lossy().into_owned());
+    let name = match (stem, base.extension()) {
+        (Some(stem), Some(ext)) => format!("{stem}-{index}.{}", ext.to_string_lossy()),
+        (Some(stem), None) => format!("{stem}-{index}"),
+        (None, _) => format!("proof-{index}"),
+    };
+    base.with_file_name(name)
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
@@ -233,38 +255,92 @@ async fn main() -> Result<()> {
     // No ELF, no input, no node: the Groth16 circuit's whole witness comes out
     // of the wrap proof.
     if matches!(args.mode, Mode::FromWrap) {
-        let path = args.wrap_in.clone().context("--mode from-wrap needs --wrap-in <path>")?;
-        let bytes = fs::read(&path).with_context(|| format!("read {}", path.display()))?;
-        let wrap: sp1_hypercube::SP1WrapProof<
-            sp1_primitives::SP1OuterGlobalContext,
-            sp1_hypercube::SP1PcsProofOuter,
-        > = bincode::deserialize(&bytes).context("deserialize the wrap proof")?;
-        println!("wrap proof: {} bytes from {}", bytes.len(), path.display());
-        let t = Instant::now();
-        let proof = sp1_prover::build::groth16_from_wrap(wrap).await?;
-        let seconds = t.elapsed().as_secs_f64();
-        let report = serde_json::json!({
-            "mode": "pipeline-local",
-            "proof_mode": "FromWrap",
-            "wrap_in": path.display().to_string(),
-            "wrap_proof_bytes": bytes.len(),
-            "groth16": {
-                "public_inputs": proof.public_inputs,
-                "raw_proof_bytes": proof.raw_proof.len() / 2,
-                "encoded_proof_bytes": proof.encoded_proof.len() / 2,
-                "groth16_vkey_hash": hex::encode(proof.groth16_vkey_hash),
-            },
-            "seconds": { "groth16": seconds },
-            "note": "verified inside groth16_from_wrap before it returned",
-        });
+        if args.wrap_in.is_empty() {
+            anyhow::bail!("--mode from-wrap needs at least one --wrap-in <path>");
+        }
+        let total = args.wrap_in.len();
+        let mut entries: Vec<serde_json::Value> = Vec::with_capacity(total);
+        let mut each: Vec<f64> = Vec::with_capacity(total);
+        let all = Instant::now();
+        for (index, path) in args.wrap_in.iter().enumerate() {
+            let bytes = fs::read(path).with_context(|| format!("read {}", path.display()))?;
+            let wrap: sp1_hypercube::SP1WrapProof<
+                sp1_primitives::SP1OuterGlobalContext,
+                sp1_hypercube::SP1PcsProofOuter,
+            > = bincode::deserialize(&bytes).context("deserialize the wrap proof")?;
+            println!(
+                "wrap proof {}/{}: {} bytes from {}",
+                index + 1,
+                total,
+                bytes.len(),
+                path.display()
+            );
+            let t = Instant::now();
+            let proof = sp1_prover::build::groth16_from_wrap(wrap).await?;
+            let seconds = t.elapsed().as_secs_f64();
+            each.push(seconds);
+            println!("  groth16 in {seconds:.1}s, {} raw bytes", proof.raw_proof.len() / 2);
+            if let Some(out) = &args.proof_out {
+                let out = if total == 1 { out.clone() } else { indexed_path(out, index) };
+                fs::write(&out, bincode::serialize(&proof).context("serialize the proof")?)?;
+            }
+            entries.push(serde_json::json!({
+                "wrap_in": path.display().to_string(),
+                "wrap_proof_bytes": bytes.len(),
+                "groth16": {
+                    "public_inputs": proof.public_inputs,
+                    "raw_proof_bytes": proof.raw_proof.len() / 2,
+                    "encoded_proof_bytes": proof.encoded_proof.len() / 2,
+                    "groth16_vkey_hash": hex::encode(proof.groth16_vkey_hash),
+                },
+                "seconds": seconds,
+            }));
+        }
+        let total_seconds = all.elapsed().as_secs_f64();
+
+        // One proof keeps the record shape every earlier from-wrap run used, so
+        // those records stay comparable. More than one adds the amortisation,
+        // which is the only thing a multi-proof run is for.
+        let report = if total == 1 {
+            let first = &entries[0];
+            serde_json::json!({
+                "mode": "pipeline-local",
+                "proof_mode": "FromWrap",
+                "wrap_in": first["wrap_in"],
+                "wrap_proof_bytes": first["wrap_proof_bytes"],
+                "groth16": first["groth16"],
+                "seconds": { "groth16": each[0] },
+                "note": "verified inside groth16_from_wrap before it returned",
+            })
+        } else {
+            let rest: f64 = each[1..].iter().sum::<f64>() / (total - 1) as f64;
+            serde_json::json!({
+                "mode": "pipeline-local",
+                "proof_mode": "FromWrap",
+                "proofs": entries,
+                "seconds": {
+                    "groth16_total": total_seconds,
+                    "groth16_first": each[0],
+                    "groth16_rest_mean": rest,
+                    "groth16_each": each,
+                },
+                "saved_per_proof_after_the_first": each[0] - rest,
+                "note": "each proof verified inside groth16_from_wrap before it                          returned; the first pays the R1CS and proving-key reads                          and the rest reuse them from the process globals",
+            })
+        };
         if let Some(parent) = args.output.parent() {
             fs::create_dir_all(parent)?;
         }
         fs::write(&args.output, format!("{}\n", serde_json::to_string_pretty(&report)?))?;
-        if let Some(path) = &args.proof_out {
-            fs::write(path, bincode::serialize(&proof).context("serialize the proof")?)?;
+        if total > 1 {
+            let rest: f64 = each[1..].iter().sum::<f64>() / (total - 1) as f64;
+            println!(
+                "{total} proofs in {total_seconds:.1}s: first {:.1}s, rest {rest:.1}s mean, \
+                 {:.1}s saved per proof after the first",
+                each[0],
+                each[0] - rest
+            );
         }
-        println!("groth16 in {seconds:.1}s, {} raw bytes", proof.raw_proof.len() / 2);
         return Ok(());
     }
 

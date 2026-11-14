@@ -512,6 +512,79 @@ The suite also checks the digest is the right one: the contract's own
 expected statement `837d502c..`, so the guest committed the statement it should
 have.
 
+## Latency: what is actually left, and one lever taken (2026-11-14)
+
+Audited the two levers this project had been quoting for the post-CUDA proof.
+**One was already harvested and the other was mis-sized.**
+
+### The re-execution is not duplication, and the duplicate is already gone
+
+The claim was "~45 s of pure duplication: the driver executes once for the cycle
+count and `prove_with_mode` re-executes from the ELF". Half right, and the wrong
+half. There were two executions; the removable one was the **driver's own**, at
+**26.0 s** of run C's 350.9 s, and it was removed — `count_cycles` now defaults
+to `false` in both drivers and its doc comment says why. The **~45 s inside
+`prove_with_mode` is the execution that generates the trace**, so it is the
+proof's own work and not available to drop. Nothing is left on this lever.
+
+### The resident-process saving is real, already implemented in Go, and unused
+
+Both gnark paths keep the circuit and the proving key for the life of the
+process, so the artifact reads are a **per-process** cost, not a per-proof one:
+
+| path | state | where |
+| --- | --- | --- |
+| CPU gnark | `globalR1cs`, `globalPk` behind `globalMutex` | `go/sp1/prove_groth16.go:19-23` |
+| CUDA gnark | `groth16CudaProvers` keyed by `dataDir` | `go/sp1/prove_groth16_cuda.go`, whose comment says it "keeps the circuit and its proving key in host memory for the life of the process" |
+
+So no Go change is needed. What was missing is a driver that proves **more than
+once in one process** — `--mode from-wrap` took a single `--wrap-in` and exited,
+so the cache was never reused.
+
+`--wrap-in` is now repeatable. One process, N wrap proofs, and the record reports
+`groth16_first`, `groth16_rest_mean` and `saved_per_proof_after_the_first`, so a
+single run measures the lever instead of inferring it:
+
+```sh
+pipeline-runner --mode from-wrap --wrap-in a.bin --wrap-in b.bin --wrap-in c.bin \
+  --output fromwrap-x3.json
+```
+
+A one-proof run keeps the exact record shape every earlier from-wrap run used, so
+those records stay comparable.
+
+### What it is worth, and the correction to "~40 s"
+
+**40.0 s is the CPU-gnark figure** — R1CS 24.0 s plus proving key 16.0 s of that
+path's 130.1 s. It is not the figure after CUDA. #3017's reader skips the R1CS
+debug info and the key's FFT twiddle tables and reads both in parallel, and the
+whole CUDA gnark half measured **35.6 s**, so the cacheable part cannot exceed
+that and is likely **~10-13 s** on the estimates in the table above. The CUDA
+run's internal stage split was not recorded, so this is bounded, not measured.
+Any multi-proof run should print it.
+
+### Where the remaining time actually is
+
+After CUDA gnark the proof is roughly 205 s of wrap and 37 s of gnark, so **the
+wrap half is about 85% of what is left** and it is GPU STARK work: execution,
+core proving over 84 shards, the reduce tree, shrink and wrap. The levers there
+are fewer cycles, fewer shards, or more card — not driver plumbing.
+
+One more per-process cost is visible in run C and **not** addressed here:
+`node_build` at 17.9 s (CUDA context and prover setup) and `setup` at 7.3 s.
+`--mode from-wrap` pays neither, because it builds no node. A multi-proof
+*full* pipeline would amortise both, worth a further ~25 s per extra proof, but
+it needs several ELF/input pairs and the node held open across them — a larger
+change than this one, and only worth making if more than one proof per pod is
+actually the plan.
+
+### Unverified
+
+The repeatable `--wrap-in` type-checks locally; **it has not been run.** From-wrap
+needs the 7.9 GB of Groth16 artifacts, so measuring it needs a pod. Until then
+the amortisation is a property of the Go globals read from source, not a figure
+of ours.
+
 ## Still open
 
 - **Nothing is deployed.** Our `vk_root` differs from Succinct's, so their
