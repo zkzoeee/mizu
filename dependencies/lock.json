@@ -1,305 +1,372 @@
 {
-  "schema_version": 2,
-  "root_upstream": {
-    "repository": "https://github.com/o1-labs/o1js-to-zkvm.git",
-    "base": "095a5c0a46b903b7b126c857c9910567b16e2e6b"
-  },
-  "dependencies": [
+ "schema_version": 2,
+ "root_upstream": {
+  "repository": "https://github.com/o1-labs/o1js-to-zkvm.git",
+  "base": "095a5c0a46b903b7b126c857c9910567b16e2e6b"
+ },
+ "dependencies": [
+  {
+   "name": "algebra",
+   "path": "vendor/algebra",
+   "upstream": "https://github.com/arkworks-rs/algebra.git",
+   "base": "7ad88c46e859a94ab8e0b19fd8a217c3dc472f1c",
+   "revision": "41ee0d03036149c77224d74a296f45d5042403ce",
+   "tree": "479e9ca19838e8282d385647f3d2b9bca3f8e597",
+   "branch": "codex/mizu",
+   "bundle": "dependencies/bundles/algebra.bundle",
+   "bundle_sha256": "9114a8ca8b9c5fb0d7b27b13d09f2de69c52e2ae5ec0e3ca6c9509465462a3ba",
+   "patches": [
     {
-      "name": "algebra",
-      "path": "vendor/algebra",
-      "upstream": "https://github.com/arkworks-rs/algebra.git",
-      "base": "7ad88c46e859a94ab8e0b19fd8a217c3dc472f1c",
-      "revision": "6f81d7e13f3e2ea3cb985df5f5c16a8560dbc969",
-      "tree": "322ede8d57878ae1c7b3f84094bfd8f9236c292b",
-      "branch": "codex/mizu",
-      "bundle": "dependencies/bundles/algebra.bundle",
-      "bundle_sha256": "783f3f009bdb1454b17c0734314966dba83ad0528e3afb8d40b1668e039b2ac8",
-      "patches": [
-        {
-          "commit": "7b99b0e0f7243814c1414e3180bd51b643d2e5e2",
-          "subject": "Add SP1 field arithmetic and inversion fast paths",
-          "paths": [
-            "Cargo.toml",
-            "ff/Cargo.toml",
-            "ff/src/fields/arithmetic.rs",
-            "ff/src/fields/mod.rs",
-            "ff/src/fields/models/cubic_extension.rs",
-            "ff/src/fields/models/fp/montgomery_backend.rs",
-            "ff/src/fields/models/fp4.rs",
-            "ff/src/lib.rs"
-          ]
-        },
-        {
-          "commit": "712a6ae796d08e7572fd05d08fac54866bc93e6f",
-          "subject": "Add GLV and fixed/variable-base MSM optimizations",
-          "paths": [
-            "ec/Cargo.toml",
-            "ec/src/hashing/map_to_curve_hasher.rs",
-            "ec/src/lib.rs",
-            "ec/src/models/short_weierstrass/mod.rs",
-            "ec/src/models/twisted_edwards/mod.rs",
-            "ec/src/pairing.rs",
-            "ec/src/scalar_mul/fixed_base.rs",
-            "ec/src/scalar_mul/glv.rs",
-            "ec/src/scalar_mul/mod.rs",
-            "ec/src/scalar_mul/variable_base/affine_spike.rs",
-            "ec/src/scalar_mul/variable_base/mod.rs",
-            "ec/src/scalar_mul/variable_base/stream_pippenger.rs",
-            "ec/src/scalar_mul/wnaf.rs"
-          ]
-        },
-        {
-          "commit": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
-          "subject": "Optimize polynomial evaluation for the verifier",
-          "paths": [
-            "poly/src/polynomial/univariate/dense.rs"
-          ]
-        },
-        {
-          "commit": "6f81d7e13f3e2ea3cb985df5f5c16a8560dbc969",
-          "subject": "Route direct Pasta mulmods to the fixed-modulus syscalls",
-          "paths": [
-            "ff/src/fields/models/fp/montgomery_backend.rs"
-          ]
-        }
-      ]
+     "commit": "7b99b0e0f7243814c1414e3180bd51b643d2e5e2",
+     "subject": "Add SP1 field arithmetic and inversion fast paths",
+     "paths": [
+      "Cargo.toml",
+      "ff/Cargo.toml",
+      "ff/src/fields/arithmetic.rs",
+      "ff/src/fields/mod.rs",
+      "ff/src/fields/models/cubic_extension.rs",
+      "ff/src/fields/models/fp/montgomery_backend.rs",
+      "ff/src/fields/models/fp4.rs",
+      "ff/src/lib.rs"
+     ]
     },
     {
-      "name": "proof-systems",
-      "path": "vendor/proof-systems",
-      "upstream": "https://github.com/o1-labs/proof-systems.git",
-      "base": "b1d9829fa0b2bb8e15494df1e5e0c6741394075b",
-      "revision": "ddb617200040ce1c69809f14962735eed9b4479b",
-      "tree": "e71a72e42faef0164bb8644e03258608cd5329b8",
-      "branch": "codex/proof-systems-0.7",
-      "bundle": "dependencies/bundles/proof-systems.bundle",
-      "bundle_sha256": "1531bdd137ef25953b8339e50250dd35351106def315672055339455086ab624",
-      "patches": [
-        {
-          "commit": "9f37ee019fb855c08884fe2c5681093b8b979806",
-          "subject": "Add canonical Pasta arithmetic, GLV and SP1 point operations",
-          "paths": [
-            "Cargo.toml",
-            "curves/Cargo.toml",
-            "curves/src/pasta/canonical_pallas.rs",
-            "curves/src/pasta/canonical_words.rs",
-            "curves/src/pasta/curves/pallas.rs",
-            "curves/src/pasta/mod.rs",
-            "curves/src/pasta/pallas_glv.rs",
-            "curves/src/pasta/point_spikes.rs",
-            "curves/src/pasta/precompile_spikes.rs"
-          ]
-        },
-        {
-          "commit": "3d579636d89c4ebf4c9b9f7ba4e51ea8e995ac79",
-          "subject": "Add canonical Poseidon and retained sponge fast paths",
-          "paths": [
-            "poseidon/src/canonical.rs",
-            "poseidon/src/lib.rs",
-            "poseidon/src/pasta/fp_kimchi.rs",
-            "poseidon/src/pasta/fp_legacy.rs",
-            "poseidon/src/pasta/fq_kimchi.rs",
-            "poseidon/src/pasta/fq_legacy.rs",
-            "poseidon/src/permutation.rs",
-            "poseidon/src/sponge.rs"
-          ]
-        },
-        {
-          "commit": "af2c000a7664125c93c2f41c8e030dc252b27f83",
-          "subject": "Add canonical IPA and reusable SRS representations",
-          "paths": [
-            "poly-commitment/src/canonical_ipa.rs",
-            "poly-commitment/src/commitment.rs",
-            "poly-commitment/src/generators.rs",
-            "poly-commitment/src/ipa.rs",
-            "poly-commitment/src/lib.rs",
-            "poly-commitment/src/precomputed_srs.rs",
-            "poly-commitment/src/utils.rs"
-          ]
-        },
-        {
-          "commit": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
-          "subject": "Optimize verifier challenges, expressions and borrowed commitments",
-          "paths": [
-            "kimchi/src/alphas.rs",
-            "kimchi/src/circuits/constraints.rs",
-            "kimchi/src/circuits/polynomials/permutation.rs",
-            "kimchi/src/verifier.rs"
-          ]
-        },
-        {
-          "commit": "8d691e9918a1d9c5126f802fd4fc410c9c5f85b3",
-          "subject": "Add an opt-in deferred-reduction Poseidon MDS row",
-          "paths": [
-            "curves/src/pasta/canonical_words.rs",
-            "poseidon/src/canonical.rs"
-          ]
-        },
-        {
-          "commit": "dbe478fc4cda3a51ee5a365158fe89954f0d7863",
-          "subject": "Route canonical Pasta multiplies to the fixed-modulus syscalls",
-          "paths": [
-            "curves/src/pasta/canonical_pallas.rs",
-            "curves/src/pasta/canonical_words.rs"
-          ]
-        },
-        {
-          "commit": "ddb617200040ce1c69809f14962735eed9b4479b",
-          "subject": "Route the kimchi Poseidon permutation to the Pasta Poseidon syscalls",
-          "paths": [
-            "curves/src/pasta/canonical_words.rs",
-            "poseidon/src/canonical.rs"
-          ]
-        }
-      ]
+     "commit": "712a6ae796d08e7572fd05d08fac54866bc93e6f",
+     "subject": "Add GLV and fixed/variable-base MSM optimizations",
+     "paths": [
+      "ec/Cargo.toml",
+      "ec/src/hashing/map_to_curve_hasher.rs",
+      "ec/src/lib.rs",
+      "ec/src/models/short_weierstrass/mod.rs",
+      "ec/src/models/twisted_edwards/mod.rs",
+      "ec/src/pairing.rs",
+      "ec/src/scalar_mul/fixed_base.rs",
+      "ec/src/scalar_mul/glv.rs",
+      "ec/src/scalar_mul/mod.rs",
+      "ec/src/scalar_mul/variable_base/affine_spike.rs",
+      "ec/src/scalar_mul/variable_base/mod.rs",
+      "ec/src/scalar_mul/variable_base/stream_pippenger.rs",
+      "ec/src/scalar_mul/wnaf.rs"
+     ]
     },
     {
-      "name": "sp1",
-      "path": "vendor/sp1",
-      "upstream": "https://github.com/succinctlabs/sp1.git",
-      "base": "d83ed91f96701209613720708f36ffce0e98ed33",
-      "revision": "a418319a0fd386e52982b22b495859a2c4609800",
-      "tree": "f768283504f6e05a50dd9a77d9f77286608a4d33",
-      "branch": "codex/mizu",
-      "bundle": "dependencies/bundles/sp1.bundle",
-      "bundle_sha256": "0cf64243a7eb82aace2fcb955cfc2469d2c24f906aa85d0fd436c33df391e26f",
-      "patches": [
-        {
-          "commit": "0fde0939bc84bed83160e7f2c3685a863430ff7d",
-          "subject": "Add Pasta curves and modular inversion support",
-          "paths": [
-            "crates/curves/src/lib.rs",
-            "crates/curves/src/weierstrass/mod.rs",
-            "crates/curves/src/weierstrass/pasta.rs"
-          ]
-        },
-        {
-          "commit": "7d7b32b1530dbddac728d31c2ecf6afd34718e65",
-          "subject": "Register Pasta execution, AIRs and lossless record streaming",
-          "paths": [
-            "crates/core/executor/src/air.rs",
-            "crates/core/executor/src/artifacts/rv64im_complexity.json",
-            "crates/core/executor/src/artifacts/rv64im_complexity_mprotect.json",
-            "crates/core/executor/src/artifacts/rv64im_costs.json",
-            "crates/core/executor/src/events/precompiles/mod.rs",
-            "crates/core/executor/src/minimal/ecall.rs",
-            "crates/core/executor/src/record.rs",
-            "crates/core/executor/src/retain.rs",
-            "crates/core/executor/src/syscall_code.rs",
-            "crates/core/executor/src/vm.rs",
-            "crates/core/executor/src/vm/gas.rs",
-            "crates/core/executor/src/vm/syscall.rs",
-            "crates/core/executor/src/vm/syscall/precompiles/weierstrass/add.rs",
-            "crates/core/executor/src/vm/syscall/precompiles/weierstrass/double.rs",
-            "crates/core/machine/src/operations/field/field_op.rs",
-            "crates/core/machine/src/riscv/mod.rs",
-            "crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_add.rs",
-            "crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_double.rs",
-            "crates/core/machine/src/utils/prove.rs",
-            "crates/core/runner/build.rs"
-          ]
-        },
-        {
-          "commit": "59fa996a5001d31f3112dd05307003111847c3e7",
-          "subject": "Keep the Pasta crates compatible with registry SP1 consumers",
-          "paths": [
-            "crates/core/executor/Cargo.toml",
-            "crates/core/machine/Cargo.toml",
-            "crates/core/runner/Cargo.toml",
-            "crates/curves/Cargo.toml"
-          ]
-        },
-        {
-          "commit": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1",
-          "subject": "Expose portable execution counters for cycle measurements",
-          "paths": [
-            "crates/core/executor/src/minimal.rs",
-            "crates/core/executor/src/minimal/arch/portable/mod.rs",
-            "crates/core/runner/src/portable.rs"
-          ]
-        },
-        {
-          "commit": "e0b57de848ef91fcefc3f19a6d081265864fa14f",
-          "subject": "Batch Weierstrass add witness inversions and trim field-op population",
-          "paths": [
-            "crates/core/machine/src/operations/field/field_op.rs",
-            "crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_add.rs"
-          ]
-        },
-        {
-          "commit": "b2c2b02d5596ab5e07f2edb9a198050df01e67be",
-          "subject": "Run Pallas and Vesta executor operations on fixed-limb arithmetic",
-          "paths": [
-            "crates/curves/src/weierstrass/mod.rs",
-            "crates/curves/src/weierstrass/pasta_arith.rs"
-          ]
-        },
-        {
-          "commit": "ac99509d080f6683d03e6a6fa96014eabaae0fc3",
-          "subject": "Pipeline streaming record generation and profile its phases",
-          "paths": [
-            "crates/core/machine/src/utils/prove.rs"
-          ]
-        },
-        {
-          "commit": "70a005d67f95fb7175073ddf2384502c04424017",
-          "subject": "Add fixed-modulus Pallas and Vesta field-op precompiles",
-          "paths": [
-            "crates/core/executor/src/air.rs",
-            "crates/core/executor/src/artifacts/rv64im_complexity.json",
-            "crates/core/executor/src/artifacts/rv64im_complexity_mprotect.json",
-            "crates/core/executor/src/artifacts/rv64im_costs.json",
-            "crates/core/executor/src/events/precompiles/mod.rs",
-            "crates/core/executor/src/minimal/ecall.rs",
-            "crates/core/executor/src/syscall_code.rs",
-            "crates/core/executor/src/vm/syscall.rs",
-            "crates/core/executor/src/vm/syscall/precompiles/fptower/fp.rs",
-            "crates/core/executor/src/vm/syscall/precompiles/fptower/fp2_addsub.rs",
-            "crates/core/executor/src/vm/syscall/precompiles/fptower/fp2_mul.rs",
-            "crates/core/machine/src/riscv/mod.rs",
-            "crates/core/machine/src/syscall/precompiles/fptower/fp.rs",
-            "crates/core/machine/src/syscall/precompiles/fptower/fp2_addsub.rs",
-            "crates/core/machine/src/syscall/precompiles/fptower/fp2_mul.rs",
-            "crates/curves/src/weierstrass/mod.rs",
-            "crates/curves/src/weierstrass/pasta.rs"
-          ]
-        },
-        {
-          "commit": "a418319a0fd386e52982b22b495859a2c4609800",
-          "subject": "Add Pasta Poseidon permutation precompiles for Mina's kimchi sponge",
-          "paths": [
-            "crates/core/executor/src/air.rs",
-            "crates/core/executor/src/artifacts/rv64im_complexity.json",
-            "crates/core/executor/src/artifacts/rv64im_complexity_mprotect.json",
-            "crates/core/executor/src/artifacts/rv64im_costs.json",
-            "crates/core/executor/src/events/precompiles/mod.rs",
-            "crates/core/executor/src/events/precompiles/pasta_poseidon.rs",
-            "crates/core/executor/src/minimal.rs",
-            "crates/core/executor/src/minimal/arch/portable/mod.rs",
-            "crates/core/executor/src/minimal/ecall.rs",
-            "crates/core/executor/src/minimal/precompiles/fptower/fp.rs",
-            "crates/core/executor/src/minimal/precompiles/fptower/mod.rs",
-            "crates/core/executor/src/minimal/precompiles/mod.rs",
-            "crates/core/executor/src/minimal/precompiles/pasta_poseidon.rs",
-            "crates/core/executor/src/syscall_code.rs",
-            "crates/core/executor/src/vm/syscall.rs",
-            "crates/core/executor/src/vm/syscall/precompiles/mod.rs",
-            "crates/core/executor/src/vm/syscall/precompiles/pasta_poseidon.rs",
-            "crates/core/machine/src/operations/field/field_inner_product.rs",
-            "crates/core/machine/src/riscv/mod.rs",
-            "crates/core/machine/src/syscall/precompiles/mod.rs",
-            "crates/core/machine/src/syscall/precompiles/pasta_poseidon/columns.rs",
-            "crates/core/machine/src/syscall/precompiles/pasta_poseidon/control.rs",
-            "crates/core/machine/src/syscall/precompiles/pasta_poseidon/mod.rs",
-            "crates/core/machine/src/syscall/precompiles/pasta_poseidon/round.rs",
-            "crates/curves/src/weierstrass/mod.rs",
-            "crates/curves/src/weierstrass/pasta_arith.rs",
-            "crates/curves/src/weierstrass/pasta_poseidon.rs",
-            "crates/curves/src/weierstrass/pasta_poseidon_constants.rs"
-          ]
-        }
-      ]
+     "commit": "8bcb64d5234ecec84c18524fed907dfc22c81eb6",
+     "subject": "Optimize polynomial evaluation for the verifier",
+     "paths": [
+      "poly/src/polynomial/univariate/dense.rs"
+     ]
+    },
+    {
+     "commit": "6f81d7e13f3e2ea3cb985df5f5c16a8560dbc969",
+     "subject": "Route direct Pasta mulmods to the fixed-modulus syscalls",
+     "paths": [
+      "ff/src/fields/models/fp/montgomery_backend.rs"
+     ]
+    },
+    {
+     "commit": "41ee0d03036149c77224d74a296f45d5042403ce",
+     "subject": "Rename the ZEKO_ build flags to MIZU_",
+     "paths": [
+      "ec/src/scalar_mul/variable_base/mod.rs",
+      "ff/src/fields/models/fp/montgomery_backend.rs"
+     ]
     }
-  ]
+   ]
+  },
+  {
+   "name": "proof-systems",
+   "path": "vendor/proof-systems",
+   "upstream": "https://github.com/o1-labs/proof-systems.git",
+   "base": "b1d9829fa0b2bb8e15494df1e5e0c6741394075b",
+   "revision": "5a7962f351d5597f77c05933297809ed3996eb95",
+   "tree": "4526ec1296e540f1e89bdb244ec79da9c4ec2d2b",
+   "branch": "codex/proof-systems-0.7",
+   "bundle": "dependencies/bundles/proof-systems.bundle",
+   "bundle_sha256": "1e5fe26559846f1f278ad3900618284e6179daa2522aa1dfe003d0c04908d1ec",
+   "patches": [
+    {
+     "commit": "9f37ee019fb855c08884fe2c5681093b8b979806",
+     "subject": "Add canonical Pasta arithmetic, GLV and SP1 point operations",
+     "paths": [
+      "Cargo.toml",
+      "curves/Cargo.toml",
+      "curves/src/pasta/canonical_pallas.rs",
+      "curves/src/pasta/canonical_words.rs",
+      "curves/src/pasta/curves/pallas.rs",
+      "curves/src/pasta/mod.rs",
+      "curves/src/pasta/pallas_glv.rs",
+      "curves/src/pasta/point_spikes.rs",
+      "curves/src/pasta/precompile_spikes.rs"
+     ]
+    },
+    {
+     "commit": "3d579636d89c4ebf4c9b9f7ba4e51ea8e995ac79",
+     "subject": "Add canonical Poseidon and retained sponge fast paths",
+     "paths": [
+      "poseidon/src/canonical.rs",
+      "poseidon/src/lib.rs",
+      "poseidon/src/pasta/fp_kimchi.rs",
+      "poseidon/src/pasta/fp_legacy.rs",
+      "poseidon/src/pasta/fq_kimchi.rs",
+      "poseidon/src/pasta/fq_legacy.rs",
+      "poseidon/src/permutation.rs",
+      "poseidon/src/sponge.rs"
+     ]
+    },
+    {
+     "commit": "af2c000a7664125c93c2f41c8e030dc252b27f83",
+     "subject": "Add canonical IPA and reusable SRS representations",
+     "paths": [
+      "poly-commitment/src/canonical_ipa.rs",
+      "poly-commitment/src/commitment.rs",
+      "poly-commitment/src/generators.rs",
+      "poly-commitment/src/ipa.rs",
+      "poly-commitment/src/lib.rs",
+      "poly-commitment/src/precomputed_srs.rs",
+      "poly-commitment/src/utils.rs"
+     ]
+    },
+    {
+     "commit": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
+     "subject": "Optimize verifier challenges, expressions and borrowed commitments",
+     "paths": [
+      "kimchi/src/alphas.rs",
+      "kimchi/src/circuits/constraints.rs",
+      "kimchi/src/circuits/polynomials/permutation.rs",
+      "kimchi/src/verifier.rs"
+     ]
+    },
+    {
+     "commit": "8d691e9918a1d9c5126f802fd4fc410c9c5f85b3",
+     "subject": "Add an opt-in deferred-reduction Poseidon MDS row",
+     "paths": [
+      "curves/src/pasta/canonical_words.rs",
+      "poseidon/src/canonical.rs"
+     ]
+    },
+    {
+     "commit": "dbe478fc4cda3a51ee5a365158fe89954f0d7863",
+     "subject": "Route canonical Pasta multiplies to the fixed-modulus syscalls",
+     "paths": [
+      "curves/src/pasta/canonical_pallas.rs",
+      "curves/src/pasta/canonical_words.rs"
+     ]
+    },
+    {
+     "commit": "ddb617200040ce1c69809f14962735eed9b4479b",
+     "subject": "Route the kimchi Poseidon permutation to the Pasta Poseidon syscalls",
+     "paths": [
+      "curves/src/pasta/canonical_words.rs",
+      "poseidon/src/canonical.rs"
+     ]
+    },
+    {
+     "commit": "5a7962f351d5597f77c05933297809ed3996eb95",
+     "subject": "Rename the ZEKO_ build flags to MIZU_",
+     "paths": [
+      "curves/src/pasta/canonical_pallas.rs",
+      "curves/src/pasta/curves/pallas.rs",
+      "curves/src/pasta/point_spikes.rs",
+      "curves/src/pasta/precompile_spikes.rs",
+      "poly-commitment/src/commitment.rs",
+      "poly-commitment/src/ipa.rs",
+      "poseidon/src/canonical.rs",
+      "poseidon/src/permutation.rs",
+      "poseidon/src/sponge.rs"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "sp1",
+   "path": "vendor/sp1",
+   "upstream": "https://github.com/succinctlabs/sp1.git",
+   "base": "d83ed91f96701209613720708f36ffce0e98ed33",
+   "revision": "59a77a75eec0991d010388a437732a88dce3871c",
+   "tree": "7ebac8c65f0d5eafe91db1855ccf6b793d4e75c8",
+   "branch": "codex/mizu",
+   "bundle": "dependencies/bundles/sp1.bundle",
+   "bundle_sha256": "71539cf74ddcd6e9e9c18182ccef0101a45deb488b55ece56a1a8b1f2267947f",
+   "patches": [
+    {
+     "commit": "0fde0939bc84bed83160e7f2c3685a863430ff7d",
+     "subject": "Add Pasta curves and modular inversion support",
+     "paths": [
+      "crates/curves/src/lib.rs",
+      "crates/curves/src/weierstrass/mod.rs",
+      "crates/curves/src/weierstrass/pasta.rs"
+     ]
+    },
+    {
+     "commit": "7d7b32b1530dbddac728d31c2ecf6afd34718e65",
+     "subject": "Register Pasta execution, AIRs and lossless record streaming",
+     "paths": [
+      "crates/core/executor/src/air.rs",
+      "crates/core/executor/src/artifacts/rv64im_complexity.json",
+      "crates/core/executor/src/artifacts/rv64im_complexity_mprotect.json",
+      "crates/core/executor/src/artifacts/rv64im_costs.json",
+      "crates/core/executor/src/events/precompiles/mod.rs",
+      "crates/core/executor/src/minimal/ecall.rs",
+      "crates/core/executor/src/record.rs",
+      "crates/core/executor/src/retain.rs",
+      "crates/core/executor/src/syscall_code.rs",
+      "crates/core/executor/src/vm.rs",
+      "crates/core/executor/src/vm/gas.rs",
+      "crates/core/executor/src/vm/syscall.rs",
+      "crates/core/executor/src/vm/syscall/precompiles/weierstrass/add.rs",
+      "crates/core/executor/src/vm/syscall/precompiles/weierstrass/double.rs",
+      "crates/core/machine/src/operations/field/field_op.rs",
+      "crates/core/machine/src/riscv/mod.rs",
+      "crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_add.rs",
+      "crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_double.rs",
+      "crates/core/machine/src/utils/prove.rs",
+      "crates/core/runner/build.rs"
+     ]
+    },
+    {
+     "commit": "59fa996a5001d31f3112dd05307003111847c3e7",
+     "subject": "Keep the Pasta crates compatible with registry SP1 consumers",
+     "paths": [
+      "crates/core/executor/Cargo.toml",
+      "crates/core/machine/Cargo.toml",
+      "crates/core/runner/Cargo.toml",
+      "crates/curves/Cargo.toml"
+     ]
+    },
+    {
+     "commit": "7d0c4646a47fba76ff4d9aeffee18eb884c4ebc1",
+     "subject": "Expose portable execution counters for cycle measurements",
+     "paths": [
+      "crates/core/executor/src/minimal.rs",
+      "crates/core/executor/src/minimal/arch/portable/mod.rs",
+      "crates/core/runner/src/portable.rs"
+     ]
+    },
+    {
+     "commit": "e0b57de848ef91fcefc3f19a6d081265864fa14f",
+     "subject": "Batch Weierstrass add witness inversions and trim field-op population",
+     "paths": [
+      "crates/core/machine/src/operations/field/field_op.rs",
+      "crates/core/machine/src/syscall/precompiles/weierstrass/weierstrass_add.rs"
+     ]
+    },
+    {
+     "commit": "b2c2b02d5596ab5e07f2edb9a198050df01e67be",
+     "subject": "Run Pallas and Vesta executor operations on fixed-limb arithmetic",
+     "paths": [
+      "crates/curves/src/weierstrass/mod.rs",
+      "crates/curves/src/weierstrass/pasta_arith.rs"
+     ]
+    },
+    {
+     "commit": "ac99509d080f6683d03e6a6fa96014eabaae0fc3",
+     "subject": "Pipeline streaming record generation and profile its phases",
+     "paths": [
+      "crates/core/machine/src/utils/prove.rs"
+     ]
+    },
+    {
+     "commit": "70a005d67f95fb7175073ddf2384502c04424017",
+     "subject": "Add fixed-modulus Pallas and Vesta field-op precompiles",
+     "paths": [
+      "crates/core/executor/src/air.rs",
+      "crates/core/executor/src/artifacts/rv64im_complexity.json",
+      "crates/core/executor/src/artifacts/rv64im_complexity_mprotect.json",
+      "crates/core/executor/src/artifacts/rv64im_costs.json",
+      "crates/core/executor/src/events/precompiles/mod.rs",
+      "crates/core/executor/src/minimal/ecall.rs",
+      "crates/core/executor/src/syscall_code.rs",
+      "crates/core/executor/src/vm/syscall.rs",
+      "crates/core/executor/src/vm/syscall/precompiles/fptower/fp.rs",
+      "crates/core/executor/src/vm/syscall/precompiles/fptower/fp2_addsub.rs",
+      "crates/core/executor/src/vm/syscall/precompiles/fptower/fp2_mul.rs",
+      "crates/core/machine/src/riscv/mod.rs",
+      "crates/core/machine/src/syscall/precompiles/fptower/fp.rs",
+      "crates/core/machine/src/syscall/precompiles/fptower/fp2_addsub.rs",
+      "crates/core/machine/src/syscall/precompiles/fptower/fp2_mul.rs",
+      "crates/curves/src/weierstrass/mod.rs",
+      "crates/curves/src/weierstrass/pasta.rs"
+     ]
+    },
+    {
+     "commit": "a418319a0fd386e52982b22b495859a2c4609800",
+     "subject": "Add Pasta Poseidon permutation precompiles for Mina's kimchi sponge",
+     "paths": [
+      "crates/core/executor/src/air.rs",
+      "crates/core/executor/src/artifacts/rv64im_complexity.json",
+      "crates/core/executor/src/artifacts/rv64im_complexity_mprotect.json",
+      "crates/core/executor/src/artifacts/rv64im_costs.json",
+      "crates/core/executor/src/events/precompiles/mod.rs",
+      "crates/core/executor/src/events/precompiles/pasta_poseidon.rs",
+      "crates/core/executor/src/minimal.rs",
+      "crates/core/executor/src/minimal/arch/portable/mod.rs",
+      "crates/core/executor/src/minimal/ecall.rs",
+      "crates/core/executor/src/minimal/precompiles/fptower/fp.rs",
+      "crates/core/executor/src/minimal/precompiles/fptower/mod.rs",
+      "crates/core/executor/src/minimal/precompiles/mod.rs",
+      "crates/core/executor/src/minimal/precompiles/pasta_poseidon.rs",
+      "crates/core/executor/src/syscall_code.rs",
+      "crates/core/executor/src/vm/syscall.rs",
+      "crates/core/executor/src/vm/syscall/precompiles/mod.rs",
+      "crates/core/executor/src/vm/syscall/precompiles/pasta_poseidon.rs",
+      "crates/core/machine/src/operations/field/field_inner_product.rs",
+      "crates/core/machine/src/riscv/mod.rs",
+      "crates/core/machine/src/syscall/precompiles/mod.rs",
+      "crates/core/machine/src/syscall/precompiles/pasta_poseidon/columns.rs",
+      "crates/core/machine/src/syscall/precompiles/pasta_poseidon/control.rs",
+      "crates/core/machine/src/syscall/precompiles/pasta_poseidon/mod.rs",
+      "crates/core/machine/src/syscall/precompiles/pasta_poseidon/round.rs",
+      "crates/curves/src/weierstrass/mod.rs",
+      "crates/curves/src/weierstrass/pasta_arith.rs",
+      "crates/curves/src/weierstrass/pasta_poseidon.rs",
+      "crates/curves/src/weierstrass/pasta_poseidon_constants.rs"
+     ]
+    },
+    {
+     "commit": "60d062703b850fc318a43780203ae88145c8fb4a",
+     "subject": "Bump the compress shape's Select height to what this fork's chips need",
+     "paths": [
+      "crates/prover/compress_shape.json"
+     ]
+    },
+    {
+     "commit": "cc81871e28bde574910b98c59f40774d6cad7ccf",
+     "subject": "Gate the pasta retained clusters, so the recursion VK map can reach depth 18",
+     "paths": [
+      "crates/core/machine/src/riscv/mod.rs"
+     ]
+    },
+    {
+     "commit": "172a1fc8750926037edafbd792093b68e03a5e53",
+     "subject": "Make the lean pasta cluster set the default, behind a compile-time feature",
+     "paths": [
+      "crates/core/machine/Cargo.toml",
+      "crates/core/machine/src/riscv/mod.rs"
+     ]
+    },
+    {
+     "commit": "fdd28002ff7e087087a93d49b670360750c43b2c",
+     "subject": "Pin the fork's real compress shape, and expose the wrap program builder",
+     "paths": [
+      "crates/prover/compress_shape.json",
+      "crates/prover/src/recursion.rs"
+     ]
+    },
+    {
+     "commit": "ec57b7c2ab14719624d1a45ab7d1b043f502bcda",
+     "subject": "gnark-ffi: make the `debug` go tag overridable, and record that it does not matter",
+     "paths": [
+      "crates/recursion/gnark-ffi/build.rs"
+     ]
+    },
+    {
+     "commit": "59a77a75eec0991d010388a437732a88dce3871c",
+     "subject": "prover: groth16_from_wrap, so a saved wrap proof can be proved without a GPU",
+     "paths": [
+      "crates/prover/src/build.rs"
+     ]
+    }
+   ]
+  }
+ ]
 }
