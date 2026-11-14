@@ -12,24 +12,42 @@ Before both scripts declared these, a `VK_JSON=... make build-rust` from a warm
 tree rebuilt nothing and handed back the previous guest — exit 0, wrong VK. That
 cost three confused builds on 2026-11-13.
 
-## The naming is historical, and the flags are Mizu's
+## The naming is a compatibility artifact, not a provenance claim
 
-43 of the 54 are spelled `ZEKO_*`. That prefix records where the *optimization
-idea* came from — Zeko's optimization work, ported selectively — not ownership.
-**Zeko is not a dependency of this repository and is not in it.** These are
-Mizu's build flags, and `MIZU_*` is what they describe.
+43 of the 54 are spelled `ZEKO_*`. **All 54 are this project's own work**,
+developed here on top of upstream `o1-labs/o1js-to-zkvm`. The prefix is a
+compatibility name, which is how
+[the dependency inventory](dependencies-and-optimizations.md) already puts it:
+"The compatibility `ZEKO_` names are retained in the implementation."
 
-The prefix has not been changed, because renaming an environment variable that
-is read through `option_env!` changes every guest ELF, which would:
+Checked rather than assumed, because an earlier version of this section claimed
+these were ported from Zeko's optimization work, and that is wrong:
+
+- **No upstream ref contains any `ZEKO_*` flag.** All seventeen
+  `refs/remotes/upstream/*` branches, `main` included, have zero matches for
+  `ZEKO_[A-Z_]+` in any `.rs` file.
+- **The prefix first appears in this repository's own history**, at `f0e1a1f`
+  ("Add strict Pickles wire validation and retained verifier optimizations",
+  2026-11-09), which is a descendant of `upstream/main`.
+
+So the starting point was upstream, and every optimization on this list was
+measured and retained here. **The only thing this project takes from Zeko is the
+settlement idea** — the inner-action tree encoding discussed in
+[the diff-proof plan](diff-proof-plan.md). Nothing in the flag surface comes
+from it, and Zeko is not a dependency.
+
+The prefix split is therefore chronological, not editorial: `ZEKO_*` is the
+older, settled set and `MIZU_*` is what has been added since the naming changed.
+Renaming the 43 has not been done because `option_env!` bakes values at compile
+time, so it would:
 
 - invalidate every provenance receipt under `benchmarks/provenance/`,
 - change `elf_sha256` and therefore the `programVKey` in every benchmark record,
-- require all ten `benchmarks/dev/*.json` recipes to be rewritten together, and
+- require all ten `benchmarks/dev/*.json` recipes rewritten together, and
 - break reproduction of the recorded cycle counts from their stated recipes.
 
-None of that is hard; it is just a change that has to be made in one commit with
-the receipts regenerated, and it buys naming consistency rather than behaviour.
-Treat `ZEKO_` as meaning "ported, now ours" until that commit happens.
+None of that is hard; it is a change that has to land in one commit with the
+receipts regenerated, and it buys naming consistency rather than behaviour.
 
 ## Three tiers
 
@@ -71,8 +89,15 @@ the practical reason the naming matters: the live surface is the Mizu six.
 **On 38 versus 40.** `docs/optimizations/README.md` and the area records speak of
 "40 retained settings". That is `retained.json`'s own count: the 38 above plus
 `ZEKO_CANONICAL_POSEIDON=1` and `ZEKO_POSEIDON_PACKED_RHS=1`. The 38 here is the
-intersection across all ten recipes, which excludes those two only because
-`poseidon-reference` sets them to `0`. Same set, different question.
+intersection across all ten `benchmarks/dev/` recipes, which excludes those two
+only because `poseidon-reference` sets them to `0`. Same set, different question.
+
+**Three more configs carry the retained 40**, outside `benchmarks/dev/`:
+`benchmarks/retained.json`, `core-proof-systems-0.7-sp1-6.10.json` and
+`core-sp1-6.10.json`. Their `optimization_env` blocks are byte-identical to
+`benchmarks/dev/retained.json`, so they add no settings to this reference — but
+they are the ones the measurement records and the dependency inventory cite, so
+a flag change has to reach all four.
 
 ### What the switches are worth, measured
 
@@ -176,9 +201,9 @@ Area tags match the files under [`docs/optimizations/`](optimizations/). **base*
 
 | flag | value | base | recipes | read at | what it selects |
 | --- | --- | :-: | :-: | --- | --- |
-| `MIZU_PASTA_FP_PRECOMPILE` | `1` | — | 3/10 | `pickles-verifier/src/canonical_msm.rs:113` +4 | **Mizu's own.** Fixed-modulus Pallas/Vesta field-op precompiles. -2.12% of cycles alone. The widest flag in the tree: read in `crates/`, proof-systems and algebra. |
-| `MIZU_POSEIDON_DEFERRED_MDS` | `1` | — | 2/10 | `ps:poseidon/src/canonical.rs:54` | **Mizu's own.** Defer the MDS multiply via `sum3_prepared_products_deferred`. Opt-in candidate, not in the retained recipe. |
-| `MIZU_POSEIDON_PRECOMPILE` | `1` | — | 2/10 | `ps:poseidon/src/canonical.rs:70` | **Mizu's own.** Routes the kimchi sponge to the SP1 `PALLAS_POSEIDON`/`VESTA_POSEIDON` executor precompiles. Worth a further -6.62% of cycles on top of the Fp precompile. |
+| `MIZU_PASTA_FP_PRECOMPILE` | `1` | — | 3/10 | `pickles-verifier/src/canonical_msm.rs:113` +4 | Fixed-modulus Pallas/Vesta field-op precompiles. -2.12% of cycles alone. The widest flag in the tree: read in `crates/`, proof-systems and algebra. |
+| `MIZU_POSEIDON_DEFERRED_MDS` | `1` | — | 2/10 | `ps:poseidon/src/canonical.rs:54` | Defer the MDS multiply via `sum3_prepared_products_deferred`. Opt-in candidate, not in the retained recipe. |
+| `MIZU_POSEIDON_PRECOMPILE` | `1` | — | 2/10 | `ps:poseidon/src/canonical.rs:70` | Routes the kimchi sponge to the SP1 `PALLAS_POSEIDON`/`VESTA_POSEIDON` executor precompiles. Worth a further -6.62% of cycles on top of the Fp precompile. |
 | `ZEKO_CANONICAL_POSEIDON` | `0`, `1` | — | 10/10 | `ps:poseidon/src/permutation.rs:151` | The fork's canonical Poseidon permutation. On in nine recipes; explicitly `0` in `poseidon-reference`, which is the control. |
 | `ZEKO_INTEGER_SCALAR_CHALLENGE` | `1` | yes | 10/10 | `ps:poseidon/src/sponge.rs:194` | Derive sponge scalar challenges as integers, avoiding a field round-trip. |
 | `ZEKO_POSEIDON_PACKED_RHS` | `0`, `1` | — | 10/10 | `ps:poseidon/src/canonical.rs:152` +1 | Packed right-hand side in the Poseidon MDS multiply. Toggled with `ZEKO_CANONICAL_POSEIDON` in every recipe. |
@@ -200,9 +225,9 @@ Area tags match the files under [`docs/optimizations/`](optimizations/). **base*
 
 | flag | value | base | recipes | read at | what it selects |
 | --- | --- | :-: | :-: | --- | --- |
-| `MIZU_BATCH_ACCUMULATOR` | — | — | 0/10 | `pickles-verifier/src/lib.rs:110` | **Mizu's own.** Batch the accumulator check. Code path exists; **no recipe enables it.** |
-| `MIZU_CIP_MODE` | `borrowed` | — | 1/10 | `pickles-verifier/src/deferred.rs:304` | **Mizu's own, string-valued.** Combined-inner-product strategy: `borrowed` or `fused`. Only `allocation` sets it. |
-| `MIZU_STACK_CROSS_FIELD` | `1` | — | 1/10 | `pickles-verifier/src/deferred.rs:375` | **Mizu's own.** Stack-allocate cross-field bytes in deferred-value expansion. |
+| `MIZU_BATCH_ACCUMULATOR` | — | — | 0/10 | `pickles-verifier/src/lib.rs:110` | Batch the accumulator check. Code path exists; **no recipe enables it.** |
+| `MIZU_CIP_MODE` | `borrowed` | — | 1/10 | `pickles-verifier/src/deferred.rs:304` | **String-valued.** Combined-inner-product strategy: `borrowed` or `fused`. Only `allocation` sets it. |
+| `MIZU_STACK_CROSS_FIELD` | `1` | — | 1/10 | `pickles-verifier/src/deferred.rs:375` | Stack-allocate cross-field bytes in deferred-value expansion. |
 
 ### Paths no recipe enables
 
