@@ -27,6 +27,9 @@ settings have one primary area below; many settings affect multiple modules.
 - [Current full measurement](../../benchmarks/core-proof-systems-0.7-sp1-6.10.json)
   and [upgrade validation](../proof-systems-upgrade.md): **142,650,295 cycles**,
   valid proof input, output `01`, 249 native tests and two rejected corruptions.
+- [Build-flag reference](../build-flags.md): all 54 environment variables that
+  shape the guest, one row each — value domain, read site, which recipes set it,
+  and the three tiers (48 compile-time, 5 build-script, 1 host-only).
 - [Dependency/version inventory](../dependencies-and-optimizations.md),
   [complete changed-file list](../file-changes.md), and
   [upstream sync guide](../../dependencies/README.md).
