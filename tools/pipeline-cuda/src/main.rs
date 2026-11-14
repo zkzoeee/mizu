@@ -199,9 +199,17 @@ fn apply_retention(opts: &mut SP1CoreOpts) {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .init();
+    // This used to be a bare `tracing_subscriber::fmt()` with no
+    // `with_span_events`, which tracks spans but never prints their duration --
+    // which is why run C's log carried wall-clock timestamps and no phase
+    // breakdown, and why the wrap half's internal split in
+    // docs/groth16-runs.md was read off those timestamps rather than measured.
+    //
+    // SP1's own logger sets `FmtSpan::CLOSE` and honours RUST_LOGGER=forest for
+    // a nested phase tree. Its prove-path spans are `debug_span!`, so the split
+    // needs RUST_LOG=debug; with RUST_LOG unset the filter is `off`, so this is
+    // inert by default.
+    sp1_core_machine::utils::setup_logger();
     let args = Args::parse();
 
     let elf = fs::read(&args.elf).context("read guest ELF")?;

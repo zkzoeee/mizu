@@ -252,6 +252,20 @@ fn indexed_path(base: &Path, index: usize) -> PathBuf {
 async fn main() -> Result<()> {
     let args = Args::parse();
 
+    // Make the inside of `prove` visible. Every run script set RUST_LOG, but
+    // this driver installed no subscriber, so none of it ever emitted: the
+    // wrap half's internal split in docs/groth16-runs.md came from wall-clock
+    // timestamps in a pod-side log that was never committed, not from spans.
+    //
+    // SP1's prove-path spans are `debug_span!` (prover/src/recursion.rs,
+    // worker/controller/*.rs), so they need RUST_LOG=debug; its logger already
+    // sets `FmtSpan::CLOSE`, which is what prints a span's duration, and
+    // RUST_LOGGER=forest nests them into a phase tree. Inert by default: with
+    // RUST_LOG unset the filter is `off` (machine/src/utils/logger.rs:21).
+    //
+    // sp1-core-machine is already a dependency, so this adds no crate.
+    sp1_core_machine::utils::setup_logger();
+
     // No ELF, no input, no node: the Groth16 circuit's whole witness comes out
     // of the wrap proof.
     if matches!(args.mode, Mode::FromWrap) {

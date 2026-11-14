@@ -611,6 +611,76 @@ Still unaddressed, because from-wrap builds no node and pays neither:
 `node_build` at 17.9 s and `setup` at 7.3 s. A multi-proof *full* pipeline would
 amortise both, which needs the node held open across several ELF/input pairs.
 
+## The wrap half, and why it was not decomposable (2026-11-14)
+
+With the gnark half batched to 12 s, the wrap half is the whole remaining
+proof. These are the only two committed `--mode wrap` records:
+
+| | node_build | execute | setup | **prove** | shrink_wrap | verify | total |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| statement-digest `f014afda` | 23.7 | 27.9 | 5.2 | **131.6** | 11.8 | 0.1 | 200.3 |
+| block3 simplechain `51241c13` | 19.7 | 0.0 | 7.4 | **188.6** | 10.0 | 0.1 | 225.8 |
+
+**`prove` is 66% and 83% of the two runs, and it is one unsplit number in every
+record.** That is the state of knowledge about the thing now worth optimising.
+
+### The 45 s / 111 s split is not a measurement this repository holds
+
+*Where run C's 5m50.9s goes*, above, breaks `prove` into roughly 45 s of
+re-execution and 111 s of STARK. Its own note says those came from timestamps in
+`/workspace/out/run2/run.log` — a pod-side file that was never committed, on a
+pod long since terminated. The JSON records carry only the coarse `seconds`
+block. Treat the split as a one-off observation, not a reproducible figure.
+
+### Two reasons no span timings were ever captured
+
+Both are driver bugs, and both are now fixed:
+
+- **`pipeline-runner` installed no tracing subscriber at all.** Every run script
+  exported `RUST_LOG`, and for this driver all of it was inert.
+- **`pipeline-cuda` — the driver that produced run C — installed a bare
+  `tracing_subscriber::fmt()` with no `with_span_events`**, which tracks spans
+  but never prints their duration. Hence timestamps and no phase tree.
+
+And on top of both: SP1's prove-path spans are `debug_span!`
+(`prover/src/recursion.rs`, `worker/controller/*.rs`), so even a correct
+subscriber at `info` drops them.
+
+Both drivers now call `sp1_core_machine::utils::setup_logger()`, which sets
+`FmtSpan::CLOSE` and honours `RUST_LOGGER=forest` for a nested phase tree.
+`sp1-core-machine` was already a direct dependency of both, so this adds no
+crate. It is inert by default: with `RUST_LOG` unset the filter is `off`
+(`machine/src/utils/logger.rs:21`). To decompose the wrap half:
+
+```sh
+RUST_LOG=debug RUST_LOGGER=forest pipeline-runner --mode wrap ...   # and keep the log
+```
+
+Take the result as proportions. Debug-level tracing has its own overhead, so
+absolute stage figures still belong to an `info`-level run.
+
+### What is already measured in there
+
+`node_build` plus `setup` is **27-29 s, 12-14% of the wrap half**, and it is
+per-process: the same shape the from-wrap change just exploited, so a
+multi-proof *full* pipeline holding the node open across several ELF/input pairs
+would amortise it. `shrink_wrap` is 10-12 s, about 5%, and small enough to
+leave alone.
+
+The two runs differ on `prove` by 57 s, but they are different guests on
+different pods, so that spread is not a controlled result. It is one more reason
+the decomposition has to be measured rather than argued.
+
+### Unrelated defect found while checking this
+
+`tools/pipeline-cuda/Cargo.lock` is out of sync with its manifest:
+`cargo check --locked` there fails at lock resolution, before compiling
+anything, and reports four unused `ark-*` patches. Confirmed pre-existing by
+re-running with the driver edit stashed. It went unnoticed because the pod
+scripts run `cargo build --release` without `--locked`. So `pipeline-cuda`
+cannot be built from a clean checkout with `--locked`, and the logger change in
+it is **uncompiled** — it will first compile on the next pod run.
+
 ## Still open
 
 - **Nothing is deployed.** Our `vk_root` differs from Succinct's, so their
