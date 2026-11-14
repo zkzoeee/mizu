@@ -1,0 +1,15 @@
+begin=2026-11-14T09:15:09Z
+W: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/InRelease: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
+Setting up gfortran-13 (13.3.0-6ubuntu2~24.04.1) ...
+Setting up g++-13 (13.3.0-6ubuntu2~24.04.1) ...
+Processing triggers for libc-bin (2.39-0ubuntu8.12) ...
+protoc=libprotoc 3.21.12 libclang=/usr/lib/llvm-18/lib/libclang.so
+cargo:rerun-if-env-changed=CFLAGS_x86_64_unknown_linux_gnu
+CFLAGS_x86_64_unknown_linux_gnu = None
+cargo:rerun-if-env-changed=CFLAGS_x86_64-unknown-linux-gnu
+CFLAGS_x86_64-unknown-linux-gnu = None
+rustc=rustc 1.92.0 (ded5c06cf 2025-12-08) cargo=cargo 1.92.0 (344c4567c 2025-10-21)
+go=go version go1.27.4 linux/amd64
+registry -> /workspace/cargo-registry  sp1 -> /workspace/sp1
+artifacts_complete=yes
+BOOTSTRAP_DONE=2026-11-14T09:15:38Z

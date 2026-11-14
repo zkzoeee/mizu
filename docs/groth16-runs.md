@@ -555,13 +555,35 @@ those records stay comparable.
 
 ### What it is worth, and the correction to "~40 s"
 
-**40.0 s is the CPU-gnark figure** — R1CS 24.0 s plus proving key 16.0 s of that
-path's 130.1 s. It is not the figure after CUDA. #3017's reader skips the R1CS
-debug info and the key's FFT twiddle tables and reads both in parallel, and the
-whole CUDA gnark half measured **35.6 s**, so the cacheable part cannot exceed
-that and is likely **~10-13 s** on the estimates in the table above. The CUDA
-run's internal stage split was not recorded, so this is bounded, not measured.
-Any multi-proof run should print it.
+**Measured on both backends, 2026-11-14.** One A40 (EU-SE-1, 96 cores, ECC on),
+the same wrap proof `320d4997..` three times in one process, each arm. Records in
+`benchmarks/pipeline/fromwrap-amortise-20261114/`.
+
+| | proof 1 | proof 2 | proof 3 | rest mean | **saved** | % of proof 1 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| CPU gnark | 139.5 s | 80.0 s | 78.7 s | 79.4 s | **60.1 s** | **43%** |
+| CUDA gnark | 39.9 s | 13.1 s | 11.0 s | 12.0 s | **27.9 s** | **70%** |
+
+The evidence is gnark's own log rather than arithmetic: "Reading R1CS took
+32.854736809s" and "Reading proving key took 18.482908199s" appear before proof
+1 and **never again**. All six proofs returned identical public inputs and the
+same `groth16_vkey_hash 4388a21c..`.
+
+**I had estimated ~10-13 s for the CUDA case. It is 27.9 s** — more than double.
+The reasoning was that #3017 skips the R1CS debug info and the key's twiddle
+tables and reads both in parallel, so the cacheable part had to be a small slice
+of the 35.6 s gnark half. The bound was right and the apportionment was wrong:
+**70% of the CUDA gnark half is per-process setup** and the real per-proof
+proving is 12 s.
+
+**And the saving exceeds the artifact reads.** On CPU the reads are 51.3 s but
+60.1 s is saved, because "Generating proof" itself ran 87.1 s on proof 1 against
+79.2 s and 77.7 s after — roughly 9 s of first-call warm-up on top. So the figure
+is not derivable from the artifact sizes.
+
+One caveat: this A40's reads ran slower than run C's (32.9 + 18.5 s against 24.0
++ 16.0 s), so 139.5 s is a this-pod first-proof cost, not a correction to run
+C's 130.1 s.
 
 ### Where the remaining time actually is
 
@@ -578,12 +600,16 @@ it needs several ELF/input pairs and the node held open across them — a larger
 change than this one, and only worth making if more than one proof per pod is
 actually the plan.
 
-### Unverified
+### What this leaves as the target
 
-The repeatable `--wrap-in` type-checks locally; **it has not been run.** From-wrap
-needs the 7.9 GB of Groth16 artifacts, so measuring it needs a pod. Until then
-the amortisation is a property of the Go globals read from source, not a figure
-of ours.
+Batched after CUDA, a proof is 205 s of wrap plus **12 s** of gnark, so the gnark
+half is about **5%** of it and the wrap half is the whole remaining target —
+execution, core proving over 84 shards, the reduce tree, shrink and wrap. No
+driver change reaches that.
+
+Still unaddressed, because from-wrap builds no node and pays neither:
+`node_build` at 17.9 s and `setup` at 7.3 s. A multi-proof *full* pipeline would
+amortise both, which needs the node held open across several ELF/input pairs.
 
 ## Still open
 

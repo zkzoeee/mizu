@@ -1,0 +1,69 @@
+{
+  "mode": "pipeline-local",
+  "note": "each proof verified inside groth16_from_wrap before it                          returned; the first pays the R1CS and proving-key reads                          and the rest reuse them from the process globals",
+  "proof_mode": "FromWrap",
+  "proofs": [
+    {
+      "groth16": {
+        "encoded_proof_bytes": 352,
+        "groth16_vkey_hash": "4388a21c687fdd5f218d7e3d13190cac4c5355818d3605fd5fb811df468ee696",
+        "public_inputs": [
+          "127491716344518085331917678658257543340454481468858029144042376303494033399",
+          "10450732416361500606638862004718813867545877298259723900316985715029809860773",
+          "0",
+          "417928567306502074565230804347770440112435844975915505731356756126568605749",
+          "0"
+        ],
+        "raw_proof_bytes": 324
+      },
+      "seconds": 139.458866917,
+      "wrap_in": "/workspace/out/wrap.bin",
+      "wrap_proof_bytes": 1340949
+    },
+    {
+      "groth16": {
+        "encoded_proof_bytes": 352,
+        "groth16_vkey_hash": "4388a21c687fdd5f218d7e3d13190cac4c5355818d3605fd5fb811df468ee696",
+        "public_inputs": [
+          "127491716344518085331917678658257543340454481468858029144042376303494033399",
+          "10450732416361500606638862004718813867545877298259723900316985715029809860773",
+          "0",
+          "417928567306502074565230804347770440112435844975915505731356756126568605749",
+          "0"
+        ],
+        "raw_proof_bytes": 324
+      },
+      "seconds": 80.017454795,
+      "wrap_in": "/workspace/out/wrap.bin",
+      "wrap_proof_bytes": 1340949
+    },
+    {
+      "groth16": {
+        "encoded_proof_bytes": 352,
+        "groth16_vkey_hash": "4388a21c687fdd5f218d7e3d13190cac4c5355818d3605fd5fb811df468ee696",
+        "public_inputs": [
+          "127491716344518085331917678658257543340454481468858029144042376303494033399",
+          "10450732416361500606638862004718813867545877298259723900316985715029809860773",
+          "0",
+          "417928567306502074565230804347770440112435844975915505731356756126568605749",
+          "0"
+        ],
+        "raw_proof_bytes": 324
+      },
+      "seconds": 78.720499022,
+      "wrap_in": "/workspace/out/wrap.bin",
+      "wrap_proof_bytes": 1340949
+    }
+  ],
+  "saved_per_proof_after_the_first": 60.08989000849999,
+  "seconds": {
+    "groth16_each": [
+      139.458866917,
+      80.017454795,
+      78.720499022
+    ],
+    "groth16_first": 139.458866917,
+    "groth16_rest_mean": 79.3689769085,
+    "groth16_total": 298.235738203
+  }
+}

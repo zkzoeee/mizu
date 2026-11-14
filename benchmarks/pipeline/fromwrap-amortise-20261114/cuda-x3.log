@@ -1,0 +1,32 @@
+begin=2026-11-14T09:33:06Z
+nvcc=Build cuda_12.8.r12.8/compiler.35583870_0
+go mod ok
+   Compiling sp1-recursion-gnark-ffi v6.10.0 (/workspace/src/mizu/vendor/sp1/crates/recursion/gnark-ffi)
+   Compiling sp1-prover-types v6.10.0 (/workspace/src/mizu/vendor/sp1/crates/prover-types)
+   Compiling sp1-prover v6.10.0 (/workspace/src/mizu/vendor/sp1/crates/prover)
+   Compiling pipeline-runner v0.1.0 (/workspace/src/mizu/crates/pipeline-runner)
+    Finished `release` profile [optimized] target(s) in 11m 07s
+build_exit=0
+BUILD_DONE=2026-11-14T09:44:14Z
+wrap proof 1/3: 1340949 bytes from /workspace/out/wrap.bin
+[90m09:44:54[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m09:44:54[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m09:44:54[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m09:44:54[0m DBG verifier done [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mtook=[0m2.507203
+  groth16 in 39.9s, 324 raw bytes
+wrap proof 2/3: 1340949 bytes from /workspace/out/wrap.bin
+[90m09:45:07[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m09:45:07[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m09:45:07[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m09:45:07[0m DBG verifier done [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mtook=[0m2.732742
+  groth16 in 13.1s, 324 raw bytes
+wrap proof 3/3: 1340949 bytes from /workspace/out/wrap.bin
+[90m09:45:18[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m09:45:18[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m09:45:18[0m [33mWRN[0m [1mignoring uninitialized slice[0m [36mslice name=[0mVars [36mslice type=[0m[]frontend.Variable
+[90m09:45:18[0m DBG verifier done [36mbackend=[0mgroth16 [36mcurve=[0mbn254 [36mtook=[0m1.210805
+  groth16 in 11.0s, 324 raw bytes
+3 proofs in 64.0s: first 39.9s, rest 12.0s mean, 27.9s saved per proof after the first
+exit=0
+done=2026-11-14T09:45:21Z
+CUDA3_DONE
