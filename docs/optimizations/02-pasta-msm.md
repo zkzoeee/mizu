@@ -55,20 +55,20 @@ recoder geometry equivalent before attributing a window comparison.
 
 | Setting | Current value |
 | --- | --- |
-| `ZEKO_PALLAS_AFFINE` | `1` |
-| `ZEKO_PALLAS_GLV` | `1` |
-| `ZEKO_PALLAS_POINT_PRECOMPILE` | `1` |
-| `ZEKO_PALLAS_WINDOW` | `13` |
-| `ZEKO_VESTA_AFFINE` | `1` |
-| `ZEKO_VESTA_GLV` | `1` |
-| `ZEKO_VESTA_POINT_PRECOMPILE` | `1` |
-| `ZEKO_VESTA_WINDOW` | `16` |
-| `ZEKO_MSM_FILTER_ZERO` | `1` |
-| `ZEKO_INLINE_FINITE_COPY` | `words` |
-| `ZEKO_UNINIT_MSM_DIGITS` | `1` |
-| `ZEKO_OUTLINE_PALLAS_BUCKETS` | `1` |
-| `ZEKO_OUTLINE_VESTA_BUCKETS` | `1` |
-| `ZEKO_PACKED_PALLAS_HALVES` | `1` |
+| `MIZU_PALLAS_AFFINE` | `1` |
+| `MIZU_PALLAS_GLV` | `1` |
+| `MIZU_PALLAS_POINT_PRECOMPILE` | `1` |
+| `MIZU_PALLAS_WINDOW` | `13` |
+| `MIZU_VESTA_AFFINE` | `1` |
+| `MIZU_VESTA_GLV` | `1` |
+| `MIZU_VESTA_POINT_PRECOMPILE` | `1` |
+| `MIZU_VESTA_WINDOW` | `16` |
+| `MIZU_MSM_FILTER_ZERO` | `1` |
+| `MIZU_INLINE_FINITE_COPY` | `words` |
+| `MIZU_UNINIT_MSM_DIGITS` | `1` |
+| `MIZU_OUTLINE_PALLAS_BUCKETS` | `1` |
+| `MIZU_OUTLINE_VESTA_BUCKETS` | `1` |
+| `MIZU_PACKED_PALLAS_HALVES` | `1` |
 
 These controls can compose or select fallback paths. Their grouping assigns a
 primary documentation area, not independent additive performance credit. Exact

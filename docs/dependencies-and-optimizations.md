@@ -118,8 +118,8 @@ proving records; streaming/GMP/GPU improvements are not exercised by that number
 ## Retained experiments and non-performance changes
 
 The source also retains optional experiments that are not selected by the
-retained configuration: generic MSM window sweeps (`ZEKO_MSM_WINDOW_BITS`),
-Vesta prepared-lane tables (`ZEKO_VESTA_PREPARED_LANES`), alternative compact
+retained configuration: generic MSM window sweeps (`MIZU_MSM_WINDOW_BITS`),
+Vesta prepared-lane tables (`MIZU_VESTA_PREPARED_LANES`), alternative compact
 backends, the generic Arkworks affine-batch-inversion implementation, and
 `debug-log` features in `ark-ff` / `ark-ec`. Their presence is not evidence that
 they contributed to 142,650,295 cycles. The guest's `mina-curves/sp1` Cargo

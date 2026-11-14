@@ -237,7 +237,7 @@ pub(crate) fn msm(
         scalars.push(*hk);scalars.extend_from_slice(ks);scalars.extend_from_slice(tk);
         return mina_curves::pasta::canonical_pallas::msm_bigint(&points,&scalars);
     }
-    let width=option_env!("ZEKO_PALLAS_WINDOW").map(|s|s.parse().expect("Pallas fixed window"));
+    let width=option_env!("MIZU_PALLAS_WINDOW").map(|s|s.parse().expect("Pallas fixed window"));
     mina_curves::pasta::canonical_pallas::msm_bigint_fixed_prefix(table.rows(),ks,h,*hk,tail,tk,width)
 }
 

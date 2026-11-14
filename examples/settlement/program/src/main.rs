@@ -52,14 +52,14 @@ fn commit_zkapp_public_values(proof_valid: bool) {
 
 pub fn main() {
     tracker(b"cycle-tracker-report-start:setup\n");
-    let eager_proof: Option<VerifiableProof> = if matches!(option_env!("ZEKO_WRAP_SRS_PREFIX"), Some("1"))
-        && matches!(option_env!("ZEKO_PRECOMPUTED_VK_DIGEST"), Some("1"))
+    let eager_proof: Option<VerifiableProof> = if matches!(option_env!("MIZU_WRAP_SRS_PREFIX"), Some("1"))
+        && matches!(option_env!("MIZU_PRECOMPUTED_VK_DIGEST"), Some("1"))
     {
         Some(sp1_zkvm::io::read())
     } else {
         None
     };
-    let verifier = if matches!(option_env!("ZEKO_PRECOMPUTED_VK_DIGEST"), Some("1")) {
+    let verifier = if matches!(option_env!("MIZU_PRECOMPUTED_VK_DIGEST"), Some("1")) {
         Some(if let Some(proof) = eager_proof.as_ref() {
             decode_embedded_verifier_for_proof(&VERIFIER_BYTES.0, VK_TRANSCRIPT_DIGEST, proof)
         } else {

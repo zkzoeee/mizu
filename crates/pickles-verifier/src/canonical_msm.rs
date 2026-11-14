@@ -100,7 +100,7 @@ impl FpConfig<4> for CanonicalFqConfig {
     fn mul_assign(a: &mut CanonicalFq, b: &CanonicalFq) {
         #[cfg(target_os = "zkvm")]
         {
-            if matches!(option_env!("ZEKO_DIRECT_MULMOD"), Some("1")) {
+            if matches!(option_env!("MIZU_DIRECT_MULMOD"), Some("1")) {
                 // UINT256_MUL reads eight words starting at its second pointer:
                 // four RHS limbs followed by four modulus limbs. An array of
                 // arrays guarantees adjacency and u64 alignment. Copy the RHS
@@ -204,10 +204,10 @@ impl SWCurveConfig for CanonicalVestaParameters {
 /// turns unchecked bytes into accepted points. Mismatched lengths are rejected.
 pub(crate) fn vesta_msm(bases: &[Vesta], scalars: &[Fp]) -> Projective<VestaParameters> {
     assert_eq!(bases.len(), scalars.len(), "canonical MSM input lengths");
-    let fuse_conversion = matches!(option_env!("ZEKO_FUSE_VESTA_BASE_CONVERSION"), Some("1"))
-        && matches!(option_env!("ZEKO_VESTA_GLV"), Some("1"))
-        && matches!(option_env!("ZEKO_VESTA_POINT_PRECOMPILE"), Some("1"))
-        && option_env!("ZEKO_VESTA_PREPARED_LANES").is_none();
+    let fuse_conversion = matches!(option_env!("MIZU_FUSE_VESTA_BASE_CONVERSION"), Some("1"))
+        && matches!(option_env!("MIZU_VESTA_GLV"), Some("1"))
+        && matches!(option_env!("MIZU_VESTA_POINT_PRECOMPILE"), Some("1"))
+        && option_env!("MIZU_VESTA_PREPARED_LANES").is_none();
     let canonical_bases: Vec<Affine<CanonicalVestaParameters>> = if fuse_conversion {
         Vec::new()
     } else { bases.iter()
@@ -220,17 +220,17 @@ pub(crate) fn vesta_msm(bases: &[Vesta], scalars: &[Fp]) -> Projective<VestaPara
     // GLV performs its own scalar-to-integer conversion. Keep the old path as
     // the control, but omit this unused vector (and its conversion syscalls)
     // when the explicitly selected GLV-only trimming experiment is active.
-    let bigints: Vec<_> = if matches!(option_env!("ZEKO_TRIM_CONVERSIONS"), Some("1"))
-        && matches!(option_env!("ZEKO_VESTA_GLV"), Some("1"))
-        && option_env!("ZEKO_VESTA_PREPARED_LANES").is_none()
+    let bigints: Vec<_> = if matches!(option_env!("MIZU_TRIM_CONVERSIONS"), Some("1"))
+        && matches!(option_env!("MIZU_VESTA_GLV"), Some("1"))
+        && option_env!("MIZU_VESTA_PREPARED_LANES").is_none()
     {
         Vec::new()
     } else {
         scalars.iter().map(|scalar| scalar.into_bigint()).collect()
     };
-    let result = if option_env!("ZEKO_VESTA_PREPARED_LANES").is_some() {
+    let result = if option_env!("MIZU_VESTA_PREPARED_LANES").is_some() {
         assert!(
-            !matches!(option_env!("ZEKO_VESTA_GLV"), Some("1")),
+            !matches!(option_env!("MIZU_VESTA_GLV"), Some("1")),
             "prepared and GLV are separate experiments"
         );
         let (points, coefficients, bits) = prepared_inputs(&canonical_bases, &bigints);
@@ -241,9 +241,9 @@ pub(crate) fn vesta_msm(bases: &[Vesta], scalars: &[Fp]) -> Projective<VestaPara
             // No magnitude bound is available on this path.
             None,
         )
-    } else if matches!(option_env!("ZEKO_VESTA_GLV"), Some("1")) {
+    } else if matches!(option_env!("MIZU_VESTA_GLV"), Some("1")) {
         let beta = from_fq(crate::vesta_glv::endomorphism_coefficient());
-        if matches!(option_env!("ZEKO_VESTA_POINT_PRECOMPILE"), Some("1")) {
+        if matches!(option_env!("MIZU_VESTA_POINT_PRECOMPILE"), Some("1")) {
             // Convert each expanded point as it is produced, rather than
             // collecting a Vec<Affine> for the MSM to read back.
             if fuse_conversion {
@@ -270,9 +270,9 @@ pub(crate) fn vesta_msm(bases: &[Vesta], scalars: &[Fp]) -> Projective<VestaPara
                 Some(crate::vesta_glv::HALF_MAX),
             )
         }
-    } else if matches!(option_env!("ZEKO_VESTA_AFFINE"), Some("1"))
-        || matches!(option_env!("ZEKO_VESTA_COMPACT"), Some("1"))
-        || matches!(option_env!("ZEKO_VESTA_POINT_PRECOMPILE"), Some("1"))
+    } else if matches!(option_env!("MIZU_VESTA_AFFINE"), Some("1"))
+        || matches!(option_env!("MIZU_VESTA_COMPACT"), Some("1"))
+        || matches!(option_env!("MIZU_VESTA_POINT_PRECOMPILE"), Some("1"))
     {
         crate::vesta_spikes::run::<CanonicalVestaParameters>(
             &canonical_bases,
@@ -313,12 +313,12 @@ pub(crate) fn vesta_msm_fixed(
 ) -> Projective<VestaParameters> {
     use mina_curves::pasta::point_spikes::{PreparedTerms, PastaCurve, CarryWindow, msm_prepared};
     assert_eq!(table.len(), scalars.len(), "fixed SRS scalar count");
-    if matches!(option_env!("ZEKO_FIXED_VESTA_COUPLED"), Some("1"))
-        && matches!(option_env!("ZEKO_VESTA_WINDOW"), Some("16"))
+    if matches!(option_env!("MIZU_FIXED_VESTA_COUPLED"), Some("1"))
+        && matches!(option_env!("MIZU_VESTA_WINDOW"), Some("16"))
     {
         // Only the explicit width16 configuration uses coupled recoding.
         // All heuristic/other-window configurations retain the original path.
-        if matches!(option_env!("ZEKO_BORROW_POSITIONAL_SCALARS"), Some("1")) {
+        if matches!(option_env!("MIZU_BORROW_POSITIONAL_SCALARS"), Some("1")) {
             return vesta_msm_fixed_borrowed(table, scalars);
         }
         return vesta_msm_fixed_coupled(table, scalars);
@@ -385,10 +385,10 @@ fn prepared_inputs(
     bases: &[Affine<CanonicalVestaParameters>],
     scalars: &[BigInt<4>],
 ) -> (Vec<Affine<CanonicalVestaParameters>>, Vec<BigInt<4>>, usize) {
-    let lanes = match option_env!("ZEKO_VESTA_PREPARED_LANES") {
+    let lanes = match option_env!("MIZU_VESTA_PREPARED_LANES") {
         Some("2") => 2,
         Some("4") => 4,
-        _ => panic!("ZEKO_VESTA_PREPARED_LANES must be 2 or 4"),
+        _ => panic!("MIZU_VESTA_PREPARED_LANES must be 2 or 4"),
     };
     let bytes = include_bytes!(concat!(env!("OUT_DIR"), "/vesta-prepared.bin"));
     let word = |offset| u64::from_le_bytes(bytes[offset..offset + 8].try_into().unwrap());

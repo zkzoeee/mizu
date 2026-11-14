@@ -246,12 +246,12 @@ fn accumulator_check_with_generators(
         .map(|c| ScalarChallenge::new(*c).to_field(&verifier.step_endo))
         .collect();
     let expected_len = 1usize << verifier.step_srs_length_log2;
-    let canonical_coefficients = matches!(option_env!("ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS"), Some("1"))
-        && matches!(option_env!("ZEKO_CANONICAL_MSM"), Some("1"))
-        && matches!(option_env!("ZEKO_FUSE_VESTA_BASE_CONVERSION"), Some("1"))
-        && matches!(option_env!("ZEKO_VESTA_GLV"), Some("1"))
-        && matches!(option_env!("ZEKO_VESTA_POINT_PRECOMPILE"), Some("1"))
-        && option_env!("ZEKO_VESTA_PREPARED_LANES").is_none();
+    let canonical_coefficients = matches!(option_env!("MIZU_CANONICAL_ACCUMULATOR_COEFFICIENTS"), Some("1"))
+        && matches!(option_env!("MIZU_CANONICAL_MSM"), Some("1"))
+        && matches!(option_env!("MIZU_FUSE_VESTA_BASE_CONVERSION"), Some("1"))
+        && matches!(option_env!("MIZU_VESTA_GLV"), Some("1"))
+        && matches!(option_env!("MIZU_VESTA_POINT_PRECOMPILE"), Some("1"))
+        && option_env!("MIZU_VESTA_PREPARED_LANES").is_none();
     if canonical_coefficients {
         let coeffs = canonical_coefficients::coefficients(&chals);
         if coeffs.len() != expected_len || g.len() < expected_len {
@@ -268,7 +268,7 @@ fn accumulator_check_with_generators(
         track_cycles(b"cycle-tracker-report-end:pickles-accumulator\n");
         return false;
     }
-    let computed_sg = if matches!(option_env!("ZEKO_CANONICAL_MSM"), Some("1")) {
+    let computed_sg = if matches!(option_env!("MIZU_CANONICAL_MSM"), Some("1")) {
         canonical_msm::vesta_msm(&g[..expected_len], &coeffs).into_affine()
     } else {
         <<Vesta as AffineRepr>::Group as VariableBaseMSM>::msm(&g[..expected_len], &coeffs)
@@ -769,7 +769,7 @@ mod tests {
             assert_eq!(table.point::<mina_curves::pasta::VestaParameters>(1,i),
                 g.mul_bigint(ark_ff::BigInt([0,0,1,0])).into_affine());
         }
-        if matches!(option_env!("ZEKO_FIXED_VESTA_SRS"), Some("1")) {
+        if matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1")) {
             let digest = Box::leak(Box::new(embedded_wrap_digest(&verifier.wrap_vk)));
             let mut blob = crate::serialize::encode_embedded_verifier_blob(
                 &verifier.vesta_srs, &verifier.wrap_vk.srs, 1, &verifier.wrap_vk);
@@ -804,7 +804,7 @@ mod tests {
         let (full_g,_)=full.wrap_storage_for_test();let (short_g,_)=prefix.wrap_storage_for_test();
         assert_eq!(full_g.len(),plen);assert_eq!(short_g.len(),1<<proof.wrap_proof.proof.lr.len());
         assert_eq!(short_g,&full_g[..short_g.len()]);
-        if matches!(option_env!("ZEKO_BORROW_PALLAS_SRS"),Some("1")) {
+        if matches!(option_env!("MIZU_BORROW_PALLAS_SRS"),Some("1")) {
             assert_eq!(full_g.as_ptr() as *const u8,expected_ptr);assert_eq!(short_g.as_ptr() as *const u8,expected_ptr);
         } else {assert_ne!(full_g.as_ptr() as *const u8,expected_ptr);assert_ne!(short_g.as_ptr() as *const u8,expected_ptr);}
         assert!(full.verify(&proof));assert!(prefix.verify(&proof));
@@ -826,7 +826,7 @@ mod tests {
         let blob: &'static [u8] = Box::leak(blob.into_boxed_slice());
         let fixed = decode_embedded_verifier(blob, digest);
         let (borrowed, owned_len) = fixed.vesta_storage_for_test();
-        let enabled = matches!(option_env!("ZEKO_BORROW_VESTA_SRS"), Some("1"));
+        let enabled = matches!(option_env!("MIZU_BORROW_VESTA_SRS"), Some("1"));
         assert_eq!(borrowed.is_some(), enabled);
         if let Some(g) = borrowed {
             assert_eq!(owned_len, 0, "embedded path must not copy Vesta g");
@@ -909,7 +909,7 @@ mod tests {
             assert_eq!(table.point::<mina_curves::pasta::PallasParameters>(0,i),g[i]);
             assert_eq!(table.point::<mina_curves::pasta::PallasParameters>(1,i),g[i].mul_bigint(ark_ff::BigInt([0,0,1,0])).into_affine());
         }
-        if matches!(option_env!("ZEKO_FIXED_PALLAS_SRS"),Some("1")) {
+        if matches!(option_env!("MIZU_FIXED_PALLAS_SRS"),Some("1")) {
             let digest=Box::leak(Box::new(embedded_wrap_digest(&verifier.wrap_vk)));
             let mut blob=crate::serialize::encode_embedded_verifier_blob(&verifier.vesta_srs,&verifier.wrap_vk.srs,1,&verifier.wrap_vk);
             let start=blob.windows(8).rposition(|b|b==crate::fixed_pallas::MAGIC).unwrap()+crate::fixed_pallas::HEADER;

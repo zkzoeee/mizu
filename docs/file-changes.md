@@ -235,82 +235,82 @@ Values come from `benchmarks/retained.json`. References include callers/build sc
 | Setting | Value | References |
 | --- | --- | --- |
 
-| `ZEKO_APPEND_B_POLY` | `1` | `vendor/proof-systems/poly-commitment/src/commitment.rs:547` |
+| `MIZU_APPEND_B_POLY` | `1` | `vendor/proof-systems/poly-commitment/src/commitment.rs:547` |
 
-| `ZEKO_BORROW_PALLAS_SRS` | `1` | `crates/o1-verifier/build.rs:37`; `crates/pickles-verifier/src/lib.rs:727`; `crates/pickles-verifier/src/serialize.rs:491`; `examples/settlement/program/build.rs:38` |
+| `MIZU_BORROW_PALLAS_SRS` | `1` | `crates/o1-verifier/build.rs:37`; `crates/pickles-verifier/src/lib.rs:727`; `crates/pickles-verifier/src/serialize.rs:491`; `examples/settlement/program/build.rs:38` |
 
-| `ZEKO_BORROW_POSITIONAL_SCALARS` | `1` | `crates/o1-verifier/build.rs:34`; `crates/pickles-verifier/src/canonical_msm.rs:316`; `examples/settlement/program/build.rs:35` |
+| `MIZU_BORROW_POSITIONAL_SCALARS` | `1` | `crates/o1-verifier/build.rs:34`; `crates/pickles-verifier/src/canonical_msm.rs:316`; `examples/settlement/program/build.rs:35` |
 
-| `ZEKO_BORROW_VESTA_SRS` | `1` | `crates/pickles-verifier/src/lib.rs:749`; `crates/pickles-verifier/src/serialize.rs:487` |
+| `MIZU_BORROW_VESTA_SRS` | `1` | `crates/pickles-verifier/src/lib.rs:749`; `crates/pickles-verifier/src/serialize.rs:487` |
 
-| `ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS` | `1` | `crates/pickles-verifier/src/lib.rs:237` |
+| `MIZU_CANONICAL_ACCUMULATOR_COEFFICIENTS` | `1` | `crates/pickles-verifier/src/lib.rs:237` |
 
-| `ZEKO_CANONICAL_MSM` | `1` | `crates/pickles-verifier/src/lib.rs:238,259` |
+| `MIZU_CANONICAL_MSM` | `1` | `crates/pickles-verifier/src/lib.rs:238,259` |
 
-| `ZEKO_CANONICAL_PALLAS` | `1` | `vendor/proof-systems/curves/src/pasta/curves/pallas.rs:47` |
+| `MIZU_CANONICAL_PALLAS` | `1` | `vendor/proof-systems/curves/src/pasta/curves/pallas.rs:47` |
 
-| `ZEKO_CANONICAL_POSEIDON` | `1` | `vendor/proof-systems/poseidon/src/permutation.rs:151` |
+| `MIZU_CANONICAL_POSEIDON` | `1` | `vendor/proof-systems/poseidon/src/permutation.rs:151` |
 
-| `ZEKO_DIRECT_MULMOD` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:103`; `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:106` |
+| `MIZU_DIRECT_MULMOD` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:103`; `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:106` |
 
-| `ZEKO_FIXED_PALLAS_SRS` | `1` | `crates/o1-verifier/build.rs:36,70`; `crates/pickles-verifier/src/lib.rs:832`; `crates/pickles-verifier/src/serialize.rs:277,490`; `examples/settlement/program/build.rs:37,71` |
+| `MIZU_FIXED_PALLAS_SRS` | `1` | `crates/o1-verifier/build.rs:36,70`; `crates/pickles-verifier/src/lib.rs:832`; `crates/pickles-verifier/src/serialize.rs:277,490`; `examples/settlement/program/build.rs:37,71` |
 
-| `ZEKO_FIXED_VESTA_COUPLED` | `1` | `crates/o1-verifier/build.rs:33`; `crates/pickles-verifier/src/canonical_msm.rs:311`; `examples/settlement/program/build.rs:34` |
+| `MIZU_FIXED_VESTA_COUPLED` | `1` | `crates/o1-verifier/build.rs:33`; `crates/pickles-verifier/src/canonical_msm.rs:311`; `examples/settlement/program/build.rs:34` |
 
-| `ZEKO_FIXED_VESTA_SRS` | `1` | `crates/o1-verifier/build.rs:32,69`; `crates/pickles-verifier/src/lib.rs:692`; `crates/pickles-verifier/src/serialize.rs:273,489`; `examples/settlement/program/build.rs:33,70` |
+| `MIZU_FIXED_VESTA_SRS` | `1` | `crates/o1-verifier/build.rs:32,69`; `crates/pickles-verifier/src/lib.rs:692`; `crates/pickles-verifier/src/serialize.rs:273,489`; `examples/settlement/program/build.rs:33,70` |
 
-| `ZEKO_FUSE_PALLAS_BASE_CONVERSION` | `1` | `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:436` |
+| `MIZU_FUSE_PALLAS_BASE_CONVERSION` | `1` | `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:436` |
 
-| `ZEKO_FUSE_VESTA_BASE_CONVERSION` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:202`; `crates/pickles-verifier/src/lib.rs:239` |
+| `MIZU_FUSE_VESTA_BASE_CONVERSION` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:202`; `crates/pickles-verifier/src/lib.rs:239` |
 
-| `ZEKO_HINTED_INVERSE` | `1` | `vendor/proof-systems/curves/src/pasta/precompile_spikes.rs:19` |
+| `MIZU_HINTED_INVERSE` | `1` | `vendor/proof-systems/curves/src/pasta/precompile_spikes.rs:19` |
 
-| `ZEKO_INLINE_FINITE_COPY` | `words` | `vendor/proof-systems/curves/src/pasta/point_spikes.rs:238` |
+| `MIZU_INLINE_FINITE_COPY` | `words` | `vendor/proof-systems/curves/src/pasta/point_spikes.rs:238` |
 
-| `ZEKO_INTEGER_SCALAR_CHALLENGE` | `1` | `vendor/proof-systems/poseidon/src/sponge.rs:194` |
+| `MIZU_INTEGER_SCALAR_CHALLENGE` | `1` | `vendor/proof-systems/poseidon/src/sponge.rs:194` |
 
-| `ZEKO_IPA_BORROW_SRS_PREFIX` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:432` |
+| `MIZU_IPA_BORROW_SRS_PREFIX` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:432` |
 
-| `ZEKO_IPA_CANONICAL_PREFIX` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:440` |
+| `MIZU_IPA_CANONICAL_PREFIX` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:440` |
 
-| `ZEKO_IPA_DIRECT_COEFFICIENTS` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:508` |
+| `MIZU_IPA_DIRECT_COEFFICIENTS` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:508` |
 
-| `ZEKO_IPA_EXACT_CAPACITY` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:415` |
+| `MIZU_IPA_EXACT_CAPACITY` | `1` | `vendor/proof-systems/poly-commitment/src/ipa.rs:415` |
 
-| `ZEKO_MONT_DIRECT_MULMOD` | `1` | `vendor/algebra/ff/src/fields/models/fp/montgomery_backend.rs:64` |
+| `MIZU_MONT_DIRECT_MULMOD` | `1` | `vendor/algebra/ff/src/fields/models/fp/montgomery_backend.rs:64` |
 
-| `ZEKO_MSM_FILTER_ZERO` | `1` | `vendor/algebra/ec/src/scalar_mul/variable_base/mod.rs:188`; `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:220` |
+| `MIZU_MSM_FILTER_ZERO` | `1` | `vendor/algebra/ec/src/scalar_mul/variable_base/mod.rs:188`; `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:220` |
 
-| `ZEKO_OUTLINE_PALLAS_BUCKETS` | `1` | `vendor/proof-systems/curves/src/pasta/point_spikes.rs:690` |
+| `MIZU_OUTLINE_PALLAS_BUCKETS` | `1` | `vendor/proof-systems/curves/src/pasta/point_spikes.rs:690` |
 
-| `ZEKO_OUTLINE_VESTA_BUCKETS` | `1` | `vendor/proof-systems/curves/src/pasta/point_spikes.rs:689` |
+| `MIZU_OUTLINE_VESTA_BUCKETS` | `1` | `vendor/proof-systems/curves/src/pasta/point_spikes.rs:689` |
 
-| `ZEKO_PACKED_PALLAS_HALVES` | `1` | `crates/o1-verifier/build.rs:35`; `examples/settlement/program/build.rs:36`; `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:439` |
+| `MIZU_PACKED_PALLAS_HALVES` | `1` | `crates/o1-verifier/build.rs:35`; `examples/settlement/program/build.rs:36`; `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:439` |
 
-| `ZEKO_PALLAS_AFFINE` | `1` | `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:205` |
+| `MIZU_PALLAS_AFFINE` | `1` | `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:205` |
 
-| `ZEKO_PALLAS_GLV` | `1` | `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:206` |
+| `MIZU_PALLAS_GLV` | `1` | `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:206` |
 
-| `ZEKO_PALLAS_POINT_PRECOMPILE` | `1` | `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:208` |
+| `MIZU_PALLAS_POINT_PRECOMPILE` | `1` | `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:208` |
 
-| `ZEKO_PALLAS_WINDOW` | `13` | `crates/pickles-verifier/src/fixed_pallas.rs:240`; `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:209` |
+| `MIZU_PALLAS_WINDOW` | `13` | `crates/pickles-verifier/src/fixed_pallas.rs:240`; `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:209` |
 
-| `ZEKO_POSEIDON_PACKED_RHS` | `1` | `vendor/proof-systems/poseidon/src/canonical.rs:134,149` |
+| `MIZU_POSEIDON_PACKED_RHS` | `1` | `vendor/proof-systems/poseidon/src/canonical.rs:134,149` |
 
-| `ZEKO_PRECOMPUTED_SETUP` | `1` | `crates/o1-verifier/build.rs:31,68`; `crates/pickles-verifier/src/serialize.rs:488`; `examples/settlement/program/build.rs:32,69` |
+| `MIZU_PRECOMPUTED_SETUP` | `1` | `crates/o1-verifier/build.rs:31,68`; `crates/pickles-verifier/src/serialize.rs:488`; `examples/settlement/program/build.rs:32,69` |
 
-| `ZEKO_PRECOMPUTED_VK_DIGEST` | `1` | `crates/o1-verifier/src/main.rs:30,36`; `examples/settlement/program/src/main.rs:56,62` |
+| `MIZU_PRECOMPUTED_VK_DIGEST` | `1` | `crates/o1-verifier/src/main.rs:30,36`; `examples/settlement/program/src/main.rs:56,62` |
 
-| `ZEKO_TRIM_CONVERSIONS` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:218`; `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:207` |
+| `MIZU_TRIM_CONVERSIONS` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:218`; `vendor/proof-systems/curves/src/pasta/canonical_pallas.rs:207` |
 
-| `ZEKO_UNINIT_MSM_DIGITS` | `1` | `vendor/proof-systems/curves/src/pasta/point_spikes.rs:426` |
+| `MIZU_UNINIT_MSM_DIGITS` | `1` | `vendor/proof-systems/curves/src/pasta/point_spikes.rs:426` |
 
-| `ZEKO_VESTA_AFFINE` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:268`; `crates/pickles-verifier/src/vesta_spikes.rs:58` |
+| `MIZU_VESTA_AFFINE` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:268`; `crates/pickles-verifier/src/vesta_spikes.rs:58` |
 
-| `ZEKO_VESTA_GLV` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:203,219,228,239`; `crates/pickles-verifier/src/lib.rs:240` |
+| `MIZU_VESTA_GLV` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:203,219,228,239`; `crates/pickles-verifier/src/lib.rs:240` |
 
-| `ZEKO_VESTA_POINT_PRECOMPILE` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:204,241,270`; `crates/pickles-verifier/src/lib.rs:241`; `crates/pickles-verifier/src/vesta_spikes.rs:49` |
+| `MIZU_VESTA_POINT_PRECOMPILE` | `1` | `crates/pickles-verifier/src/canonical_msm.rs:204,241,270`; `crates/pickles-verifier/src/lib.rs:241`; `crates/pickles-verifier/src/vesta_spikes.rs:49` |
 
-| `ZEKO_VESTA_WINDOW` | `16` | `crates/pickles-verifier/src/canonical_msm.rs:312`; `crates/pickles-verifier/src/vesta_spikes.rs:11` |
+| `MIZU_VESTA_WINDOW` | `16` | `crates/pickles-verifier/src/canonical_msm.rs:312`; `crates/pickles-verifier/src/vesta_spikes.rs:11` |
 
-| `ZEKO_WRAP_SRS_PREFIX` | `1` | `crates/o1-verifier/src/main.rs:29`; `examples/settlement/program/src/main.rs:55` |
+| `MIZU_WRAP_SRS_PREFIX` | `1` | `crates/o1-verifier/src/main.rs:29`; `examples/settlement/program/src/main.rs:55` |

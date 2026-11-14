@@ -50,8 +50,8 @@ untrusted proof input.
 
 | Setting | Current value |
 | --- | --- |
-| `ZEKO_PRECOMPUTED_SETUP` | `1` |
-| `ZEKO_PRECOMPUTED_VK_DIGEST` | `1` |
+| `MIZU_PRECOMPUTED_SETUP` | `1` |
+| `MIZU_PRECOMPUTED_VK_DIGEST` | `1` |
 
 These controls can compose or select fallback paths. Their grouping assigns a
 primary documentation area, not independent additive performance credit. Exact

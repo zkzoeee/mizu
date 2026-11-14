@@ -56,14 +56,14 @@ already supplies the field hooks; our fork adds the remaining optimizations.
 
 | Setting | Current value |
 | --- | --- |
-| `ZEKO_CANONICAL_MSM` | `1` |
-| `ZEKO_CANONICAL_PALLAS` | `1` |
-| `ZEKO_DIRECT_MULMOD` | `1` |
-| `ZEKO_HINTED_INVERSE` | `1` |
-| `ZEKO_MONT_DIRECT_MULMOD` | `1` |
-| `ZEKO_TRIM_CONVERSIONS` | `1` |
-| `ZEKO_FUSE_PALLAS_BASE_CONVERSION` | `1` |
-| `ZEKO_FUSE_VESTA_BASE_CONVERSION` | `1` |
+| `MIZU_CANONICAL_MSM` | `1` |
+| `MIZU_CANONICAL_PALLAS` | `1` |
+| `MIZU_DIRECT_MULMOD` | `1` |
+| `MIZU_HINTED_INVERSE` | `1` |
+| `MIZU_MONT_DIRECT_MULMOD` | `1` |
+| `MIZU_TRIM_CONVERSIONS` | `1` |
+| `MIZU_FUSE_PALLAS_BASE_CONVERSION` | `1` |
+| `MIZU_FUSE_VESTA_BASE_CONVERSION` | `1` |
 
 These controls can compose or select fallback paths. Their grouping assigns a
 primary documentation area, not independent additive performance credit. Exact

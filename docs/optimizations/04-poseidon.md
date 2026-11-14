@@ -48,9 +48,9 @@ arithmetic comparisons before timing the full fixture.
 
 | Setting | Current value |
 | --- | --- |
-| `ZEKO_CANONICAL_POSEIDON` | `1` |
-| `ZEKO_POSEIDON_PACKED_RHS` | `1` |
-| `ZEKO_INTEGER_SCALAR_CHALLENGE` | `1` |
+| `MIZU_CANONICAL_POSEIDON` | `1` |
+| `MIZU_POSEIDON_PACKED_RHS` | `1` |
+| `MIZU_INTEGER_SCALAR_CHALLENGE` | `1` |
 
 These controls can compose or select fallback paths. Their grouping assigns a
 primary documentation area, not independent additive performance credit. Exact

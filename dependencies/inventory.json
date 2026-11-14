@@ -958,7 +958,7 @@
     "guest_abi": "boolean",
     "configured_flags": [
       {
-        "name": "ZEKO_APPEND_B_POLY",
+        "name": "MIZU_APPEND_B_POLY",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -971,7 +971,7 @@
         ]
       },
       {
-        "name": "ZEKO_BORROW_PALLAS_SRS",
+        "name": "MIZU_BORROW_PALLAS_SRS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1002,7 +1002,7 @@
         ]
       },
       {
-        "name": "ZEKO_BORROW_POSITIONAL_SCALARS",
+        "name": "MIZU_BORROW_POSITIONAL_SCALARS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1027,7 +1027,7 @@
         ]
       },
       {
-        "name": "ZEKO_BORROW_VESTA_SRS",
+        "name": "MIZU_BORROW_VESTA_SRS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1046,7 +1046,7 @@
         ]
       },
       {
-        "name": "ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS",
+        "name": "MIZU_CANONICAL_ACCUMULATOR_COEFFICIENTS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1059,7 +1059,7 @@
         ]
       },
       {
-        "name": "ZEKO_CANONICAL_MSM",
+        "name": "MIZU_CANONICAL_MSM",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1073,7 +1073,7 @@
         ]
       },
       {
-        "name": "ZEKO_CANONICAL_PALLAS",
+        "name": "MIZU_CANONICAL_PALLAS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1086,7 +1086,7 @@
         ]
       },
       {
-        "name": "ZEKO_CANONICAL_POSEIDON",
+        "name": "MIZU_CANONICAL_POSEIDON",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1099,7 +1099,7 @@
         ]
       },
       {
-        "name": "ZEKO_DIRECT_MULMOD",
+        "name": "MIZU_DIRECT_MULMOD",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1118,7 +1118,7 @@
         ]
       },
       {
-        "name": "ZEKO_FIXED_PALLAS_SRS",
+        "name": "MIZU_FIXED_PALLAS_SRS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1152,7 +1152,7 @@
         ]
       },
       {
-        "name": "ZEKO_FIXED_VESTA_COUPLED",
+        "name": "MIZU_FIXED_VESTA_COUPLED",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1177,7 +1177,7 @@
         ]
       },
       {
-        "name": "ZEKO_FIXED_VESTA_SRS",
+        "name": "MIZU_FIXED_VESTA_SRS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1211,7 +1211,7 @@
         ]
       },
       {
-        "name": "ZEKO_FUSE_PALLAS_BASE_CONVERSION",
+        "name": "MIZU_FUSE_PALLAS_BASE_CONVERSION",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1224,7 +1224,7 @@
         ]
       },
       {
-        "name": "ZEKO_FUSE_VESTA_BASE_CONVERSION",
+        "name": "MIZU_FUSE_VESTA_BASE_CONVERSION",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1243,7 +1243,7 @@
         ]
       },
       {
-        "name": "ZEKO_HINTED_INVERSE",
+        "name": "MIZU_HINTED_INVERSE",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1256,7 +1256,7 @@
         ]
       },
       {
-        "name": "ZEKO_INLINE_FINITE_COPY",
+        "name": "MIZU_INLINE_FINITE_COPY",
         "value": "words",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1269,7 +1269,7 @@
         ]
       },
       {
-        "name": "ZEKO_INTEGER_SCALAR_CHALLENGE",
+        "name": "MIZU_INTEGER_SCALAR_CHALLENGE",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1282,7 +1282,7 @@
         ]
       },
       {
-        "name": "ZEKO_IPA_BORROW_SRS_PREFIX",
+        "name": "MIZU_IPA_BORROW_SRS_PREFIX",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1295,7 +1295,7 @@
         ]
       },
       {
-        "name": "ZEKO_IPA_CANONICAL_PREFIX",
+        "name": "MIZU_IPA_CANONICAL_PREFIX",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1308,7 +1308,7 @@
         ]
       },
       {
-        "name": "ZEKO_IPA_DIRECT_COEFFICIENTS",
+        "name": "MIZU_IPA_DIRECT_COEFFICIENTS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1321,7 +1321,7 @@
         ]
       },
       {
-        "name": "ZEKO_IPA_EXACT_CAPACITY",
+        "name": "MIZU_IPA_EXACT_CAPACITY",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1334,7 +1334,7 @@
         ]
       },
       {
-        "name": "ZEKO_MONT_DIRECT_MULMOD",
+        "name": "MIZU_MONT_DIRECT_MULMOD",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1347,7 +1347,7 @@
         ]
       },
       {
-        "name": "ZEKO_MSM_FILTER_ZERO",
+        "name": "MIZU_MSM_FILTER_ZERO",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1366,7 +1366,7 @@
         ]
       },
       {
-        "name": "ZEKO_OUTLINE_PALLAS_BUCKETS",
+        "name": "MIZU_OUTLINE_PALLAS_BUCKETS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1379,7 +1379,7 @@
         ]
       },
       {
-        "name": "ZEKO_OUTLINE_VESTA_BUCKETS",
+        "name": "MIZU_OUTLINE_VESTA_BUCKETS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1392,7 +1392,7 @@
         ]
       },
       {
-        "name": "ZEKO_PACKED_PALLAS_HALVES",
+        "name": "MIZU_PACKED_PALLAS_HALVES",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1417,7 +1417,7 @@
         ]
       },
       {
-        "name": "ZEKO_PALLAS_AFFINE",
+        "name": "MIZU_PALLAS_AFFINE",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1430,7 +1430,7 @@
         ]
       },
       {
-        "name": "ZEKO_PALLAS_GLV",
+        "name": "MIZU_PALLAS_GLV",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1443,7 +1443,7 @@
         ]
       },
       {
-        "name": "ZEKO_PALLAS_POINT_PRECOMPILE",
+        "name": "MIZU_PALLAS_POINT_PRECOMPILE",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1456,7 +1456,7 @@
         ]
       },
       {
-        "name": "ZEKO_PALLAS_WINDOW",
+        "name": "MIZU_PALLAS_WINDOW",
         "value": "13",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1475,7 +1475,7 @@
         ]
       },
       {
-        "name": "ZEKO_POSEIDON_PACKED_RHS",
+        "name": "MIZU_POSEIDON_PACKED_RHS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1489,7 +1489,7 @@
         ]
       },
       {
-        "name": "ZEKO_PRECOMPUTED_SETUP",
+        "name": "MIZU_PRECOMPUTED_SETUP",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1516,7 +1516,7 @@
         ]
       },
       {
-        "name": "ZEKO_PRECOMPUTED_VK_DIGEST",
+        "name": "MIZU_PRECOMPUTED_VK_DIGEST",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1537,7 +1537,7 @@
         ]
       },
       {
-        "name": "ZEKO_TRIM_CONVERSIONS",
+        "name": "MIZU_TRIM_CONVERSIONS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1556,7 +1556,7 @@
         ]
       },
       {
-        "name": "ZEKO_UNINIT_MSM_DIGITS",
+        "name": "MIZU_UNINIT_MSM_DIGITS",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1569,7 +1569,7 @@
         ]
       },
       {
-        "name": "ZEKO_VESTA_AFFINE",
+        "name": "MIZU_VESTA_AFFINE",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1588,7 +1588,7 @@
         ]
       },
       {
-        "name": "ZEKO_VESTA_GLV",
+        "name": "MIZU_VESTA_GLV",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1610,7 +1610,7 @@
         ]
       },
       {
-        "name": "ZEKO_VESTA_POINT_PRECOMPILE",
+        "name": "MIZU_VESTA_POINT_PRECOMPILE",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1637,7 +1637,7 @@
         ]
       },
       {
-        "name": "ZEKO_VESTA_WINDOW",
+        "name": "MIZU_VESTA_WINDOW",
         "value": "16",
         "configured_in_retained_benchmark": true,
         "references": [
@@ -1656,7 +1656,7 @@
         ]
       },
       {
-        "name": "ZEKO_WRAP_SRS_PREFIX",
+        "name": "MIZU_WRAP_SRS_PREFIX",
         "value": "1",
         "configured_in_retained_benchmark": true,
         "references": [

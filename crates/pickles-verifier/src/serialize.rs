@@ -270,11 +270,11 @@ pub fn encode_embedded_verifier_blob(
 ) -> Vec<u8> {
     let mut bytes = encode_verifier_blob(vesta_srs, wrap_srs, step_num_chunks, wrap_vk);
     write_bytes_section(&mut bytes, &crate::setup_data::encode());
-    if matches!(option_env!("ZEKO_FIXED_VESTA_SRS"), Some("1")) {
+    if matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1")) {
         bytes.resize(bytes.len().next_multiple_of(8), 0);
         bytes.extend_from_slice(&crate::fixed_srs::encode(&vesta_srs.g));
     }
-    if matches!(option_env!("ZEKO_FIXED_PALLAS_SRS"), Some("1")) {
+    if matches!(option_env!("MIZU_FIXED_PALLAS_SRS"), Some("1")) {
         bytes.resize(bytes.len().next_multiple_of(8), 0);
         // A bounded build-time prefix; larger openings use the original path.
         let n = wrap_srs.g.len().div_ceil(2);
@@ -492,11 +492,11 @@ fn decode_embedded_verifier_inner(
         core::array::from_fn(|i| u64::from_le_bytes(digest[8 * i..8 * i + 8].try_into().unwrap()));
     let digest = crate::types::StepField::from_bigint(ark_ff::BigInt(limbs))
         .expect("embedded digest must be canonical");
-    let borrow_vesta = matches!(option_env!("ZEKO_BORROW_VESTA_SRS"), Some("1"));
-    let use_setup = matches!(option_env!("ZEKO_PRECOMPUTED_SETUP"), Some("1"));
-    let use_fixed = matches!(option_env!("ZEKO_FIXED_VESTA_SRS"), Some("1"));
-    let use_pallas = matches!(option_env!("ZEKO_FIXED_PALLAS_SRS"), Some("1"));
-    let static_wrap=if matches!(option_env!("ZEKO_BORROW_PALLAS_SRS"),Some("1")) {
+    let borrow_vesta = matches!(option_env!("MIZU_BORROW_VESTA_SRS"), Some("1"));
+    let use_setup = matches!(option_env!("MIZU_PRECOMPUTED_SETUP"), Some("1"));
+    let use_fixed = matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1"));
+    let use_pallas = matches!(option_env!("MIZU_FIXED_PALLAS_SRS"), Some("1"));
+    let static_wrap=if matches!(option_env!("MIZU_BORROW_PALLAS_SRS"),Some("1")) {
         let (_,rest)=read_vesta_section(bytes);let (g,_)=read_pallas_section(rest);Some(g)
     } else {None};
     let (verifier, generators, fixed_vesta, fixed_pallas) = decode_verifier_blob_inner(bytes, !borrow_vesta, use_setup, wrap_prefix, use_fixed, use_pallas, static_wrap);

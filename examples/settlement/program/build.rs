@@ -29,13 +29,13 @@ fn main() {
         "SETTLEMENT_VK_JSON",
         "SETTLEMENT_BLOB_CACHE_DIR",
         "SETTLEMENT_REBUILD_VERIFIER_BLOB",
-        "ZEKO_PRECOMPUTED_SETUP",
-        "ZEKO_FIXED_VESTA_SRS",
-        "ZEKO_FIXED_VESTA_COUPLED",
-        "ZEKO_BORROW_POSITIONAL_SCALARS",
-        "ZEKO_PACKED_PALLAS_HALVES",
-        "ZEKO_FIXED_PALLAS_SRS",
-        "ZEKO_BORROW_PALLAS_SRS",
+        "MIZU_PRECOMPUTED_SETUP",
+        "MIZU_FIXED_VESTA_SRS",
+        "MIZU_FIXED_VESTA_COUPLED",
+        "MIZU_BORROW_POSITIONAL_SCALARS",
+        "MIZU_PACKED_PALLAS_HALVES",
+        "MIZU_FIXED_PALLAS_SRS",
+        "MIZU_BORROW_PALLAS_SRS",
     ] {
         println!("cargo::rerun-if-env-changed={name}");
     }
@@ -66,9 +66,9 @@ fn main() {
         let wrap_vk =
             parse_wrap_vk(vk_json).unwrap_or_else(|e| panic!("failed to parse wrap VK: {e}"));
         let artifacts = Blobs {
-            verifier: if matches!(option_env!("ZEKO_PRECOMPUTED_SETUP"), Some("1"))
-                || matches!(option_env!("ZEKO_FIXED_VESTA_SRS"), Some("1"))
-                || matches!(option_env!("ZEKO_FIXED_PALLAS_SRS"), Some("1")) {
+            verifier: if matches!(option_env!("MIZU_PRECOMPUTED_SETUP"), Some("1"))
+                || matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1"))
+                || matches!(option_env!("MIZU_FIXED_PALLAS_SRS"), Some("1")) {
                 encode_embedded_verifier_blob(&get_srs::<Vesta>(), &get_srs::<Pallas>(), 1, &wrap_vk)
             } else {
                 encode_verifier_blob(&get_srs::<Vesta>(), &get_srs::<Pallas>(), 1, &wrap_vk)

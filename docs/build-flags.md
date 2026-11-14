@@ -1,6 +1,6 @@
 # Build flags: every environment variable that shapes the guest
 
-Reference for the 54 variables listed in
+Reference for the 58 variables listed in
 [`crates/o1-verifier/build-env.rs`](../crates/o1-verifier/build-env.rs), which is
 the list both build scripts declare to cargo. Generated from the read sites and
 the `optimization_env` keys of `benchmarks/dev/*.json`, so it describes what the
@@ -14,7 +14,7 @@ cost three confused builds on 2026-11-13.
 
 ## The naming is a compatibility artifact, not a provenance claim
 
-43 of the 54 are spelled `ZEKO_*`. **All 54 are this project's own work**,
+47 of the 58 are spelled `ZEKO_*`. **All 58 are this project's own work**,
 developed here on top of upstream `o1-labs/o1js-to-zkvm`. The prefix is a
 compatibility name, which is how
 [the dependency inventory](dependencies-and-optimizations.md) already puts it:
@@ -38,7 +38,7 @@ from it, and Zeko is not a dependency.
 
 The prefix split is therefore chronological, not editorial: `ZEKO_*` is the
 older, settled set and `MIZU_*` is what has been added since the naming changed.
-Renaming the 43 has not been done because `option_env!` bakes values at compile
+Renaming the 47 has not been done because `option_env!` bakes values at compile
 time, so it would:
 
 - invalidate every provenance receipt under `benchmarks/provenance/`,
@@ -53,8 +53,8 @@ receipts regenerated, and it buys naming consistency rather than behaviour.
 
 | tier | count | what it does |
 | --- | ---: | --- |
-| **Compile-time** (`option_env!`) | 48 | Baked into the guest at compile time. Changing one changes the ELF, the `programVKey`, and potentially the shard shapes. |
-| **Build-script** (`env::var_os` in a `build.rs`) | 5 | Selects a file or a cache path: `SETTLEMENT_BLOB_CACHE_DIR`, `SETTLEMENT_REBUILD_VERIFIER_BLOB`, `SETTLEMENT_VK_JSON`, `VK_JSON`, `ZEKO_PREPARED_VESTA_PATH`. |
+| **Compile-time** (`option_env!`) | 52 | Baked into the guest at compile time. Changing one changes the ELF, the `programVKey`, and potentially the shard shapes. |
+| **Build-script** (`env::var_os` in a `build.rs`) | 5 | Selects a file or a cache path: `SETTLEMENT_BLOB_CACHE_DIR`, `SETTLEMENT_REBUILD_VERIFIER_BLOB`, `SETTLEMENT_VK_JSON`, `VK_JSON`, `MIZU_PREPARED_VESTA_PATH`. |
 | **Run-time** (`env::var`, host only) | 1 | `PASTA_RETAIN` — does not reach the guest. |
 
 ### The one that is not a guest flag
@@ -75,8 +75,8 @@ six settings ever vary:
 
 | setting | varies how |
 | --- | --- |
-| `ZEKO_CANONICAL_POSEIDON` | `1` in nine recipes, `0` in `poseidon-reference` (the control) |
-| `ZEKO_POSEIDON_PACKED_RHS` | toggled together with the above, in every recipe |
+| `MIZU_CANONICAL_POSEIDON` | `1` in nine recipes, `0` in `poseidon-reference` (the control) |
+| `MIZU_POSEIDON_PACKED_RHS` | toggled together with the above, in every recipe |
 | `MIZU_PASTA_FP_PRECOMPILE` | `pasta-fp`, `pasta-poseidon`, `pasta-poseidon-digest` |
 | `MIZU_POSEIDON_PRECOMPILE` | `pasta-poseidon`, `pasta-poseidon-digest` |
 | `MIZU_POSEIDON_DEFERRED_MDS` | `deferred-mds`, `poseidon-deferred-mds` |
@@ -88,7 +88,7 @@ the practical reason the naming matters: the live surface is the Mizu six.
 
 **On 38 versus 40.** `docs/optimizations/README.md` and the area records speak of
 "40 retained settings". That is `retained.json`'s own count: the 38 above plus
-`ZEKO_CANONICAL_POSEIDON=1` and `ZEKO_POSEIDON_PACKED_RHS=1`. The 38 here is the
+`MIZU_CANONICAL_POSEIDON=1` and `MIZU_POSEIDON_PACKED_RHS=1`. The 38 here is the
 intersection across all ten `benchmarks/dev/` recipes, which excludes those two
 only because `poseidon-reference` sets them to `0`. Same set, different question.
 
@@ -118,15 +118,15 @@ runs from 138 shards to 84.
 
 Each of these is a real shape in the tree, not a hypothetical:
 
-- **`ZEKO_VESTA_PREPARED_LANES` is inverted.** Its guards are
+- **`MIZU_VESTA_PREPARED_LANES` is inverted.** Its guards are
   `option_env!(..).is_none()`, so setting it to *any* value — including `0` —
   turns the prepared-lane route off. Every other flag here is "`1` enables".
-- **`ZEKO_VESTA_WINDOW` is compared to the literal `16`** at
-  `canonical_msm.rs:317`, which gates `ZEKO_FIXED_VESTA_COUPLED`. Another width
+- **`MIZU_VESTA_WINDOW` is compared to the literal `16`** at
+  `canonical_msm.rs:317`, which gates `MIZU_FIXED_VESTA_COUPLED`. Another width
   does not error; it silently takes a different path.
-- **`ZEKO_PALLAS_WINDOW` is parsed as a number** and `.expect()`s, so a
+- **`MIZU_PALLAS_WINDOW` is parsed as a number** and `.expect()`s, so a
   non-numeric value fails the build rather than being ignored.
-- **Two flags are string-valued, not boolean:** `ZEKO_INLINE_FINITE_COPY=words`
+- **Two flags are string-valued, not boolean:** `MIZU_INLINE_FINITE_COPY=words`
   and `MIZU_CIP_MODE=borrowed|fused`. `=1` is not a valid value for either.
 - **`VK_JSON` wins over `SETTLEMENT_VK_JSON`**, which is a fallback only.
 - **`option_env!` bakes the value at compile time.** Exporting a flag and
@@ -145,57 +145,58 @@ Area tags match the files under [`docs/optimizations/`](optimizations/). **base*
 | `SETTLEMENT_REBUILD_VERIFIER_BLOB` | — | — | 0/10 | `o1-verifier/build.rs:47` | `1` forces the verifier blob to be rebuilt even when the cache would hit. |
 | `SETTLEMENT_VK_JSON` | — | — | 0/10 | `o1-verifier-host/build.rs:32` +1 | Fallback VK path, used only when `VK_JSON` is unset. Both build scripts consult them in the same order. |
 | `VK_JSON` | — | — | 0/10 | `o1-verifier-host/build.rs:31` +1 | Path to the wrap verification key JSON baked into the guest. Takes precedence over `SETTLEMENT_VK_JSON`. Changing it changes the guest ELF and therefore the `programVKey`. |
-| `ZEKO_PREPARED_VESTA_PATH` | — | — | 0/10 | `pickles-verifier/build.rs:9` | Build-script file selection: copies the named prepared-Vesta table into `OUT_DIR/vesta-prepared.bin`. Unset writes an empty file, so the table is absent rather than stale. |
+| `MIZU_PREPARED_VESTA_PATH` | — | — | 0/10 | `pickles-verifier/build.rs:9` | Build-script file selection: copies the named prepared-Vesta table into `OUT_DIR/vesta-prepared.bin`. Unset writes an empty file, so the table is absent rather than stale. |
 
 ### Field arithmetic
 
 | flag | value | base | recipes | read at | what it selects |
 | --- | --- | :-: | :-: | --- | --- |
-| `ZEKO_CANONICAL_MSM` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:250` +1 | Use the canonical MSM entry point for accumulator work instead of arkworks' generic one. |
-| `ZEKO_CANONICAL_PALLAS` | `1` | yes | 10/10 | `ps:curves/src/pasta/curves/pallas.rs:47` | Route Pallas curve ops through the fork's canonical implementation. |
-| `ZEKO_DIRECT_MULMOD` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:103` +1 | Call the fixed-modulus mulmod path directly rather than going through generic field multiplication. |
-| `ZEKO_FUSE_PALLAS_BASE_CONVERSION` | `1` | yes | 10/10 | `ps:curves/src/pasta/canonical_pallas.rs:440` | Fuse the base-field conversion into the Pallas point operation instead of converting separately. |
-| `ZEKO_FUSE_VESTA_BASE_CONVERSION` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:207` +1 | The Vesta counterpart. Also gates part of the accumulator path in `lib.rs`. |
-| `ZEKO_HINTED_INVERSE` | `1` | yes | 10/10 | `ps:curves/src/pasta/precompile_spikes.rs:19` | Compute modular inverses from a supplied hint and verify, instead of running the full inversion in the guest. |
-| `ZEKO_MONT_DIRECT_MULMOD` | `1` | yes | 10/10 | `alg:ff/src/fields/models/fp/montgomery_backend.rs:64` | Same idea one layer down, inside arkworks' Montgomery backend. The only flag read in `vendor/algebra` alone. |
-| `ZEKO_TRIM_CONVERSIONS` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:223` +1 | Drop redundant Montgomery/bigint conversions around MSM scalar preparation. |
+| `MIZU_CANONICAL_MSM` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:250` +1 | Use the canonical MSM entry point for accumulator work instead of arkworks' generic one. |
+| `MIZU_CANONICAL_PALLAS` | `1` | yes | 10/10 | `ps:curves/src/pasta/curves/pallas.rs:47` | Route Pallas curve ops through the fork's canonical implementation. |
+| `MIZU_DIRECT_MULMOD` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:103` +1 | Call the fixed-modulus mulmod path directly rather than going through generic field multiplication. |
+| `MIZU_FUSE_PALLAS_BASE_CONVERSION` | `1` | yes | 10/10 | `ps:curves/src/pasta/canonical_pallas.rs:440` | Fuse the base-field conversion into the Pallas point operation instead of converting separately. |
+| `MIZU_FUSE_VESTA_BASE_CONVERSION` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:207` +1 | The Vesta counterpart. Also gates part of the accumulator path in `lib.rs`. |
+| `MIZU_HINTED_INVERSE` | `1` | yes | 10/10 | `ps:curves/src/pasta/precompile_spikes.rs:19` | Compute modular inverses from a supplied hint and verify, instead of running the full inversion in the guest. |
+| `MIZU_MONT_DIRECT_MULMOD` | `1` | yes | 10/10 | `alg:ff/src/fields/models/fp/montgomery_backend.rs:64` | Same idea one layer down, inside arkworks' Montgomery backend. The only flag read in `vendor/algebra` alone. |
+| `MIZU_TRIM_CONVERSIONS` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:223` +1 | Drop redundant Montgomery/bigint conversions around MSM scalar preparation. |
 
 ### Pasta MSM and point arithmetic
 
 | flag | value | base | recipes | read at | what it selects |
 | --- | --- | :-: | :-: | --- | --- |
-| `ZEKO_INLINE_FINITE_COPY` | `words` | yes | 10/10 | `ps:curves/src/pasta/point_spikes.rs:238` | **String-valued, not `1`.** Recipes set `words`, selecting word-wise inline copying of finite-field limbs. |
-| `ZEKO_MSM_FILTER_ZERO` | `1` | yes | 10/10 | `alg:ec/src/scalar_mul/variable_base/mod.rs:188` +1 | Skip zero scalars before bucketing. Read in both the proof-systems and algebra forks. |
-| `ZEKO_OUTLINE_PALLAS_BUCKETS` | `1` | yes | 10/10 | `ps:curves/src/pasta/point_spikes.rs:690` | Move Pallas bucket accumulation out of line to cut code size in the hot loop. |
-| `ZEKO_OUTLINE_VESTA_BUCKETS` | `1` | yes | 10/10 | `ps:curves/src/pasta/point_spikes.rs:689` | The Vesta counterpart; both read at the same `point_spikes.rs` match. |
-| `ZEKO_PACKED_PALLAS_HALVES` | `1` | yes | 10/10 | `ps:curves/src/pasta/canonical_pallas.rs:443` | Pack the two halves of a Pallas base-field element together through the conversion. |
-| `ZEKO_PALLAS_AFFINE` | `1` | yes | 10/10 | `ps:curves/src/pasta/canonical_pallas.rs:209` | Keep Pallas MSM inputs in affine form rather than projective. |
-| `ZEKO_PALLAS_GLV` | `1` | yes | 10/10 | `ps:curves/src/pasta/canonical_pallas.rs:210` | GLV scalar decomposition for Pallas, halving scalar bit length. |
-| `ZEKO_PALLAS_POINT_PRECOMPILE` | `1` | yes | 10/10 | `ps:curves/src/pasta/canonical_pallas.rs:212` | Use the SP1 `PALLAS_ADD` executor precompile for point addition. |
-| `ZEKO_PALLAS_WINDOW` | `13` | yes | 10/10 | `pickles-verifier/src/fixed_pallas.rs:240` +1 | Pallas fixed-window width, parsed as a number. The recipes use `13`; a non-numeric value panics at build time. |
-| `ZEKO_UNINIT_MSM_DIGITS` | `1` | yes | 10/10 | `ps:curves/src/pasta/point_spikes.rs:426` | Allocate the MSM digit buffer uninitialised instead of zeroing it first. |
-| `ZEKO_VESTA_AFFINE` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:273` +1 | The Vesta counterpart. |
-| `ZEKO_VESTA_GLV` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:208` +4 | The Vesta counterpart. |
-| `ZEKO_VESTA_POINT_PRECOMPILE` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:209` +4 | Use the SP1 `VESTA_ADD` executor precompile. |
-| `ZEKO_VESTA_WINDOW` | `16` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:317` +1 | Vesta window width, recipes use `16`. **Matched against the literal `16`** at `canonical_msm.rs:317`, so another width silently takes a different path. |
+| `MIZU_INLINE_FINITE_COPY` | `words` | yes | 10/10 | `ps:curves/src/pasta/point_spikes.rs:238` | **String-valued, not `1`.** Recipes set `words`, selecting word-wise inline copying of finite-field limbs. |
+| `MIZU_MSM_FILTER_ZERO` | `1` | yes | 10/10 | `alg:ec/src/scalar_mul/variable_base/mod.rs:188` +1 | Skip zero scalars before bucketing. Read in both the proof-systems and algebra forks. |
+| `MIZU_MSM_WINDOW_BITS` | `10`, `12`, `14` | — | 0/10 | `ps:curves/src/pasta/canonical_pallas.rs:229` +1 | MSM window override, read in proof-systems **and** algebra. **Panics** on any value other than unset, `10`, `12` or `14`. No recipe sets it. |
+| `MIZU_OUTLINE_PALLAS_BUCKETS` | `1` | yes | 10/10 | `ps:curves/src/pasta/point_spikes.rs:690` | Move Pallas bucket accumulation out of line to cut code size in the hot loop. |
+| `MIZU_OUTLINE_VESTA_BUCKETS` | `1` | yes | 10/10 | `ps:curves/src/pasta/point_spikes.rs:689` | The Vesta counterpart; both read at the same `point_spikes.rs` match. |
+| `MIZU_PACKED_PALLAS_HALVES` | `1` | yes | 10/10 | `ps:curves/src/pasta/canonical_pallas.rs:443` | Pack the two halves of a Pallas base-field element together through the conversion. |
+| `MIZU_PALLAS_AFFINE` | `1` | yes | 10/10 | `ps:curves/src/pasta/canonical_pallas.rs:209` | Keep Pallas MSM inputs in affine form rather than projective. |
+| `MIZU_PALLAS_GLV` | `1` | yes | 10/10 | `ps:curves/src/pasta/canonical_pallas.rs:210` | GLV scalar decomposition for Pallas, halving scalar bit length. |
+| `MIZU_PALLAS_POINT_PRECOMPILE` | `1` | yes | 10/10 | `ps:curves/src/pasta/canonical_pallas.rs:212` | Use the SP1 `PALLAS_ADD` executor precompile for point addition. |
+| `MIZU_PALLAS_WINDOW` | `13` | yes | 10/10 | `pickles-verifier/src/fixed_pallas.rs:240` +1 | Pallas fixed-window width, parsed as a number. The recipes use `13`; a non-numeric value panics at build time. |
+| `MIZU_UNINIT_MSM_DIGITS` | `1` | yes | 10/10 | `ps:curves/src/pasta/point_spikes.rs:426` | Allocate the MSM digit buffer uninitialised instead of zeroing it first. |
+| `MIZU_VESTA_AFFINE` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:273` +1 | The Vesta counterpart. |
+| `MIZU_VESTA_GLV` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:208` +4 | The Vesta counterpart. |
+| `MIZU_VESTA_POINT_PRECOMPILE` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:209` +4 | Use the SP1 `VESTA_ADD` executor precompile. |
+| `MIZU_VESTA_WINDOW` | `16` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:317` +1 | Vesta window width, recipes use `16`. **Matched against the literal `16`** at `canonical_msm.rs:317`, so another width silently takes a different path. |
 
 ### IPA and SRS
 
 | flag | value | base | recipes | read at | what it selects |
 | --- | --- | :-: | :-: | --- | --- |
-| `ZEKO_APPEND_B_POLY` | `1` | yes | 10/10 | `ps:poly-commitment/src/commitment.rs:547` | Append the b-polynomial commitment in the IPA batch rather than committing it separately. |
-| `ZEKO_BORROW_PALLAS_SRS` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:807` +1 | Borrow the baked Pallas SRS instead of cloning it into the guest heap. |
-| `ZEKO_BORROW_POSITIONAL_SCALARS` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:321` | Borrow positional scalars for the accumulator MSM rather than materialising a vector. |
-| `ZEKO_BORROW_VESTA_SRS` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:829` +1 | The Vesta counterpart. |
-| `ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:249` | Compute accumulator coefficients canonically; gated together with `ZEKO_CANONICAL_MSM` and `ZEKO_FUSE_VESTA_BASE_CONVERSION`. |
-| `ZEKO_FIXED_PALLAS_SRS` | `1` | yes | 10/10 | `o1-verifier/build.rs:62` +3 | Use the compile-time fixed Pallas SRS tables. Also one of the two flags that make `build.rs` bake the verifier blob. |
-| `ZEKO_FIXED_VESTA_COUPLED` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:316` | Use the coupled fixed-Vesta table, valid only with `ZEKO_VESTA_WINDOW=16`. |
-| `ZEKO_FIXED_VESTA_SRS` | `1` | yes | 10/10 | `o1-verifier/build.rs:61` +3 | The Vesta counterpart, likewise consulted by `build.rs`. |
-| `ZEKO_IPA_BORROW_SRS_PREFIX` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:432` | Borrow the SRS prefix the IPA opening needs instead of copying it. |
-| `ZEKO_IPA_CANONICAL_PREFIX` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:440` | Use the canonical prefix routine, passed as a flag into the batch call. |
-| `ZEKO_IPA_DIRECT_COEFFICIENTS` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:508` | Build IPA coefficients directly rather than via the generic polynomial path. |
-| `ZEKO_IPA_EXACT_CAPACITY` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:415` | Size the IPA buffer to the exact length needed instead of a growth-factor reservation. |
-| `ZEKO_WRAP_SRS_PREFIX` | `1` | yes | 10/10 | `o1-verifier/src/main.rs:29` | Deserialise the wrap proof eagerly against the baked SRS prefix, in `o1-verifier/src/main.rs`. |
+| `MIZU_APPEND_B_POLY` | `1` | yes | 10/10 | `ps:poly-commitment/src/commitment.rs:547` | Append the b-polynomial commitment in the IPA batch rather than committing it separately. |
+| `MIZU_BORROW_PALLAS_SRS` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:807` +1 | Borrow the baked Pallas SRS instead of cloning it into the guest heap. |
+| `MIZU_BORROW_POSITIONAL_SCALARS` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:321` | Borrow positional scalars for the accumulator MSM rather than materialising a vector. |
+| `MIZU_BORROW_VESTA_SRS` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:829` +1 | The Vesta counterpart. |
+| `MIZU_CANONICAL_ACCUMULATOR_COEFFICIENTS` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:249` | Compute accumulator coefficients canonically; gated together with `MIZU_CANONICAL_MSM` and `MIZU_FUSE_VESTA_BASE_CONVERSION`. |
+| `MIZU_FIXED_PALLAS_SRS` | `1` | yes | 10/10 | `o1-verifier/build.rs:62` +3 | Use the compile-time fixed Pallas SRS tables. Also one of the two flags that make `build.rs` bake the verifier blob. |
+| `MIZU_FIXED_VESTA_COUPLED` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:316` | Use the coupled fixed-Vesta table, valid only with `MIZU_VESTA_WINDOW=16`. |
+| `MIZU_FIXED_VESTA_SRS` | `1` | yes | 10/10 | `o1-verifier/build.rs:61` +3 | The Vesta counterpart, likewise consulted by `build.rs`. |
+| `MIZU_IPA_BORROW_SRS_PREFIX` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:432` | Borrow the SRS prefix the IPA opening needs instead of copying it. |
+| `MIZU_IPA_CANONICAL_PREFIX` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:440` | Use the canonical prefix routine, passed as a flag into the batch call. |
+| `MIZU_IPA_DIRECT_COEFFICIENTS` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:508` | Build IPA coefficients directly rather than via the generic polynomial path. |
+| `MIZU_IPA_EXACT_CAPACITY` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:415` | Size the IPA buffer to the exact length needed instead of a growth-factor reservation. |
+| `MIZU_WRAP_SRS_PREFIX` | `1` | yes | 10/10 | `o1-verifier/src/main.rs:29` | Deserialise the wrap proof eagerly against the baked SRS prefix, in `o1-verifier/src/main.rs`. |
 
 ### Poseidon and the sponge
 
@@ -204,16 +205,16 @@ Area tags match the files under [`docs/optimizations/`](optimizations/). **base*
 | `MIZU_PASTA_FP_PRECOMPILE` | `1` | — | 3/10 | `pickles-verifier/src/canonical_msm.rs:113` +4 | Fixed-modulus Pallas/Vesta field-op precompiles. -2.12% of cycles alone. The widest flag in the tree: read in `crates/`, proof-systems and algebra. |
 | `MIZU_POSEIDON_DEFERRED_MDS` | `1` | — | 2/10 | `ps:poseidon/src/canonical.rs:54` | Defer the MDS multiply via `sum3_prepared_products_deferred`. Opt-in candidate, not in the retained recipe. |
 | `MIZU_POSEIDON_PRECOMPILE` | `1` | — | 2/10 | `ps:poseidon/src/canonical.rs:70` | Routes the kimchi sponge to the SP1 `PALLAS_POSEIDON`/`VESTA_POSEIDON` executor precompiles. Worth a further -6.62% of cycles on top of the Fp precompile. |
-| `ZEKO_CANONICAL_POSEIDON` | `0`, `1` | — | 10/10 | `ps:poseidon/src/permutation.rs:151` | The fork's canonical Poseidon permutation. On in nine recipes; explicitly `0` in `poseidon-reference`, which is the control. |
-| `ZEKO_INTEGER_SCALAR_CHALLENGE` | `1` | yes | 10/10 | `ps:poseidon/src/sponge.rs:194` | Derive sponge scalar challenges as integers, avoiding a field round-trip. |
-| `ZEKO_POSEIDON_PACKED_RHS` | `0`, `1` | — | 10/10 | `ps:poseidon/src/canonical.rs:152` +1 | Packed right-hand side in the Poseidon MDS multiply. Toggled with `ZEKO_CANONICAL_POSEIDON` in every recipe. |
+| `MIZU_CANONICAL_POSEIDON` | `0`, `1` | — | 10/10 | `ps:poseidon/src/permutation.rs:151` | The fork's canonical Poseidon permutation. On in nine recipes; explicitly `0` in `poseidon-reference`, which is the control. |
+| `MIZU_INTEGER_SCALAR_CHALLENGE` | `1` | yes | 10/10 | `ps:poseidon/src/sponge.rs:194` | Derive sponge scalar challenges as integers, avoiding a field round-trip. |
+| `MIZU_POSEIDON_PACKED_RHS` | `0`, `1` | — | 10/10 | `ps:poseidon/src/canonical.rs:152` +1 | Packed right-hand side in the Poseidon MDS multiply. Toggled with `MIZU_CANONICAL_POSEIDON` in every recipe. |
 
 ### Verifier setup
 
 | flag | value | base | recipes | read at | what it selects |
 | --- | --- | :-: | :-: | --- | --- |
-| `ZEKO_PRECOMPUTED_SETUP` | `1` | yes | 10/10 | `o1-verifier/build.rs:60` +1 | Bake the verifier setup at build time instead of deriving it in the guest. |
-| `ZEKO_PRECOMPUTED_VK_DIGEST` | `1` | yes | 10/10 | `o1-verifier/src/main.rs:30` +1 | Bake the VK digest too, so the guest does not recompute it. |
+| `MIZU_PRECOMPUTED_SETUP` | `1` | yes | 10/10 | `o1-verifier/build.rs:60` +1 | Bake the verifier setup at build time instead of deriving it in the guest. |
+| `MIZU_PRECOMPUTED_VK_DIGEST` | `1` | yes | 10/10 | `o1-verifier/src/main.rs:30` +1 | Bake the VK digest too, so the guest does not recompute it. |
 
 ### Prover runtime
 
@@ -229,12 +230,59 @@ Area tags match the files under [`docs/optimizations/`](optimizations/). **base*
 | `MIZU_CIP_MODE` | `borrowed` | — | 1/10 | `pickles-verifier/src/deferred.rs:304` | **String-valued.** Combined-inner-product strategy: `borrowed` or `fused`. Only `allocation` sets it. |
 | `MIZU_STACK_CROSS_FIELD` | `1` | — | 1/10 | `pickles-verifier/src/deferred.rs:375` | Stack-allocate cross-field bytes in deferred-value expansion. |
 
+### Diagnostics and adversarial tests
+
+Not optimizations. These were **undeclared until 2026-11-14** — see the note
+below.
+
+| flag | value | base | recipes | read at | what it selects |
+| --- | --- | :-: | :-: | --- | --- |
+| `MIZU_INVERSE_HINT_FAULT` | `zero`, `modulus` | — | 0/10 | `ps:curves/src/pasta/precompile_spikes.rs:131` | **TEST ONLY.** Corrupts the inverse hint before the guest's checks, to build adversarial ELFs. Effective only with `MIZU_HINTED_INVERSE` on. Its own comment warns these runs "must never be reported as successful runs". |
+| `MIZU_IPA_CAPACITY_ASSERT` | `1` | — | 0/10 | `ps:poly-commitment/src/ipa.rs:628` +1 | Asserts the IPA point and scalar buffers never reallocate: `assert_eq!(points.capacity(), ..)`. A guard for `MIZU_IPA_EXACT_CAPACITY`, not a speedup. |
+| `MIZU_IPA_CAPACITY_REPORT` | `1` | — | 0/10 | `ps:poly-commitment/src/ipa.rs:622` +1 | `eprintln!`s an `IPA_CAPACITY {...}` JSON line with the point/scalar capacities. Measurement instrumentation. |
+
+**How these were missed, and why it mattered.** `GUEST_BUILD_ENV`'s own comment
+said it was generated from sites "under `crates/`" — and these three, plus
+`MIZU_MSM_WINDOW_BITS`, live in `vendor/proof-systems` and `vendor/algebra`.
+All four are `option_env!`, so they bake into the guest ELF, and an undeclared
+one means changing it from a warm tree hands back the **previous** guest at
+exit 0: exactly the failure that cost three confused builds on 2026-11-13 and
+the reason the list exists. Declared now, and the comment says to grep all three
+trees.
+
+### The `ZEKO_` names that are genuinely Zeko's
+
+The 2026-11-14 rename was exact-name against the flag list, never a prefix sed,
+because **eleven `ZEKO_` names here are not ours and must not be renamed.** Nine
+are wire-format domain separators whose value is hashed, so changing one changes
+a hash on the wire, and `AGENTS.md` protects them as "compatibility data, not
+project branding":
+
+`ZEKO_RAW_INNER_ACTION_LEAF_V2`, `ZEKO_INNER_ACTION_FIELDS_V2`,
+`ZEKO_INNER_ACTION_NODE_V2`, `ZEKO_ASSET_RECORD_BATCH_LEAF_V2`,
+`ZEKO_ASSET_RECORD_BATCH_NODE_V1`, `ZEKO_NATIVE_WITHDRAWAL_LEAF_V2`,
+`ZEKO_ERC20_WITHDRAWAL_LEAF_V4`, `ZEKO_ERC20_ASSET_V1`,
+`ZEKO_ERC20_ASSET_RECORD_V1` — all in `examples/settlement`.
+
+The tenth is `ZEKO_SETTLEMENT_FIXTURE_DIR` in `fixtures/ocaml-compat/README.md`:
+Zeko's own variable, present in `zeko-labs/ethereum-settlement` `origin/main`,
+used there in a command that runs **their** tooling. No code of ours reads it.
+
+The eleventh is ours but is not a variable at all: `ZEKO_VERIFIER_BLOB_CACHE_V1`
+is a cache-version string constant in `crates/o1-verifier/blob_cache.rs`. A
+`ZEKO_[A-Z_]+` grep catches it, which is exactly why the rename ran from an
+explicit list.
+
+**So a `ZEKO_` hit in this tree is now either Zeko's or a historical record.**
+Measurement records under `benchmarks/` keep the old names deliberately: they
+document what was run, under the names it was run with.
+
 ### Paths no recipe enables
 
 | flag | value | base | recipes | read at | what it selects |
 | --- | --- | :-: | :-: | --- | --- |
-| `ZEKO_VESTA_COMPACT` | — | — | 0/10 | `pickles-verifier/src/canonical_msm.rs:274` | Alternative compact Vesta representation, OR-ed with `ZEKO_VESTA_AFFINE`. No recipe sets it. |
-| `ZEKO_VESTA_PREPARED_LANES` | — | — | 0/10 | `pickles-verifier/src/canonical_msm.rs:210` +4 | **Inverted: presence disables.** The guarded paths require `option_env!(..).is_none()`, so setting it to any value turns off the prepared-lane MSM route. No recipe sets it. |
+| `MIZU_VESTA_COMPACT` | — | — | 0/10 | `pickles-verifier/src/canonical_msm.rs:274` | Alternative compact Vesta representation, OR-ed with `MIZU_VESTA_AFFINE`. No recipe sets it. |
+| `MIZU_VESTA_PREPARED_LANES` | — | — | 0/10 | `pickles-verifier/src/canonical_msm.rs:210` +4 | **Inverted: presence disables.** The guarded paths require `option_env!(..).is_none()`, so setting it to any value turns off the prepared-lane MSM route. No recipe sets it. |
 
 ## Adding a flag
 

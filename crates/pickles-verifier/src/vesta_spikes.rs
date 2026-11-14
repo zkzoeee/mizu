@@ -8,12 +8,12 @@ use ark_ff::{AdditiveGroup, BigInt, BigInteger, PrimeField, Zero};
 use mina_curves::pasta::Fp;
 
 pub(crate) fn window(size: usize) -> usize {
-    match option_env!("ZEKO_VESTA_WINDOW") {
+    match option_env!("MIZU_VESTA_WINDOW") {
         Some(value) => {
             let width = value
                 .parse::<usize>()
-                .expect("ZEKO_VESTA_WINDOW must be 2..16");
-            assert!((2..=16).contains(&width), "ZEKO_VESTA_WINDOW must be 2..16");
+                .expect("MIZU_VESTA_WINDOW must be 2..16");
+            assert!((2..=16).contains(&width), "MIZU_VESTA_WINDOW must be 2..16");
             width
         }
         None => {
@@ -46,7 +46,7 @@ where
             mina_curves::pasta::point_spikes::CarryWindow::for_bound(bound, width, bits)
         },
     );
-    if matches!(option_env!("ZEKO_VESTA_POINT_PRECOMPILE"), Some("1")) {
+    if matches!(option_env!("MIZU_VESTA_POINT_PRECOMPILE"), Some("1")) {
         mina_curves::pasta::point_spikes::msm::<C>(
             bases,
             scalars,
@@ -55,7 +55,7 @@ where
             carry,
             mina_curves::pasta::point_spikes::PastaCurve::Vesta,
         )
-    } else if matches!(option_env!("ZEKO_VESTA_AFFINE"), Some("1")) {
+    } else if matches!(option_env!("MIZU_VESTA_AFFINE"), Some("1")) {
         ark_ec::scalar_mul::variable_base::affine_spike::msm_affine::<C>(
             bases, scalars, width, bits,
         )

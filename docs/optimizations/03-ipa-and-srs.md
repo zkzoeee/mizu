@@ -57,19 +57,19 @@ new APIs while retaining old wire encoding and ownership/lifetime guarantees.
 
 | Setting | Current value |
 | --- | --- |
-| `ZEKO_APPEND_B_POLY` | `1` |
-| `ZEKO_BORROW_PALLAS_SRS` | `1` |
-| `ZEKO_BORROW_VESTA_SRS` | `1` |
-| `ZEKO_BORROW_POSITIONAL_SCALARS` | `1` |
-| `ZEKO_FIXED_PALLAS_SRS` | `1` |
-| `ZEKO_FIXED_VESTA_COUPLED` | `1` |
-| `ZEKO_FIXED_VESTA_SRS` | `1` |
-| `ZEKO_CANONICAL_ACCUMULATOR_COEFFICIENTS` | `1` |
-| `ZEKO_IPA_BORROW_SRS_PREFIX` | `1` |
-| `ZEKO_IPA_CANONICAL_PREFIX` | `1` |
-| `ZEKO_IPA_DIRECT_COEFFICIENTS` | `1` |
-| `ZEKO_IPA_EXACT_CAPACITY` | `1` |
-| `ZEKO_WRAP_SRS_PREFIX` | `1` |
+| `MIZU_APPEND_B_POLY` | `1` |
+| `MIZU_BORROW_PALLAS_SRS` | `1` |
+| `MIZU_BORROW_VESTA_SRS` | `1` |
+| `MIZU_BORROW_POSITIONAL_SCALARS` | `1` |
+| `MIZU_FIXED_PALLAS_SRS` | `1` |
+| `MIZU_FIXED_VESTA_COUPLED` | `1` |
+| `MIZU_FIXED_VESTA_SRS` | `1` |
+| `MIZU_CANONICAL_ACCUMULATOR_COEFFICIENTS` | `1` |
+| `MIZU_IPA_BORROW_SRS_PREFIX` | `1` |
+| `MIZU_IPA_CANONICAL_PREFIX` | `1` |
+| `MIZU_IPA_DIRECT_COEFFICIENTS` | `1` |
+| `MIZU_IPA_EXACT_CAPACITY` | `1` |
+| `MIZU_WRAP_SRS_PREFIX` | `1` |
 
 These controls can compose or select fallback paths. Their grouping assigns a
 primary documentation area, not independent additive performance credit. Exact
