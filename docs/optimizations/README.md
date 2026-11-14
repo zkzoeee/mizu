@@ -30,6 +30,14 @@ settings have one primary area below; many settings affect multiple modules.
 - [Build-flag reference](../build-flags.md): all 54 environment variables that
   shape the guest, one row each — value domain, read site, which recipes set it,
   and the three tiers (48 compile-time, 5 build-script, 1 host-only).
+- [Groth16 runs](../groth16-runs.md): the retained configuration proved end to
+  end — **130,367,324 cycles** with both Pasta precompiles, 84 shards, a
+  324-byte Groth16 proof verified in a Solidity contract at 225,954 gas, under
+  Succinct's released artifacts with no ceremony of our own. These records are
+  where the cycle work stops being a cycle count.
+- [Running a proof](../running-a-proof.md): wall time and price per card, from
+  eleven measurements on nine physical cards; the cheapest complete verified
+  core proof on record is **$0.023** end to end.
 - [Dependency/version inventory](../dependencies-and-optimizations.md),
   [complete changed-file list](../file-changes.md), and
   [upstream sync guide](../../dependencies/README.md).

@@ -13,7 +13,9 @@ there are no application snapshots followed by branding or deletion commits.
 | Settlement verifier entry point and setup cache | Core `crates/o1-verifier`; receipts isolated below | o1js-to-zkvm patch stack |
 | Upstream host CLI | `crates/o1-verifier-host` | o1js-to-zkvm patch stack |
 | Cycle/operation runners | `crates/cycle-runner` | Measurement tools |
-| Standalone Poseidon screening guest | `crates/poseidon-bench` | Measurement tools; independent of verifier setup |
+| Proof pipeline: core → wrap → Groth16, VK maps, shape audits | `crates/pipeline-runner`; CUDA variant `tools/pipeline-cuda` | Proving tools; [pipeline plan](proof-pipeline-plan.md) |
+| Groth16 verifier contracts and their tests | `contracts-check` | EVM verification of our own proofs |
+| Standalone Poseidon screening guest, and the keccak mirror tree | `crates/poseidon-bench` | Measurement tools; independent of verifier setup |
 | Cached native / screening / paired / promotion workflow | `scripts/dev.py`, `scripts/devloop`, `scripts/tests` | Measurement tools; [development guide](development-loop.md) |
 | Receipt logic and types | `examples/settlement/{program,types}` | Optional standalone workspace |
 | Algebra arithmetic / GLV / MSM | `vendor/algebra` | Arkworks fork, three commits |
@@ -21,8 +23,14 @@ there are no application snapshots followed by branding or deletion commits.
 | Published SP1 crate copies | `vendor/sp1` in native upstream layout | SP1 6.10 fork, four commits |
 | Active Pasta harness and micro-guests | `tools/pasta-*` | Focused validation tools |
 | Benchmark recipes / selected measurements | `benchmarks` | Performance evidence |
-| API, browser apps, Ethereum contracts, deployment/container setup, application SDKs | Archived outside this history | Application scope removed |
+| API, browser apps, *application* Ethereum contracts, deployment/container setup, application SDKs | Archived outside this history | Application scope removed |
 | Old fork variants, full run dumps, handoffs, agent/vendor skills and branding/import manifests | Archived outside this history | Recovery / historical evidence |
+
+**On Ethereum contracts.** Application contracts stay out of scope, as the row
+above says. `contracts-check` is not one: it is the harness that verifies *our
+own* Groth16 proofs on an EVM, with one verifier per VK-map root, and it exists
+because a proof nobody has checked on chain is not a finished result. Nothing is
+deployed; it runs under `forge test`.
 
 Core crates do not depend on the receipt example. Proof-systems owns reusable
 curve, Poseidon and commitment code; Pickles-specific deferred/statement checks
