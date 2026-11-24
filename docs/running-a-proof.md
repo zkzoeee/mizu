@@ -490,3 +490,15 @@ a card.
   [a5000](../benchmarks/gpu-core-proof-a5000-sp1-6.10.json),
   [channel depth](../benchmarks/gpu-inflight-sweep-a40-sp1-6.10.json),
   [build cache](../benchmarks/gpu-build-cache-validation.json)
+
+## 2026-11-24 update: compact `w=16` (`84.99M`) vs batched-MSM (`35.44M`) on A40
+
+Measured back-to-back on the same `EU-SE-1` **NVIDIA A40** (`46,068 MiB`, ECC enabled, `$0.59/hr`, `PASTA_GPU_WORKERS=2`, `retain-pasta-and-uint`; total pod rental `23.4 min` / `~$0.23` including cold CUDA build):
+
+| Guest build | Cycles | Shards | Prove loop | Wall | Proof size | CPU reload verify | Evidence |
+| --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| Previous ECC-on A40 cluster | `142,638,298` | `82` | `107.7–111.4 s` | `134.2–138.6 s` | — | Passed | above |
+| **`mizu/dev` compact `w=16`** | **`84,985,706`** | **`67`** | **`92.64 s`** | **`117.09 s`** | **`112.75 MB`** | **Passed (`5.37 s`)** | [result-w16-compact-a40.json](../benchmarks/gpu/result-w16-compact-a40.json) |
+| `feat/batched-pasta-msm` `w=16` | `35,440,449` | `108` | `169.20 s` | `189.33 s` | `172.44 MB` | Failed (`InconsistencyWithEval`) | [result-w16-batched-a40.json](../benchmarks/gpu/result-w16-batched-a40.json) |
+
+`mizu/dev` compact `w=16` beats every A40 run on record (including the ECC-off outlier) with zero AIR changes. On `feat/batched-pasta-msm`, CPU shards fell `50 → 35` but non-retained wide step chips (`1,776–2,933` cols) expanded `SyscallPrecompile` shards `13 → 69` and failed `ConstraintsCheckFailed(InconsistencyWithEval)`; see [02-pasta-msm.md](optimizations/02-pasta-msm.md) for the breakdown.
