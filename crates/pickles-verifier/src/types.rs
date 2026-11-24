@@ -227,8 +227,6 @@ pub struct VerifiableProof {
     #[serde_as(as = "SerdeAs")]
     pub sponge_digest_before_evaluations: StepField,
     pub prev_evals: ChunkedAllEvals,
-    #[serde_as(as = "Vec<SerdeAs>")]
-    pub p_eval0_chunks: Vec<StepField>,
     /// previous-proof bp challenges, ALREADY endo-expanded (length `mpv`).
     #[serde_as(as = "Vec<[SerdeAs; STEP_IPA_ROUNDS]>")]
     pub old_bulletproof_challenges: Vec<[StepField; STEP_IPA_ROUNDS]>,

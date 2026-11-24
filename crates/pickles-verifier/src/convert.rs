@@ -202,7 +202,6 @@ impl OcamlProof {
             branch_data: self.branch_data,
             sponge_digest_before_evaluations: self.sponge_digest_before_evaluations,
             prev_evals: self.prev_evals,
-            p_eval0_chunks: self.p_eval0_chunks,
             old_bulletproof_challenges,
             app_state: app_state.to_vec(),
             prev_step_sgs: self.prev_step_sgs,

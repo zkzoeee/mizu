@@ -129,7 +129,6 @@ pub struct OcamlProof {
     pub challenge_polynomial_commitment: Vesta,
     pub step_domain_log2: u8,
     pub prev_evals: ChunkedAllEvals,
-    pub p_eval0_chunks: Vec<StepField>,
     /// `messages_for_next_step_proof.challenge_polynomial_commitments` (Pallas).
     pub prev_step_sgs: Vec<Pallas>,
     /// `messages_for_next_step_proof.old_bulletproof_challenges` (16-round step).
@@ -755,7 +754,6 @@ impl OcamlProof {
             .collect::<Result<Vec<_>, String>>()?;
 
         let prev_evals = parse_all_evals(field(&root, "prev_evals")?)?;
-        let p_eval0_chunks = prev_evals.public_evals.zeta.clone();
 
         Ok(OcamlProof {
             raw_plonk,
@@ -765,7 +763,6 @@ impl OcamlProof {
             challenge_polynomial_commitment,
             step_domain_log2,
             prev_evals,
-            p_eval0_chunks,
             prev_step_sgs,
             prev_step_chals_raw,
             prev_wrap_chals_raw,
@@ -983,7 +980,7 @@ mod tests {
             assert!(sg.is_on_curve(), "prev_step_sg on Pallas");
         }
         assert_eq!(p.prev_evals.z.zeta.len(), 1, "nc = 1");
-        assert_eq!(p.p_eval0_chunks.len(), 1);
+        assert_eq!(p.prev_evals.public_evals.zeta.len(), 1);
     }
 
     #[test]

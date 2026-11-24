@@ -130,9 +130,9 @@ impl Rng {
 /// The number of typed mutators `typed_mutation` selects from (18 V1 + 12 V1b).
 const TYPED_MUTATORS: usize = 30;
 
-/// Fields of `VerifiableProof` that no part of the verifier reads, so a
-/// mutation of them is expected to be accepted.
-const IGNORED_FIELDS: [&str; 1] = ["p_eval0_chunks"];
+/// Fields of `VerifiableProof` that no part of the verifier reads. Empty after
+/// removing dead `p_eval0_chunks` from `VerifiableProof`.
+const IGNORED_FIELDS: [&str; 0] = [];
 
 /// Whether `target` names an ignored field.
 fn is_ignored(target: &str) -> bool {
@@ -160,9 +160,9 @@ fn typed_mutation(which: usize, proof: &mut VerifiableProof, rng: &mut Rng) -> O
             format!("old_bulletproof_challenges[{i}][{j}]")
         }
         3 => {
-            let i = rng.below(proof.p_eval0_chunks.len().max(1));
-            *proof.p_eval0_chunks.get_mut(i)? += rng.step();
-            format!("p_eval0_chunks[{i}]")
+            let i = rng.below(proof.prev_evals.public_evals.zeta.len().max(1));
+            *proof.prev_evals.public_evals.zeta.get_mut(i)? += rng.step();
+            format!("prev_evals.public_evals.zeta[{i}]")
         }
         4 => {
             proof.sponge_digest_before_evaluations += rng.step();
@@ -698,7 +698,7 @@ fn main() -> Result<()> {
         let mut undecodable = 0usize;
         let mut byte_rejected = 0usize;
         let mut byte_panicked = Vec::new();
-        let mut byte_ignored = 0usize;
+        let byte_ignored = 0usize;
         let mut byte_accepted = Vec::new();
         for _ in 0..args.bytes {
             let mut bytes = honest_bytes.clone();
@@ -715,17 +715,7 @@ fn main() -> Result<()> {
                 Some(false) => byte_rejected += 1,
                 None => byte_panicked.push(json!({"byte": index, "bit": bit})),
                 Some(true) => {
-                    let mut restored = mutated.clone();
-                    restored.p_eval0_chunks = honest.p_eval0_chunks.clone();
-                    let only_ignored = bincode_options()
-                        .serialize(&restored)
-                        .map(|bytes| bytes == honest_bytes)
-                        .unwrap_or(false);
-                    if only_ignored {
-                        byte_ignored += 1;
-                    } else {
-                        byte_accepted.push(json!({"byte": index, "bit": bit}));
-                    }
+                    byte_accepted.push(json!({"byte": index, "bit": bit}));
                 }
             }
         }
@@ -957,10 +947,5 @@ fn main() -> Result<()> {
     if panicked_total > 0 {
         bail!("{panicked_total} mutated proofs panicked instead of returning false");
     }
-    ensure!(
-        ignored_total > 0,
-        "no mutation of an ignored field was accepted, so the expectation that {IGNORED_FIELDS:?} \
-         is read by nothing was not exercised"
-    );
     Ok(())
 }
