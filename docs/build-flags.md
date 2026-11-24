@@ -53,7 +53,7 @@ receipts regenerated, and it buys naming consistency rather than behaviour.
 
 | tier | count | what it does |
 | --- | ---: | --- |
-| **Compile-time** (`option_env!`) | 56 | Baked into the guest at compile time. Changing one changes the ELF, the `programVKey`, and potentially the shard shapes. |
+| **Compile-time** (`option_env!`) | 58 | Baked into the guest at compile time. Changing one changes the ELF, the `programVKey`, and potentially the shard shapes. |
 | **Build-script** (`env::var_os` in a `build.rs`) | 5 | Selects a file or a cache path: `SETTLEMENT_BLOB_CACHE_DIR`, `SETTLEMENT_REBUILD_VERIFIER_BLOB`, `SETTLEMENT_VK_JSON`, `VK_JSON`, `MIZU_PREPARED_VESTA_PATH`. |
 | **Run-time** (`env::var`, host only) | 1 | `PASTA_RETAIN` — does not reach the guest (removed from `GUEST_BUILD_ENV`). |
 
@@ -112,6 +112,8 @@ fixture:
 | + zero-copy finite SRS, `MIZU_FIXED_PALLAS_COUPLED=1`, `MIZU_SOFT_PASTA_DOUBLE=1` (`w=16`) | 102,664,876 | **-28.02%** total (-21.25% vs 130.37M) |
 | + `MIZU_PREBAKE_NEGATIVES=1` + unchecked recoder/bucket writes (`w=15`) | 85,156,453 | **-40.30%** total (-34.68% vs 130.37M; -49K `vesta_add`) |
 | + `MIZU_PREBAKE_NEGATIVES=1` + unchecked recoder/bucket writes (`w=16`) | 84,985,703 | **-40.42%** total (-34.81% vs 130.37M) |
+| + `MIZU_BATCHED_BUCKET_REDUCE=1` (`w=16`, requires `VK_ROOT` regen) | 79,233,892 | **-44.45%** total (-39.22% vs 130.37M) |
+| + `MIZU_BATCHED_MSM_ACCUM=1` (`w=16`, requires `VK_ROOT` regen) | 35,440,449 | **-75.15%** total (-72.81% vs 130.37M) |
 
 And `PASTA_RETAIN` is a prover-side lever rather than a cycle one: retained
 routing takes main cells from 43,922,703,280 to 27,839,873,136 and the Groth16
@@ -169,6 +171,8 @@ Area tags match the files under [`docs/optimizations/`](optimizations/). **base*
 | flag | value | base | recipes | read at | what it selects |
 | --- | --- | :-: | :-: | --- | --- |
 | `MIZU_INLINE_FINITE_COPY` | `words` | yes | 10/10 | `ps:curves/src/pasta/point_spikes.rs:238` | **String-valued, not `1`.** Recipes set `words`, selecting word-wise inline copying of finite-field limbs. |
+| `MIZU_BATCHED_BUCKET_REDUCE` | `1` | — | 0/10 | `ps:curves/src/pasta/point_spikes.rs:281` | Dispatch 8-bucket reverse reduction chunks to `PALLAS_BUCKET_REDUCE` (`0x0001017C`) / `VESTA_BUCKET_REDUCE` (`0x0001017D`) SP1 precompile chips (requires `VK_ROOT` / `block3.bin` regeneration). |
+| `MIZU_BATCHED_MSM_ACCUM` | `1` | — | 0/10 | `ps:curves/src/pasta/point_spikes.rs:1349` | Dispatch 16-digit MSM bucket accumulation chunks to `PALLAS_MSM_ACCUM` (`0x0001017E`) / `VESTA_MSM_ACCUM` (`0x0001017F`) SP1 precompile chips (requires `VK_ROOT` / `block3.bin` regeneration). |
 | `MIZU_MSM_FILTER_ZERO` | `1` | yes | 10/10 | `alg:ec/src/scalar_mul/variable_base/mod.rs:188` +1 | Skip zero scalars before bucketing. Read in both the proof-systems and algebra forks. |
 | `MIZU_MSM_WINDOW_BITS` | `10`, `12`, `14` | — | 0/10 | `ps:curves/src/pasta/canonical_pallas.rs:229` +1 | MSM window override, read in proof-systems **and** algebra. **Panics** on any value other than unset, `10`, `12` or `14`. No recipe sets it. |
 | `MIZU_OUTLINE_PALLAS_BUCKETS` | `1` | yes | 10/10 | `ps:curves/src/pasta/point_spikes.rs:690` | Move Pallas bucket accumulation out of line to cut code size in the hot loop. |

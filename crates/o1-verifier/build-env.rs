@@ -19,6 +19,8 @@
 // it is a cache-version string constant in `crates/o1-verifier/blob_cache.rs`.
 pub const GUEST_BUILD_ENV: &[&str] = &[
     "MIZU_BATCH_ACCUMULATOR",
+    "MIZU_BATCHED_BUCKET_REDUCE",
+    "MIZU_BATCHED_MSM_ACCUM",
     "MIZU_CIP_MODE",
     "MIZU_PASTA_FP_PRECOMPILE",
     "MIZU_POSEIDON_DEFERRED_MDS",
