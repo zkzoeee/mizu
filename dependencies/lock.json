@@ -88,11 +88,11 @@
    "path": "vendor/proof-systems",
    "upstream": "https://github.com/o1-labs/proof-systems.git",
    "base": "b1d9829fa0b2bb8e15494df1e5e0c6741394075b",
-   "revision": "49f2237b4dac5ef973a88824783aee370be9960d",
-   "tree": "56e974f79502721bf7614b81709a176f0861eb77",
+   "revision": "4968ca87ffe7d09a3ab6b184198a5eb77fdc1289",
+   "tree": "886d62ab847912d9ce04934f7874d457f4521934",
    "branch": "codex/proof-systems-0.7",
    "bundle": "dependencies/bundles/proof-systems.bundle",
-   "bundle_sha256": "1f6b7870c8842adf1bd3c015e1ce84b713f06969fcf1a319d3515f5fc5472d53",
+   "bundle_sha256": "d7800d6c4f859cadd036a0d5c593cd35ec9d22a17234e431252f6850e1dd88b9",
    "patches": [
     {
      "commit": "9f37ee019fb855c08884fe2c5681093b8b979806",
@@ -203,6 +203,14 @@
       "curves/src/pasta/canonical_words.rs",
       "curves/src/pasta/point_spikes.rs",
       "poly-commitment/src/canonical_ipa.rs"
+     ]
+    },
+    {
+     "commit": "4968ca87ffe7d09a3ab6b184198a5eb77fdc1289",
+     "subject": "Add prebaked-negative MSM entry points and unchecked recoder/bucket writes",
+     "paths": [
+      "curves/src/pasta/canonical_pallas.rs",
+      "curves/src/pasta/point_spikes.rs"
      ]
     }
    ]
