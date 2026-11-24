@@ -10,11 +10,11 @@
    "path": "vendor/algebra",
    "upstream": "https://github.com/arkworks-rs/algebra.git",
    "base": "7ad88c46e859a94ab8e0b19fd8a217c3dc472f1c",
-   "revision": "41ee0d03036149c77224d74a296f45d5042403ce",
-   "tree": "479e9ca19838e8282d385647f3d2b9bca3f8e597",
+   "revision": "f01c749e21944abb7be965e06e42177489fa3da0",
+   "tree": "8a5df0d47666adee0a7bbc1707e9571b34e4697c",
    "branch": "codex/mizu",
    "bundle": "dependencies/bundles/algebra.bundle",
-   "bundle_sha256": "9114a8ca8b9c5fb0d7b27b13d09f2de69c52e2ae5ec0e3ca6c9509465462a3ba",
+   "bundle_sha256": "76247e69ae97f40bd698bc92a571acb7e5d0b0b3a793a9147703f324b0a5d005",
    "patches": [
     {
      "commit": "7b99b0e0f7243814c1414e3180bd51b643d2e5e2",
@@ -70,6 +70,16 @@
       "ec/src/scalar_mul/variable_base/mod.rs",
       "ff/src/fields/models/fp/montgomery_backend.rs"
      ]
+    },
+    {
+     "commit": "f01c749e21944abb7be965e06e42177489fa3da0",
+     "subject": "Enforce explicit repr ABI layout and full 4-limb Pasta modulus check",
+     "paths": [
+      "ec/src/models/short_weierstrass/affine.rs",
+      "ff/src/biginteger/mod.rs",
+      "ff/src/fields/models/fp/mod.rs",
+      "ff/src/fields/models/fp/montgomery_backend.rs"
+     ]
     }
    ]
   },
@@ -78,11 +88,11 @@
    "path": "vendor/proof-systems",
    "upstream": "https://github.com/o1-labs/proof-systems.git",
    "base": "b1d9829fa0b2bb8e15494df1e5e0c6741394075b",
-   "revision": "5a7962f351d5597f77c05933297809ed3996eb95",
-   "tree": "4526ec1296e540f1e89bdb244ec79da9c4ec2d2b",
+   "revision": "49f2237b4dac5ef973a88824783aee370be9960d",
+   "tree": "56e974f79502721bf7614b81709a176f0861eb77",
    "branch": "codex/proof-systems-0.7",
    "bundle": "dependencies/bundles/proof-systems.bundle",
-   "bundle_sha256": "1e5fe26559846f1f278ad3900618284e6179daa2522aa1dfe003d0c04908d1ec",
+   "bundle_sha256": "1f6b7870c8842adf1bd3c015e1ce84b713f06969fcf1a319d3515f5fc5472d53",
    "patches": [
     {
      "commit": "9f37ee019fb855c08884fe2c5681093b8b979806",
@@ -174,6 +184,26 @@
       "poseidon/src/permutation.rs",
       "poseidon/src/sponge.rs"
      ]
+    },
+    {
+     "commit": "12691018c058ed7708b9ca2b7906ceb2e030e522",
+     "subject": "Harden IPA/Kimchi bounds checks, error propagation, and Poseidon precompile short-circuit",
+     "paths": [
+      "kimchi/src/verifier.rs",
+      "poly-commitment/src/commitment.rs",
+      "poly-commitment/src/ipa.rs",
+      "poseidon/src/canonical.rs"
+     ]
+    },
+    {
+     "commit": "49f2237b4dac5ef973a88824783aee370be9960d",
+     "subject": "Add zero-copy finite Pasta MSMs, coupled w=15/14/13 recoders, in-place b_poly, and soft doubling",
+     "paths": [
+      "curves/src/pasta/canonical_pallas.rs",
+      "curves/src/pasta/canonical_words.rs",
+      "curves/src/pasta/point_spikes.rs",
+      "poly-commitment/src/canonical_ipa.rs"
+     ]
     }
    ]
   },
@@ -182,11 +212,11 @@
    "path": "vendor/sp1",
    "upstream": "https://github.com/succinctlabs/sp1.git",
    "base": "d83ed91f96701209613720708f36ffce0e98ed33",
-   "revision": "59a77a75eec0991d010388a437732a88dce3871c",
-   "tree": "7ebac8c65f0d5eafe91db1855ccf6b793d4e75c8",
+   "revision": "91c73fdd9b8db5d79015549d2d02d774733f2bc6",
+   "tree": "b156863bdf50caff78f0c254fc19989fb61ea50a",
    "branch": "codex/mizu",
    "bundle": "dependencies/bundles/sp1.bundle",
-   "bundle_sha256": "71539cf74ddcd6e9e9c18182ccef0101a45deb488b55ece56a1a8b1f2267947f",
+   "bundle_sha256": "f7a434755805b38ec34e4a9e83518c87ad39648dc0c96ff04a256471ed6f4b32",
    "patches": [
     {
      "commit": "0fde0939bc84bed83160e7f2c3685a863430ff7d",
@@ -363,6 +393,20 @@
      "commit": "59a77a75eec0991d010388a437732a88dce3871c",
      "subject": "prover: groth16_from_wrap, so a saved wrap proof can be proved without a GPU",
      "paths": [
+      "crates/prover/src/build.rs"
+     ]
+    },
+    {
+     "commit": "91c73fdd9b8db5d79015549d2d02d774733f2bc6",
+     "subject": "Harden Pasta precompile AIR completeness, alignment, feature gating, and wrap VK check",
+     "paths": [
+      "crates/core/executor/src/minimal/precompiles/pasta_poseidon.rs",
+      "crates/core/executor/src/record.rs",
+      "crates/core/machine/src/operations/field/field_op.rs",
+      "crates/core/machine/src/riscv/mod.rs",
+      "crates/core/machine/src/syscall/precompiles/pasta_poseidon/control.rs",
+      "crates/curves/src/weierstrass/mod.rs",
+      "crates/curves/src/weierstrass/pasta_poseidon.rs",
       "crates/prover/src/build.rs"
      ]
     }
