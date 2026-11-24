@@ -41,7 +41,7 @@ pub(crate) fn check(verifier: &Verifier, proofs: &[VerifiableProof], g: &[Vesta]
     if proofs.is_empty() { return false; }
     if proofs.len() == 1 {
         return match table {
-            Some(table) => crate::accumulator_check_fixed(verifier, &proofs[0], g, table),
+            Some(table) => crate::accumulator_check_fixed(verifier, &proofs[0], table),
             None => crate::accumulator_check_with_generators(verifier, &proofs[0], g),
         };
     }
@@ -49,7 +49,11 @@ pub(crate) fn check(verifier: &Verifier, proofs: &[VerifiableProof], g: &[Vesta]
     let result = (|| {
         if verifier.step_srs_length_log2 >= usize::BITS as usize { return false; }
         let expected = 1usize << verifier.step_srs_length_log2;
-        if g.len() < expected || table.is_some_and(|t| t.len() != expected) { return false; }
+        if let Some(t) = table {
+            if t.len() != expected { return false; }
+        } else if g.len() < expected {
+            return false;
+        }
         let r = challenge(verifier, proofs, digest);
         let mut power = StepField::one();
         let mut combined = Vec::<CanonicalPasta<false>>::new();

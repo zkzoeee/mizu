@@ -106,15 +106,19 @@ pub(crate) fn verify_batch_with_index_digest_and_vesta(
     use rand_chacha::ChaCha20Rng;
     use types::WrapField;
 
+    if proofs.is_empty() {
+        return false;
+    }
+
     let generators = vesta_generators.unwrap_or_else(|| verifier.vesta_srs.g.as_slice());
     if matches!(option_env!("MIZU_BATCH_ACCUMULATOR"), Some("1")) {
-        if !proofs.iter().all(|p| statement::check_app_state_binding(verifier, p))
+        if !proofs.iter().all(|p| statement::check_proof_binding(verifier, p))
             || !accumulator_batch::check(verifier, proofs, generators, fixed_vesta, digest) {
             return false;
         }
-    } else if !proofs.iter().all(|p| statement::check_app_state_binding(verifier, p)
+    } else if !proofs.iter().all(|p| statement::check_proof_binding(verifier, p)
             && if let Some(table) = fixed_vesta {
-                accumulator_check_fixed(verifier, p, generators, table)
+                accumulator_check_fixed(verifier, p, table)
             } else {
                 accumulator_check_with_generators(verifier, p, generators)
             })
@@ -123,17 +127,18 @@ pub(crate) fn verify_batch_with_index_digest_and_vesta(
     }
 
     track_cycles(b"cycle-tracker-report-start:pickles-wrap-prepare\n");
-    let pis: Vec<Vec<WrapField>> = proofs
-        .iter()
-        .map(|p| {
-            let dv = deferred::expand_deferred(verifier, p);
-            deferred::wrap_public_input(
-                &dv,
-                p.messages_for_next_step_proof_digest,
-                p.messages_for_next_wrap_proof_digest,
-            )
-        })
-        .collect();
+    let mut pis: Vec<Vec<WrapField>> = Vec::with_capacity(proofs.len());
+    for p in proofs {
+        let Some(dv) = deferred::try_expand_deferred(verifier, p) else {
+            track_cycles(b"cycle-tracker-report-end:pickles-wrap-prepare\n");
+            return false;
+        };
+        pis.push(deferred::wrap_public_input(
+            &dv,
+            p.messages_for_next_step_proof_digest,
+            p.messages_for_next_wrap_proof_digest,
+        ));
+    }
 
     let mut rng = batching_rng(proofs, &pis);
     let contexts: Vec<Context<FULL_ROUNDS, Pallas, OpeningProof<Pallas, FULL_ROUNDS>, _>> = proofs
@@ -282,7 +287,7 @@ fn accumulator_check_with_generators(
 
 #[inline(never)]
 fn accumulator_check_fixed(
-    verifier: &Verifier, proof: &VerifiableProof, g: &[Vesta],
+    verifier: &Verifier, proof: &VerifiableProof,
     table: &fixed_srs::FixedVestaSrs<'_>,
 ) -> bool {
     track_cycles(b"cycle-tracker-report-start:pickles-accumulator\n");
@@ -290,7 +295,7 @@ fn accumulator_check_fixed(
         .map(|c| ScalarChallenge::new(*c).to_field(&verifier.step_endo)).collect();
     let expected_len = 1usize << verifier.step_srs_length_log2;
     let coeffs = canonical_coefficients::coefficients(&chals);
-    if coeffs.len() != expected_len || g.len() < expected_len || table.len() != expected_len {
+    if coeffs.len() != expected_len || table.len() != expected_len {
         track_cycles(b"cycle-tracker-report-end:pickles-accumulator\n");
         return false;
     }
@@ -764,10 +769,16 @@ mod tests {
         let (verifier, proof) = mainnet_proof();
         let bytes = crate::fixed_srs::encode(&verifier.vesta_srs.g);
         let table = crate::fixed_srs::decode(&bytes, verifier.vesta_srs.g.len());
+        let shift_scalar = match table.lane_shift() {
+            120 => ark_ff::BigInt([0, 1u64 << 56, 0, 0]),
+            126 => ark_ff::BigInt([0, 1u64 << 62, 0, 0]),
+            128 => ark_ff::BigInt([0, 0, 1, 0]),
+            other => panic!("unexpected Vesta lane shift {other}"),
+        };
         for (i, g) in verifier.vesta_srs.g.iter().enumerate() {
             assert_eq!(table.point::<mina_curves::pasta::VestaParameters>(0,i), *g);
             assert_eq!(table.point::<mina_curves::pasta::VestaParameters>(1,i),
-                g.mul_bigint(ark_ff::BigInt([0,0,1,0])).into_affine());
+                g.mul_bigint(shift_scalar).into_affine());
         }
         if matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1")) {
             let digest = Box::leak(Box::new(embedded_wrap_digest(&verifier.wrap_vk)));
@@ -827,13 +838,20 @@ mod tests {
         let fixed = decode_embedded_verifier(blob, digest);
         let (borrowed, owned_len) = fixed.vesta_storage_for_test();
         let enabled = matches!(option_env!("MIZU_BORROW_VESTA_SRS"), Some("1"));
-        assert_eq!(borrowed.is_some(), enabled);
-        if let Some(g) = borrowed {
-            assert_eq!(owned_len, 0, "embedded path must not copy Vesta g");
-            assert_eq!(g.as_ptr() as usize, blob.as_ptr() as usize + 8);
-            assert_eq!(g, vesta_srs().g.as_slice());
+        let fixed_table = matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1"));
+        if enabled && fixed_table {
+            // Fixed Vesta table supersedes raw Montgomery Vesta SRS: neither copy nor scan it.
+            assert!(borrowed.is_none());
+            assert_eq!(owned_len, 0, "embedded fixed-Vesta path must not copy Vesta g");
         } else {
-            assert_eq!(owned_len, vesta_srs().g.len());
+            assert_eq!(borrowed.is_some(), enabled);
+            if let Some(g) = borrowed {
+                assert_eq!(owned_len, 0, "embedded path must not copy Vesta g");
+                assert_eq!(g.as_ptr() as usize, blob.as_ptr() as usize + 8);
+                assert_eq!(g, vesta_srs().g.as_slice());
+            } else {
+                assert_eq!(owned_len, vesta_srs().g.len());
+            }
         }
         let runtime = crate::serialize::decode_verifier_blob(blob);
         assert_eq!(runtime.vesta_srs.g, vesta_srs().g,
@@ -905,9 +923,14 @@ mod tests {
         let g=&verifier.wrap_vk.srs.g;let n=g.len().div_ceil(2);
         let bytes=crate::fixed_pallas::encode(&g[..n]);
         let table=crate::fixed_pallas::decode(&bytes,n);
+        let shift_scalar = match table.lane_shift() {
+            128 => ark_ff::BigInt([0, 0, 1, 0]),
+            130 => ark_ff::BigInt([0, 0, 4, 0]),
+            other => panic!("unexpected Pallas lane shift {other}"),
+        };
         for i in 0..n {
             assert_eq!(table.point::<mina_curves::pasta::PallasParameters>(0,i),g[i]);
-            assert_eq!(table.point::<mina_curves::pasta::PallasParameters>(1,i),g[i].mul_bigint(ark_ff::BigInt([0,0,1,0])).into_affine());
+            assert_eq!(table.point::<mina_curves::pasta::PallasParameters>(1,i),g[i].mul_bigint(shift_scalar).into_affine());
         }
         if matches!(option_env!("MIZU_FIXED_PALLAS_SRS"),Some("1")) {
             let digest=Box::leak(Box::new(embedded_wrap_digest(&verifier.wrap_vk)));
@@ -918,6 +941,94 @@ mod tests {
             let blob=Box::leak(blob.into_boxed_slice());
             assert!(!decode_embedded_verifier(blob,digest).verify(&proof),"changed Pallas table point must reject");
             assert!(verify(&crate::serialize::decode_verifier_blob(blob),&proof),"runtime decoder must keep its own SRS");
+        }
+    }
+
+    #[test]
+    fn verify_rejects_unbound_wrap_digest_prev_challenges_branch_and_empty_batch() {
+        use ark_ec::AffineRepr;
+        use ark_ff::One;
+
+        let (verifier, proof) = mainnet_proof();
+        assert!(!verify_batch(&verifier, &[]), "empty batch must be rejected");
+        assert!(statement::check_proof_binding(&verifier, &proof));
+
+        // 1. Mutating messages_for_next_wrap_proof_digest breaks binding immediately
+        //    (even before Kimchi verify — simulating a forged Wrap proof with a
+        //    different step_sg_fake hashed into messages_for_next_wrap_proof_digest).
+        let mut forged_wrap_digest = proof.clone();
+        forged_wrap_digest.messages_for_next_wrap_proof_digest += types::WrapField::one();
+        assert!(!statement::check_proof_binding(&verifier, &forged_wrap_digest));
+        assert!(!verify(&verifier, &forged_wrap_digest));
+
+        // 2. Mutating challenge_polynomial_commitment while keeping digest fixed breaks binding.
+        let mut forged_cpc = proof.clone();
+        forged_cpc.challenge_polynomial_commitment =
+            (forged_cpc.challenge_polynomial_commitment + Vesta::generator()).into_affine();
+        assert!(!statement::check_proof_binding(&verifier, &forged_cpc));
+        assert!(!verify(&verifier, &forged_cpc));
+
+        // 3. Infinity challenge_polynomial_commitment must be rejected.
+        let mut inf_cpc = proof.clone();
+        inf_cpc.challenge_polynomial_commitment = Vesta::zero();
+        assert!(!statement::check_proof_binding(&verifier, &inf_cpc));
+
+        // 4. Decoupling wrap_proof.prev_challenges[i].comm from prev_step_sgs must be rejected.
+        let mut swapped_prev_comm = proof.clone();
+        swapped_prev_comm.wrap_proof.prev_challenges[0].comm.chunks[0] =
+            (swapped_prev_comm.wrap_proof.prev_challenges[0].comm.chunks[0] + Pallas::generator())
+                .into_affine();
+        assert!(!statement::check_proof_binding(&verifier, &swapped_prev_comm));
+        assert!(!verify(&verifier, &swapped_prev_comm));
+
+        // 5. Decoupling wrap_proof.prev_challenges[i].chals from messages_for_next_wrap_proof_digest.
+        let mut tampered_prev_chals = proof.clone();
+        tampered_prev_chals.wrap_proof.prev_challenges[0].chals[0] += types::WrapField::one();
+        assert!(!statement::check_proof_binding(&verifier, &tampered_prev_chals));
+
+        // 6. Mismatched or out-of-range step_domain_log2 must be rejected without shift overflow.
+        let mut bad_log2 = proof.clone();
+        bad_log2.step_domain_log2 = 15;
+        assert!(!statement::check_proof_binding(&verifier, &bad_log2));
+        assert!(!verify(&verifier, &bad_log2));
+
+        let mut overflow_log2 = proof.clone();
+        overflow_log2.step_domain_log2 = usize::BITS as usize;
+        assert!(!statement::check_proof_binding(&verifier, &overflow_log2));
+        assert!(!verify(&verifier, &overflow_log2));
+
+        // 7. Invalid proofs_verified_mask [true, false] must be rejected.
+        let mut bad_mask = proof.clone();
+        bad_mask.branch_data.proofs_verified_mask = [true, false];
+        assert!(!statement::check_proof_binding(&verifier, &bad_mask));
+        assert!(!verify(&verifier, &bad_mask));
+
+        // 8. Wrong wrap opening round count must be rejected.
+        let mut bad_lr = proof.clone();
+        bad_lr.wrap_proof.proof.lr.pop();
+        assert!(!statement::check_proof_binding(&verifier, &bad_lr));
+        assert!(!verify(&verifier, &bad_lr));
+
+        // 9. Dummy padding slots on mpv < 2 fixtures (nrr, simplechain/wrap0) must be bound.
+        for dir in ["nrr", "simplechain/wrap0"] {
+            let ocaml =
+                OcamlProof::parse(&fixture(dir, "public_input_skeleton.json")).expect("skeleton");
+            let wrap_vk = parse_wrap_vk(&fixture(dir, "vk.serde.json")).expect("vk");
+            let wrap_proof = parse_wrap_proof(&fixture(dir, "proof.serde.json")).expect("proof");
+            let stmt =
+                parse_app_statement_fields(&fixture(dir, "app_statement.json")).expect("stmt");
+            let vp = ocaml.into_verifiable(wrap_proof, &wrap_vk, &stmt).expect("conv");
+            let v = Verifier::new(wrap_vk, wrap_srs().clone(), vesta_srs().clone(), 1);
+            assert!(statement::check_proof_binding(&v, &vp), "{dir} honest");
+
+            let mut bad_dummy = vp.clone();
+            bad_dummy.wrap_proof.prev_challenges[0].chals[0] += types::WrapField::one();
+            bad_dummy.messages_for_next_wrap_proof_digest =
+                statement::wrap_messages_digest(&bad_dummy).expect("rehashed");
+            assert!(
+                !statement::check_proof_binding(&v, &bad_dummy),
+                "{dir}: tampering dummy wrap challenge slot must fail even if digest is rehashed"
+            );
         }
     }
 

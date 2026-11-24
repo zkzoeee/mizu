@@ -12,17 +12,31 @@ pub(crate) fn coefficients(challenges: &[Fp]) -> Vec<CanonicalPasta<false>> {
         challenges.len() < usize::BITS as usize,
         "challenge polynomial round count overflow"
     );
-    let mut result = Vec::with_capacity(1usize << challenges.len());
+    let total = 1usize << challenges.len();
+    let mut result = Vec::with_capacity(total);
     result.push(CanonicalPasta::from_limbs([1, 0, 0, 0]).expect("one is canonical"));
     for challenge in challenges.iter().rev() {
         let rhs = CanonicalPastaRhs::new(
             CanonicalPasta::from_limbs(challenge.into_bigint().0)
                 .expect("field scalar is canonical"),
         );
-        for i in 0..result.len() {
-            let mut value = result[i];
-            value.mul_prepared_assign(&rhs);
-            result.push(value);
+        let len = result.len();
+        debug_assert!(len * 2 <= result.capacity());
+        // Expand directly into the reserved spare capacity, performing
+        // `mul_prepared_assign` in place on the destination slot to avoid
+        // per-element stack round-trips and `Vec::push` capacity branches.
+        // SAFETY: `total == 1 << challenges.len()` was reserved up front, so
+        // `len * 2 <= result.capacity()`, `result[..len]` is initialized, and
+        // every slot in `len..2*len` is initialized before `set_len(len * 2)`.
+        unsafe {
+            let base = result.as_mut_ptr();
+            for i in 0..len {
+                let value = *base.add(i);
+                let dst_ptr = base.add(len + i);
+                dst_ptr.write(value);
+                (*dst_ptr).mul_prepared_assign(&rhs);
+            }
+            result.set_len(len * 2);
         }
     }
     result

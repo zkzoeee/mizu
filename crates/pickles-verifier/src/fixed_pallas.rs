@@ -20,13 +20,31 @@ struct EncodedPoint {
 }
 
 #[derive(Clone, Copy)]
-pub(crate) struct FixedPallasSrs<'a> {
-    entries: &'a [EncodedPoint],
-    n: usize,
+enum FixedPallasStorage<'a> {
+    Finite(&'a [[u64; 8]]),
+    General(&'a [EncodedPoint]),
 }
-impl FixedPallasSrs<'_> {
+
+#[derive(Clone, Copy)]
+pub(crate) struct FixedPallasSrs<'a> {
+    storage: FixedPallasStorage<'a>,
+    n: usize,
+    lane_shift: usize,
+}
+impl<'a> FixedPallasSrs<'a> {
     pub(crate) fn len(&self) -> usize {
         self.n
+    }
+    pub(crate) fn lane_shift(&self) -> usize {
+        self.lane_shift
+    }
+    /// Zero-copy view of all `2 * n` canonical `[u64; 8]` coordinates when every
+    /// generator in the baked SRS is finite (true for all production Mina SRSes).
+    pub(crate) fn finite_coords(&self) -> Option<&'a [[u64; 8]]> {
+        match self.storage {
+            FixedPallasStorage::Finite(coords) => Some(coords),
+            FixedPallasStorage::General(_) => None,
+        }
     }
     #[cfg(test)]
     pub(crate) fn point<C: SWCurveConfig>(&self, lane: usize, i: usize) -> Affine<C>
@@ -35,31 +53,70 @@ impl FixedPallasSrs<'_> {
     {
         assert_eq!(C::BaseField::MODULUS, Fp::MODULUS, "fixed SRS base field");
         assert!(lane < 2 && i < self.n, "fixed SRS point index");
-        let p = &self.entries[lane * self.n + i];
-        match p.infinity {
-            0 => Affine::new_unchecked(
-                C::BaseField::from_bigint(BigInt(p.x)).expect("fixed SRS noncanonical x"),
-                C::BaseField::from_bigint(BigInt(p.y)).expect("fixed SRS noncanonical y"),
-            ),
-            1 => {
-                assert!(
-                    p.x == [0; 4] && p.y == [0; 4],
-                    "fixed SRS identity coordinates"
-                );
-                Affine::identity()
+        match self.storage {
+            FixedPallasStorage::Finite(coords) => {
+                let c = &coords[lane * self.n + i];
+                Affine::new_unchecked(
+                    C::BaseField::from_bigint(BigInt([c[0], c[1], c[2], c[3]]))
+                        .expect("fixed SRS noncanonical x"),
+                    C::BaseField::from_bigint(BigInt([c[4], c[5], c[6], c[7]]))
+                        .expect("fixed SRS noncanonical y"),
+                )
             }
-            _ => panic!("fixed SRS infinity flag"),
+            FixedPallasStorage::General(entries) => {
+                let p = &entries[lane * self.n + i];
+                match p.infinity {
+                    0 => Affine::new_unchecked(
+                        C::BaseField::from_bigint(BigInt(p.x)).expect("fixed SRS noncanonical x"),
+                        C::BaseField::from_bigint(BigInt(p.y)).expect("fixed SRS noncanonical y"),
+                    ),
+                    1 => {
+                        assert!(
+                            p.x == [0; 4] && p.y == [0; 4],
+                            "fixed SRS identity coordinates"
+                        );
+                        Affine::identity()
+                    }
+                    _ => panic!("fixed SRS infinity flag"),
+                }
+            }
         }
     }
-    pub(crate) fn rows(&self) -> &[[u64;9]] {
-        bytemuck::cast_slice(self.entries)
+    pub(crate) fn rows(&self) -> &[[u64; 9]] {
+        match self.storage {
+            FixedPallasStorage::General(entries) => bytemuck::cast_slice(entries),
+            FixedPallasStorage::Finite(_) => panic!("finite Pallas table uses finite_coords"),
+        }
     }
+}
 
+/// Active positional plane-1 bit shift for the fixed Pallas table.
+pub(crate) fn configured_lane_shift() -> usize {
+    if matches!(option_env!("MIZU_FIXED_PALLAS_COUPLED"), Some("1"))
+        && matches!(option_env!("MIZU_PALLAS_WINDOW"), None | Some("13"))
+    {
+        130
+    } else {
+        128
+    }
 }
 
 pub(crate) fn encode(g: &[Pallas]) -> Vec<u8> {
+    let shift = if g.iter().all(|p| !p.infinity) {
+        configured_lane_shift()
+    } else {
+        128
+    };
+    encode_with_shift(g, shift)
+}
+
+pub(crate) fn encode_with_shift(g: &[Pallas], lane_shift: usize) -> Vec<u8> {
+    assert!(
+        matches!(lane_shift, 128 | 130),
+        "unsupported fixed Pallas lane shift {lane_shift}"
+    );
     // Host-only: fixture suites encode the same SRS for many VKs. Cache by
-    // every generator byte, not pointer/length, so changed-SRS tests remain real.
+    // every generator byte and lane shift so changed-SRS tests remain real.
     #[cfg(feature = "std")]
     {
         use blake2::{Blake2s256, Digest};
@@ -69,7 +126,8 @@ pub(crate) fn encode(g: &[Pallas]) -> Vec<u8> {
         };
         static CACHE: OnceLock<Mutex<BTreeMap<[u8; 32], Vec<u8>>>> = OnceLock::new();
         let mut hash = Blake2s256::new();
-        hash.update(b"fixed-pallas-srs/v1");
+        hash.update(b"fixed-pallas-srs/v2");
+        hash.update((lane_shift as u64).to_le_bytes());
         for p in g {
             for word in p.x.0 .0.into_iter().chain(p.y.0 .0) {
                 hash.update(word.to_le_bytes());
@@ -83,49 +141,61 @@ pub(crate) fn encode(g: &[Pallas]) -> Vec<u8> {
             .unwrap();
         cache
             .entry(key)
-            .or_insert_with(|| encode_uncached(g))
+            .or_insert_with(|| encode_uncached(g, lane_shift))
             .clone()
     }
     #[cfg(not(feature = "std"))]
-    encode_uncached(g)
+    encode_uncached(g, lane_shift)
 }
 
-fn encode_uncached(g: &[Pallas]) -> Vec<u8> {
+fn encode_uncached(g: &[Pallas], lane_shift: usize) -> Vec<u8> {
     let high: Vec<_> = g
         .iter()
         .map(|p| {
             let mut p = p.into_group();
-            for _ in 0..128 {
+            for _ in 0..lane_shift {
                 p.double_in_place();
             }
             p
         })
         .collect();
     let high = <Pallas as AffineRepr>::Group::normalize_batch(&high);
-    let mut out = Vec::with_capacity(HEADER + 2 * g.len() * 72);
+    let all_finite = g.iter().chain(&high).all(|p| !p.infinity);
+    let entry_bytes = if all_finite { 64 } else { 72 };
+    let mut out = Vec::with_capacity(HEADER + 2 * g.len() * entry_bytes);
     out.extend_from_slice(MAGIC);
     out.extend_from_slice(&(g.len() as u64).to_le_bytes());
-    out.extend_from_slice(&2u64.to_le_bytes());
+    let meta: u64 = 2u64 | (u64::from(all_finite) << 16) | ((lane_shift as u64) << 32);
+    out.extend_from_slice(&meta.to_le_bytes());
     for modulus in [Fp::MODULUS, Fq::MODULUS] {
         for word in modulus.0 {
             out.extend_from_slice(&word.to_le_bytes());
         }
     }
-    for p in g.iter().chain(&high) {
-        let encoded = if p.infinity {
-            EncodedPoint {
-                x: [0; 4],
-                y: [0; 4],
-                infinity: 1,
-            }
-        } else {
-            EncodedPoint {
-                x: p.x.into_bigint().0,
-                y: p.y.into_bigint().0,
-                infinity: 0,
-            }
-        };
-        out.extend_from_slice(bytemuck::bytes_of(&encoded));
+    if all_finite {
+        for p in g.iter().chain(&high) {
+            let x = p.x.into_bigint().0;
+            let y = p.y.into_bigint().0;
+            let coords = [x[0], x[1], x[2], x[3], y[0], y[1], y[2], y[3]];
+            out.extend_from_slice(bytemuck::bytes_of(&coords));
+        }
+    } else {
+        for p in g.iter().chain(&high) {
+            let encoded = if p.infinity {
+                EncodedPoint {
+                    x: [0; 4],
+                    y: [0; 4],
+                    infinity: 1,
+                }
+            } else {
+                EncodedPoint {
+                    x: p.x.into_bigint().0,
+                    y: p.y.into_bigint().0,
+                    infinity: 0,
+                }
+            };
+            out.extend_from_slice(bytemuck::bytes_of(&encoded));
+        }
     }
     out
 }
@@ -138,7 +208,15 @@ pub(crate) fn decode(bytes: &[u8], expected: usize) -> FixedPallasSrs<'_> {
     let word = |at| u64::from_le_bytes(bytes[at..at + 8].try_into().unwrap());
     let n = usize::try_from(word(8)).expect("fixed SRS length overflow");
     assert_eq!(n, expected, "fixed SRS generator count");
-    assert_eq!(word(16), 2, "fixed SRS lanes");
+    let meta = word(16);
+    let lanes = meta & 0xffff;
+    let flags = (meta >> 16) & 0xffff;
+    let raw_shift = (meta >> 32) as usize;
+    let lane_shift = if raw_shift == 0 { 128 } else { raw_shift };
+    assert_eq!(lanes, 2, "fixed SRS lanes");
+    assert!(flags <= 1, "fixed SRS infinity flag");
+    assert!(matches!(lane_shift, 128 | 130), "fixed SRS lane shift");
+    let all_finite = flags == 1;
     for (at, modulus) in [(24, Fp::MODULUS), (56, Fq::MODULUS)] {
         assert_eq!(
             core::array::from_fn::<_, 4, _>(|i| word(at + 8 * i)),
@@ -147,13 +225,26 @@ pub(crate) fn decode(bytes: &[u8], expected: usize) -> FixedPallasSrs<'_> {
         );
     }
     let count = n.checked_mul(2).expect("fixed SRS length overflow");
+    let entry_bytes = if all_finite { 64 } else { 72 };
     let size = count
-        .checked_mul(72)
+        .checked_mul(entry_bytes)
         .and_then(|x| x.checked_add(HEADER))
         .expect("fixed SRS length overflow");
     assert_eq!(bytes.len(), size, "fixed SRS byte length");
-    let entries = bytemuck::try_cast_slice(&bytes[HEADER..]).expect("fixed SRS alignment");
-    FixedPallasSrs { entries, n }
+    let storage = if all_finite {
+        let coords: &[[u64; 8]] =
+            bytemuck::try_cast_slice(&bytes[HEADER..]).expect("fixed SRS alignment");
+        FixedPallasStorage::Finite(coords)
+    } else {
+        let entries: &[EncodedPoint] =
+            bytemuck::try_cast_slice(&bytes[HEADER..]).expect("fixed SRS alignment");
+        FixedPallasStorage::General(entries)
+    };
+    FixedPallasSrs {
+        storage,
+        n,
+        lane_shift,
+    }
 }
 
 #[cfg(test)]
@@ -207,9 +298,70 @@ mod tests {
     #[test]
     #[should_panic(expected = "fixed SRS infinity flag")]
     fn rejects_invalid_identity_flag() {
-        let mut b = encode(&[Pallas::generator()]);
+        let mut b = encode(&[Pallas::zero(), Pallas::generator()]);
         b[HEADER + 64] = 2;
-        decode(&b, 1).point::<PallasParameters>(0, 0);
+        decode(&b, 2).point::<PallasParameters>(0, 0);
+    }
+    #[test]
+    #[should_panic(expected = "fixed SRS infinity flag")]
+    fn rejects_invalid_header_flags() {
+        let mut b = encode(&[Pallas::generator()]);
+        b[18] = 2;
+        decode(&b, 1);
+    }
+    #[test]
+    fn coupled_and_uncoupled_finite_pallas_tables_match_reference() {
+        let g = Pallas::generator();
+        let bases: Vec<Pallas> = (1..=12u64)
+            .map(|k| (g * Fq::from(k * 7 + 5)).into_affine())
+            .collect();
+        let prefix_fq = [
+            Fq::ZERO,
+            Fq::from(1u64),
+            -Fq::from(1u64),
+            Fq::from_bigint(BigInt([u64::MAX, u64::MAX, 0, 0])).unwrap(), // 2^128 - 1
+            Fq::from_bigint(BigInt([0, 0, 1, 0])).unwrap(),               // 2^128
+            Fq::from_bigint(BigInt([u64::MAX, u64::MAX, 3, 0])).unwrap(), // 2^130 - 1
+            Fq::from_bigint(BigInt([0, 0, 4, 0])).unwrap(),               // 2^130
+            Fq::from_bigint(BigInt([0x1234, 0x5678, 0x9abc, 0x3fff_ffff_ffff_ffff])).unwrap(),
+        ];
+        let prefix_ks: Vec<BigInt<4>> = prefix_fq.iter().map(|s| s.into_bigint()).collect();
+        let h = (g * Fq::from(31u64)).into_affine();
+        let hk = (-Fq::from(17u64)).into_bigint();
+        let tail = [
+            (g * Fq::from(101u64)).into_affine(),
+            Pallas::zero(),
+            -(g * Fq::from(101u64)).into_affine(),
+        ];
+        let tk = [
+            Fq::from(123456789u64).into_bigint(),
+            Fq::from(42u64).into_bigint(),
+            (-Fq::from(999u64)).into_bigint(),
+        ];
+        let mut expected = h.mul_bigint(hk);
+        for (p, k) in bases[..prefix_ks.len()].iter().zip(&prefix_ks) {
+            expected += p.mul_bigint(*k);
+        }
+        for (p, k) in tail.iter().zip(&tk) {
+            expected += p.mul_bigint(*k);
+        }
+        for shift in [128usize, 130usize] {
+            let blob = encode_with_shift(&bases, shift);
+            let table = decode(&blob, bases.len());
+            assert_eq!(table.lane_shift(), shift);
+            let coords = table.finite_coords().expect("all-finite Pallas table must be packed");
+            let actual = mina_curves::pasta::canonical_pallas::msm_bigint_fixed_prefix_coords(
+                coords,
+                shift,
+                &prefix_ks,
+                &h,
+                hk,
+                &tail,
+                &tk,
+                Some(13),
+            );
+            assert_eq!(actual, expected, "Pallas shift={shift} mismatch");
+        }
     }
     #[test]
     #[should_panic(expected = "fixed SRS base field")]
@@ -238,6 +390,18 @@ pub(crate) fn msm(
         return mina_curves::pasta::canonical_pallas::msm_bigint(&points,&scalars);
     }
     let width=option_env!("MIZU_PALLAS_WINDOW").map(|s|s.parse().expect("Pallas fixed window"));
+    if let Some(coords) = table.finite_coords() {
+        return mina_curves::pasta::canonical_pallas::msm_bigint_fixed_prefix_coords(
+            coords,
+            table.lane_shift(),
+            ks,
+            h,
+            *hk,
+            tail,
+            tk,
+            width,
+        );
+    }
     mina_curves::pasta::canonical_pallas::msm_bigint_fixed_prefix(table.rows(),ks,h,*hk,tail,tk,width)
 }
 

@@ -33,11 +33,13 @@ where
             assert_eq!(point_spikes::add(&a, &b, curve), (a + b).into_affine());
         }
         assert_eq!(point_spikes::double(&a, curve), (a + a).into_affine());
+        assert_eq!(point_spikes::double_software(&a, curve), (a + a).into_affine());
     }
     // Prime-order Pasta has no nonidentity order-two point. This synthetic
     // unchecked input tests only the zero-denominator guard, not provenance.
     let zero_y = Affine::<C>::new_unchecked(g.x, C::BaseField::ZERO);
     assert!(point_spikes::double(&zero_y, curve).is_zero());
+    assert!(point_spikes::double_software(&zero_y, curve).is_zero());
     assert!(point_spikes::add(&zero_y, &zero_y, curve).is_zero());
 }
 

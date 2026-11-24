@@ -77,6 +77,22 @@ pub struct PodPallas {
     pub _pad: [u8; 7],
 }
 
+// Compile-time ABI proof that `PodVesta`/`PodPallas` match `Vesta`/`Pallas`
+// field-for-field (`#[repr(C)]` Affine over `#[repr(transparent)]` Fp/BigInt).
+const _: () = {
+    assert!(core::mem::size_of::<PodVesta>() == core::mem::size_of::<Vesta>());
+    assert!(core::mem::align_of::<PodVesta>() == core::mem::align_of::<Vesta>());
+    assert!(core::mem::offset_of!(PodVesta, x) == core::mem::offset_of!(Vesta, x));
+    assert!(core::mem::offset_of!(PodVesta, y) == core::mem::offset_of!(Vesta, y));
+    assert!(core::mem::offset_of!(PodVesta, infinity) == core::mem::offset_of!(Vesta, infinity));
+
+    assert!(core::mem::size_of::<PodPallas>() == core::mem::size_of::<Pallas>());
+    assert!(core::mem::align_of::<PodPallas>() == core::mem::align_of::<Pallas>());
+    assert!(core::mem::offset_of!(PodPallas, x) == core::mem::offset_of!(Pallas, x));
+    assert!(core::mem::offset_of!(PodPallas, y) == core::mem::offset_of!(Pallas, y));
+    assert!(core::mem::offset_of!(PodPallas, infinity) == core::mem::offset_of!(Pallas, infinity));
+};
+
 fn vesta_to_pod(v: &Vesta) -> PodVesta {
     PodVesta {
         x: v.x.0 .0,
@@ -131,7 +147,7 @@ fn read_u64_le(bytes: &[u8]) -> (u64, &[u8]) {
     (u64::from_le_bytes(head.try_into().unwrap()), rest)
 }
 
-fn read_vesta_section(bytes: &[u8]) -> (&[Vesta], &[u8]) {
+fn read_vesta_pods(bytes: &[u8]) -> (&[PodVesta], &[u8]) {
     let (len, rest) = read_u64_le(bytes);
     let len = len as usize;
     let byte_len = len
@@ -139,15 +155,21 @@ fn read_vesta_section(bytes: &[u8]) -> (&[Vesta], &[u8]) {
         .expect("section overflow");
     assert!(rest.len() >= byte_len, "blob truncated mid vesta section");
     let (section, tail) = rest.split_at(byte_len);
-    let pods: &[PodVesta] = bytemuck::cast_slice(section);
-    // SAFETY: PodVesta is `#[repr(C)]` and bit-identical to mina-curves's Vesta
-    // affine for the pinned arkworks version (checked by the layout tests).
-    let vestas: &[Vesta] =
-        unsafe { core::slice::from_raw_parts(pods.as_ptr() as *const Vesta, pods.len()) };
-    (vestas, tail)
+    (bytemuck::cast_slice(section), tail)
 }
 
-fn read_pallas_section(bytes: &[u8]) -> (&[Pallas], &[u8]) {
+fn cast_vesta_pods(pods: &[PodVesta]) -> &[Vesta] {
+    assert!(
+        pods.iter().all(|p| p.infinity <= 1),
+        "invalid bool discriminant in vesta section"
+    );
+    // SAFETY: `Vesta` is `#[repr(C)]` with `#[repr(transparent)]` field limbs,
+    // compile-time offset/size/align assertions above prove layout equality,
+    // and every `infinity` byte has been validated to be `0` or `1`.
+    unsafe { core::slice::from_raw_parts(pods.as_ptr() as *const Vesta, pods.len()) }
+}
+
+fn read_pallas_pods(bytes: &[u8]) -> (&[PodPallas], &[u8]) {
     let (len, rest) = read_u64_le(bytes);
     let len = len as usize;
     let byte_len = len
@@ -155,12 +177,16 @@ fn read_pallas_section(bytes: &[u8]) -> (&[Pallas], &[u8]) {
         .expect("section overflow");
     assert!(rest.len() >= byte_len, "blob truncated mid pallas section");
     let (section, tail) = rest.split_at(byte_len);
-    let pods: &[PodPallas] = bytemuck::cast_slice(section);
-    // SAFETY: PodPallas is `#[repr(C)]` and bit-identical to mina-curves's
-    // Pallas affine for the pinned arkworks version.
-    let pallases: &[Pallas] =
-        unsafe { core::slice::from_raw_parts(pods.as_ptr() as *const Pallas, pods.len()) };
-    (pallases, tail)
+    (bytemuck::cast_slice(section), tail)
+}
+
+fn cast_pallas_pods(pods: &[PodPallas]) -> &[Pallas] {
+    assert!(
+        pods.iter().all(|p| p.infinity <= 1),
+        "invalid bool discriminant in pallas section"
+    );
+    // SAFETY: same layout and `infinity <= 1` invariants as `cast_vesta_pods`.
+    unsafe { core::slice::from_raw_parts(pods.as_ptr() as *const Pallas, pods.len()) }
 }
 
 fn read_one_pallas(bytes: &[u8]) -> (Pallas, &[u8]) {
@@ -168,7 +194,8 @@ fn read_one_pallas(bytes: &[u8]) -> (Pallas, &[u8]) {
     assert!(bytes.len() >= byte_len, "blob truncated reading one Pallas");
     let (section, tail) = bytes.split_at(byte_len);
     let pod: &PodPallas = bytemuck::from_bytes(section);
-    // SAFETY: same as `read_pallas_section`.
+    assert!(pod.infinity <= 1, "invalid bool discriminant in Pallas point");
+    // SAFETY: same layout and `infinity <= 1` invariants as `read_pallas_section`.
     let p = unsafe { *(pod as *const PodPallas as *const Pallas) };
     (p, tail)
 }
@@ -286,20 +313,29 @@ pub fn encode_embedded_verifier_blob(
 fn decode_verifier_blob_inner<'a>(
     bytes: &'a [u8], copy_vesta: bool, use_setup: bool, wrap_prefix: Option<usize>, use_fixed: bool, use_pallas: bool, static_wrap: Option<&'static[Pallas]>,
 ) -> (Verifier, &'a [Vesta], Option<crate::fixed_srs::FixedVestaSrs<'a>>, Option<crate::fixed_pallas::FixedPallasSrs<'a>>) {
-    let (vesta_g, rest) = read_vesta_section(bytes);
-    let (wrap_g, rest) = read_pallas_section(rest);
-    let full_wrap_len = wrap_g.len();
+    let (vesta_pods, rest) = read_vesta_pods(bytes);
+    let vesta_len = vesta_pods.len();
+    // Skip scanning unused Montgomery Vesta points when the embedded fixed
+    // table replaces them (avoids touching 65K unused .rodata words).
+    let vesta_g: &'a [Vesta] = if copy_vesta || !use_fixed {
+        cast_vesta_pods(vesta_pods)
+    } else {
+        &[]
+    };
+    let (wrap_pods, rest) = read_pallas_pods(rest);
+    let full_wrap_len = wrap_pods.len();
     // Parse the full section before taking a view: later sections keep their
     // original offsets, and the trusted Lagrange prefix still comes from the
-    // complete embedded SRS. Only the verification scratch ownership narrows.
-    let wrap_g = if let Some(len) = wrap_prefix {
-        assert!(len <= wrap_g.len(), "opening rounds exceed embedded wrap SRS");
-        &wrap_g[..len]
+    // complete embedded SRS. Only validate/cast the prefix actually used.
+    let wrap_prefix_len = if let Some(len) = wrap_prefix {
+        assert!(len <= full_wrap_len, "opening rounds exceed embedded wrap SRS");
+        len
     } else {
-        wrap_g
+        full_wrap_len
     };
+    let wrap_pods_prefix = &wrap_pods[..wrap_prefix_len];
     let (wrap_h, rest) = read_one_pallas(rest);
-    let (wrap_basis_pts, rest) = read_pallas_section(rest);
+    let (wrap_basis_pods, rest) = read_pallas_pods(rest);
     let (step_num_chunks, rest) = read_u64_le(rest);
     let (vk_bytes, tail) = read_bytes_section(rest);
 
@@ -313,13 +349,18 @@ fn decode_verifier_blob_inner<'a>(
     // Wrap (Pallas) SRS: `g` + `h`. Lagrange basis is seeded below.
     let mut wrap_srs = WrapSrs::default();
     wrap_srs.g = if let Some(static_g) = static_wrap {
-        // The embedded caller obtains this static view by parsing the exact
-        // same blob. Preserve the proof-derived logical prefix and verify the
-        // pointer before borrowing; ordinary runtime input is always owned.
-        assert_eq!(static_g.len(),full_wrap_len,"embedded Pallas storage length");
-        assert_eq!(static_g.as_ptr(),wrap_g.as_ptr(),"embedded Pallas storage binding");
-        poly_commitment::generators::Generators::borrowed(&static_g[..wrap_g.len()])
-    } else { wrap_g.to_vec().into() };
+        // The embedded caller already validated this static prefix from the
+        // exact same blob. Verify pointer & length before borrowing.
+        assert_eq!(static_g.len(), wrap_prefix_len, "embedded Pallas storage length");
+        assert_eq!(
+            static_g.as_ptr() as *const PodPallas,
+            wrap_pods_prefix.as_ptr(),
+            "embedded Pallas storage binding"
+        );
+        poly_commitment::generators::Generators::borrowed(static_g)
+    } else {
+        cast_pallas_pods(wrap_pods_prefix).to_vec().into()
+    };
     wrap_srs.h = wrap_h;
 
     let wrap_vk: WrapVerifierIndex =
@@ -348,11 +389,12 @@ fn decode_verifier_blob_inner<'a>(
     let domain_size = wrap_vk.domain.size as usize;
     let public_len = wrap_vk.public;
     assert!(
-        public_len <= wrap_basis_pts.len(),
+        public_len <= wrap_basis_pods.len(),
         "wrap VK needs {public_len} Lagrange commitments but the blob carries {}",
-        wrap_basis_pts.len()
+        wrap_basis_pods.len()
     );
-    let basis: Vec<PolyComm<Pallas>> = wrap_basis_pts[..public_len]
+    let wrap_basis_pts = cast_pallas_pods(&wrap_basis_pods[..public_len]);
+    let basis: Vec<PolyComm<Pallas>> = wrap_basis_pts
         .iter()
         .map(|p| PolyComm {
             chunks: alloc::vec![*p],
@@ -371,9 +413,9 @@ fn decode_verifier_blob_inner<'a>(
             rest=&rest[padding..];
         }
         let fixed = if rest.starts_with(crate::fixed_srs::MAGIC) {
-            let n = crate::fixed_srs::HEADER.checked_add(vesta_g.len().checked_mul(144).expect("Vesta table overflow")).expect("Vesta table overflow");
+            let n = crate::fixed_srs::encoded_byte_len(rest);
             assert!(rest.len()>=n,"truncated Vesta table");
-            let table=crate::fixed_srs::decode(&rest[..n],vesta_g.len());rest=&rest[n..];Some(table)
+            let table=crate::fixed_srs::decode(&rest[..n],vesta_len);rest=&rest[n..];Some(table)
         } else {None};
         assert!(!use_fixed || fixed.is_some(),"missing fixed SRS table");
         let pallas=if rest.is_empty() {None} else {
@@ -496,14 +538,24 @@ fn decode_embedded_verifier_inner(
     let use_setup = matches!(option_env!("MIZU_PRECOMPUTED_SETUP"), Some("1"));
     let use_fixed = matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1"));
     let use_pallas = matches!(option_env!("MIZU_FIXED_PALLAS_SRS"), Some("1"));
-    let static_wrap=if matches!(option_env!("MIZU_BORROW_PALLAS_SRS"),Some("1")) {
-        let (_,rest)=read_vesta_section(bytes);let (g,_)=read_pallas_section(rest);Some(g)
-    } else {None};
+    let static_wrap = if matches!(option_env!("MIZU_BORROW_PALLAS_SRS"), Some("1")) {
+        let (_, rest) = read_vesta_pods(bytes);
+        let (wrap_pods, _) = read_pallas_pods(rest);
+        let prefix = if let Some(len) = wrap_prefix {
+            assert!(len <= wrap_pods.len(), "opening rounds exceed embedded wrap SRS");
+            &wrap_pods[..len]
+        } else {
+            wrap_pods
+        };
+        Some(cast_pallas_pods(prefix))
+    } else {
+        None
+    };
     let (verifier, generators, fixed_vesta, fixed_pallas) = decode_verifier_blob_inner(bytes, !borrow_vesta, use_setup, wrap_prefix, use_fixed, use_pallas, static_wrap);
     EmbeddedVerifier {
         verifier,
         digest,
-        vesta_generators: borrow_vesta.then_some(generators),
+        vesta_generators: (borrow_vesta && !use_fixed).then_some(generators),
         fixed_vesta,
         fixed_pallas,
     }

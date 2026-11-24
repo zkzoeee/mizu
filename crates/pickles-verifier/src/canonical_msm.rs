@@ -313,16 +313,35 @@ pub(crate) fn vesta_msm_fixed(
 ) -> Projective<VestaParameters> {
     use mina_curves::pasta::point_spikes::{PreparedTerms, PastaCurve, CarryWindow, msm_prepared};
     assert_eq!(table.len(), scalars.len(), "fixed SRS scalar count");
-    if matches!(option_env!("MIZU_FIXED_VESTA_COUPLED"), Some("1"))
-        && matches!(option_env!("MIZU_VESTA_WINDOW"), Some("16"))
-    {
-        // Only the explicit width16 configuration uses coupled recoding.
-        // All heuristic/other-window configurations retain the original path.
-        if matches!(option_env!("MIZU_BORROW_POSITIONAL_SCALARS"), Some("1")) {
-            return vesta_msm_fixed_borrowed(table, scalars);
+    if matches!(option_env!("MIZU_FIXED_VESTA_COUPLED"), Some("1")) {
+        let coupled_width = match (option_env!("MIZU_VESTA_WINDOW"), table.lane_shift()) {
+            (Some("16"), 128) => Some(16usize),
+            (Some("15"), 120) => Some(15usize),
+            (Some("14"), 126) => Some(14usize),
+            _ => None,
+        };
+        if let Some(width) = coupled_width {
+            if matches!(option_env!("MIZU_BORROW_POSITIONAL_SCALARS"), Some("1")) {
+                if let Some(coords) = table.finite_coords() {
+                    let result = mina_curves::pasta::point_spikes::msm_vesta_finite_borrowed::<
+                        CanonicalVestaParameters,
+                    >(coords, scalars, width, table.lane_shift());
+                    return Projective::new_unchecked(to_fq(result.x), to_fq(result.y), to_fq(result.z));
+                }
+                if width == 16 {
+                    return vesta_msm_fixed_borrowed(table, scalars);
+                }
+            }
+            if width == 16 {
+                return vesta_msm_fixed_coupled(table, scalars);
+            }
         }
-        return vesta_msm_fixed_coupled(table, scalars);
     }
+    assert_eq!(
+        table.lane_shift(),
+        128,
+        "uncoupled fixed Vesta fallback requires 128-bit lane shift"
+    );
     let mut terms = PreparedTerms::<CanonicalVestaParameters>::with_capacity(2 * scalars.len(), PastaCurve::Vesta);
     for lane in 0..2 {
         for (i, scalar) in scalars.iter().enumerate() {
