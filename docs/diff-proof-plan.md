@@ -599,4 +599,44 @@ Measured via `mirror-records` (`depth = 35`, `MIZU_POSEIDON_PRECOMPILE=1`, `--fe
 Native unit test `batch_mirror::tests::batch_multiproof_matches_dense_merkle_tree_and_saves_hashes` verifies bit-exact `(old_root, new_root)` equivalence against a dense reference Merkle tree.
 
 ### Dual-root commitment (Option 1 `keccakDiffRoot` + Option 3 `keccakGlobalRoot`)
-Modes 5 and 6 also commit `keccak_diff_root` — a compact depth $\lceil \log_2 N \rceil$ Keccak Merkle tree over the same `N` sorted `keccak(H_p ‖ evm_fields)` leaves (tested by `keccak_diff_root_and_client_inclusion_proofs_verify`). Adding `keccakDiffRoot` alongside `keccakGlobalRoot` adds **+0 shards** and only **+0.53%–0.55% main cells** (`N=64` Mode 5: `1.676B → 1.685B`; `N=256` Mode 5: `6.469B → 6.504B`, `20` shards; `N=256` Mode 6: `4.918B → 4.945B`, `16` shards), letting clients verify recent diffs directly from any unmodified Mina indexer GraphQL API (~25k gas) while still supporting arbitrary/dormant account proofs against `keccakGlobalRoot` (~50k gas).
+Modes 5 and 6 commit **both** roots in the same Phase 2 pass:
+- **`keccakDiffRoot` (Option 1):** compact depth $\lceil \log_2 N \rceil$ binary Keccak Merkle tree over the `N` sorted `keccak(H_p ‖ evm_fields)` leaves (odd trailing nodes paired with `[0u8; 32]`; tested by `keccak_diff_root_and_client_inclusion_proofs_verify`).
+- **`keccakGlobalRoot` (Option 3):** depth-35 global Keccak mirror updated via `batch_merkle_update`.
+
+Adding `keccakDiffRoot` alongside `keccakGlobalRoot` adds **+0 shards** and only **+0.53%–0.55% main cells**:
+
+| Workload (`depth = 35`) | Mode | Shards | Cycles | Main cells | Overhead vs Option 3 alone |
+| --- | --- | ---: | ---: | ---: | ---: |
+| `N = 64` | 5 (unique) | `7` (`+0`) | `7,696,893` | `1.685B` | `+0.53%` |
+| `N = 64` | 6 (25% hot) | `7` (`+0`) | `5,795,253` | `1.269B` | `+0.55%` |
+| `N = 256` | 5 (unique) | `20` (`+0`) | `29,677,982` | `6.504B` | `+0.55%` |
+| `N = 256` | 6 (25% hot) | `16` (`+0`) | `22,593,151` | `4.945B` | `+0.54%` |
+
+### Client & Ethereum verification flow (using `mina-indexer` GraphQL)
+1. **Using `keccakDiffRoot` (zero custom infra, ~25k gas):**
+   - Client queries any **unmodified `mina-indexer` GraphQL API** for the updated accounts in block/epoch $H$, hashes `keccak256(abi.encodePacked(H_p, evmFields))` locally in JS/TS (`< 1 ms`), builds the depth $\lceil \log_2 N \rceil$ tree, and submits `6–8` sibling hashes to Ethereum.
+   - Ideal for bridge deposits, withdrawals, actions, and recent zkApp state transitions.
+2. **Using `keccakGlobalRoot` (arbitrary / dormant accounts, ~50k gas):**
+   - A thin sparse Keccak-tree sidecar/resolver on `mina-indexer` exposes one GraphQL query `keccakMerklePath(publicKey, tokenId)` returning `(leafIndex, H_p, evmFields, siblings[35])`.
+   - The sidecar is **100% untrusted** — Mizu's SP1 proof binds `P_old → P_new` to Mina's verified Pickles proof and `K_old → K_new` to Ethereum's stored `keccakGlobalRoot`.
+3. **Solidity leaf & path check (identical for both roots, varying only loop depth):**
+   ```solidity
+   bytes32 node = keccak256(abi.encodePacked(poseidonLeafHash, evmFields));
+   for (uint256 i = 0; i < siblings.length; i++) {
+       node = ((index >> i) & 1) == 0
+           ? keccak256(abi.encodePacked(node, siblings[i]))
+           : keccak256(abi.encodePacked(siblings[i], node));
+   }
+   require(node == expectedKeccakRoot, "invalid Mina state proof");
+   ```
+
+### Estimated combined latency (`o1-verifier` compact `w=16` + dual-root mirror)
+Anchored to measured `mizu/dev` compact `w=16` (`67` shards: `63.8 s` core on RTX 4090, `117.1 s` core on A40) + measured dual-root mirror scaling (`~19M–25M` cells/account). Because Mina's block time is ~180 s, single-block cadence (`K = 1`) keeps up in real time on a single RTX 4090:
+
+| Account updates (`N`) | Total shards *(25% hot – unique)* | Core STARK (4090) | Core STARK (A40) | Full Groth16 est. (4090, CUDA gnark) | Full Groth16 est. (A40, CUDA gnark) |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| `0` *(measured)* | `67` | `63.8 s` | `117.1 s` | `~135 s` | `~215 s` |
+| `64` | `71 – 72` | `~68 – 69 s` | `~124 – 126 s` | `~141 – 143 s` | `~225 – 228 s` |
+| `128` | `74 – 76` | `~71 – 73 s` | `~129 – 133 s` | `~146 – 149 s` | `~233 – 238 s` |
+| `256` | `81 – 85` | `~77 – 81 s` | `~141 – 149 s` | `~155 – 161 s` | `~250 – 260 s` |
+| `512` | `93 – 101` | `~88 – 96 s` | `~162 – 176 s` | `~172 – 184 s` | `~280 – 300 s` |
