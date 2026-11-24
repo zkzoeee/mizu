@@ -323,9 +323,9 @@ pub(crate) fn vesta_msm_fixed(
         if let Some(width) = coupled_width {
             if matches!(option_env!("MIZU_BORROW_POSITIONAL_SCALARS"), Some("1")) {
                 if let Some(coords) = table.finite_coords() {
-                    let result = mina_curves::pasta::point_spikes::msm_vesta_finite_borrowed::<
+                    let result = mina_curves::pasta::point_spikes::msm_vesta_finite_borrowed_with_negatives::<
                         CanonicalVestaParameters,
-                    >(coords, scalars, width, table.lane_shift());
+                    >(coords, table.finite_negatives(), scalars, width, table.lane_shift());
                     return Projective::new_unchecked(to_fq(result.x), to_fq(result.y), to_fq(result.z));
                 }
                 if width == 16 {

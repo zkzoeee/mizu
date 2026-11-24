@@ -21,7 +21,10 @@ struct EncodedPoint {
 
 #[derive(Clone, Copy)]
 enum FixedVestaStorage<'a> {
-    Finite(&'a [[u64; 8]]),
+    Finite {
+        coords: &'a [[u64; 8]],
+        negatives: Option<&'a [[u64; 8]]>,
+    },
     General(&'a [EncodedPoint]),
 }
 
@@ -42,7 +45,15 @@ impl<'a> FixedVestaSrs<'a> {
     /// generator in the baked SRS is finite (true for all production Mina SRSes).
     pub(crate) fn finite_coords(&self) -> Option<&'a [[u64; 8]]> {
         match self.storage {
-            FixedVestaStorage::Finite(coords) => Some(coords),
+            FixedVestaStorage::Finite { coords, .. } => Some(coords),
+            FixedVestaStorage::General(_) => None,
+        }
+    }
+    /// Optional pre-baked `-G` coordinates borrowed directly from `.rodata`
+    /// when compiled with `MIZU_PREBAKE_NEGATIVES=1`.
+    pub(crate) fn finite_negatives(&self) -> Option<&'a [[u64; 8]]> {
+        match self.storage {
+            FixedVestaStorage::Finite { negatives, .. } => negatives,
             FixedVestaStorage::General(_) => None,
         }
     }
@@ -53,7 +64,7 @@ impl<'a> FixedVestaSrs<'a> {
         assert_eq!(C::BaseField::MODULUS, Fq::MODULUS, "fixed SRS base field");
         assert!(lane < 2 && i < self.n, "fixed SRS point index");
         match self.storage {
-            FixedVestaStorage::Finite(coords) => {
+            FixedVestaStorage::Finite { coords, .. } => {
                 let c = &coords[lane * self.n + i];
                 Affine::new_unchecked(
                     C::BaseField::from_bigint(BigInt([c[0], c[1], c[2], c[3]]))
@@ -110,8 +121,9 @@ pub(crate) fn encode_with_shift(g: &[Vesta], lane_shift: usize) -> Vec<u8> {
         matches!(lane_shift, 120 | 126 | 128),
         "unsupported fixed Vesta lane shift {lane_shift}"
     );
+    let prebake_negatives = matches!(option_env!("MIZU_PREBAKE_NEGATIVES"), Some("1"));
     // Host-only: fixture suites encode the same SRS for many VKs. Cache by
-    // every generator byte and lane shift so changed-SRS tests remain real.
+    // every generator byte, lane shift, and negative-prebake setting.
     #[cfg(feature = "std")]
     {
         use blake2::{Blake2s256, Digest};
@@ -121,8 +133,9 @@ pub(crate) fn encode_with_shift(g: &[Vesta], lane_shift: usize) -> Vec<u8> {
         };
         static CACHE: OnceLock<Mutex<BTreeMap<[u8; 32], Vec<u8>>>> = OnceLock::new();
         let mut hash = Blake2s256::new();
-        hash.update(b"fixed-vesta-srs/v2");
+        hash.update(b"fixed-vesta-srs/v3");
         hash.update((lane_shift as u64).to_le_bytes());
+        hash.update([u8::from(prebake_negatives)]);
         for p in g {
             for word in p.x.0 .0.into_iter().chain(p.y.0 .0) {
                 hash.update(word.to_le_bytes());
@@ -136,14 +149,14 @@ pub(crate) fn encode_with_shift(g: &[Vesta], lane_shift: usize) -> Vec<u8> {
             .unwrap();
         cache
             .entry(key)
-            .or_insert_with(|| encode_uncached(g, lane_shift))
+            .or_insert_with(|| encode_uncached(g, lane_shift, prebake_negatives))
             .clone()
     }
     #[cfg(not(feature = "std"))]
-    encode_uncached(g, lane_shift)
+    encode_uncached(g, lane_shift, prebake_negatives)
 }
 
-fn encode_uncached(g: &[Vesta], lane_shift: usize) -> Vec<u8> {
+fn encode_uncached(g: &[Vesta], lane_shift: usize, prebake_negatives: bool) -> Vec<u8> {
     let high: Vec<_> = g
         .iter()
         .map(|p| {
@@ -156,11 +169,20 @@ fn encode_uncached(g: &[Vesta], lane_shift: usize) -> Vec<u8> {
         .collect();
     let high = <Vesta as AffineRepr>::Group::normalize_batch(&high);
     let all_finite = g.iter().chain(&high).all(|p| !p.infinity);
+    let with_negatives = all_finite && prebake_negatives;
     let entry_bytes = if all_finite { 64 } else { 72 };
-    let mut out = Vec::with_capacity(HEADER + 2 * g.len() * entry_bytes);
+    let plane_mult = if with_negatives { 4 } else { 2 };
+    let flags: u64 = if with_negatives {
+        3
+    } else if all_finite {
+        1
+    } else {
+        0
+    };
+    let mut out = Vec::with_capacity(HEADER + plane_mult * g.len() * entry_bytes);
     out.extend_from_slice(MAGIC);
     out.extend_from_slice(&(g.len() as u64).to_le_bytes());
-    let meta: u64 = 2u64 | (u64::from(all_finite) << 16) | ((lane_shift as u64) << 32);
+    let meta: u64 = 2u64 | (flags << 16) | ((lane_shift as u64) << 32);
     out.extend_from_slice(&meta.to_le_bytes());
     for modulus in [Fq::MODULUS, Fp::MODULUS] {
         for word in modulus.0 {
@@ -173,6 +195,15 @@ fn encode_uncached(g: &[Vesta], lane_shift: usize) -> Vec<u8> {
             let y = p.y.into_bigint().0;
             let coords = [x[0], x[1], x[2], x[3], y[0], y[1], y[2], y[3]];
             out.extend_from_slice(bytemuck::bytes_of(&coords));
+        }
+        if with_negatives {
+            for p in g.iter().chain(&high) {
+                let np = -*p;
+                let x = np.x.into_bigint().0;
+                let y = np.y.into_bigint().0;
+                let coords = [x[0], x[1], x[2], x[3], y[0], y[1], y[2], y[3]];
+                out.extend_from_slice(bytemuck::bytes_of(&coords));
+            }
         }
     } else {
         for p in g.iter().chain(&high) {
@@ -204,9 +235,10 @@ pub(crate) fn encoded_byte_len(bytes: &[u8]) -> usize {
     let word = |at| u64::from_le_bytes(bytes[at..at + 8].try_into().unwrap());
     let n = usize::try_from(word(8)).expect("fixed SRS length overflow");
     let flags = (word(16) >> 16) & 0xffff;
-    assert!(flags <= 1, "fixed SRS infinity flag");
-    let entry_bytes = if flags == 1 { 64 } else { 72 };
-    n.checked_mul(2)
+    assert!(matches!(flags, 0 | 1 | 3), "fixed SRS infinity flag");
+    let entry_bytes = if flags == 0 { 72 } else { 64 };
+    let plane_mult = if flags == 3 { 4 } else { 2 };
+    n.checked_mul(plane_mult)
         .and_then(|c| c.checked_mul(entry_bytes))
         .and_then(|s| s.checked_add(HEADER))
         .expect("fixed SRS length overflow")
@@ -226,12 +258,13 @@ pub(crate) fn decode(bytes: &[u8], expected: usize) -> FixedVestaSrs<'_> {
     let raw_shift = (meta >> 32) as usize;
     let lane_shift = if raw_shift == 0 { 128 } else { raw_shift };
     assert_eq!(lanes, 2, "fixed SRS lanes");
-    assert!(flags <= 1, "fixed SRS infinity flag");
+    assert!(matches!(flags, 0 | 1 | 3), "fixed SRS infinity flag");
     assert!(
         matches!(lane_shift, 120 | 126 | 128),
         "fixed SRS lane shift"
     );
-    let all_finite = flags == 1;
+    let all_finite = flags != 0;
+    let with_negatives = flags == 3;
     for (at, modulus) in [(24, Fq::MODULUS), (56, Fp::MODULUS)] {
         assert_eq!(
             core::array::from_fn::<_, 4, _>(|i| word(at + 8 * i)),
@@ -239,7 +272,8 @@ pub(crate) fn decode(bytes: &[u8], expected: usize) -> FixedVestaSrs<'_> {
             "fixed SRS field tag"
         );
     }
-    let count = n.checked_mul(2).expect("fixed SRS length overflow");
+    let plane_mult = if with_negatives { 4 } else { 2 };
+    let count = n.checked_mul(plane_mult).expect("fixed SRS length overflow");
     let entry_bytes = if all_finite { 64 } else { 72 };
     let size = count
         .checked_mul(entry_bytes)
@@ -247,9 +281,20 @@ pub(crate) fn decode(bytes: &[u8], expected: usize) -> FixedVestaSrs<'_> {
         .expect("fixed SRS length overflow");
     assert_eq!(bytes.len(), size, "fixed SRS byte length");
     let storage = if all_finite {
-        let coords: &[[u64; 8]] =
+        let all_coords: &[[u64; 8]] =
             bytemuck::try_cast_slice(&bytes[HEADER..]).expect("fixed SRS alignment");
-        FixedVestaStorage::Finite(coords)
+        let two_n = n.checked_mul(2).expect("fixed SRS length overflow");
+        if with_negatives {
+            FixedVestaStorage::Finite {
+                coords: &all_coords[..two_n],
+                negatives: Some(&all_coords[two_n..]),
+            }
+        } else {
+            FixedVestaStorage::Finite {
+                coords: all_coords,
+                negatives: None,
+            }
+        }
     } else {
         let entries: &[EncodedPoint] =
             bytemuck::try_cast_slice(&bytes[HEADER..]).expect("fixed SRS alignment");
