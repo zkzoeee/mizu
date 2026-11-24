@@ -576,3 +576,24 @@ plan belong before that pipeline work**, not after.
   proof does not establish completeness: the proof attests `P_old → P_new` and
   says nothing about a prover-supplied witness list. Omit an account and the
   mirror commits to a state that never existed, with nothing to catch it.
+
+## 2026-11-24 benchmark (`feat/mirror-tree-opt`): batched multiproof + dedup + `keccak(H_p ‖ evm_fields)`
+
+Implemented in `crates/poseidon-bench/src/batch_mirror.rs` and wired as Modes 5 (all-unique accounts) and 6 (25% hot-account repeats) in `crates/poseidon-bench/src/mirror.rs`, combining:
+1. **Sorted bottom-up Merkle multiproof** (`batch_merkle_update`) — shared ancestors hashed once per level instead of once per account.
+2. **Hot-account deduplication** (`dedup_diffs`) — collapses repeated touches to the same leaf index into one net `(first_old → last_new)` transition.
+3. **Bound leaves `keccak(H_p ‖ evm_fields)`** (`keccak_leaf_bound`) — 64 bytes (1 keccak permutation) instead of 320 bytes (3 permutations).
+4. **Contiguous phase separation** — all Poseidon walks, then all Keccak walks (`--features keccak-precompile`, zero new AIRs / zero wrap-VK impact).
+
+Measured via `mirror-records` (`depth = 35`, `MIZU_POSEIDON_PRECOMPILE=1`, `--features keccak-precompile`):
+
+| Workload (`depth = 35`) | Mode | Cycles | Shards | Main cells | `Global` cells | `KeccakPermute` rows | `PallasPoseidon` rows |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `N = 64` | 1 (naive full mirror) | `9,077,624` | `7` | `1.964B` | `616.7M` | `121,344` | `302,720` |
+| `N = 64` | **5 (opt 1+2+3+5, unique)** | **`7,620,430` (`-16.1%`)** | `7` | **`1.676B` (`-14.7%`)** | `549.1M` (`-11.0%`) | **`92,256` (`-24.0%`)** | **`260,704` (`-13.9%`)** |
+| `N = 64` | **6 (opt 1+2+3+5, 25% hot)** | **`5,736,679` (`-36.8%`)** | `7` | **`1.262B` (`-35.8%`)** | `413.4M` (`-33.0%`) | **`69,408` (`-42.8%`)** | **`196,032` (`-35.2%`)** |
+| `N = 256` | 1 (naive full mirror) | `36,283,404` | `23` | `7.842B` | `2.457B` | `485,376` | `1,210,880` |
+| `N = 256` | **5 (opt 1+2+3+5, unique)** | **`29,374,343` (`-19.0%`)** | **`20` (`-13.0%`)** | **`6.469B` (`-17.5%`)** | `2.126B` (`-13.5%`) | **`354,336` (`-27.0%`)** | **`1,009,056` (`-16.7%`)** |
+| `N = 256` | **6 (opt 1+2+3+5, 25% hot)** | **`22,364,196` (`-38.4%`)** | **`16` (`-30.4%`)** | **`4.918B` (`-37.3%`)** | `1.614B` (`-34.3%`) | **`269,952` (`-44.4%`)** | **`766,496` (`-36.7%`)** |
+
+Native unit test `batch_mirror::tests::batch_multiproof_matches_dense_merkle_tree_and_saves_hashes` verifies bit-exact `(old_root, new_root)` equivalence against a dense reference Merkle tree.

@@ -30,6 +30,12 @@ sp1_zkvm::entrypoint!(main);
 #[path = "../../o1-verifier/src/atomic_shims.rs"]
 mod atomic_shims;
 
+extern crate alloc;
+use alloc::vec::Vec;
+
+mod batch_mirror;
+use batch_mirror::{batch_merkle_update, dedup_diffs, AccountDiff};
+
 use ark_ff::{AdditiveGroup, PrimeField};
 use mina_curves::pasta::Fp;
 use mina_poseidon::{
@@ -146,6 +152,21 @@ fn keccak_leaf(seed: u64) -> [u8; 32] {
     h.finish()
 }
 
+/// Optimization 3 (Change 1 in docs/diff-proof-plan.md):
+/// `keccak(H_p || evm_fields)` — 32-byte Poseidon leaf hash + 32-byte EVM payload
+/// = 64 bytes = 1 keccak permutation (vs 3 permutations for a 320-byte account).
+fn keccak_leaf_bound(poseidon_leaf_fp: Fp, evm_seed: u64) -> [u8; 32] {
+    let mut h = kc::H::new();
+    for limb in poseidon_leaf_fp.into_bigint().as_ref() {
+        h.update(limb.to_le_bytes());
+    }
+    let word = evm_seed.to_le_bytes();
+    for _ in 0..4 {
+        h.update(word);
+    }
+    h.finish()
+}
+
 fn keccak_path(mut acc: [u8; 32], idx: u64, depth: u32, sibling: &[u8; 32]) -> [u8; 32] {
     for level in 0..depth {
         acc = if (idx >> level) & 1 == 0 {
@@ -171,7 +192,7 @@ pub fn main() {
     // One read, not three: the runner hands the executor a single input
     // buffer, and a read consumes the whole of it.
     let (mode, accounts, depth) = sp1_zkvm::io::read::<(u32, u32, u32)>();
-    assert!(mode <= 4, "mode out of range");
+    assert!(mode <= 6, "mode out of range");
     assert!((1..=256).contains(&accounts), "accounts out of range");
     assert!((1..=40).contains(&depth), "depth out of range");
 
@@ -180,6 +201,77 @@ pub fn main() {
     sp1_zkvm::io::commit_slice(&depth.to_le_bytes());
 
     let params = fp_kimchi::static_params();
+
+    // Modes 5 & 6: Optimizations 1 (sorted bottom-up multiproof), 2 (hot-account
+    // dedup), 3 (`keccak(H_p || evm_fields)`), and 5 (contiguous Poseidon -> Keccak
+    // phase separation).
+    // - Mode 5: all-unique indices (apples-to-apples against mode 1).
+    // - Mode 6: realistic 25% hot-account repeats collapsed by dedup.
+    if mode == 5 || mode == 6 {
+        let mask = if depth >= 64 { u64::MAX } else { (1u64 << depth) - 1 };
+        let mut raw_diffs: Vec<AccountDiff> = Vec::with_capacity(accounts as usize);
+        let unique_pool = if mode == 6 {
+            ((accounts as u64 * 3) / 4).max(1)
+        } else {
+            accounts as u64
+        };
+        for seq in 0..accounts {
+            let logical = (seq as u64) % unique_pool;
+            let leaf_idx = logical.wrapping_mul(0x9E37_79B9_7F4A_7C15) & mask;
+            raw_diffs.push(AccountDiff {
+                leaf_idx,
+                seq,
+                old_seed: logical,
+                new_seed: (seq as u64).wrapping_add(1 << 20),
+            });
+        }
+
+        // Phase 1 (Poseidon ledger): dedup + leaves + bottom-up multiproof.
+        sp1_zkvm::io::write(1, POSEIDON_START);
+        let unique = dedup_diffs(&mut raw_diffs);
+        let mut p_frontier: Vec<(u64, Fp, Fp)> = Vec::with_capacity(unique.len());
+        let mut bound_leaves: Vec<(u64, Fp, Fp, u64, u64)> = Vec::with_capacity(unique.len());
+        for u in &unique {
+            let old_p = poseidon_leaf(params, u.old_seed);
+            let new_p = poseidon_leaf(params, u.new_seed);
+            p_frontier.push((u.leaf_idx, old_p, new_p));
+            bound_leaves.push((u.leaf_idx, old_p, new_p, u.old_seed, u.new_seed));
+        }
+        let (_old_p_root, new_p_root, _) = batch_merkle_update(
+            p_frontier,
+            depth,
+            |l, r| poseidon_node(params, *l, *r),
+            |level, sib_idx| Fp::from(sib_idx.wrapping_add(level as u64 + 11)),
+        );
+        sp1_zkvm::io::write(1, POSEIDON_END);
+        for limb in new_p_root.into_bigint().as_ref() {
+            sp1_zkvm::io::commit_slice(&limb.to_le_bytes());
+        }
+
+        // Phase 2 (Keccak mirror): bound leaves `keccak(H_p || evm_fields)` +
+        // bottom-up multiproof in one contiguous Keccak phase.
+        sp1_zkvm::io::write(1, MIRROR_START);
+        let mut k_frontier: Vec<(u64, [u8; 32], [u8; 32])> = Vec::with_capacity(bound_leaves.len());
+        for &(leaf_idx, old_p, new_p, old_seed, new_seed) in &bound_leaves {
+            let old_k = keccak_leaf_bound(old_p, old_seed);
+            let new_k = keccak_leaf_bound(new_p, new_seed);
+            k_frontier.push((leaf_idx, old_k, new_k));
+        }
+        let (_old_k_root, new_k_root, _) = batch_merkle_update(
+            k_frontier,
+            depth,
+            keccak_node,
+            |level, sib_idx| {
+                let mut sib = [0u8; 32];
+                sib[..8].copy_from_slice(&sib_idx.to_le_bytes());
+                sib[8..12].copy_from_slice(&level.to_le_bytes());
+                sib
+            },
+        );
+        sp1_zkvm::io::write(1, MIRROR_END);
+        sp1_zkvm::io::commit_slice(&new_k_root);
+        return;
+    }
 
     // Poseidon ledger: every mode pays this. It is the half we already have.
     sp1_zkvm::io::write(1, POSEIDON_START);

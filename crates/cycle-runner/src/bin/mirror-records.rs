@@ -31,7 +31,7 @@ use std::{collections::BTreeMap, fs, path::PathBuf, sync::Arc, time::Instant};
 struct Args {
     #[arg(long)]
     elf: PathBuf,
-    #[arg(long, value_parser=clap::value_parser!(u32).range(0..=4))]
+    #[arg(long, value_parser=clap::value_parser!(u32).range(0..=6))]
     mode: u32,
     #[arg(long, default_value_t = 1)]
     accounts: u32,
