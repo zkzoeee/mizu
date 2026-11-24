@@ -495,10 +495,12 @@ a card.
 
 Measured back-to-back on the same `EU-SE-1` **NVIDIA A40** (`46,068 MiB`, ECC enabled, `$0.59/hr`, `PASTA_GPU_WORKERS=2`, `retain-pasta-and-uint`; total pod rental `23.4 min` / `~$0.23` including cold CUDA build):
 
-| Guest build | Cycles | Shards | Prove loop | Wall | Proof size | CPU reload verify | Evidence |
-| --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| Previous ECC-on A40 cluster | `142,638,298` | `82` | `107.7–111.4 s` | `134.2–138.6 s` | — | Passed | above |
-| **`mizu/dev` compact `w=16`** | **`84,985,706`** | **`67`** | **`92.64 s`** | **`117.09 s`** | **`112.75 MB`** | **Passed (`5.37 s`)** | [result-w16-compact-a40.json](../benchmarks/gpu/result-w16-compact-a40.json) |
-| `feat/batched-pasta-msm` `w=16` | `35,440,449` | `108` | `169.20 s` | `189.33 s` | `172.44 MB` | Failed (`InconsistencyWithEval`) | [result-w16-batched-a40.json](../benchmarks/gpu/result-w16-batched-a40.json) |
+| Guest build | Card | Cycles | Shards | Prove loop | Wall | Proof size | CPU reload verify | Evidence |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| Previous ECC-on A40 cluster | A40 | `142,638,298` | `82` | `107.7–111.4 s` | `134.2–138.6 s` | — | Passed | above |
+| **`mizu/dev` compact `w=16`** | **A40** | **`84,985,706`** | **`67`** | **`92.64 s`** | **`117.09 s`** | **`112.75 MB`** | **Passed (`5.37 s`)** | [result-w16-compact-a40.json](../benchmarks/gpu/result-w16-compact-a40.json) |
+| **`mizu/dev` compact `w=16`** | **RTX 4090** | **`84,985,706`** | **`67`** | **`43.02 s`** | **`63.80 s`** | **`124.05 MB`** | **Passed (`5.87 s`)** | [result-w16-compact-4090.json](../benchmarks/gpu/result-w16-compact-4090.json) |
+| `feat/batched-pasta-msm` v1 | A40 | `35,440,449` | `108` | `169.20 s` | `189.33 s` | `172.44 MB` | Failed (`InconsistencyWithEval`) | [result-w16-batched-a40.json](../benchmarks/gpu/result-w16-batched-a40.json) |
+| `feat/batched-pasta-msm` v2 (retained) | RTX 4090 | `41,627,022` | `65` | `65.73 s` | `82.06 s` | `126.66 MB` | Failed (`InconsistencyWithEval`) | [result-w16-msm-accum-v2-4090.json](../benchmarks/gpu/result-w16-msm-accum-v2-4090.json) |
 
-`mizu/dev` compact `w=16` beats every A40 run on record (including the ECC-off outlier) with zero AIR changes. On `feat/batched-pasta-msm`, CPU shards fell `50 → 35` but non-retained wide step chips (`1,776–2,933` cols) expanded `SyscallPrecompile` shards `13 → 69` and failed `ConstraintsCheckFailed(InconsistencyWithEval)`; see [02-pasta-msm.md](optimizations/02-pasta-msm.md) for the breakdown.
+`mizu/dev` compact `w=16` beats every A40 run on record (`117.09 s` wall / `92.64 s` prove loop) and proves on an RTX 4090 in **`63.80 s` wall / `43.02 s` prove loop** (`~$0.015` / proof) with zero AIR changes. `feat/batched-pasta-msm` is archived as a negative result: even after retaining `MsmAccum` (`108 → 65` shards), extra LogUp/GKR interactions per step made it `+28.6%` slower than `mizu/dev` on the same 4090 (`82.06 s` vs `63.80 s`); see [02-pasta-msm.md](optimizations/02-pasta-msm.md).

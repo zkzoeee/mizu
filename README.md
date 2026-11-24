@@ -49,8 +49,8 @@ breakdown across eleven measurements on nine physical cards, and
 | the verifier unoptimized | ~4,340,000,000 | see the note below |
 | Mizu's retained configuration (40 settings) | 142,650,295 | ~30x fewer |
 | + the two Pasta precompiles | **130,367,324** | **-8.60%** |
-| + `mizu/dev` compact `w=16` (no new AIRs) | **84,985,706** | **-34.81%** vs 130.37M; verified A40 core proof: **67 shards**, **92.64 s** prove / **117.09 s** wall |
-| + `feat/batched-pasta-msm` (experimental, 4 new AIRs) | 35,440,449 | -72.81% cycles, but slower on A40 (108 shards / 189.33 s) & failed GPU verify (`InconsistencyWithEval`); see [02-pasta-msm.md](docs/optimizations/02-pasta-msm.md) |
+| + `mizu/dev` compact `w=16` (no new AIRs) | **84,985,706** | **-34.81%** vs 130.37M; verified core proof: **67 shards**, **117.09 s** wall (A40) / **63.80 s** wall (RTX 4090) |
+| + `feat/batched-pasta-msm` (archived negative result) | 41,627,022 | -68.1% cycles (65 shards), but +28.6% slower on RTX 4090 (82.06 s vs 63.80 s) due to GKR/LogUp overhead & failed GPU verify; see [02-pasta-msm.md](docs/optimizations/02-pasta-msm.md) |
 
 **On the ~4.3 billion.** That is not a measurement made in this repository under
 this harness. It is the same verifier's cost with the optimizations off, recorded
