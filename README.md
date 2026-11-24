@@ -49,6 +49,7 @@ breakdown across eleven measurements on nine physical cards, and
 | the verifier unoptimized | ~4,340,000,000 | see the note below |
 | Mizu's retained configuration (40 settings) | 142,650,295 | ~30x fewer |
 | + the two Pasta precompiles | **130,367,324** | **-8.60%** |
+| + `mizu/dev` compact `w=16` (no new AIRs) | **84,985,706** | **-34.81%** vs 130.37M; verified core proof: **67 shards**, **117.09 s** wall (A40) / **63.80 s** wall (RTX 4090) |
 
 **On the ~4.3 billion.** That is not a measurement made in this repository under
 this harness. It is the same verifier's cost with the optimizations off, recorded

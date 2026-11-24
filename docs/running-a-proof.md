@@ -490,3 +490,15 @@ a card.
   [a5000](../benchmarks/gpu-core-proof-a5000-sp1-6.10.json),
   [channel depth](../benchmarks/gpu-inflight-sweep-a40-sp1-6.10.json),
   [build cache](../benchmarks/gpu-build-cache-validation.json)
+
+## 2026-11-24 update: `mizu/dev` compact `w=16` (`84.99M` cycles, `67` shards)
+
+Measured with `retain-pasta-and-uint`, `PASTA_GPU_WORKERS=2`, `PASTA_FRI_CONFIG=core`, zero new AIRs, and full CPU reload verification passing:
+
+| Guest build | Card | Cycles | Shards | Prove loop | Wall | Proof size | CPU reload verify | Evidence |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- | --- |
+| Previous ECC-on A40 cluster | A40 | `142,638,298` | `82` | `107.7–111.4 s` | `134.2–138.6 s` | — | Passed | above |
+| **`mizu/dev` compact `w=16`** | **A40** (`$0.59/hr`, ECC on) | **`84,985,706`** | **`67`** | **`92.64 s`** | **`117.09 s`** | **`112.75 MB`** | **Passed (`5.37 s`)** | [result-w16-compact-a40.json](../benchmarks/gpu/result-w16-compact-a40.json) |
+| **`mizu/dev` compact `w=16`** | **RTX 4090** (`$0.89/hr`, ECC off) | **`84,985,706`** | **`67`** | **`43.02 s`** | **`63.80 s`** | **`124.05 MB`** | **Passed (`5.87 s`)** | [result-w16-compact-4090.json](../benchmarks/gpu/result-w16-compact-4090.json) |
+
+Note: An experimental batched-MSM precompile branch (`feat/batched-pasta-msm`, `41.63M` cycles, `65` shards) was also benchmarked back-to-back on the same RTX 4090 and archived as a negative result (`82.06 s` wall / `65.73 s` prove loop — `+28.6%` slower than `mizu/dev` due to extra LogUp/GKR interactions per step and unchanged `Global` memory cells, plus `ConstraintsCheckFailed(InconsistencyWithEval)`).
