@@ -50,6 +50,13 @@ contract SP1Verifier is Verifier, ISP1VerifierWithHash {
     }
 
     /// @notice Verifies a proof with given public values and vkey.
+    /// @dev Downstream settlement contracts MUST NOT use `keccak256(proofBytes)`
+    ///      as a replay nullifier because Groth16 proofs `(A, B, C)` are
+    ///      algebraically malleable (`(-A, -B, C)`). Key replay protection on
+    ///      the committed semantic `publicValues` (e.g., statement digest / state root).
+    ///      Note that this contract pins a custom `VK_ROOT()` while retaining
+    ///      Succinct's `VERIFIER_HASH()` selector; do not register multiple
+    ///      custom-`VK_ROOT` verifiers with identical selectors in one gateway.
     /// @param programVKey The verification key for the RISC-V program.
     /// @param publicValues The public values encoded as bytes.
     /// @param proofBytes The proof of the program execution the SP1 zkVM encoded as bytes.
@@ -58,6 +65,9 @@ contract SP1Verifier is Verifier, ISP1VerifierWithHash {
         bytes calldata publicValues,
         bytes calldata proofBytes
     ) external view {
+        if (proofBytes.length != 356) {
+            revert InvalidProof();
+        }
         bytes4 receivedSelector = bytes4(proofBytes[:4]);
         bytes4 expectedSelector = bytes4(VERIFIER_HASH());
         if (receivedSelector != expectedSelector) {

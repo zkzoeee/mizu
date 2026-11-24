@@ -18,7 +18,6 @@ use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 
-use blake2::{Blake2s256, Digest};
 use mina_curves::pasta::{Pallas, Vesta};
 use mina_poseidon::constants::PlonkSpongeConstantsKimchi;
 use mina_poseidon::pasta::{fp_kimchi, fq_kimchi, FULL_ROUNDS};
@@ -26,15 +25,12 @@ use mina_poseidon::poseidon::{ArithmeticSponge, Sponge};
 use mina_poseidon::sponge::ScalarChallenge;
 use poly_commitment::ipa::endos;
 
+use crate::statement::{dummy_ipa_wrap_expanded, PADDED_LENGTH};
 use crate::types::{
     StepField, VerifiableProof, WrapField, WrapProof, WrapVerifierIndex, STEP_IPA_ROUNDS,
     WRAP_IPA_ROUNDS,
 };
 use crate::wire::OcamlProof;
-
-/// `Wrap_hack.Padded_length.n` — the message-for-next-wrap challenge vector is
-/// front-padded with dummies up to this length.
-const PADDED_LENGTH: usize = 2;
 
 // ---------------------------------------------------------------------------
 // 128-bit challenge endo expansion.
@@ -80,29 +76,6 @@ fn wrap_vk_step_fields(vk: &WrapVerifierIndex) -> Result<Vec<StepField>, String>
             out.push(p.y);
             Ok(out)
         })
-}
-
-// ---------------------------------------------------------------------------
-// Dummy IPA wrap challenges.
-// ---------------------------------------------------------------------------
-
-/// The 15 dummy wrap IPA challenges, endo-expanded — port of OCaml
-/// `Dummy.Ipa.Wrap.challenges` (`ro.ml`). Each raw challenge `chal_i` is the
-/// low 128 bits (LE) of `blake2s256("chal_i")`; the `Ro` monad draws them in
-/// counter order `1..=15` and stores them reversed (`Vector.init` evaluates
-/// right-to-left), so the result is indexed `[chal_15, …, chal_1]`.
-fn dummy_ipa_wrap_expanded(wrap_endo: &WrapField) -> [WrapField; WRAP_IPA_ROUNDS] {
-    let mut v: Vec<WrapField> = (1..=WRAP_IPA_ROUNDS)
-        .map(|i| {
-            let digest = Blake2s256::digest(format!("chal_{i}").as_bytes());
-            let lo = u64::from_le_bytes(digest[0..8].try_into().unwrap());
-            let hi = u64::from_le_bytes(digest[8..16].try_into().unwrap());
-            ScalarChallenge::<WrapField>::from_limbs([lo, hi]).to_field(wrap_endo)
-        })
-        .collect();
-    v.reverse();
-    v.try_into()
-        .unwrap_or_else(|_| unreachable!("exactly WRAP_IPA_ROUNDS produced"))
 }
 
 // ---------------------------------------------------------------------------

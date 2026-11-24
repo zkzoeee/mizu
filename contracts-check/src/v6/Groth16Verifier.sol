@@ -555,8 +555,8 @@ contract Verifier {
 
             // Check pairing equation.
             success := staticcall(gas(), PRECOMPILE_VERIFY, f, 0x300, f, 0x20)
-            // Also check returned value (both are either 1 or 0).
-            success := and(success, mload(f))
+            // Require a full 32-byte return word equal to 1 (protects non-EIP-197 chains).
+            success := and(and(success, eq(returndatasize(), 0x20)), eq(mload(f), 1))
         }
         if (!success) {
             // Either proof or verification key invalid.

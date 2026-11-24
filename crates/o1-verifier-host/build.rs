@@ -19,9 +19,21 @@ fn main() {
         println!("cargo::rerun-if-env-changed={name}");
     }
 
-    // The guest's sources, so editing the guest rebuilds it even though it is
-    // not a dependency of this crate in cargo's eyes.
-    for path in ["../o1-verifier/src", "../o1-verifier/build.rs", "../o1-verifier/Cargo.toml", "../o1-verifier/build-env.rs"] {
+    // The guest's sources and local verifier/vendor trees, so editing any of
+    // them rebuilds the guest ELF even though cargo does not track them as
+    // direct Rust dependencies of this host crate.
+    for path in [
+        "../o1-verifier/src",
+        "../o1-verifier/build.rs",
+        "../o1-verifier/blob_cache.rs",
+        "../o1-verifier/Cargo.toml",
+        "../o1-verifier/build-env.rs",
+        "../pickles-verifier/src",
+        "../pickles-verifier/build.rs",
+        "../pickles-verifier/Cargo.toml",
+        "../../vendor/proof-systems",
+        "../../vendor/algebra",
+    ] {
         println!("cargo::rerun-if-changed={path}");
     }
 

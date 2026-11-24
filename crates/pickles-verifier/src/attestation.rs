@@ -16,6 +16,20 @@ pub fn statement_digest(vk_id: &[u8; 32], statement: &[StepField]) -> [u8; 32] {
     hash.finalize().into()
 }
 
+/// Domain-separated commitment over a batch of verified application statements
+/// under one embedded wrap VK:
+/// `Keccak256("mizu/verified-statement-batch/v1" || vk_id || batch_len_le || [statement_digest_i]...)`.
+pub fn batch_statement_digest(vk_id: &[u8; 32], statements: &[&[StepField]]) -> [u8; 32] {
+    let mut hash = Keccak256::new();
+    hash.update(b"mizu/verified-statement-batch/v1");
+    hash.update(vk_id);
+    hash.update((statements.len() as u64).to_le_bytes());
+    for statement in statements {
+        hash.update(statement_digest(vk_id, statement));
+    }
+    hash.finalize().into()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

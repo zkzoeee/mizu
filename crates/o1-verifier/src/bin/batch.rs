@@ -1,6 +1,7 @@
 //! Optional bounded batch guest. Same embedded key; separate program identity.
 #![no_main]
 sp1_zkvm::entrypoint!(main);
+#[cfg(target_os = "zkvm")]
 #[path = "../atomic_shims.rs"]
 mod atomic_shims;
 use pickles_verifier::{serialize::decode_embedded_verifier, types::VerifiableProof};
@@ -17,5 +18,13 @@ fn main() {
     let proofs: Vec<VerifiableProof> = (0..count).map(|_| sp1_zkvm::io::read()).collect();
     sp1_zkvm::io::write(1, b"cycle-tracker-report-end:setup\n");
     assert!(verifier.verify_batch(&proofs), "batch verification failed");
+    #[cfg(not(feature = "statement-digest"))]
     sp1_zkvm::io::commit(&true);
+    #[cfg(feature = "statement-digest")]
+    {
+        let vk_id = include_bytes!(concat!(env!("OUT_DIR"), "/vk_hash.bin"));
+        let statements: Vec<&[_]> = proofs.iter().map(|p| p.app_state.as_slice()).collect();
+        let digest = pickles_verifier::attestation::batch_statement_digest(vk_id, &statements);
+        sp1_zkvm::io::commit_slice(&digest);
+    }
 }

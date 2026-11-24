@@ -221,10 +221,14 @@ struct Args {
     #[arg(long, default_value_t = true, action = clap::ArgAction::Set)]
     retain_pasta: bool,
     /// The recursion VK map. `--mode vk-map` writes it; every other mode reads
-    /// it and turns vk verification ON. Omit it for a development run with
-    /// verification off.
+    /// it and turns vk verification ON. Required for `--mode wrap` and
+    /// `--mode groth16` unless `--unsafe-no-vk-verification` is explicitly set.
     #[arg(long)]
     vk_map: Option<PathBuf>,
+    /// Explicitly allow running without recursion VK verification (unsound
+    /// development artifact only). Refused by default when `--vk-map` is omitted.
+    #[arg(long, default_value_t = false)]
+    unsafe_no_vk_verification: bool,
 }
 
 /// The Pasta/UInt256 retention this project proves with, applied on top of
@@ -655,7 +659,16 @@ async fn main() -> Result<()> {
     }
     let builder = match &args.vk_map {
         Some(path) => builder.with_vk_map_path(path.display().to_string()),
-        None => builder.without_vk_verification(),
+        None => {
+            if matches!(args.mode, Mode::Wrap | Mode::Groth16) && !args.unsafe_no_vk_verification {
+                anyhow::bail!(
+                    "--vk-map is required for `--mode {:?}`; pass --unsafe-no-vk-verification \
+                     explicitly only for unsound development runs",
+                    args.mode
+                );
+            }
+            builder.without_vk_verification()
+        }
     };
     let node = SP1LocalNodeBuilder::from_worker_client_builder(builder)
         .build()

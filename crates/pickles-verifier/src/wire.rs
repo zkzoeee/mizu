@@ -174,6 +174,12 @@ fn challenge<F: PrimeField>(v: &Value) -> Result<F, String> {
             .as_array()
             .ok_or_else(|| "scalar challenge: `inner` not an array".to_string())?,
     };
+    if limbs.len() != 2 {
+        return Err(alloc::format!(
+            "challenge: expected 2 64-bit limbs (128-bit challenge), got {}",
+            limbs.len()
+        ));
+    }
     combine_limbs_le(limbs)
 }
 
@@ -493,15 +499,20 @@ fn proofs_verified_mask(v: &Value) -> Result<[bool; 2], String> {
     }
 }
 
-/// OCaml `Hex64` single byte (= `domain_log2`) is a 1-char string.
+/// OCaml `Hex64` single byte (= `domain_log2`) is a 1-char string in `0..=255`.
 fn ocaml_byte(v: &Value) -> Result<u8, String> {
     let s = v
         .as_str()
         .ok_or_else(|| "domain_log2: expected string".to_string())?;
-    s.chars()
+    let mut chars = s.chars();
+    let c = chars
         .next()
-        .map(|c| c as u8)
-        .ok_or_else(|| "domain_log2: empty string".to_string())
+        .ok_or_else(|| "domain_log2: empty string".to_string())?;
+    if chars.next().is_some() {
+        return Err("domain_log2: expected single-character string".to_string());
+    }
+    u8::try_from(c as u32)
+        .map_err(|_| alloc::format!("domain_log2: codepoint U+{:04X} out of byte range", c as u32))
 }
 
 fn bulletproof_vec<F: PrimeField, const N: usize>(v: &Value) -> Result<[F; N], String> {

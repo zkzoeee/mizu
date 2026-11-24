@@ -40,10 +40,8 @@ contract SP1VerifierMirror is Verifier, ISP1VerifierWithHash {
 
     /// @notice The recursion vk root.
     /// @dev Upstream ships 0x002f850ee998974d6cc00e50cd0814b098c05bfade466d28573240d057f25352.
-    ///      This is the root of our FULL preprocessed-block-3 map (8,176 keys),
-    ///      the only edit made to the artifact's contracts. The earlier
-    ///      75-key union map's root was 0x007ef473..ae0; proofs against it are
-    ///      rejected here, which is the point of pinning a root.
+    ///      This is the root of the mirror benchmark guest's preprocessed-block-1
+    ///      11-key map (distinct from the Pickles block-3 root).
     function VK_ROOT() public pure returns (bytes32) {
         return 0x00dcb7878d00c79553bb5c3b7a98aea41df70817439d3c6ee5a79335b85306a9;
     }
@@ -55,6 +53,8 @@ contract SP1VerifierMirror is Verifier, ISP1VerifierWithHash {
     }
 
     /// @notice Verifies a proof with given public values and vkey.
+    /// @dev Enforces exact 356-byte encoding (`4 + 11 * 32`). Because Groth16
+    ///      proofs are malleable, never use `keccak256(proofBytes)` as a nullifier.
     /// @param programVKey The verification key for the RISC-V program.
     /// @param publicValues The public values encoded as bytes.
     /// @param proofBytes The proof of the program execution the SP1 zkVM encoded as bytes.
@@ -63,6 +63,9 @@ contract SP1VerifierMirror is Verifier, ISP1VerifierWithHash {
         bytes calldata publicValues,
         bytes calldata proofBytes
     ) external view {
+        if (proofBytes.length != 356) {
+            revert InvalidProof();
+        }
         bytes4 receivedSelector = bytes4(proofBytes[:4]);
         bytes4 expectedSelector = bytes4(VERIFIER_HASH());
         if (receivedSelector != expectedSelector) {

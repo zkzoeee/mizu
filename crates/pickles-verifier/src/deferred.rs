@@ -126,13 +126,13 @@ fn to_proof_evaluations(e: &ChunkedAllEvals) -> ProofEvaluations<PointEvaluation
     }
 }
 
-/// Stage 1 — reconstruct the wrap deferred values from the carried skeleton.
-///
-/// # Panics
-///
-/// Panics only on a malformed step domain log2 (no radix-2 domain of that size),
-/// unreachable for valid step circuits.
-pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> ExpandedDeferredValues {
+/// Stage 1 — reconstruct the wrap deferred values from the carried skeleton,
+/// returning `None` cleanly on malformed step domain, missing selector
+/// evaluations for enabled `feature_flags`, or failed oracle reconstruction.
+pub fn try_expand_deferred(
+    verifier: &Verifier,
+    proof: &VerifiableProof,
+) -> Option<ExpandedDeferredValues> {
     // The scalar endo (`endos::<Vesta>().1`) — used to endo-expand the
     // 128-bit challenges via `ScalarChallenge::to_field`.
     let endo = verifier.step_endo;
@@ -148,8 +148,13 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
     // `Verifier` whose `step_domain_log2`/generator/shifts are the first
     // branch's, so re-expansion must use this proof's branch's domain.
     let domain_log2 = proof.step_domain_log2;
-    let domain = Radix2EvaluationDomain::<StepField>::new(1usize << domain_log2)
-        .unwrap_or_else(|| panic!("no radix-2 domain of size 2^{domain_log2}"));
+    if domain_log2 > crate::statement::MAX_STEP_DOMAIN_LOG2
+        || domain_log2 >= usize::BITS as usize
+        || StepField::from(domain_log2 as u64) != proof.branch_data.domain_log2
+    {
+        return None;
+    }
+    let domain = Radix2EvaluationDomain::<StepField>::new(1usize << domain_log2)?;
     let generator = domain.group_gen;
     let max_poly_size = 1usize << verifier.step_srs_length_log2;
     let zk_rows = verifier.step_zk_rows as u64;
@@ -237,7 +242,7 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
         proof.prev_evals.ft_eval1,
         None,
     )
-    .expect("oracles_from_digest");
+    .ok()?;
 
     let xi = oracles.v; // polyscale
     let r = oracles.u; // evalscale
@@ -337,9 +342,9 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
         .try_into()
         .unwrap_or_else(|_| unreachable!("exactly 16 bp challenges"));
 
-    let x_hat = collapsed.public.expect("public eval present");
+    let x_hat = collapsed.public?;
 
-    ExpandedDeferredValues {
+    Some(ExpandedDeferredValues {
         alpha: proof.raw_plonk.alpha,
         beta: proof.raw_plonk.beta,
         gamma: proof.raw_plonk.gamma,
@@ -359,7 +364,13 @@ pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> Expanded
         ft_eval0,
         feature_flags: proof.raw_plonk.feature_flags,
         joint_combiner: proof.raw_plonk.joint_combiner,
-    }
+    })
+}
+
+/// Stage 1 — panicking wrapper over [`try_expand_deferred`] for callers that
+/// already validated the proof.
+pub fn expand_deferred(verifier: &Verifier, proof: &VerifiableProof) -> ExpandedDeferredValues {
+    try_expand_deferred(verifier, proof).expect("expand_deferred")
 }
 
 // ---------------------------------------------------------------------------
