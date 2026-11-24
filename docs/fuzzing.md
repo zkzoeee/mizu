@@ -1,8 +1,10 @@
 # Fuzzing: what the layers cover, and what a clean run establishes
 
-Status: 2026-11-10. Twenty-one layers in three harnesses, all implemented and
-run locally. No layer generates a proof, uses a GPU or touches the retained
-verifier; every one of them runs natively on this host in minutes.
+Status: 2026-11-24. Expanded to four harnesses (adding `V1b`/`V3`/`V4` in
+`verifier-fuzz`, point/GLV/MSM/parser differential fuzz in
+`canonical_words_fuzz`, and stateless Foundry fuzz tests in `contracts-check`).
+No layer generates a proof, uses a GPU or touches the retained verifier; every
+one of them runs natively on this host.
 
 The companion documents are [the Pasta AIR verification plan](pasta-air-verification-plan.md),
 which holds the layer table in its original form, the per-run results and the
@@ -21,13 +23,14 @@ field the verifier forgets to read produces proofs that verify, and an honest
 prover never notices, because it never exercises the gap. These layers search
 for that; they cannot show its absence, which is what the Lean plan is for.
 
-## The three harnesses
+## The four harnesses
 
 | Harness | Subject | Layers | Runtime |
 | --- | --- | --- | --- |
 | `pasta-precompile-proof-6-10 --mode pasta-fuzz` | the fork's AIRs, witness generators and both executors | F1–F4, P1–P4, FP1–FP4, C1–C2, D1–D2 | 217–236 s at 32 iterations |
-| `cycle-runner`'s `verifier-fuzz` binary | the out-of-circuit Pickles verifier, over all nine fixtures | V1, V2 | 413 s at 32 typed and 64 bit flips per fixture |
-| `pickles-verifier`'s `canonical_words_fuzz` test | the closed canonical Pasta residues against arkworks | A1 | seconds |
+| `cycle-runner`'s `verifier-fuzz` binary | the out-of-circuit Pickles verifier (`Verifier::new`, `EmbeddedVerifier`, `verify_batch`), over all nine fixtures | V1/V1b, V2, V3, V4 | minutes (30 typed + 64 bit flips + coordinated/cross-VK/graft + embedded/batch differential) |
+| `pickles-verifier`'s `canonical_words_fuzz` test | canonical Pasta arithmetic (`Fp`/`Fq`), `double_software`, `pallas_glv`, coupled finite Vesta/Pallas MSMs, and untrusted wire parsers | A1 (expanded) | ~40 s |
+| `contracts-check` Foundry suite (`forge test --fuzz-runs 256`) | Solidity Groth16 verifiers (`SP1VerifierGroth16`, `SP1VerifierGroth16Mirror`) | S1 (7 stateless fuzz tests) | ~1 s |
 
 ## The four questions a layer asks
 
@@ -121,19 +124,38 @@ offsets. Both carry plain store-and-load controls, with no syscall in the
 program, which attribute a divergence to the address rather than to the
 precompile.
 
-**The native Pickles verifier.** V1 mutates one typed field of a
-`VerifiableProof` — statement field, deferred challenge, evaluation,
-commitment, IPA response — with a random field element or a negated point,
-drawing each of the 18 mutators once before any random draw. V2 flips one
-random bit of the serialization; most flips do not deserialize, which is
-counted apart. Both require rejection over all nine fixtures.
+**The native Pickles verifier.** V1/V1b mutates one typed field of a
+`VerifiableProof` across 30 mutators — statement field, deferred challenge,
+evaluation, commitment, IPA response, `step_domain_log2`, `branch_data`,
+`wrap_proof.prev_challenges`, `wrap_proof.proof.lr` length/overflow edges
+(`0`, `14`, `16`, `64`), infinity commitments, `ft_eval1`, `z_comm`/`t_comm`,
+and `raw_plonk.{joint_combiner, feature_flags}` — drawing each mutator at least
+once and failing on any panic. V2 flips one random bit of the bincode
+serialization; most flips do not deserialize, which is counted apart. V3 runs
+coordinated attacks that recompute `messages_for_next_wrap_proof_digest` and
+`messages_for_next_step_proof_digest` alongside tampered commitments,
+challenges, dummy padding slots (`mpv < 2`), and synchronized `domain_log2`,
+plus a full cross-VK rejection matrix and same-VK cross-fixture proof grafting.
+V4 differentially checks `Verifier::new` against `EmbeddedVerifier` on every
+V1/V2/V3 case and exercises `verify_batch` / `embedded.verify_batch` over empty,
+honest, and mixed honest+corrupt batches.
 
-**The canonical residues.** A1 crosses nine boundary classes pairwise and adds
-random pairs and triples, covering `add_assign`'s conditional subtraction, both
-`pow7` schedules and all three three-term inner products, and requires
-`from_limbs` to reject `p`, `p + 1` and `2^256 - 1`. On the host the products
-delegate to arkworks, so the subject is the logic around them, not the
-multiplication.
+**The canonical residues, MSMs, GLV, and wire parsers.** A1 crosses boundary
+classes (including `2^120`, `2^126`, `2^127`, `2^128`, `2^130`, `2^240`, `2^252`
+± 1) and random pairs/triples for `add_assign`, `sub_assign`, `inverse`,
+`mul_assign`, `pow7`, and three-term inner products; checks `point_spikes`
+`add`/`double`/`double_software`; fuzzes `pallas_glv::decompose_bigint`;
+differentially fuzzes `msm_vesta_finite_borrowed` (`w=16/15/14`) and
+`msm_bigint_fixed_prefix_coords` (`shift=128/130`) with duplicates, opposites,
+and infinity tails; and feeds malformed/random inputs to `parse_wrap_vk`,
+`parse_wrap_proof`, `OcamlProof::parse`, and `parse_app_statement_fields`
+requiring zero panics.
+
+**The Solidity Groth16 verifiers.** `contracts-check` (`SP1VerifierGroth16.t.sol`
+and `TwoRoots.t.sol`) runs 7 stateless Foundry fuzz tests covering arbitrary
+extended/truncated proof lengths (`!= 356`), tampered public values, tampered
+proof bytes across selector/exitCode/vkRoot/nonce/Groth16 limbs, and wrong
+`programVKey` values.
 
 ## Running them
 
@@ -151,6 +173,10 @@ CARGO_BUILD_JOBS=1 RAYON_NUM_THREADS=1 cargo run --release --locked -p cycle-run
 
 ```bash
 cargo test -p pickles-verifier --test canonical_words_fuzz
+```
+
+```bash
+cd contracts-check && forge test --fuzz-runs 256
 ```
 
 A run fails, with the offending cell or program in the message, when:
@@ -218,6 +244,15 @@ Evidence: [pasta-fuzz expansion summary](../benchmarks/pasta-fuzz-expansion-sp1-
   memory argument rejects it. The algebraic gap and the `2y != 0` precondition
   are unchanged; what is new is that this way of exploiting it does not reach a
   proof.
+- **A verifier panic on toggled `feature_flags` (2026-11-24).** V1b mutator 29
+  (`raw_plonk.feature_flags toggled`) caught panics in `oracles_from_digest`
+  (`PolishToken::evaluate(...).unwrap()` in `vendor/proof-systems/kimchi/src/verifier.rs`)
+  and `expand_deferred` (`.expect("oracles_from_digest")` in
+  `crates/pickles-verifier/src/deferred.rs`) when an untrusted proof enabled a
+  gate whose selector evaluation was absent. Fixed (`proof-systems` `12691018c`,
+  root `b4d2082`) by propagating `VerifyError::OpenProof` and returning `false`
+  via `try_expand_deferred`; post-fix `verifier-fuzz` ran with 0 accepted
+  mutations, 0 panics, and 0 `Verifier::new` vs `EmbeddedVerifier` mismatches.
 
 The fuzzing also found two defects in itself, both recorded in
 [the corrections](optimizations/08-experiments-and-corrections.md): a

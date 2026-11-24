@@ -441,6 +441,64 @@
       "proof_systems_pin": "e7f63a64d8dff5d9c9bc6809dbf1e706f61fef6a",
       "measured_revision": "d0bd6cb32b3cc0c9450a6b2e58df4384419a299d",
       "proof_generated": false
+    },
+    {
+      "id": "mizu-finite-srs-coupled-w16",
+      "cycles": 102661283,
+      "baseline_cycles": 130367324,
+      "delta_cycles": -27706041,
+      "stage_cycles": {
+        "pickles-accumulator": 58314372,
+        "pickles-wrap-kimchi": 37823150,
+        "pickles-wrap-prepare": 2641832,
+        "setup": 3704582,
+        "verify": 98897096
+      },
+      "pasta_syscall_counts": {
+        "pallas_add": 699945,
+        "pallas_double": 0,
+        "vesta_add": 1310683,
+        "vesta_double": 0
+      },
+      "guest_abi": "one VerifiableProof input; one boolean output",
+      "sp1_version": "6.10.0",
+      "proof_systems_pin": "49f2237b4",
+      "measured_revision": "68e4cb5",
+      "extra_flags": {
+        "MIZU_VESTA_WINDOW": "16",
+        "MIZU_FIXED_PALLAS_COUPLED": "1",
+        "MIZU_SOFT_PASTA_DOUBLE": "1"
+      },
+      "proof_generated": false
+    },
+    {
+      "id": "mizu-finite-srs-coupled-w15",
+      "cycles": 105862509,
+      "baseline_cycles": 130367324,
+      "delta_cycles": -24504815,
+      "stage_cycles": {
+        "pickles-accumulator": 61515596,
+        "pickles-wrap-kimchi": 37823150,
+        "pickles-wrap-prepare": 2641832,
+        "setup": 3704582,
+        "verify": 102098322
+      },
+      "pasta_syscall_counts": {
+        "pallas_add": 699945,
+        "pallas_double": 0,
+        "vesta_add": 1261505,
+        "vesta_double": 0
+      },
+      "guest_abi": "one VerifiableProof input; one boolean output",
+      "sp1_version": "6.10.0",
+      "proof_systems_pin": "49f2237b4",
+      "measured_revision": "68e4cb5",
+      "extra_flags": {
+        "MIZU_VESTA_WINDOW": "15",
+        "MIZU_FIXED_PALLAS_COUPLED": "1",
+        "MIZU_SOFT_PASTA_DOUBLE": "1"
+      },
+      "proof_generated": false
     }
   ],
   "corrections": [

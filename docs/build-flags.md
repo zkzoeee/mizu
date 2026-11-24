@@ -53,19 +53,18 @@ receipts regenerated, and it buys naming consistency rather than behaviour.
 
 | tier | count | what it does |
 | --- | ---: | --- |
-| **Compile-time** (`option_env!`) | 52 | Baked into the guest at compile time. Changing one changes the ELF, the `programVKey`, and potentially the shard shapes. |
+| **Compile-time** (`option_env!`) | 54 | Baked into the guest at compile time. Changing one changes the ELF, the `programVKey`, and potentially the shard shapes. |
 | **Build-script** (`env::var_os` in a `build.rs`) | 5 | Selects a file or a cache path: `SETTLEMENT_BLOB_CACHE_DIR`, `SETTLEMENT_REBUILD_VERIFIER_BLOB`, `SETTLEMENT_VK_JSON`, `VK_JSON`, `MIZU_PREPARED_VESTA_PATH`. |
-| **Run-time** (`env::var`, host only) | 1 | `PASTA_RETAIN` — does not reach the guest. |
+| **Run-time** (`env::var`, host only) | 1 | `PASTA_RETAIN` — does not reach the guest (removed from `GUEST_BUILD_ENV`). |
 
 ### The one that is not a guest flag
 
 `PASTA_RETAIN` has **no `option_env!` site anywhere** in `crates/`,
 `vendor/proof-systems`, `vendor/algebra` or `vendor/sp1`. It is read only at
 runtime, by `crates/cycle-runner/src/bin/mirror-records.rs:50`, and it selects
-prover-side event retention routing. So it does not change the guest ELF, and
-listing it in `GUEST_BUILD_ENV` forces a guest rebuild that nothing needs.
-Harmless but wasteful, and worth removing from that list — carefully, since the
-list is also what stops the silent-stale-guest failure above.
+prover-side event retention routing. It has been removed from `GUEST_BUILD_ENV`
+in `crates/o1-verifier/build-env.rs` so changing it does not trigger unnecessary
+guest rebuilds.
 
 ## The recipes are one baseline plus six switches
 
@@ -109,6 +108,8 @@ fixture:
 | canonical (neither precompile) | 142,638,298 | — |
 | `MIZU_PASTA_FP_PRECOMPILE` | 139,610,314 | **-2.12%** |
 | + `MIZU_POSEIDON_PRECOMPILE` | 130,367,324 | **-8.60%** total |
+| + zero-copy finite SRS, `MIZU_FIXED_PALLAS_COUPLED=1`, `MIZU_SOFT_PASTA_DOUBLE=1` (`w=15`) | 105,862,509 | **-25.78%** total (-18.80% vs 130.37M; -49K `vesta_add`) |
+| + zero-copy finite SRS, `MIZU_FIXED_PALLAS_COUPLED=1`, `MIZU_SOFT_PASTA_DOUBLE=1` (`w=16`) | 102,661,283 | **-28.03%** total (-21.25% vs 130.37M) |
 
 And `PASTA_RETAIN` is a prover-side lever rather than a cycle one: retained
 routing takes main cells from 43,922,703,280 to 27,839,873,136 and the Groth16
@@ -121,9 +122,10 @@ Each of these is a real shape in the tree, not a hypothetical:
 - **`MIZU_VESTA_PREPARED_LANES` is inverted.** Its guards are
   `option_env!(..).is_none()`, so setting it to *any* value — including `0` —
   turns the prepared-lane route off. Every other flag here is "`1` enables".
-- **`MIZU_VESTA_WINDOW` is compared to the literal `16`** at
-  `canonical_msm.rs:317`, which gates `MIZU_FIXED_VESTA_COUPLED`. Another width
-  does not error; it silently takes a different path.
+- **`MIZU_VESTA_WINDOW` coupled widths are `16`, `15`, and `14`** (matching
+  baked `lane_shift` `128`, `120`, and `126` on packed 64-byte finite SRS tables
+  in `canonical_msm.rs` and `fixed_srs.rs`). Any other width falls back to the
+  uncoupled `lane_shift=128` path.
 - **`MIZU_PALLAS_WINDOW` is parsed as a number** and `.expect()`s, so a
   non-numeric value fails the build rather than being ignored.
 - **Two flags are string-valued, not boolean:** `MIZU_INLINE_FINITE_COPY=words`
@@ -174,11 +176,12 @@ Area tags match the files under [`docs/optimizations/`](optimizations/). **base*
 | `MIZU_PALLAS_GLV` | `1` | yes | 10/10 | `ps:curves/src/pasta/canonical_pallas.rs:210` | GLV scalar decomposition for Pallas, halving scalar bit length. |
 | `MIZU_PALLAS_POINT_PRECOMPILE` | `1` | yes | 10/10 | `ps:curves/src/pasta/canonical_pallas.rs:212` | Use the SP1 `PALLAS_ADD` executor precompile for point addition. |
 | `MIZU_PALLAS_WINDOW` | `13` | yes | 10/10 | `pickles-verifier/src/fixed_pallas.rs:240` +1 | Pallas fixed-window width, parsed as a number. The recipes use `13`; a non-numeric value panics at build time. |
-| `MIZU_UNINIT_MSM_DIGITS` | `1` | yes | 10/10 | `ps:curves/src/pasta/point_spikes.rs:426` | Allocate the MSM digit buffer uninitialised instead of zeroing it first. |
+| `MIZU_SOFT_PASTA_DOUBLE` | `1` | — | 0/10 | `ps:curves/src/pasta/point_spikes.rs:384` | Software affine doubling via canonical Fp/Fq arithmetic + checked inverse hints. Eliminates all 481 `VestaDouble`/`PallasDouble` syscalls and their `WeierstrassDoubleAssign` AIR shards. |
+| `MIZU_UNINIT_MSM_DIGITS` | `1` | yes | 10/10 | `ps:curves/src/pasta/point_spikes.rs:575` | Allocate the MSM digit buffer uninitialised instead of zeroing it first. |
 | `MIZU_VESTA_AFFINE` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:273` +1 | The Vesta counterpart. |
 | `MIZU_VESTA_GLV` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:208` +4 | The Vesta counterpart. |
 | `MIZU_VESTA_POINT_PRECOMPILE` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:209` +4 | Use the SP1 `VESTA_ADD` executor precompile. |
-| `MIZU_VESTA_WINDOW` | `16` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:317` +1 | Vesta window width, recipes use `16`. **Matched against the literal `16`** at `canonical_msm.rs:317`, so another width silently takes a different path. |
+| `MIZU_VESTA_WINDOW` | `16` (`15`, `14`) | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:317` +2 | Vesta window width (`16`, `15`, or `14` with `MIZU_FIXED_VESTA_COUPLED=1`, selecting baked `lane_shift` `128`, `120`, or `126` on packed finite tables). |
 
 ### IPA and SRS
 
@@ -186,11 +189,12 @@ Area tags match the files under [`docs/optimizations/`](optimizations/). **base*
 | --- | --- | :-: | :-: | --- | --- |
 | `MIZU_APPEND_B_POLY` | `1` | yes | 10/10 | `ps:poly-commitment/src/commitment.rs:547` | Append the b-polynomial commitment in the IPA batch rather than committing it separately. |
 | `MIZU_BORROW_PALLAS_SRS` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:807` +1 | Borrow the baked Pallas SRS instead of cloning it into the guest heap. |
-| `MIZU_BORROW_POSITIONAL_SCALARS` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:321` | Borrow positional scalars for the accumulator MSM rather than materialising a vector. |
+| `MIZU_BORROW_POSITIONAL_SCALARS` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:324` | Borrow positional scalars for the accumulator MSM rather than materialising a vector. |
 | `MIZU_BORROW_VESTA_SRS` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:829` +1 | The Vesta counterpart. |
 | `MIZU_CANONICAL_ACCUMULATOR_COEFFICIENTS` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:249` | Compute accumulator coefficients canonically; gated together with `MIZU_CANONICAL_MSM` and `MIZU_FUSE_VESTA_BASE_CONVERSION`. |
-| `MIZU_FIXED_PALLAS_SRS` | `1` | yes | 10/10 | `o1-verifier/build.rs:62` +3 | Use the compile-time fixed Pallas SRS tables. Also one of the two flags that make `build.rs` bake the verifier blob. |
-| `MIZU_FIXED_VESTA_COUPLED` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:316` | Use the coupled fixed-Vesta table, valid only with `MIZU_VESTA_WINDOW=16`. |
+| `MIZU_FIXED_PALLAS_COUPLED` | `1` | — | 0/10 | `pickles-verifier/src/fixed_pallas.rs:95` | Bake finite fixed Pallas SRS with `lane_shift=130` for coupled width-13 recoding (`msm_pallas_finite_prefix`) directly over `.rodata` `&[[u64; 8]]`. |
+| `MIZU_FIXED_PALLAS_SRS` | `1` | yes | 10/10 | `o1-verifier/build.rs:62` +3 | Use the compile-time fixed Pallas SRS tables (64-byte finite `.rodata` layout for all-finite SRSes). |
+| `MIZU_FIXED_VESTA_COUPLED` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:316` | Use the coupled fixed-Vesta table (`MIZU_VESTA_WINDOW=16|15|14` with matching `lane_shift=128|120|126`). |
 | `MIZU_FIXED_VESTA_SRS` | `1` | yes | 10/10 | `o1-verifier/build.rs:61` +3 | The Vesta counterpart, likewise consulted by `build.rs`. |
 | `MIZU_IPA_BORROW_SRS_PREFIX` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:432` | Borrow the SRS prefix the IPA opening needs instead of copying it. |
 | `MIZU_IPA_CANONICAL_PREFIX` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:440` | Use the canonical prefix routine, passed as a flag into the batch call. |
