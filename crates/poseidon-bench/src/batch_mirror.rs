@@ -102,6 +102,37 @@ pub fn batch_merkle_update<H: Copy>(
     (frontier[0].1, frontier[0].2, pairs_hashed)
 }
 
+/// Option 1: compact binary Keccak Merkle root over the `N` sorted updated
+/// leaves (`keccak(H_p || evm_fields)`).
+///
+/// Costs only `~N` Keccak permutations (vs `~70N` for a depth-35 global walk)
+/// and produces a depth `ceil(log2(N))` tree that any client can rebuild in
+/// `< 1 ms` from an unmodified Mina indexer GraphQL query. Odd trailing nodes
+/// at any level are paired with `[0u8; 32]`.
+pub fn keccak_diff_root(
+    leaves: &[[u8; 32]],
+    mut hash_node: impl FnMut(&[u8; 32], &[u8; 32]) -> [u8; 32],
+) -> [u8; 32] {
+    if leaves.is_empty() {
+        return [0u8; 32];
+    }
+    let mut level: Vec<[u8; 32]> = leaves.to_vec();
+    let mut next: Vec<[u8; 32]> = Vec::with_capacity(level.len().div_ceil(2));
+    let zero = [0u8; 32];
+    while level.len() > 1 {
+        next.clear();
+        let mut i = 0;
+        while i < level.len() {
+            let left = &level[i];
+            let right = if i + 1 < level.len() { &level[i + 1] } else { &zero };
+            next.push(hash_node(left, right));
+            i += 2;
+        }
+        core::mem::swap(&mut level, &mut next);
+    }
+    level[0]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -189,5 +220,43 @@ mod tests {
             pairs_hashed < 40,
             "expected substantial multiproof savings, got {pairs_hashed} pairs (naive 80)"
         );
+    }
+
+    #[test]
+    fn keccak_diff_root_and_client_inclusion_proofs_verify() {
+        let zero = [0u8; 32];
+        for n in [1usize, 2, 3, 5, 8, 13, 64] {
+            let leaves: Vec<[u8; 32]> = (0..n as u64).map(leaf_hash).collect();
+            let root = keccak_diff_root(&leaves, hash_pair);
+
+            // Build all levels on the "client" side and verify a Merkle proof for every leaf.
+            let mut levels = vec![leaves.clone()];
+            while levels.last().unwrap().len() > 1 {
+                let prev = levels.last().unwrap();
+                let mut next = Vec::with_capacity(prev.len().div_ceil(2));
+                for i in (0..prev.len()).step_by(2) {
+                    let r = if i + 1 < prev.len() { &prev[i + 1] } else { &zero };
+                    next.push(hash_pair(&prev[i], r));
+                }
+                levels.push(next);
+            }
+            assert_eq!(levels.last().unwrap()[0], root);
+
+            for (pos, leaf) in leaves.iter().enumerate() {
+                let mut idx = pos;
+                let mut acc = *leaf;
+                for lvl in &levels[..levels.len() - 1] {
+                    let sib_idx = idx ^ 1;
+                    let sib = if sib_idx < lvl.len() { lvl[sib_idx] } else { zero };
+                    acc = if idx & 1 == 0 {
+                        hash_pair(&acc, &sib)
+                    } else {
+                        hash_pair(&sib, &acc)
+                    };
+                    idx >>= 1;
+                }
+                assert_eq!(acc, root, "inclusion proof failed for n={n} pos={pos}");
+            }
+        }
     }
 }

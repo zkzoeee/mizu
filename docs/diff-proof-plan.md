@@ -597,3 +597,6 @@ Measured via `mirror-records` (`depth = 35`, `MIZU_POSEIDON_PRECOMPILE=1`, `--fe
 | `N = 256` | **6 (opt 1+2+3+5, 25% hot)** | **`22,364,196` (`-38.4%`)** | **`16` (`-30.4%`)** | **`4.918B` (`-37.3%`)** | `1.614B` (`-34.3%`) | **`269,952` (`-44.4%`)** | **`766,496` (`-36.7%`)** |
 
 Native unit test `batch_mirror::tests::batch_multiproof_matches_dense_merkle_tree_and_saves_hashes` verifies bit-exact `(old_root, new_root)` equivalence against a dense reference Merkle tree.
+
+### Dual-root commitment (Option 1 `keccakDiffRoot` + Option 3 `keccakGlobalRoot`)
+Modes 5 and 6 also commit `keccak_diff_root` — a compact depth $\lceil \log_2 N \rceil$ Keccak Merkle tree over the same `N` sorted `keccak(H_p ‖ evm_fields)` leaves (tested by `keccak_diff_root_and_client_inclusion_proofs_verify`). Adding `keccakDiffRoot` alongside `keccakGlobalRoot` adds **+0 shards** and only **+0.53%–0.55% main cells** (`N=64` Mode 5: `1.676B → 1.685B`; `N=256` Mode 5: `6.469B → 6.504B`, `20` shards; `N=256` Mode 6: `4.918B → 4.945B`, `16` shards), letting clients verify recent diffs directly from any unmodified Mina indexer GraphQL API (~25k gas) while still supporting arbitrary/dormant account proofs against `keccakGlobalRoot` (~50k gas).

@@ -34,7 +34,7 @@ extern crate alloc;
 use alloc::vec::Vec;
 
 mod batch_mirror;
-use batch_mirror::{batch_merkle_update, dedup_diffs, AccountDiff};
+use batch_mirror::{batch_merkle_update, dedup_diffs, keccak_diff_root, AccountDiff};
 
 use ark_ff::{AdditiveGroup, PrimeField};
 use mina_curves::pasta::Fp;
@@ -249,14 +249,18 @@ pub fn main() {
         }
 
         // Phase 2 (Keccak mirror): bound leaves `keccak(H_p || evm_fields)` +
-        // bottom-up multiproof in one contiguous Keccak phase.
+        // BOTH Option 1 (compact diff root over the N updated leaves) AND
+        // Option 3 (depth-35 global mirror multiproof) in one contiguous Keccak phase.
         sp1_zkvm::io::write(1, MIRROR_START);
         let mut k_frontier: Vec<(u64, [u8; 32], [u8; 32])> = Vec::with_capacity(bound_leaves.len());
+        let mut diff_leaves: Vec<[u8; 32]> = Vec::with_capacity(bound_leaves.len());
         for &(leaf_idx, old_p, new_p, old_seed, new_seed) in &bound_leaves {
             let old_k = keccak_leaf_bound(old_p, old_seed);
             let new_k = keccak_leaf_bound(new_p, new_seed);
             k_frontier.push((leaf_idx, old_k, new_k));
+            diff_leaves.push(new_k);
         }
+        let diff_k_root = keccak_diff_root(&diff_leaves, keccak_node);
         let (_old_k_root, new_k_root, _) = batch_merkle_update(
             k_frontier,
             depth,
@@ -270,6 +274,7 @@ pub fn main() {
         );
         sp1_zkvm::io::write(1, MIRROR_END);
         sp1_zkvm::io::commit_slice(&new_k_root);
+        sp1_zkvm::io::commit_slice(&diff_k_root);
         return;
     }
 
