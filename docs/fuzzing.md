@@ -223,13 +223,13 @@ Evidence: [pasta-fuzz expansion summary](../benchmarks/pasta-fuzz-expansion-sp1-
 
 ## What the layers found
 
-- **A field the verifier does not read.** Every mutation the native verifier
-  accepted was a mutation of `p_eval0_chunks`. It is a copy of
-  `prev_evals.public_evals.zeta` that the host conversion derives from it, and
-  nothing in the verifier, the guest, the attestation or the statement digest
-  reads it. The public-input evaluation is still bound, through the copy that
-  is used; this one is dead weight the guest pays to deserialize. Removing it
-  is an ABI change, left as its own question.
+- **A field the verifier does not read (resolved 2026-11-24).** Previously,
+  every mutation the native verifier accepted was a mutation of
+  `p_eval0_chunks`, a redundant copy of `prev_evals.public_evals.zeta`. That
+  dead field has now been removed from `VerifiableProof` and `OcamlProof`, and
+  `verifier-fuzz` sets `IGNORED_FIELDS = []` (mutator 3 now targets
+  `prev_evals.public_evals.zeta[0]` and must reject). Every field of
+  `VerifiableProof` is now read and bound.
 - **A pointer below SP1's 2^16 data floor** splits the two executors: the
   minimal one completes, the tracing replay panics inverting zero. A plain
   store and load at the same address, with no syscall in the program,

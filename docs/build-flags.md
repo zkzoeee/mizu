@@ -53,7 +53,7 @@ receipts regenerated, and it buys naming consistency rather than behaviour.
 
 | tier | count | what it does |
 | --- | ---: | --- |
-| **Compile-time** (`option_env!`) | 54 | Baked into the guest at compile time. Changing one changes the ELF, the `programVKey`, and potentially the shard shapes. |
+| **Compile-time** (`option_env!`) | 55 | Baked into the guest at compile time. Changing one changes the ELF, the `programVKey`, and potentially the shard shapes. |
 | **Build-script** (`env::var_os` in a `build.rs`) | 5 | Selects a file or a cache path: `SETTLEMENT_BLOB_CACHE_DIR`, `SETTLEMENT_REBUILD_VERIFIER_BLOB`, `SETTLEMENT_VK_JSON`, `VK_JSON`, `MIZU_PREPARED_VESTA_PATH`. |
 | **Run-time** (`env::var`, host only) | 1 | `PASTA_RETAIN` — does not reach the guest (removed from `GUEST_BUILD_ENV`). |
 
@@ -109,7 +109,9 @@ fixture:
 | `MIZU_PASTA_FP_PRECOMPILE` | 139,610,314 | **-2.12%** |
 | + `MIZU_POSEIDON_PRECOMPILE` | 130,367,324 | **-8.60%** total |
 | + zero-copy finite SRS, `MIZU_FIXED_PALLAS_COUPLED=1`, `MIZU_SOFT_PASTA_DOUBLE=1` (`w=15`) | 105,862,509 | **-25.78%** total (-18.80% vs 130.37M; -49K `vesta_add`) |
-| + zero-copy finite SRS, `MIZU_FIXED_PALLAS_COUPLED=1`, `MIZU_SOFT_PASTA_DOUBLE=1` (`w=16`) | 102,661,283 | **-28.03%** total (-21.25% vs 130.37M) |
+| + zero-copy finite SRS, `MIZU_FIXED_PALLAS_COUPLED=1`, `MIZU_SOFT_PASTA_DOUBLE=1` (`w=16`) | 102,664,876 | **-28.02%** total (-21.25% vs 130.37M) |
+| + `MIZU_PREBAKE_NEGATIVES=1` + unchecked recoder/bucket writes (`w=15`) | 85,156,453 | **-40.30%** total (-34.68% vs 130.37M; -49K `vesta_add`) |
+| + `MIZU_PREBAKE_NEGATIVES=1` + unchecked recoder/bucket writes (`w=16`) | 84,985,703 | **-40.42%** total (-34.81% vs 130.37M) |
 
 And `PASTA_RETAIN` is a prover-side lever rather than a cycle one: retained
 routing takes main cells from 43,922,703,280 to 27,839,873,136 and the Groth16
@@ -200,6 +202,7 @@ Area tags match the files under [`docs/optimizations/`](optimizations/). **base*
 | `MIZU_IPA_CANONICAL_PREFIX` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:440` | Use the canonical prefix routine, passed as a flag into the batch call. |
 | `MIZU_IPA_DIRECT_COEFFICIENTS` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:508` | Build IPA coefficients directly rather than via the generic polynomial path. |
 | `MIZU_IPA_EXACT_CAPACITY` | `1` | yes | 10/10 | `ps:poly-commitment/src/ipa.rs:415` | Size the IPA buffer to the exact length needed instead of a growth-factor reservation. |
+| `MIZU_PREBAKE_NEGATIVES` | `1` | — | 0/10 | `pickles-verifier/src/fixed_srs.rs:124` +1 | Bake `-plane0`/`-plane1` into all-finite fixed Vesta/Pallas SRS tables (`flags=3`) in `.rodata`, eliminating 12.6 MB of heap `negatives` writes and 196K runtime negations. |
 | `MIZU_WRAP_SRS_PREFIX` | `1` | yes | 10/10 | `o1-verifier/src/main.rs:29` | Deserialise the wrap proof eagerly against the baked SRS prefix, in `o1-verifier/src/main.rs`. |
 
 ### Poseidon and the sponge

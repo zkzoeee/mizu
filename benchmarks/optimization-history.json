@@ -499,6 +499,64 @@
         "MIZU_SOFT_PASTA_DOUBLE": "1"
       },
       "proof_generated": false
+    },
+    {
+      "id": "mizu-prebake-negatives-w16",
+      "cycles": 84985703,
+      "baseline_cycles": 130367324,
+      "delta_cycles": -45381621,
+      "stage_cycles": {
+        "pickles-accumulator": 48745649,
+        "pickles-wrap-kimchi": 29714257,
+        "pickles-wrap-prepare": 2645381,
+        "setup": 3703223,
+        "verify": 81223063
+      },
+      "pasta_syscall_counts": {
+        "pallas_add": 699945,
+        "pallas_double": 0,
+        "vesta_add": 1310683,
+        "vesta_double": 0
+      },
+      "guest_abi": "one VerifiableProof input (no p_eval0_chunks); one boolean output",
+      "sp1_version": "6.10.0",
+      "proof_systems_pin": "4968ca87ff",
+      "extra_flags": {
+        "MIZU_VESTA_WINDOW": "16",
+        "MIZU_FIXED_PALLAS_COUPLED": "1",
+        "MIZU_SOFT_PASTA_DOUBLE": "1",
+        "MIZU_PREBAKE_NEGATIVES": "1"
+      },
+      "proof_generated": false
+    },
+    {
+      "id": "mizu-prebake-negatives-w15",
+      "cycles": 85156453,
+      "baseline_cycles": 130367324,
+      "delta_cycles": -45210871,
+      "stage_cycles": {
+        "pickles-accumulator": 48916400,
+        "pickles-wrap-kimchi": 29714257,
+        "pickles-wrap-prepare": 2645381,
+        "setup": 3703223,
+        "verify": 81393813
+      },
+      "pasta_syscall_counts": {
+        "pallas_add": 699945,
+        "pallas_double": 0,
+        "vesta_add": 1261505,
+        "vesta_double": 0
+      },
+      "guest_abi": "one VerifiableProof input (no p_eval0_chunks); one boolean output",
+      "sp1_version": "6.10.0",
+      "proof_systems_pin": "4968ca87ff",
+      "extra_flags": {
+        "MIZU_VESTA_WINDOW": "15",
+        "MIZU_FIXED_PALLAS_COUPLED": "1",
+        "MIZU_SOFT_PASTA_DOUBLE": "1",
+        "MIZU_PREBAKE_NEGATIVES": "1"
+      },
+      "proof_generated": false
     }
   ],
   "corrections": [
