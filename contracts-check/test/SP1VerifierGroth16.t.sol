@@ -139,4 +139,57 @@ contract SP1VerifierGroth16Test {
     function test_cuda_and_cpu_proofs_differ() public pure {
         require(keccak256(PROOF_CUDA) != keccak256(PROOF_DIGEST), "identical bytes");
     }
+
+    function test_trailing_proof_bytes_are_rejected() public view {
+        bytes memory extended = bytes.concat(PROOF_DIGEST, hex"00");
+        try verifier.verifyProof(VKEY_DIGEST, PUBLIC_VALUES_DIGEST, extended) {
+            revert("proof with trailing bytes was accepted");
+        } catch {}
+    }
+
+    function testFuzz_rejectsArbitraryProofLengths(bytes calldata suffix, uint16 truncateSeed) public view {
+        bytes memory extended =
+            suffix.length == 0 ? bytes.concat(PROOF_DIGEST, hex"00") : bytes.concat(PROOF_DIGEST, suffix);
+        try verifier.verifyProof(VKEY_DIGEST, PUBLIC_VALUES_DIGEST, extended) {
+            revert("extended proof was accepted");
+        } catch {}
+
+        uint256 shortLen = uint256(truncateSeed) % PROOF_DIGEST.length;
+        bytes memory truncated = new bytes(shortLen);
+        for (uint256 i = 0; i < shortLen; i++) {
+            truncated[i] = PROOF_DIGEST[i];
+        }
+        try verifier.verifyProof(VKEY_DIGEST, PUBLIC_VALUES_DIGEST, truncated) {
+            revert("truncated proof was accepted");
+        } catch {}
+    }
+
+    function testFuzz_rejectsTamperedPublicValues(uint256 idx, uint8 mask) public view {
+        if (mask == 0) mask = 1;
+        bytes memory tampered = PUBLIC_VALUES_DIGEST;
+        uint256 pos = idx % tampered.length;
+        tampered[pos] = bytes1(uint8(tampered[pos]) ^ mask);
+        try verifier.verifyProof(VKEY_DIGEST, tampered, PROOF_DIGEST) {
+            revert("tampered public values were accepted");
+        } catch {}
+    }
+
+    function testFuzz_rejectsTamperedProofBytes(uint256 idx, uint8 mask) public view {
+        if (mask == 0) mask = 1;
+        bytes memory tampered = PROOF_DIGEST;
+        uint256 pos = idx % tampered.length;
+        tampered[pos] = bytes1(uint8(tampered[pos]) ^ mask);
+        try verifier.verifyProof(VKEY_DIGEST, PUBLIC_VALUES_DIGEST, tampered) {
+            revert("tampered proof bytes were accepted");
+        } catch {}
+    }
+
+    function testFuzz_rejectsWrongProgramVKey(bytes32 randomVKey) public view {
+        if (randomVKey == VKEY_DIGEST) {
+            randomVKey = bytes32(uint256(randomVKey) ^ 1);
+        }
+        try verifier.verifyProof(randomVKey, PUBLIC_VALUES_DIGEST, PROOF_DIGEST) {
+            revert("proof verified under wrong programVKey");
+        } catch {}
+    }
 }

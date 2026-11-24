@@ -84,5 +84,33 @@ contract TwoRootsTest {
         emit GasUsed("verifyProof mirror", start - gasleft());
     }
 
+    function testFuzz_mirrorRejectsTamperedProofBytes(uint256 idx, uint8 mask) public view {
+        if (mask == 0) mask = 1;
+        bytes memory tampered = PROOF_MIRROR;
+        uint256 pos = idx % tampered.length;
+        tampered[pos] = bytes1(uint8(tampered[pos]) ^ mask);
+        try mirror.verifyProof(VKEY_MIRROR, PUBLIC_VALUES_MIRROR, tampered) {
+            revert("tampered mirror proof was accepted");
+        } catch {}
+    }
+
+    function testFuzz_mirrorRejectsTamperedPublicValues(uint256 idx, uint8 mask) public view {
+        if (mask == 0) mask = 1;
+        bytes memory tampered = PUBLIC_VALUES_MIRROR;
+        uint256 pos = idx % tampered.length;
+        tampered[pos] = bytes1(uint8(tampered[pos]) ^ mask);
+        try mirror.verifyProof(VKEY_MIRROR, tampered, PROOF_MIRROR) {
+            revert("tampered mirror public values were accepted");
+        } catch {}
+    }
+
+    function testFuzz_mirrorRejectsNonCanonicalLengths(bytes calldata suffix) public view {
+        bytes memory extended =
+            suffix.length == 0 ? bytes.concat(PROOF_MIRROR, hex"00") : bytes.concat(PROOF_MIRROR, suffix);
+        try mirror.verifyProof(VKEY_MIRROR, PUBLIC_VALUES_MIRROR, extended) {
+            revert("extended mirror proof was accepted");
+        } catch {}
+    }
+
     event GasUsed(string what, uint256 gas);
 }
