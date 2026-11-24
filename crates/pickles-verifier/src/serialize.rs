@@ -247,8 +247,23 @@ pub fn encode_verifier_blob(
     step_num_chunks: usize,
     wrap_vk: &WrapVerifierIndex,
 ) -> Vec<u8> {
+    encode_verifier_blob_inner(vesta_srs, wrap_srs, step_num_chunks, wrap_vk, false, false)
+}
+
+fn encode_verifier_blob_inner(
+    vesta_srs: &VestaSrs,
+    wrap_srs: &WrapSrs,
+    step_num_chunks: usize,
+    wrap_vk: &WrapVerifierIndex,
+    omit_vesta: bool,
+    trim_lagrange: bool,
+) -> Vec<u8> {
     let mut out = Vec::new();
-    write_vesta_section(&mut out, &vesta_srs.g);
+    if omit_vesta {
+        write_vesta_section(&mut out, &[]);
+    } else {
+        write_vesta_section(&mut out, &vesta_srs.g);
+    }
     write_pallas_section(&mut out, &wrap_srs.g);
     write_one_pallas(&mut out, &wrap_srs.h);
 
@@ -258,8 +273,19 @@ pub fn encode_verifier_blob(
     let domain_size = wrap_vk.domain.size as usize;
     let basis_ref = wrap_srs.get_lagrange_basis_from_domain_size(domain_size);
     let basis: &[PolyComm<Pallas>] = &basis_ref;
-    let mut basis_points: Vec<Pallas> = Vec::with_capacity(basis.len());
-    for (i, poly) in basis.iter().enumerate() {
+    let basis_len = if trim_lagrange {
+        assert!(
+            wrap_vk.public <= basis.len(),
+            "wrap VK public length {} exceeds Lagrange basis {}",
+            wrap_vk.public,
+            basis.len()
+        );
+        wrap_vk.public
+    } else {
+        basis.len()
+    };
+    let mut basis_points: Vec<Pallas> = Vec::with_capacity(basis_len);
+    for (i, poly) in basis[..basis_len].iter().enumerate() {
         assert_eq!(
             poly.chunks.len(),
             1,
@@ -289,15 +315,29 @@ pub fn decode_verifier_blob(bytes: &[u8]) -> Verifier {
 
 /// Trusted build artifact with deterministic setup appended to the legacy blob.
 /// The runtime decoder continues to use its ordinary setup constructor.
+///
+/// When `MIZU_COMPACT_EMBEDDED_BLOB=1`, strips sections unused by the embedded
+/// guest path: the legacy Montgomery `VestaSrs` (when `MIZU_FIXED_VESTA_SRS=1`
+/// supplies the canonical fixed table) and the unused Lagrange basis tail
+/// beyond `wrap_vk.public` (~5.9 MB saved, keeping pre-baked ELFs under 32 MiB).
 pub fn encode_embedded_verifier_blob(
     vesta_srs: &VestaSrs,
     wrap_srs: &WrapSrs,
     step_num_chunks: usize,
     wrap_vk: &WrapVerifierIndex,
 ) -> Vec<u8> {
-    let mut bytes = encode_verifier_blob(vesta_srs, wrap_srs, step_num_chunks, wrap_vk);
+    let compact = matches!(option_env!("MIZU_COMPACT_EMBEDDED_BLOB"), Some("1"));
+    let fixed_vesta = matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1"));
+    let mut bytes = encode_verifier_blob_inner(
+        vesta_srs,
+        wrap_srs,
+        step_num_chunks,
+        wrap_vk,
+        compact && fixed_vesta,
+        compact,
+    );
     write_bytes_section(&mut bytes, &crate::setup_data::encode());
-    if matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1")) {
+    if fixed_vesta {
         bytes.resize(bytes.len().next_multiple_of(8), 0);
         bytes.extend_from_slice(&crate::fixed_srs::encode(&vesta_srs.g));
     }
@@ -415,7 +455,12 @@ fn decode_verifier_blob_inner<'a>(
         let fixed = if rest.starts_with(crate::fixed_srs::MAGIC) {
             let n = crate::fixed_srs::encoded_byte_len(rest);
             assert!(rest.len()>=n,"truncated Vesta table");
-            let table=crate::fixed_srs::decode(&rest[..n],vesta_len);rest=&rest[n..];Some(table)
+            let expected = if vesta_len == 0 && use_fixed {
+                crate::fixed_srs::encoded_generator_count(rest)
+            } else {
+                vesta_len
+            };
+            let table=crate::fixed_srs::decode(&rest[..n],expected);rest=&rest[n..];Some(table)
         } else {None};
         assert!(!use_fixed || fixed.is_some(),"missing fixed SRS table");
         let pallas=if rest.is_empty() {None} else {

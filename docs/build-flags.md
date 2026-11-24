@@ -53,7 +53,7 @@ receipts regenerated, and it buys naming consistency rather than behaviour.
 
 | tier | count | what it does |
 | --- | ---: | --- |
-| **Compile-time** (`option_env!`) | 55 | Baked into the guest at compile time. Changing one changes the ELF, the `programVKey`, and potentially the shard shapes. |
+| **Compile-time** (`option_env!`) | 56 | Baked into the guest at compile time. Changing one changes the ELF, the `programVKey`, and potentially the shard shapes. |
 | **Build-script** (`env::var_os` in a `build.rs`) | 5 | Selects a file or a cache path: `SETTLEMENT_BLOB_CACHE_DIR`, `SETTLEMENT_REBUILD_VERIFIER_BLOB`, `SETTLEMENT_VK_JSON`, `VK_JSON`, `MIZU_PREPARED_VESTA_PATH`. |
 | **Run-time** (`env::var`, host only) | 1 | `PASTA_RETAIN` — does not reach the guest (removed from `GUEST_BUILD_ENV`). |
 
@@ -194,6 +194,7 @@ Area tags match the files under [`docs/optimizations/`](optimizations/). **base*
 | `MIZU_BORROW_POSITIONAL_SCALARS` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:324` | Borrow positional scalars for the accumulator MSM rather than materialising a vector. |
 | `MIZU_BORROW_VESTA_SRS` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:829` +1 | The Vesta counterpart. |
 | `MIZU_CANONICAL_ACCUMULATOR_COEFFICIENTS` | `1` | yes | 10/10 | `pickles-verifier/src/lib.rs:249` | Compute accumulator coefficients canonically; gated together with `MIZU_CANONICAL_MSM` and `MIZU_FUSE_VESTA_BASE_CONVERSION`. |
+| `MIZU_COMPACT_EMBEDDED_BLOB` | `1` | — | 0/10 | `pickles-verifier/src/serialize.rs:321` +1 | Strip unused legacy Montgomery `VestaSrs` (when `MIZU_FIXED_VESTA_SRS=1`) and Lagrange tail beyond `wrap_vk.public` from `encode_embedded_verifier_blob` (~5.9 MB saved, keeping pre-baked ELFs `< 32 MiB`). |
 | `MIZU_FIXED_PALLAS_COUPLED` | `1` | — | 0/10 | `pickles-verifier/src/fixed_pallas.rs:95` | Bake finite fixed Pallas SRS with `lane_shift=130` for coupled width-13 recoding (`msm_pallas_finite_prefix`) directly over `.rodata` `&[[u64; 8]]`. |
 | `MIZU_FIXED_PALLAS_SRS` | `1` | yes | 10/10 | `o1-verifier/build.rs:62` +3 | Use the compile-time fixed Pallas SRS tables (64-byte finite `.rodata` layout for all-finite SRSes). |
 | `MIZU_FIXED_VESTA_COUPLED` | `1` | yes | 10/10 | `pickles-verifier/src/canonical_msm.rs:316` | Use the coupled fixed-Vesta table (`MIZU_VESTA_WINDOW=16|15|14` with matching `lane_shift=128|120|126`). |

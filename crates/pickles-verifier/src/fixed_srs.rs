@@ -226,6 +226,16 @@ fn encode_uncached(g: &[Vesta], lane_shift: usize, prebake_negatives: bool) -> V
     out
 }
 
+/// Generator count stored in the fixed Vesta SRS header.
+pub(crate) fn encoded_generator_count(bytes: &[u8]) -> usize {
+    assert!(
+        bytes.len() >= HEADER && &bytes[..8] == MAGIC,
+        "fixed SRS header"
+    );
+    let word = u64::from_le_bytes(bytes[8..16].try_into().unwrap());
+    usize::try_from(word).expect("fixed SRS length overflow")
+}
+
 /// Exact byte length of an encoded fixed Vesta SRS prefix starting at `bytes`.
 pub(crate) fn encoded_byte_len(bytes: &[u8]) -> usize {
     assert!(

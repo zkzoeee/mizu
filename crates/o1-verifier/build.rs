@@ -59,7 +59,8 @@ fn main() {
         let artifacts = Blobs {
             verifier: if matches!(option_env!("MIZU_PRECOMPUTED_SETUP"), Some("1"))
                 || matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1"))
-                || matches!(option_env!("MIZU_FIXED_PALLAS_SRS"), Some("1")) {
+                || matches!(option_env!("MIZU_FIXED_PALLAS_SRS"), Some("1"))
+                || matches!(option_env!("MIZU_COMPACT_EMBEDDED_BLOB"), Some("1")) {
                 encode_embedded_verifier_blob(&get_srs::<Vesta>(), &get_srs::<Pallas>(), 1, &wrap_vk)
             } else {
                 encode_verifier_blob(&get_srs::<Vesta>(), &get_srs::<Pallas>(), 1, &wrap_vk)

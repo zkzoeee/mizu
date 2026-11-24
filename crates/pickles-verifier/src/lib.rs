@@ -751,9 +751,20 @@ mod tests {
             let bytes: &'static [u8] = Box::leak(bytes.into_boxed_slice());
             let digest: &'static [u8; 32] = Box::leak(Box::new(digest));
             let fixed = decode_embedded_verifier(bytes, digest);
-            let runtime = crate::serialize::decode_verifier_blob(bytes);
+            let compact_vesta = matches!(option_env!("MIZU_COMPACT_EMBEDDED_BLOB"), Some("1"))
+                && matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1"));
+            let runtime_bytes = if compact_vesta {
+                crate::serialize::encode_verifier_blob(vesta_srs(), wrap_srs(), 1, &vk)
+            } else {
+                bytes.to_vec()
+            };
+            let runtime = crate::serialize::decode_verifier_blob(&runtime_bytes);
             assert!(verify(&runtime, &vp), "runtime {dir}");
             assert!(fixed.verify(&vp), "embedded {dir}");
+            if compact_vesta {
+                assert!(!verify(&crate::serialize::decode_verifier_blob(bytes), &vp),
+                    "compact embedded blob must not verify on runtime decoder without raw Vesta SRS");
+            }
             let wrong = decode_embedded_verifier(bytes, Box::leak(Box::new(changed_digest)));
             assert!(!wrong.verify(&vp), "mismatched digest must reject {dir}");
             let mut corrupted = vp.clone();
@@ -792,8 +803,10 @@ mod tests {
             }
             let blob = Box::leak(blob.into_boxed_slice());
             assert!(!decode_embedded_verifier(blob, digest).verify(&proof), "changed table point must reject");
-            assert!(verify(&crate::serialize::decode_verifier_blob(blob), &proof),
-                "runtime verifier must still use its own original generators");
+            if !matches!(option_env!("MIZU_COMPACT_EMBEDDED_BLOB"), Some("1")) {
+                assert!(verify(&crate::serialize::decode_verifier_blob(blob), &proof),
+                    "runtime verifier must still use its own original generators");
+            }
         }
     }
 
@@ -802,7 +815,16 @@ mod tests {
         use crate::serialize::{decode_embedded_verifier,decode_embedded_verifier_for_proof,decode_verifier_blob,embedded_wrap_digest};
         let (verifier,proof)=mainnet_proof();
         let blob=crate::serialize::encode_embedded_verifier_blob(&verifier.vesta_srs,&verifier.wrap_vk.srs,1,&verifier.wrap_vk);
-        let runtime={let input=blob.clone();let runtime=decode_verifier_blob(&input);assert!(!runtime.wrap_vk.srs.g.is_borrowed());runtime};
+        let compact_vesta = matches!(option_env!("MIZU_COMPACT_EMBEDDED_BLOB"), Some("1"))
+            && matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1"));
+        let runtime={
+            let input=if compact_vesta {
+                crate::serialize::encode_verifier_blob(&verifier.vesta_srs,&verifier.wrap_vk.srs,1,&verifier.wrap_vk)
+            } else {
+                blob.clone()
+            };
+            let runtime=decode_verifier_blob(&input);assert!(!runtime.wrap_vk.srs.g.is_borrowed());runtime
+        };
         // Input has been freed; retained generators, basis/cache and full
         // verification must remain usable on the ordinary runtime path.
         assert_eq!(runtime.wrap_vk.srs.g.as_slice(),verifier.wrap_vk.srs.g.as_slice());assert!(verify(&runtime,&proof));
@@ -839,10 +861,14 @@ mod tests {
         let (borrowed, owned_len) = fixed.vesta_storage_for_test();
         let enabled = matches!(option_env!("MIZU_BORROW_VESTA_SRS"), Some("1"));
         let fixed_table = matches!(option_env!("MIZU_FIXED_VESTA_SRS"), Some("1"));
+        let compact = matches!(option_env!("MIZU_COMPACT_EMBEDDED_BLOB"), Some("1"));
         if enabled && fixed_table {
             // Fixed Vesta table supersedes raw Montgomery Vesta SRS: neither copy nor scan it.
             assert!(borrowed.is_none());
             assert_eq!(owned_len, 0, "embedded fixed-Vesta path must not copy Vesta g");
+        } else if compact && fixed_table {
+            assert!(borrowed.is_none());
+            assert_eq!(owned_len, 0, "compact embedded blob omits raw Vesta g");
         } else {
             assert_eq!(borrowed.is_some(), enabled);
             if let Some(g) = borrowed {
@@ -853,9 +879,24 @@ mod tests {
                 assert_eq!(owned_len, vesta_srs().g.len());
             }
         }
-        let runtime = crate::serialize::decode_verifier_blob(blob);
+        let runtime_blob = if compact && fixed_table {
+            crate::serialize::encode_verifier_blob(vesta_srs(), wrap_srs(), 1, &vk)
+        } else {
+            blob.to_vec()
+        };
+        let runtime = crate::serialize::decode_verifier_blob(&runtime_blob);
         assert_eq!(runtime.vesta_srs.g, vesta_srs().g,
             "ordinary decoder must retain owned SRS semantics");
+        if compact && fixed_table {
+            // Compact embedded blob strips ~5.9 MB (unused raw Vesta SRS + Lagrange tail).
+            assert!(
+                blob.len() + 5_800_000 < runtime_blob.len()
+                    + crate::fixed_srs::encode(&vesta_srs().g).len()
+                    + crate::fixed_pallas::encode(&wrap_srs().g[..wrap_srs().g.len().div_ceil(2)]).len()
+                    + 1024,
+                "compact embedded blob should strip unused Vesta SRS and Lagrange tail"
+            );
+        }
         let g = vesta_srs().g.as_slice();
         assert!(accumulator_check_with_generators(&runtime, &vp, g));
         assert!(!accumulator_check_with_generators(&runtime, &vp, &g[..g.len() - 1]));
@@ -940,7 +981,10 @@ mod tests {
             for (i,w) in changed.x.into_bigint().0.into_iter().chain(changed.y.into_bigint().0).enumerate() {blob[start+8*i..start+8*i+8].copy_from_slice(&w.to_le_bytes());}
             let blob=Box::leak(blob.into_boxed_slice());
             assert!(!decode_embedded_verifier(blob,digest).verify(&proof),"changed Pallas table point must reject");
-            assert!(verify(&crate::serialize::decode_verifier_blob(blob),&proof),"runtime decoder must keep its own SRS");
+            if !(matches!(option_env!("MIZU_COMPACT_EMBEDDED_BLOB"),Some("1"))
+                && matches!(option_env!("MIZU_FIXED_VESTA_SRS"),Some("1"))) {
+                assert!(verify(&crate::serialize::decode_verifier_blob(blob),&proof),"runtime decoder must keep its own SRS");
+            }
         }
     }
 
