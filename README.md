@@ -18,9 +18,13 @@ contract at **~226k gas**. No trusted setup of our own was needed: the fork's
 wrap verifying key is byte-identical to upstream's, so Succinct's released
 artifacts apply.
 
-**3. Mina state is usable on an EVM.** An optional **keccak mirror tree** walks
-the same ledger diff in both Poseidon and keccak, so a contract can prove
-inclusion of any account against a keccak root it can recompute cheaply.
+**3. Mina state is usable on an EVM.** An optional **dual-root keccak mirror**
+walks the same ledger diff in Poseidon and keccak (batched multiproof +
+hot-account deduplication + `keccak(H_p ‖ evm_fields)` bound leaves) and commits
+both a **compact diff root** (`keccakDiffRoot`, usable directly with any
+unmodified `mina-indexer` GraphQL API at ~25k gas) and a **depth-35 global
+mirror root** (`keccakGlobalRoot`, for proving any arbitrary or dormant Mina
+account at ~50k gas). See [docs/diff-proof-plan.md](docs/diff-proof-plan.md).
 
 ## The numbers
 
