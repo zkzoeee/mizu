@@ -1,0 +1,43 @@
+{
+  "chip_clusters": 43,
+  "distinct_shard_shapes": 18,
+  "elf_sha256": "353bf06bec4bcde3bbaa67f2057b4d4397e330736529babbfe905d3bb80f897a",
+  "mode": "pipeline-cuda",
+  "panic_indices": [],
+  "proof_mode": "VkMap",
+  "seconds": {
+    "build_vks": 10.383771232,
+    "core": 127.659157115
+  },
+  "shape_indices": [
+    16679,
+    16853,
+    17243,
+    20036,
+    20520,
+    20563,
+    21131,
+    21455,
+    22223,
+    22482,
+    23174,
+    23358,
+    24250,
+    24332,
+    24596,
+    24631,
+    24636,
+    24637,
+    249744,
+    249745,
+    249746,
+    249747,
+    249748,
+    249749
+  ],
+  "shape_space": 249750,
+  "shards": 66,
+  "vk_map_keys": 24,
+  "vk_map_path": "/workspace/settlement-run/out/vk_map.bin",
+  "vk_map_sha256": "98b315763babb3634dc7dd900444f10b982b60d8bd39fb14b10d590ba8cca2b6"
+}

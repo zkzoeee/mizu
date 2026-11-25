@@ -630,13 +630,28 @@ Adding `keccakDiffRoot` alongside `keccakGlobalRoot` adds **+0 shards** and only
    require(node == expectedKeccakRoot, "invalid Mina state proof");
    ```
 
-### Estimated combined latency (`o1-verifier` compact `w=16` + dual-root mirror)
-Anchored to measured `mizu/dev` compact `w=16` (`67` shards: `63.8 s` core on RTX 4090, `117.1 s` core on A40) + measured dual-root mirror scaling (`~19M–25M` cells/account). Because Mina's block time is ~180 s, single-block cadence (`K = 1`) keeps up in real time on a single RTX 4090:
+### Combined settlement guest (`o1-verifier-settlement`) — measured end-to-end Groth16 (2026-11-25)
 
-| Account updates (`N`) | Total shards *(25% hot – unique)* | Core STARK (4090) | Core STARK (A40) | Full Groth16 est. (4090, CUDA gnark) | Full Groth16 est. (A40, CUDA gnark) |
+Wired into `crates/pickles-verifier/src/mirror.rs` (exact 20-byte Mina domain prefixes `"MinaMklTree{:03}******"`, `"MinaAccount*********"`, `"MinaProtoState******"` + dual-root Keccak mirror) and `crates/o1-verifier/src/bin/settlement.rs` (`o1-verifier` compact `w=16` + `verify_and_apply_settlement`, committing 196-byte `SettlementPublicValues`).
+
+Measured on the real Mina mainnet Pickles fixture + `N = 64` accounts at `depth = 35` (`benchmarks/pipeline/settlement-groth16-20261125/`):
+
+| Metric | Value | Notes |
+| --- | ---: | --- |
+| Guest ELF (`o1-verifier-settlement`) | `353bf06b..` | compact `w=16` + `--features settlement` (`KeccakPermute` deferred, zero new AIRs) |
+| Cycles (`settlement-bench`) | **`94,643,704`** | `+11.4%` over bare `o1-verifier` (`84.99M`) |
+| Main cells (local `settlement-bench`) | **`22.96B`** (`71` shards) | `KeccakPermute`: `1` shard, `70,560` rows (`0.8%` of cells) |
+| Committed public values | **`196 B`** | bit-exact match (`pv_sha256 = 9f16c2ea..`) |
+| GPU Core STARK + VK-map (1×A40) | **`127.7 s`** core + **`10.4 s`** VK-map | **`66` shards**, `18` distinct shard shapes, `24` VK-map keys |
+| **Full Groth16 (1×A40, VK verification ON)** | **`217.7 s` prove (`246.0 s` wall)** | **`324 B`** raw proof, **`verified: true`**, Succinct v6.1.0 artifacts (zero ceremony), **`~$0.040`/proof** |
+
+### Estimated combined latency (`o1-verifier` compact `w=16` + dual-root mirror)
+Anchored to measured `mizu/dev` compact `w=16` (`67` shards: `63.8 s` core on RTX 4090, `117.1 s` core on A40) and verified `o1-verifier-settlement` (`N = 64` on A40: `127.7 s` core, `217.7 s` Groth16 prove). Because Mina's block time is ~180 s, single-block cadence (`K = 1`) keeps up in real time on a single RTX 4090:
+
+| Account updates (`N`) | Total shards *(25% hot – unique)* | Core STARK (4090) | Core STARK (A40) | Full Groth16 est. (4090, CUDA gnark) | Full Groth16 (A40) |
 | ---: | ---: | ---: | ---: | ---: | ---: |
 | `0` *(measured)* | `67` | `63.8 s` | `117.1 s` | `~135 s` | `~215 s` |
-| `64` | `71 – 72` | `~68 – 69 s` | `~124 – 126 s` | `~141 – 143 s` | `~225 – 228 s` |
+| `64` *(A40 measured)* | `66 (GPU)` / `71 (CPU)` | `~68 – 69 s` | **`127.7 s`** | `~141 – 143 s` | **`217.7 s` prove** |
 | `128` | `74 – 76` | `~71 – 73 s` | `~129 – 133 s` | `~146 – 149 s` | `~233 – 238 s` |
 | `256` | `81 – 85` | `~77 – 81 s` | `~141 – 149 s` | `~155 – 161 s` | `~250 – 260 s` |
 | `512` | `93 – 101` | `~88 – 96 s` | `~162 – 176 s` | `~172 – 184 s` | `~280 – 300 s` |

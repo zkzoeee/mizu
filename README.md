@@ -39,6 +39,7 @@ account at ~50k gas). See [docs/diff-proof-plan.md](docs/diff-proof-plan.md).
 | Groth16 proof size | 324 bytes |
 | Solidity verification | 225,954 gas |
 | Mirror-tree proof, end to end | 71 s |
+| **Combined settlement Groth16 (`o1-verifier-settlement`, 64 accts, depth 35), 1xA40** | **`217.7 s` prove (`246.0 s` wall), ~$0.040, 66 shards, 324 B, verified** |
 
 Prices are the card's hourly rate (A40 at $0.59/hr) against measured wall time.
 Everything here is a recorded run, not a projection —
