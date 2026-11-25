@@ -21,6 +21,9 @@ std = [
   "mina-poseidon/std",
   "o1-utils/std",
 ]
+# Routes Keccak-256 in `mirror` through SP1's `KECCAK_PERMUTE` precompile via
+# the root `[patch.crates-io]` `tiny-keccak` patch.
+keccak-precompile = ["dep:tiny-keccak"]
 
 [dependencies]
 kimchi = { workspace = true }
@@ -41,6 +44,7 @@ rand_chacha = { version = "0.3", default-features = false }
 postcard = { version = "1", default-features = false, features = ["alloc"] }
 blake2 = { version = "0.10", default-features = false }
 sha3 = { version = "0.10.9", default-features = false }
+tiny-keccak = { version = "2.0.2", features = ["keccak"], optional = true }
 # Pod casts for the SP1-guest verifier blob (`serialize` module).
 bytemuck = { version = "1", default-features = false, features = ["derive"] }
 # serde_with + o1_utils::serialization::SerdeAs to drive `#[serde_as]` on the

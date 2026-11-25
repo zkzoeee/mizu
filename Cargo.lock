@@ -4484,6 +4484,7 @@ dependencies = [
  "sha2 0.10.9",
  "sha3",
  "sp1-lib",
+ "tiny-keccak",
 ]
 
 [[package]]

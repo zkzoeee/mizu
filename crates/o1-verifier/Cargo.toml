@@ -16,6 +16,7 @@ mina-curves = { workspace = true, default-features = false }
 default = []
 batch = []
 statement-digest = []
+settlement = ["pickles-verifier/keccak-precompile"]
 # Routes Pasta Fp/Fq Montgomery multiplication through the SP1 zkVM
 # `sys_bigint` precompile. Activated by o1-verifier-host's build.rs during
 # the guest sub-build (`cargo build --features sp1` on o1-verifier).
@@ -39,5 +40,12 @@ bench = false
 name = "o1-verifier-batch"
 path = "src/bin/batch.rs"
 required-features = ["batch"]
+test = false
+bench = false
+
+[[bin]]
+name = "o1-verifier-settlement"
+path = "src/bin/settlement.rs"
+required-features = ["settlement"]
 test = false
 bench = false

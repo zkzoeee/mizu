@@ -29,6 +29,7 @@ mod vesta_glv;
 mod vesta_spikes;
 pub mod deferred;
 pub mod attestation;
+pub mod mirror;
 pub mod serialize;
 mod setup_data;
 pub mod statement;
